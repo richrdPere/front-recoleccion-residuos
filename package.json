@@ -29,13 +29,23 @@
     "@angular/forms": "^21.1.0",
     "@angular/platform-browser": "^21.1.0",
     "@angular/router": "^21.1.0",
+    "@auth0/angular-jwt": "^5.2.0",
+    "@fortawesome/fontawesome-free": "^7.3.1",
+    "@tailwindcss/postcss": "^4.3.3",
+    "izitoast": "^1.4.0",
+    "jwt-decode": "^4.0.0",
+    "postcss": "^8.5.28",
     "rxjs": "~7.8.0",
+    "socket.io-client": "^4.8.3",
+    "sweetalert2": "^11.26.25",
+    "tailwindcss": "^4.3.3",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
     "@angular/build": "^21.1.4",
     "@angular/cli": "^21.1.4",
     "@angular/compiler-cli": "^21.1.0",
+    "daisyui": "^5.7.34",
     "jsdom": "^27.1.0",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"

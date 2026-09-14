@@ -1,0 +1,318 @@
+<div class="relative min-h-screen overflow-hidden bg-base-200 text-base-content">
+
+  <!-- ================================================= -->
+  <!-- DECORACIÓN DEL FONDO -->
+  <!-- ================================================= -->
+
+  <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+
+    <div class="absolute -left-32 -top-32 size-96 rounded-full bg-primary/10 blur-3xl">
+    </div>
+
+    <div class="absolute -bottom-40 -right-40 size-120 rounded-full bg-success/10 blur-3xl">
+    </div>
+
+    <div class="absolute left-1/2 top-1/2
+             size-72 -translate-x-1/2
+             -translate-y-1/2 rounded-full bg-secondary/5 blur-3xl">
+    </div>
+  </div>
+
+  <!-- ================================================= -->
+  <!-- BOTÓN DE TEMA -->
+  <!-- ================================================= -->
+
+  <div class="absolute right-4 top-4 z-30 sm:right-6 sm:top-6">
+    <button type="button" class="btn btn-circle btn-ghost
+             border border-base-300
+             bg-base-100/80 shadow-sm
+             backdrop-blur" [attr.aria-label]="
+        isDarkMode()
+          ? 'Activar tema claro'
+          : 'Activar tema oscuro'
+      " [attr.title]="
+        isDarkMode()
+          ? 'Activar tema claro'
+          : 'Activar tema oscuro'
+      " (click)="toggleTheme()">
+
+      @if (isDarkMode()) {
+      <i class="fa-regular fa-sun text-lg"></i>
+      } @else {
+      <i class="fa-regular fa-moon text-lg"></i>
+      }
+    </button>
+  </div>
+
+  <!-- ================================================= -->
+  <!-- CONTENIDO PRINCIPAL -->
+  <!-- ================================================= -->
+
+  <main class="relative z-10 grid min-h-screen
+           grid-cols-1 lg:grid-cols-2">
+
+    <!-- ================================================= -->
+    <!-- PANEL INFORMATIVO -->
+    <!-- Visible en escritorio -->
+    <!-- ================================================= -->
+
+    <section class="relative hidden min-h-screen
+             overflow-hidden bg-neutral
+             text-neutral-content lg:flex
+             lg:flex-col">
+
+      <!-- Decoración -->
+      <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+
+        <div class="absolute -left-32 top-20
+                 size-96 rounded-full
+                 bg-primary/25 blur-3xl">
+        </div>
+
+        <div class="absolute -bottom-40 right-0
+                 size-120 rounded-full
+                 bg-success/20 blur-3xl">
+        </div>
+
+        <div class="absolute inset-0 opacity-[0.04]" style="
+            background-image:
+              linear-gradient(
+                rgba(255, 255, 255, 0.8) 1px,
+                transparent 1px
+              ),
+              linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0.8) 1px,
+                transparent 1px
+              );
+            background-size: 32px 32px;
+          ">
+        </div>
+      </div>
+
+      <!-- Encabezado institucional -->
+      <header class="relative z-10 flex items-center
+               gap-4 px-10 py-8 xl:px-14">
+
+        <div class="flex size-13 shrink-0 items-center
+                 justify-center rounded-2xl
+                 bg-white/10 text-2xl
+                 ring-1 ring-white/15
+                 backdrop-blur">
+
+          <i class="fa-solid fa-recycle"></i>
+        </div>
+
+        <div class="min-w-0">
+          <p class="truncate text-lg font-bold">
+            Sistema de Recolección
+          </p>
+
+          <p class="truncate text-sm opacity-65">
+            Municipalidad Provincial de Calca
+          </p>
+        </div>
+      </header>
+
+      <!-- Presentación -->
+      <div class="relative z-10 flex flex-1
+               items-center px-10 py-12 xl:px-14">
+
+        <div class="w-full max-w-xl">
+          <div class="inline-flex items-center gap-2
+                   rounded-full border border-white/15
+                   bg-white/5 px-4 py-2
+                   text-xs font-semibold
+                   uppercase tracking-wide
+                   backdrop-blur">
+
+            <span class="relative flex size-2">
+              <span class="absolute inline-flex size-full
+                       animate-ping rounded-full
+                       bg-success opacity-60">
+              </span>
+
+              <span class="relative inline-flex size-2
+                       rounded-full bg-success">
+              </span>
+            </span>
+
+            Plataforma operativa municipal
+          </div>
+
+          <h1 class="mt-7 text-4xl font-bold
+                   leading-tight xl:text-5xl">
+
+            Gestión inteligente para una
+            ciudad más limpia
+          </h1>
+
+          <p class="mt-5 max-w-lg text-base
+                   leading-7 opacity-70 xl:text-lg">
+
+            Administra rutas, unidades recolectoras,
+            programaciones y operaciones en tiempo real
+            desde una plataforma centralizada.
+          </p>
+
+          <!-- Características -->
+          <div class="mt-10 grid grid-cols-1
+                   gap-4 xl:grid-cols-2">
+
+            <article class="rounded-2xl border
+                     border-white/10 bg-white/5
+                     p-4 backdrop-blur">
+
+              <div class="flex size-11 items-center
+                       justify-center rounded-xl
+                       bg-primary/25 text-primary-content">
+
+                <i class="fa-solid fa-map-location-dot"></i>
+              </div>
+
+              <h2 class="mt-4 font-semibold">
+                Monitoreo GPS
+              </h2>
+
+              <p class="mt-1 text-sm leading-6 opacity-60">
+                Seguimiento de rutas y unidades
+                recolectoras en tiempo real.
+              </p>
+            </article>
+
+            <article class="rounded-2xl border
+                     border-white/10 bg-white/5
+                     p-4 backdrop-blur">
+
+              <div class="flex size-11 items-center
+                       justify-center rounded-xl
+                       bg-success/25 text-success">
+
+                <i class="fa-regular fa-calendar-check"></i>
+              </div>
+
+              <h2 class="mt-4 font-semibold">
+                Planificación
+              </h2>
+
+              <p class="mt-1 text-sm leading-6 opacity-60">
+                Organización de rutas, vehículos,
+                horarios y personal operativo.
+              </p>
+            </article>
+
+            <article class="rounded-2xl border
+                     border-white/10 bg-white/5
+                     p-4 backdrop-blur">
+
+              <div class="flex size-11 items-center
+                       justify-center rounded-xl
+                       bg-info/25 text-info">
+
+                <i class="fa-solid fa-chart-line"></i>
+              </div>
+
+              <h2 class="mt-4 font-semibold">
+                Indicadores
+              </h2>
+
+              <p class="mt-1 text-sm leading-6 opacity-60">
+                Dashboard y reportes para el control
+                de la operación municipal.
+              </p>
+            </article>
+
+            <article class="rounded-2xl border
+                     border-white/10 bg-white/5
+                     p-4 backdrop-blur">
+
+              <div class="flex size-11 items-center
+                       justify-center rounded-xl
+                       bg-warning/25 text-warning">
+
+                <i class="fa-solid fa-bell"></i>
+              </div>
+
+              <h2 class="mt-4 font-semibold">
+                Alertas oportunas
+              </h2>
+
+              <p class="mt-1 text-sm leading-6 opacity-60">
+                Notificaciones sobre incidencias,
+                cambios y eventos operativos.
+              </p>
+            </article>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pie del panel -->
+      <footer class="relative z-10 px-10 py-7
+               text-xs opacity-50 xl:px-14">
+
+        © {{ currentYear }} Municipalidad Provincial de Calca
+      </footer>
+    </section>
+
+    <!-- ================================================= -->
+    <!-- ÁREA DE AUTENTICACIÓN -->
+    <!-- ================================================= -->
+
+    <section class="flex min-h-screen min-w-0
+             flex-col">
+
+      <!-- Identificación móvil -->
+      <header class="relative flex items-center
+               gap-3 px-5 pb-4 pt-5
+               pr-20 sm:px-8 lg:hidden">
+
+        <div class="flex size-11 shrink-0 items-center
+                 justify-center rounded-2xl
+                 bg-primary text-xl
+                 text-primary-content shadow-sm">
+
+          <i class="fa-solid fa-recycle"></i>
+        </div>
+
+        <div class="min-w-0">
+          <p class="truncate font-bold">
+            Sistema de Recolección
+          </p>
+
+          <p class="truncate text-xs
+                   text-base-content/55">
+
+            Municipalidad Provincial de Calca
+          </p>
+        </div>
+      </header>
+
+      <!-- Router outlet -->
+      <div class="flex flex-1 items-center
+               justify-center px-4 py-8
+               sm:px-8 sm:py-12
+               lg:px-10 xl:px-16">
+
+        <div class="w-full max-w-md">
+          <router-outlet />
+        </div>
+      </div>
+
+      <!-- Pie móvil y formulario -->
+      <footer class="relative px-5 pb-6
+               text-center text-xs
+               text-base-content/45
+               sm:px-8 lg:px-10">
+
+        <p>
+          © {{ currentYear }}
+          Municipalidad Provincial de Calca
+        </p>
+
+        <p class="mt-1">
+          Acceso exclusivo para personal autorizado
+        </p>
+      </footer>
+    </section>
+  </main>
+</div>

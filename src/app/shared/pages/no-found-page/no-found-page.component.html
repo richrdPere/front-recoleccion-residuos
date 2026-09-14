@@ -1,0 +1,71 @@
+<div class="min-h-screen bg-base-200 flex items-center justify-center px-6">
+
+  <div class="card w-full max-w-2xl bg-base-100 shadow-2xl">
+
+    <div class="card-body items-center text-center">
+
+      <!-- Icono -->
+      <div class="mb-6">
+
+        <div class="w-28 h-28 rounded-full bg-primary/10 flex items-center justify-center">
+
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-primary" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"
+              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 01.553-.894L9 2m0 18l6-2m-6 2V2m6 16l5.447-2.724A1 1 0 0021 14.382V3.618a1 1 0 00-.553-.894L15 0m0 18V0" />
+
+          </svg>
+
+        </div>
+
+      </div>
+
+      <!-- Codigo -->
+      <h1 class="text-7xl font-black text-primary tracking-wider">
+
+        404
+
+      </h1>
+
+      <h2 class="text-3xl font-bold mt-2">
+
+        Página no encontrada
+
+      </h2>
+
+      <p class="mt-4 text-base-content/70 max-w-xl leading-relaxed">
+
+        La dirección solicitada no existe o fue movida del sistema.
+        Verifique la URL o regrese al panel principal del Sistema
+        de Patrullaje Municipal.
+
+      </p>
+
+      <div class="divider my-6">
+
+        Sistema Integral de Patrullaje
+
+      </div>
+
+      <div class="flex flex-wrap gap-4 justify-center">
+
+        <button class="btn btn-outline" (click)="volver()">
+
+          ← Volver
+
+        </button>
+
+        <button class="btn btn-primary" (click)="irAlInicio()">
+
+          Ir al Panel Principal
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

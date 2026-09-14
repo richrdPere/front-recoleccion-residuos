@@ -1,0 +1,530 @@
+[
+  {
+    "departamento_id": "08",
+    "departamento": "CUSCO",
+    "provincias": [
+      {
+        "provincia_id": "0801",
+        "nombre": "CUSCO",
+        "distritos": [
+          {
+            "id": "080101",
+            "nombre": "CUSCO"
+          },
+          {
+            "id": "080102",
+            "nombre": "CCORCA"
+          },
+          {
+            "id": "080103",
+            "nombre": "POROY"
+          },
+          {
+            "id": "080104",
+            "nombre": "SAN JERONIMO"
+          },
+          {
+            "id": "080105",
+            "nombre": "SAN SEBASTIAN"
+          },
+          {
+            "id": "080106",
+            "nombre": "SANTIAGO"
+          },
+          {
+            "id": "080107",
+            "nombre": "SAYLLA"
+          },
+          {
+            "id": "080108",
+            "nombre": "WANCHAQ"
+          }
+        ]
+      },
+      {
+        "provincia_id": "0802",
+        "nombre": "ACOMAYO",
+        "distritos": [
+          {
+            "id": "080201",
+            "nombre": "ACOMAYO"
+          },
+          {
+            "id": "080202",
+            "nombre": "ACOPIA"
+          },
+          {
+            "id": "080203",
+            "nombre": "ACOS"
+          },
+          {
+            "id": "080204",
+            "nombre": "MOSOC LLACTA"
+          },
+          {
+            "id": "080205",
+            "nombre": "POMACANCHI"
+          },
+          {
+            "id": "080206",
+            "nombre": "RONDOCAN"
+          },
+          {
+            "id": "080207",
+            "nombre": "SANGARARA"
+          }
+        ]
+      },
+      {
+        "provincia_id": "0803",
+        "nombre": "ANTA",
+        "distritos": [
+          {
+            "id": "080301",
+            "nombre": "ANTA"
+          },
+          {
+            "id": "080302",
+            "nombre": "ANCAHUASI"
+          },
+          {
+            "id": "080303",
+            "nombre": "CACHIMAYO"
+          },
+          {
+            "id": "080304",
+            "nombre": "CHINCHAYPUJIO"
+          },
+          {
+            "id": "080305",
+            "nombre": "HUAROCONDO"
+          },
+          {
+            "id": "080306",
+            "nombre": "LIMATAMBO"
+          },
+          {
+            "id": "080307",
+            "nombre": "MOLLEPATA"
+          },
+          {
+            "id": "080308",
+            "nombre": "PUCYURA"
+          },
+          {
+            "id": "080309",
+            "nombre": "ZURITE"
+          }
+        ]
+      },
+      {
+        "provincia_id": "0804",
+        "nombre": "CALCA",
+        "distritos": [
+          {
+            "id": "080401",
+            "nombre": "CALCA"
+          },
+          {
+            "id": "080402",
+            "nombre": "COYA"
+          },
+          {
+            "id": "080403",
+            "nombre": "LAMAY"
+          },
+          {
+            "id": "080404",
+            "nombre": "LARES"
+          },
+          {
+            "id": "080405",
+            "nombre": "PISAC"
+          },
+          {
+            "id": "080406",
+            "nombre": "SAN SALVADOR"
+          },
+          {
+            "id": "080407",
+            "nombre": "TARAY"
+          },
+          {
+            "id": "080408",
+            "nombre": "YANATILE"
+          }
+        ]
+      },
+      {
+        "provincia_id": "0805",
+        "nombre": "CANAS",
+        "distritos": [
+          {
+            "id": "080501",
+            "nombre": "YANAOCA"
+          },
+          {
+            "id": "080502",
+            "nombre": "CHECCA"
+          },
+          {
+            "id": "080503",
+            "nombre": "KUNTURKANKI"
+          },
+          {
+            "id": "080504",
+            "nombre": "LANGUI"
+          },
+          {
+            "id": "080505",
+            "nombre": "LAYO"
+          },
+          {
+            "id": "080506",
+            "nombre": "PAMPAMARCA"
+          },
+          {
+            "id": "080507",
+            "nombre": "QUEHUE"
+          },
+          {
+            "id": "080508",
+            "nombre": "TUPAC AMARU"
+          }
+        ]
+      },
+      {
+        "provincia_id": "0806",
+        "nombre": "CANCHIS",
+        "distritos": [
+          {
+            "id": "080601",
+            "nombre": "SICUANI"
+          },
+          {
+            "id": "080602",
+            "nombre": "CHECACUPE"
+          },
+          {
+            "id": "080603",
+            "nombre": "COMBAPATA"
+          },
+          {
+            "id": "080604",
+            "nombre": "MARANGANI"
+          },
+          {
+            "id": "080605",
+            "nombre": "PITUMARCA"
+          },
+          {
+            "id": "080606",
+            "nombre": "SAN PABLO"
+          },
+          {
+            "id": "080607",
+            "nombre": "SAN PEDRO"
+          },
+          {
+            "id": "080608",
+            "nombre": "TINTA"
+          }
+        ]
+      },
+      {
+        "provincia_id": "0807",
+        "nombre": "CHUMBIVILCAS",
+        "distritos": [
+          {
+            "id": "080701",
+            "nombre": "SANTO TOMAS"
+          },
+          {
+            "id": "080702",
+            "nombre": "CAPACMARCA"
+          },
+          {
+            "id": "080703",
+            "nombre": "CHAMACA"
+          },
+          {
+            "id": "080704",
+            "nombre": "COLQUEMARCA"
+          },
+          {
+            "id": "080705",
+            "nombre": "LIVITACA"
+          },
+          {
+            "id": "080706",
+            "nombre": "LLUSCO"
+          },
+          {
+            "id": "080707",
+            "nombre": "QUIÑOTA"
+          },
+          {
+            "id": "080708",
+            "nombre": "VELILLE"
+          }
+        ]
+      },
+      {
+        "provincia_id": "0808",
+        "nombre": "ESPINAR",
+        "distritos": [
+          {
+            "id": "080801",
+            "nombre": "ESPINAR"
+          },
+          {
+            "id": "080802",
+            "nombre": "CONDOROMA"
+          },
+          {
+            "id": "080803",
+            "nombre": "COPORAQUE"
+          },
+          {
+            "id": "080804",
+            "nombre": "OCORURO"
+          },
+          {
+            "id": "080805",
+            "nombre": "PALLPATA"
+          },
+          {
+            "id": "080806",
+            "nombre": "PICHIGUA"
+          },
+          {
+            "id": "080807",
+            "nombre": "SUYCKUTAMBO"
+          },
+          {
+            "id": "080808",
+            "nombre": "ALTO PICHIGUA"
+          }
+        ]
+      },
+      {
+        "provincia_id": "0809",
+        "nombre": "LA CONVENCION",
+        "distritos": [
+          {
+            "id": "080901",
+            "nombre": "SANTA ANA"
+          },
+          {
+            "id": "080902",
+            "nombre": "ECHARATE"
+          },
+          {
+            "id": "080903",
+            "nombre": "HUAYOPATA"
+          },
+          {
+            "id": "080904",
+            "nombre": "MARANURA"
+          },
+          {
+            "id": "080905",
+            "nombre": "OCOBAMBA"
+          },
+          {
+            "id": "080906",
+            "nombre": "QUELLOUNO"
+          },
+          {
+            "id": "080907",
+            "nombre": "KIMBIRI"
+          },
+          {
+            "id": "080908",
+            "nombre": "SANTA TERESA"
+          },
+          {
+            "id": "080909",
+            "nombre": "VILCABAMBA"
+          },
+          {
+            "id": "080910",
+            "nombre": "PICHARI"
+          },
+          {
+            "id": "080911",
+            "nombre": "INKAWASI"
+          },
+          {
+            "id": "080912",
+            "nombre": "VILLA KINTIARINA"
+          },
+          {
+            "id": "080913",
+            "nombre": "MEGANTONI"
+          }
+        ]
+      },
+      {
+        "provincia_id": "0810",
+        "nombre": "PARURO",
+        "distritos": [
+          {
+            "id": "081001",
+            "nombre": "PARURO"
+          },
+          {
+            "id": "081002",
+            "nombre": "ACCHA"
+          },
+          {
+            "id": "081003",
+            "nombre": "CCAPI"
+          },
+          {
+            "id": "081004",
+            "nombre": "COLCHA"
+          },
+          {
+            "id": "081005",
+            "nombre": "HUANOQUITE"
+          },
+          {
+            "id": "081006",
+            "nombre": "OMACHA"
+          },
+          {
+            "id": "081007",
+            "nombre": "PACCARITAMBO"
+          },
+          {
+            "id": "081008",
+            "nombre": "PILLPINTO"
+          },
+          {
+            "id": "081009",
+            "nombre": "YAURISQUE"
+          }
+        ]
+      },
+      {
+        "provincia_id": "0811",
+        "nombre": "PAUCARTAMBO",
+        "distritos": [
+          {
+            "id": "081101",
+            "nombre": "PAUCARTAMBO"
+          },
+          {
+            "id": "081102",
+            "nombre": "CAICAY"
+          },
+          {
+            "id": "081103",
+            "nombre": "CHALLABAMBA"
+          },
+          {
+            "id": "081104",
+            "nombre": "COLQUEPATA"
+          },
+          {
+            "id": "081105",
+            "nombre": "HUANCARANI"
+          },
+          {
+            "id": "081106",
+            "nombre": "KOSÑIPATA"
+          }
+        ]
+      },
+      {
+        "provincia_id": "0812",
+        "nombre": "QUISPICANCHI",
+        "distritos": [
+          {
+            "id": "081201",
+            "nombre": "URCOS"
+          },
+          {
+            "id": "081202",
+            "nombre": "ANDAHUAYLILLAS"
+          },
+          {
+            "id": "081203",
+            "nombre": "CAMANTI"
+          },
+          {
+            "id": "081204",
+            "nombre": "CCARHUAYO"
+          },
+          {
+            "id": "081205",
+            "nombre": "CCATCA"
+          },
+          {
+            "id": "081206",
+            "nombre": "CUSIPATA"
+          },
+          {
+            "id": "081207",
+            "nombre": "HUARO"
+          },
+          {
+            "id": "081208",
+            "nombre": "LUCRE"
+          },
+          {
+            "id": "081209",
+            "nombre": "MARCAPATA"
+          },
+          {
+            "id": "081210",
+            "nombre": "OCONGATE"
+          },
+          {
+            "id": "081211",
+            "nombre": "OROPESA"
+          },
+          {
+            "id": "081212",
+            "nombre": "QUIQUIJANA"
+          }
+        ]
+      },
+      {
+        "provincia_id": "0813",
+        "nombre": "URUBAMBA",
+        "distritos": [
+          {
+            "id": "081301",
+            "nombre": "URUBAMBA"
+          },
+          {
+            "id": "081302",
+            "nombre": "CHINCHERO"
+          },
+          {
+            "id": "081303",
+            "nombre": "HUAYLLABAMBA"
+          },
+          {
+            "id": "081304",
+            "nombre": "MACHUPICCHU"
+          },
+          {
+            "id": "081305",
+            "nombre": "MARAS"
+          },
+          {
+            "id": "081306",
+            "nombre": "OLLANTAYTAMBO"
+          },
+          {
+            "id": "081307",
+            "nombre": "YUCAY"
+          }
+        ]
+      }
+    ]
+  }
+]

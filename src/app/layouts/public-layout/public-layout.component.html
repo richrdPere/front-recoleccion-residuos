@@ -1,0 +1,376 @@
+<div class="flex min-h-screen flex-col
+         bg-base-200 text-base-content">
+
+  <!-- ================================================= -->
+  <!-- ENCABEZADO -->
+  <!-- ================================================= -->
+
+  <header class="sticky top-0 z-40
+           border-b border-base-300
+           bg-base-100/95 shadow-sm
+           backdrop-blur">
+
+    <!-- Barra institucional -->
+    <div class="hidden border-b border-base-300
+             bg-neutral text-neutral-content
+             sm:block">
+
+      <div class="mx-auto flex min-h-8
+               w-full max-w-360
+               items-center justify-between
+               px-4 text-[11px]
+               sm:px-6 lg:px-8">
+
+        <p class="flex items-center gap-2">
+          <i class="fa-solid fa-building-columns"></i>
+
+          Municipalidad Provincial de Calca
+        </p>
+
+        <p class="flex items-center gap-2 opacity-70">
+          <i class="fa-solid fa-leaf"></i>
+
+          Juntos por una ciudad limpia y sostenible
+        </p>
+      </div>
+    </div>
+
+    <!-- Navbar -->
+    <div class="mx-auto flex min-h-16
+             w-full max-w-360
+             items-center gap-3
+             px-4 sm:px-6 lg:px-8">
+
+      <!-- Marca -->
+      <a routerLink="/publico" class="group flex min-w-0
+               items-center gap-3" aria-label="Ir al inicio" (click)="closeMobileMenu()">
+
+        <div class="flex size-11 shrink-0
+                 items-center justify-center
+                 rounded-2xl
+                 bg-linear-to-br
+                 from-success to-primary
+                 text-xl text-white shadow-sm
+                 transition-transform duration-200
+                 group-hover:scale-105">
+
+          <i class="fa-solid fa-recycle"></i>
+        </div>
+
+        <div class="min-w-0">
+          <p class="truncate text-sm font-bold
+                   leading-tight sm:text-base">
+
+            Recolección de Residuos
+          </p>
+
+          <p class="hidden truncate text-[11px]
+                   text-base-content/55 sm:block">
+
+            Consulta ciudadana
+          </p>
+        </div>
+      </a>
+
+      <!-- Menú de escritorio -->
+      <nav class="ml-auto hidden items-center gap-1
+               xl:flex" aria-label="Navegación pública">
+
+        @for (
+        item of navigationItems;
+        track item.route
+        ) {
+        <a [routerLink]="item.route" routerLinkActive="
+              bg-primary/10
+              text-primary
+            " [routerLinkActiveOptions]="{
+              exact: item.exact ?? false
+            }" class="flex min-h-10 items-center
+                   gap-2 rounded-xl px-3
+                   text-sm font-medium
+                   text-base-content/70
+                   transition-colors duration-200
+                   hover:bg-base-200
+                   hover:text-base-content">
+
+          <i [class]="item.icon"></i>
+
+          {{ item.label }}
+        </a>
+        }
+      </nav>
+
+      <!-- Acciones -->
+      <div class="ml-auto flex items-center gap-1 xl:ml-3">
+
+        <!-- Tema -->
+        <button type="button" class="btn btn-square btn-ghost btn-sm
+                 sm:btn-md" [attr.aria-label]="
+            isDarkMode()
+              ? 'Activar tema claro'
+              : 'Activar tema oscuro'
+          " [attr.title]="
+            isDarkMode()
+              ? 'Activar tema claro'
+              : 'Activar tema oscuro'
+          " (click)="toggleTheme()">
+
+          @if (isDarkMode()) {
+          <i class="fa-regular fa-sun text-lg"></i>
+          } @else {
+          <i class="fa-regular fa-moon text-lg"></i>
+          }
+        </button>
+
+        <!-- Acceso del personal -->
+        <a routerLink="/auth/login" class="btn btn-primary btn-sm
+                 hidden gap-2 sm:inline-flex">
+
+          <i class="fa-solid fa-right-to-bracket"></i>
+
+          Acceso del personal
+        </a>
+
+        <!-- Menú móvil -->
+        <button type="button" class="btn btn-square btn-ghost
+                 btn-sm xl:hidden sm:btn-md" [attr.aria-expanded]="mobileMenuOpen()" aria-controls="public-mobile-menu"
+          aria-label="Abrir menú de navegación" (click)="toggleMobileMenu()">
+
+          @if (mobileMenuOpen()) {
+          <i class="fa-solid fa-xmark text-xl"></i>
+          } @else {
+          <i class="fa-solid fa-bars text-lg"></i>
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- ================================================= -->
+    <!-- MENÚ MÓVIL -->
+    <!-- ================================================= -->
+
+    @if (mobileMenuOpen()) {
+    <div id="public-mobile-menu" class="border-t border-base-300
+               bg-base-100 px-4 py-4
+               shadow-lg xl:hidden">
+
+      <nav class="mx-auto w-full max-w-360" aria-label="Navegación pública móvil">
+
+        <ul class="grid grid-cols-1 gap-1
+                   sm:grid-cols-2">
+
+          @for (
+          item of navigationItems;
+          track item.route
+          ) {
+          <li>
+            <a [routerLink]="item.route" routerLinkActive="
+                    bg-primary
+                    text-primary-content
+                    shadow-sm
+                  " [routerLinkActiveOptions]="{
+                    exact: item.exact ?? false
+                  }" class="flex min-h-12 items-center
+                         gap-3 rounded-xl px-4
+                         text-sm font-medium
+                         transition-colors duration-200
+                         hover:bg-base-200" (click)="closeMobileMenu()">
+
+              <span class="flex size-8 shrink-0
+                           items-center justify-center
+                           rounded-lg bg-base-200">
+
+                <i [class]="item.icon"></i>
+              </span>
+
+              <span class="truncate">
+                {{ item.label }}
+              </span>
+            </a>
+          </li>
+          }
+        </ul>
+
+        <!-- Acceso del personal en móvil -->
+        <div class="mt-4 border-t border-base-300 pt-4 sm:hidden">
+          <a routerLink="/auth/login" class="btn btn-primary w-full gap-2" (click)="closeMobileMenu()">
+
+            <i class="fa-solid fa-right-to-bracket"></i>
+
+            Acceso del personal
+          </a>
+        </div>
+      </nav>
+    </div>
+    }
+  </header>
+
+  <!-- ================================================= -->
+  <!-- CONTENIDO PRINCIPAL -->
+  <!-- ================================================= -->
+
+  <main class="relative min-w-0 flex-1">
+    <!-- Decoración de fondo -->
+    <div class="pointer-events-none absolute inset-x-0
+             top-0 h-72 overflow-hidden" aria-hidden="true">
+
+      <div class="absolute -left-32 -top-32
+               size-80 rounded-full
+               bg-success/10 blur-3xl">
+      </div>
+
+      <div class="absolute -right-32 -top-24
+               size-80 rounded-full
+               bg-primary/10 blur-3xl">
+      </div>
+    </div>
+
+    <!-- Páginas públicas -->
+    <div class="relative z-10">
+      <router-outlet />
+    </div>
+  </main>
+
+  <!-- ================================================= -->
+  <!-- PIE DE PÁGINA -->
+  <!-- ================================================= -->
+
+  <footer class="border-t border-base-300
+           bg-base-100">
+
+    <!-- Contenido principal del footer -->
+    <div class="mx-auto grid w-full
+             max-w-360
+             grid-cols-1 gap-8
+             px-4 py-10 sm:px-6
+             md:grid-cols-2 lg:grid-cols-4
+             lg:px-8">
+
+      <!-- Institución -->
+      <section class="lg:col-span-2">
+        <div class="flex items-center gap-3">
+          <div class="flex size-11 shrink-0
+                   items-center justify-center
+                   rounded-2xl bg-success
+                   text-xl text-success-content">
+
+            <i class="fa-solid fa-recycle"></i>
+          </div>
+
+          <div class="min-w-0">
+            <p class="font-bold">
+              Recolección de Residuos
+            </p>
+
+            <p class="text-xs text-base-content/55">
+              Municipalidad Provincial de Calca
+            </p>
+          </div>
+        </div>
+
+        <p class="mt-4 max-w-xl text-sm
+                 leading-6 text-base-content/60">
+
+          Consulta los días y horarios de recolección,
+          revisa el estado de las rutas y recibe
+          información actualizada sobre el servicio
+          correspondiente a tu sector.
+        </p>
+      </section>
+
+      <!-- Consultas -->
+      <section>
+        <h2 class="text-sm font-bold">
+          Consultas
+        </h2>
+
+        <ul class="mt-4 space-y-3 text-sm">
+          <li>
+            <a routerLink="/publico/cronogramas" class="text-base-content/60
+                     transition-colors
+                     hover:text-primary">
+
+              Cronogramas
+            </a>
+          </li>
+
+          <li>
+            <a routerLink="/publico/consulta" class="text-base-content/60
+                     transition-colors
+                     hover:text-primary">
+
+              Consultar sector
+            </a>
+          </li>
+
+          <li>
+            <a routerLink="/publico/rutas" class="text-base-content/60
+                     transition-colors
+                     hover:text-primary">
+
+              Estado de rutas
+            </a>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Ayuda -->
+      <section>
+        <h2 class="text-sm font-bold">
+          Atención ciudadana
+        </h2>
+
+        <ul class="mt-4 space-y-3 text-sm">
+          <li>
+            <a routerLink="/publico/reportar" class="text-base-content/60
+                     transition-colors
+                     hover:text-primary">
+
+              Reportar un problema
+            </a>
+          </li>
+
+          <li>
+            <a routerLink="/publico/privacidad" class="text-base-content/60
+                     transition-colors
+                     hover:text-primary">
+
+              Privacidad
+            </a>
+          </li>
+
+          <li>
+            <a routerLink="/auth/login" class="text-base-content/60
+                     transition-colors
+                     hover:text-primary">
+
+              Acceso del personal
+            </a>
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- Barra inferior -->
+    <div class="border-t border-base-300">
+      <div class="mx-auto flex w-full
+               max-w-360
+               flex-col items-center
+               justify-between gap-2
+               px-4 py-5 text-center
+               text-xs text-base-content/45
+               sm:px-6 md:flex-row
+               md:text-left lg:px-8">
+
+        <p>
+          © {{ currentYear }}
+          Municipalidad Provincial de Calca
+        </p>
+
+        <p>
+          Sistema de Gestión de Recolección de Residuos
+        </p>
+      </div>
+    </div>
+  </footer>
+</div>

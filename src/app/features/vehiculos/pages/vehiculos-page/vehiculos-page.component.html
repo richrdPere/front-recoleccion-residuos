@@ -1,0 +1,640 @@
+<!-- ================================================= -->
+<!-- CONTENEDOR DEL DASHBOARD -->
+<!-- ================================================= -->
+<div class="mx-auto w-full max-w-500">
+
+  <!-- ================================================= -->
+  <!-- ENCABEZADO -->
+  <!-- ================================================= -->
+  <header class="mb-5 flex flex-col gap-4
+             sm:flex-row sm:items-center
+             sm:justify-between">
+
+    <div class="flex min-w-0 items-center gap-3">
+
+      <div class="flex h-12 w-12 shrink-0
+                 items-center justify-center
+                 rounded-2xl bg-primary/10
+                 text-primary" aria-hidden="true">
+
+        <i class="fa-solid fa-car-side text-2xl"></i>
+      </div>
+
+      <div class="min-w-0">
+        <h1 class="text-2xl font-bold
+                   leading-tight text-base-content">
+
+          Vehiculos
+        </h1>
+
+        <p class="mt-1 max-w-2xl
+                   text-sm leading-relaxed
+                   text-base-content/60">
+
+          Registre y administre las unidades disponibles
+          para las operaciones de patrullaje.
+        </p>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ================================================= -->
+  <!-- FILTROS -->
+  <!-- ================================================= -->
+  <section class="mb-6 overflow-hidden rounded-2xl
+         border border-base-300
+         bg-base-100 shadow-sm">
+
+    <div class="grid grid-cols-1
+           lg:grid-cols-[minmax(0,1fr)_170px]">
+
+      <!-- =============================================== -->
+      <!-- CAMPOS DE FILTRO -->
+      <!-- =============================================== -->
+      <div class="p-4 sm:p-5">
+
+        <div class="grid grid-cols-1 gap-4
+               sm:grid-cols-2
+               xl:grid-cols-[minmax(240px,1.4fr)_minmax(180px,1fr)_minmax(190px,1fr)_auto]">
+
+
+          <!-- Buscar  -->
+          <label class="form-control w-full">
+            <span class="mb-1.5 text-xs font-semibold
+                   uppercase tracking-wide
+                   text-base-content/60">
+              Placa
+            </span>
+
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass
+                     pointer-events-none absolute
+                     left-3.5 top-1/2
+                     -translate-y-1/2
+                     text-base-content/35">
+              </i>
+
+              <input type="text" class="input input-bordered
+                     h-11 w-full rounded-xl
+                     bg-base-100 pl-10 pr-4
+                     focus:outline-none
+                     focus:ring-2
+                     focus:ring-primary/30" placeholder="Buscar por placa" autocomplete="off"
+                [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()" appUppercase />
+            </div>
+          </label>
+
+          <!-- Buscar por estado operativo -->
+
+
+          <!-- Buscar por tipo vehiculo -->
+
+        </div>
+      </div>
+
+      <!-- =============================================== -->
+      <!-- ILUSTRACIÓN DE BÚSQUEDA -->
+      <!-- =============================================== -->
+      <div class="hidden items-center justify-center border-base-300 px-5 lg:flex">
+
+        <img src="assets/img/search.png" alt="" aria-hidden="true" class="h-32 w-32
+               select-none object-contain
+               opacity-90
+               drop-shadow-sm" draggable="false" />
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ================================================= -->
+  <!-- MODALES -->
+  <!-- ================================================= -->
+
+
+
+  <!-- ================================================= -->
+  <!-- TABLA DE VEHICULOS -->
+  <!-- ================================================= -->
+  @if (isLoading || vehiculos.length > 0) {
+  <section class="overflow-hidden rounded-2xl
+           border border-base-300
+           bg-base-100 shadow-sm" aria-label="Vehiculos registrados">
+
+    <!-- Cabecera de tabla -->
+    <div class="flex flex-col gap-4
+               border-b border-base-300
+               px-4 py-4
+               sm:flex-row
+               sm:items-center
+               sm:justify-between
+               sm:px-5">
+
+
+      <!-- Total -->
+      <div class="flex w-full items-center
+                 justify-between gap-3
+                 text-sm text-base-content/70
+                 sm:w-auto sm:justify-start">
+        <label for="incidentes-page-size" class="whitespace-nowrap">
+          Mostrar
+        </label>
+
+        <select id="incidentes-page-size" class="select select-bordered
+                   select-sm w-auto" [(ngModel)]="limit" (change)="cambiarLimite()">
+
+          @for ( size of pageSizeOptions; track size ) {
+          <option [ngValue]="size">
+            {{ size }}
+          </option>
+          }
+        </select>
+
+        <span class="whitespace-nowrap">
+          ítems por página
+        </span>
+      </div>
+
+      <!-- Botón crear -->
+      <div class="flex w-full items-center
+                 justify-end sm:w-auto">
+
+        <button type="button" class="btn btn-primary
+                  min-h-10 w-full gap-2
+                  rounded-xl border-none
+                hover:text-white bg-info hover:bg-primary
+                  sm:w-auto sm:min-w-36" (click)="abrirModal()">
+
+          <i class="fa-solid fa-plus"></i>
+
+          Vehiculo
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Tabla con scroll horizontal -->
+    <div class="overflow-x-auto">
+      <table class="table min-w-275">
+        <thead class="bg-base-300/90">
+          <tr class="text-xs uppercase
+                     tracking-wide
+                     text-base-content/60">
+            <th class="w-14 text-center"> N.°</th>
+            <th class="min-w-40"> Vehículo </th>
+            <th class="min-w-70"> Marca y modelo </th>
+            <th class="min-w-42"> Tipo </th>
+            <th class="min-w-40"> Capacidad </th>
+            <th class="min-w-34"> Kilometraje </th>
+            <th class="min-w-30 text-center"> Estado operativo </th>
+            <th class="min-w-34 text-center"> Estado </th>
+            <th class="min-w-34">Actualización</th>
+            <th class="w-28 text-center"> Acciones </th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <!-- =================================================== -->
+          <!-- CARGANDO -->
+          <!-- =================================================== -->
+
+          @if (isLoading) {
+          @for ( item of [1, 2, 3, 4, 5, 6]; track item ) {
+          <tr>
+            <!-- Numeración -->
+            <td>
+              <div class="skeleton mx-auto h-4 w-8"></div>
+            </td>
+
+            <!-- Vehículo -->
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="skeleton h-10 w-10 rounded-xl"></div>
+
+                <div class="space-y-2">
+                  <div class="skeleton h-4 w-20"></div>
+                  <div class="skeleton h-3 w-16"></div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Marca y modelo -->
+            <td>
+              <div class="space-y-2">
+                <div class="skeleton h-4 w-24"></div>
+                <div class="skeleton h-3 w-28"></div>
+              </div>
+            </td>
+
+            <!-- Tipo -->
+            <td>
+              <div class="skeleton h-6 w-36"></div>
+            </td>
+
+            <!-- Capacidad -->
+            <td>
+              <div class="skeleton h-4 w-24"></div>
+            </td>
+
+            <!-- Kilometraje -->
+            <td>
+              <div class="skeleton h-4 w-20"></div>
+            </td>
+
+            <!-- Estado operativo -->
+            <td>
+              <div class="skeleton h-6 w-28"></div>
+            </td>
+
+            <!-- Estado -->
+            <td>
+              <div class="skeleton mx-auto h-6 w-16"></div>
+            </td>
+
+            <!-- Actualizacion -->
+            <td>
+              <div class="skeleton mx-auto h-6 w-16"></div>
+            </td>
+
+            <!-- Acciones -->
+            <td>
+              <div class="flex justify-center gap-1">
+                <div class="skeleton h-8 w-8 rounded-full"></div>
+                <div class="skeleton h-8 w-8 rounded-full"></div>
+                <div class="skeleton h-8 w-8 rounded-full"></div>
+              </div>
+            </td>
+          </tr>
+          }
+          } @else {
+
+          <!-- ================================================= -->
+          <!-- FILAS DE VEHÍCULOS -->
+          <!-- ================================================= -->
+
+          @for ( vehiculo of vehiculos; track vehiculo.id_vehiculo; let i = $index ) {
+          <tr class="transition-colors
+               hover:bg-base-200/40">
+            <!-- ============================================= -->
+            <!-- NUMERACIÓN PAGINADA -->
+            <!-- ============================================= -->
+
+            <td class="text-center text-base-content/60">
+              {{ ((currentPage - 1) * limit) + i + 1 }}
+            </td>
+
+            <!-- ============================================= -->
+            <!-- VEHÍCULO: FOTO, CÓDIGO Y PLACA -->
+            <!-- ============================================= -->
+            <td>
+              <div class="flex items-center gap-3">
+
+                <!-- Foto o icono -->
+                <div class="flex h-10 w-10 shrink-0
+                     items-center justify-center
+                     overflow-hidden rounded-xl
+                     bg-primary/10 text-primary">
+                  @if (vehiculo.foto_url) {
+                  <img [src]="vehiculo.foto_url" [alt]="'Vehículo ' + vehiculo.placa"
+                    class="h-full w-full object-cover" />
+                  } @else {
+                  <i class="fa-solid fa-truck
+                         text-base"></i>
+                  }
+                </div>
+
+                <!-- Código y placa -->
+                <div class="min-w-0">
+                  <p class="truncate text-sm
+                       font-semibold" [title]="vehiculo.codigo">
+                    {{ vehiculo.codigo }}
+                  </p>
+
+                  <p class="mt-0.5 truncate
+                       text-xs font-medium
+                       uppercase tracking-wide
+                       text-base-content/50" [title]="vehiculo.placa">
+                    {{ vehiculo.placa }}
+                  </p>
+                </div>
+              </div>
+            </td>
+
+            <!-- ============================================= -->
+            <!-- MARCA Y MODELO -->
+            <!-- ============================================= -->
+
+            <td>
+              <div class="max-w-52">
+                <p class="truncate text-sm
+                     font-medium" [title]="vehiculo.marca">
+                  {{ vehiculo.marca }}
+                </p>
+
+                <p class="mt-0.5 truncate
+                     text-xs text-base-content/50" [title]="vehiculo.modelo">
+                  {{ vehiculo.modelo }}
+
+                  @if (vehiculo.anio) {
+                  <span>
+                    · {{ vehiculo.anio }}
+                  </span>
+                  }
+                </p>
+
+                @if (vehiculo.color) {
+                <p class="mt-0.5 truncate
+                       text-xs text-base-content/40">
+                  {{ vehiculo.color }}
+                </p>
+                }
+              </div>
+            </td>
+
+            <!-- ============================================= -->
+            <!-- TIPO DE VEHÍCULO -->
+            <!-- ============================================= -->
+
+            <td>
+              <span class="badge badge-outline
+                   gap-1.5 whitespace-nowrap">
+                <i class="fa-solid" [ngClass]="getTipoIcon(vehiculo.tipo_vehiculo)"></i>
+
+                {{ vehiculo.tipo_vehiculo }}
+              </span>
+            </td>
+
+            <!-- ============================================= -->
+            <!-- CAPACIDAD -->
+            <!-- ============================================= -->
+
+            <td>
+              <div class="whitespace-nowrap">
+                <p class="text-sm font-semibold">
+                  {{
+                  vehiculo.capacidad_maxima
+                  | number:'1.0-2'
+                  }}
+                </p>
+
+                <p class="text-xs
+                     text-base-content/50">
+                  {{
+                  vehiculo.unidad_capacidad
+                  }}
+                </p>
+              </div>
+            </td>
+
+            <!-- ============================================= -->
+            <!-- KILOMETRAJE -->
+            <!-- ============================================= -->
+
+            <td>
+              <div class="flex items-center
+                   gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-gauge-high
+                     text-base-content/40"></i>
+
+                <span class="text-sm">
+                  {{ vehiculo.kilometraje | number:'1.0-0' }} km
+                </span>
+              </div>
+            </td>
+
+            <!-- ============================================= -->
+            <!-- ESTADO OPERATIVO -->
+            <!-- ============================================= -->
+
+            <td>
+              <span class="badge badge-soft
+                   whitespace-nowrap" [ngClass]="getEstadoOperativoClass(vehiculo.estado_operativo)">
+                {{ vehiculo.estado_operativo }}
+              </span>
+            </td>
+
+            <!-- ============================================= -->
+            <!-- ESTADO DEL REGISTRO -->
+            <!-- ============================================= -->
+            <td class="text-center">
+              <div class="inline-flex items-center justify-center gap-2">
+
+                <input type="checkbox" class="toggle toggle-sm
+                               border-error
+                               bg-error/70
+                               checked:border-success
+                               checked:bg-success" [checked]="vehiculo.estado" (change)="cambiarEstado(vehiculo)"
+                  [attr.aria-label]="
+                          vehiculo.estado
+                            ? 'Desactivar vehiculo'
+                            : 'Activar vehiculo'
+                        " />
+
+                <span class="min-w-14 text-left text-xs font-medium" [class.text-success]="vehiculo.estado"
+                  [class.text-error]="!vehiculo.estado">
+
+                  {{ vehiculo.estado ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+            </td>
+
+            <!-- Actualización -->
+
+            <td class="whitespace-nowrap text-sm">
+              {{ vehiculo.updated_at | date: 'dd/MM/yyyy, hh:mm a' }}
+            </td>
+
+            <!-- ============================================= -->
+            <!-- ACCIONES -->
+            <!-- ============================================= -->
+            <td>
+              <div class="flex items-center
+                   justify-center gap-1">
+
+                <!-- Ver -->
+                <div class="tooltip tooltip-left" data-tip="Ver vehículo">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="verVehiculo(vehiculo)"
+                    aria-label="Ver detalle del vehículo">
+                    <i class="fa-regular fa-eye"></i>
+                  </button>
+                </div>
+
+                <!-- Editar -->
+                <div class="tooltip tooltip-left" data-tip="Editar vehículo">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm"
+                    (click)="editarUnidad(vehiculo)" aria-label="Editar vehículo">
+                    <i class="fa-regular fa-pen-to-square"></i>
+                  </button>
+                </div>
+
+                <!-- Eliminar -->
+                <div class="tooltip tooltip-left" data-tip="Eliminar vehículo">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="eliminarVehiculo(vehiculo)"
+                    aria-label="Eliminar vehículo">
+
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          } @empty {
+
+          <!-- =============================================== -->
+          <!-- SIN RESULTADOS -->
+          <!-- =============================================== -->
+
+          <tr>
+            <td colspan="9" class="py-16 text-center">
+              <div class="mx-auto flex max-w-sm
+                   flex-col items-center">
+                <div class="flex h-16 w-16
+                     items-center justify-center
+                     rounded-2xl
+                     bg-base-200
+                     text-base-content/30">
+                  <i class="fa-solid fa-truck
+                       text-2xl"></i>
+                </div>
+
+                <h3 class="mt-4 text-base
+                     font-semibold">
+                  No se encontraron vehículos
+                </h3>
+
+                <p class="mt-1 text-sm
+                     text-base-content/60">
+                  Cambia los filtros o registra un
+                  nuevo vehículo.
+                </p>
+
+                <!-- <button type="button" class="btn btn-primary
+                     btn-sm mt-5" (click)="goToCreate()">
+                    <i class="fa-solid fa-plus"></i>
+                    Registrar vehículo
+                  </button> -->
+              </div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- PAGINACIÓN -->
+    <!-- ===================================================== -->
+    @if (!isLoading && totalItems > 0) {
+    <footer class="flex flex-col gap-4
+                 border-t border-base-300
+                 bg-base-200/50
+                 px-4 py-4
+                 lg:flex-row
+                 lg:items-center
+                 lg:justify-between
+                 sm:px-5">
+
+      <!-- Resumen de incidentes -->
+      <div class="text-center sm:text-left">
+        <h2 class="font-semibold text-base-content">
+          Vehiculos registrados
+        </h2>
+
+        <p class="mt-0.5 text-sm text-base-content/55">
+          {{ totalItems }}
+          {{ totalItems === 1 ? 'vehiculo' : 'vehiculos' }}
+          encontrados
+        </p>
+      </div>
+
+      <!-- Controles de paginación -->
+      <div class="flex w-full flex-col
+           items-center gap-3
+           text-sm text-base-content/70
+           sm:w-auto sm:flex-row">
+
+        <!-- Página actual -->
+        <span class="whitespace-nowrap">
+          @if (totalPages > 0) {
+          Página
+          <strong class="text-base-content">
+            {{ page }}
+          </strong>
+          de
+          <strong class="text-base-content">
+            {{ totalPages }}
+          </strong>
+          } @else {
+          Sin páginas disponibles
+          }
+        </span>
+
+        <!-- Botones -->
+        <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+          <button type="button" class="btn btn-sm w-full
+               gap-2 rounded-lg
+               sm:w-auto" [disabled]="isLoading || page <= 1" (click)="cambiarPagina(page - 1)">
+            <i class="fa-solid fa-chevron-left"></i>
+
+            Anterior
+          </button>
+
+          <button type="button" class="btn btn-sm w-full
+              gap-2 rounded-lg
+              sm:w-auto" [disabled]="
+                  isLoading ||
+                  totalPages === 0 ||
+                  page >= totalPages
+                " (click)="cambiarPagina(page + 1)">
+
+            Siguiente
+
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </footer>
+    }
+  </section>
+  }
+
+  <!-- ===================================================== -->
+  <!-- VACÍO -->
+  <!-- ===================================================== -->
+  @if (!isLoading && vehiculos.length === 0) {
+  <section class="rounded-2xl border border-dashed
+           border-base-300 bg-base-100
+           px-6 py-16 text-center shadow-sm">
+    <div class="mx-auto flex h-20 w-20
+             items-center justify-center
+             rounded-full bg-base-200
+             text-base-content/35">
+      <i class="fa-regular fa-folder-open text-3xl"></i>
+    </div>
+
+    <h2 class="mt-5 text-lg font-bold">
+      No se encontraron incidencias
+    </h2>
+
+    <p class="mx-auto mt-2 max-w-md
+             text-sm text-base-content/55">
+      El sereno no tiene incidencias registradas o no existen
+      resultados para los filtros seleccionados.
+    </p>
+
+    @if (
+    searchBusqueda ||
+    estadoOperativoBusqueda ||
+    tipoVehiculoBusqueda
+    ) {
+    <button type="button" class="btn btn-primary btn-sm mt-5" (click)="limpiarFiltros()">
+      <i class="fa-solid fa-filter-circle-xmark"></i>
+      Limpiar filtros
+    </button>
+    }
+  </section>
+  }
+
+</div>

@@ -5,6 +5,13 @@
     "packageManager": "npm"
   },
   "newProjectRoot": "projects",
+  "schematics": {
+    "@schematics/angular:component": {
+      "type": "component",
+      "standalone": true,
+      "changeDetection": "OnPush"
+    }
+  },
   "projects": {
     "front-recoleccion-residuos": {
       "projectType": "application",
@@ -47,7 +54,13 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.development.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"

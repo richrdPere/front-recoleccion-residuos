@@ -1,0 +1,241 @@
+<section class="w-full rounded-3xl
+         border border-base-300
+         bg-base-100 p-5 shadow-xl
+         sm:p-7 lg:p-8">
+
+  <!-- ================================================= -->
+  <!-- ENCABEZADO -->
+  <!-- ================================================= -->
+
+  <header class="text-center">
+    <div class="mx-auto flex size-14
+             items-center justify-center
+             rounded-2xl bg-primary/10
+             text-xl text-primary
+             sm:size-16 sm:text-2xl">
+
+      <i class="fa-solid fa-user-shield"></i>
+    </div>
+
+    <p class="mt-5 text-xs font-bold
+             uppercase tracking-[0.16em]
+             text-primary">
+
+      Acceso institucional
+    </p>
+
+    <h1 class="mt-2 text-2xl font-bold
+             tracking-tight sm:text-3xl">
+
+      Iniciar sesión
+    </h1>
+
+    <p class="mx-auto mt-2 max-w-sm
+             text-sm leading-6
+             text-base-content/60">
+
+      Ingresa tus credenciales para acceder al
+      sistema de gestión de recolección de residuos.
+    </p>
+  </header>
+
+  <!-- ================================================= -->
+  <!-- ERROR GENERAL -->
+  <!-- ================================================= -->
+
+  @if (errorMessage) {
+  <div role="alert" aria-live="polite" class="alert alert-error mt-6
+             items-start rounded-2xl">
+
+    <i class="fa-solid fa-circle-exclamation
+               mt-0.5 shrink-0">
+    </i>
+
+    <div class="min-w-0">
+      <p class="font-semibold">
+        No se pudo iniciar sesión
+      </p>
+
+      <p class="mt-0.5 wrap-break-word text-sm">
+        {{ errorMessage }}
+      </p>
+    </div>
+  </div>
+  }
+
+  <!-- ================================================= -->
+  <!-- FORMULARIO -->
+  <!-- ================================================= -->
+
+  <form class="mt-7 space-y-5" [formGroup]="formLogin" (ngSubmit)="login()" novalidate>
+
+    <!-- ================================================= -->
+    <!-- USUARIO -->
+    <!-- ================================================= -->
+
+    <div>
+      <label for="login-username" class="mb-2 block text-sm font-semibold">
+
+        Usuario o documento
+
+        <span class="text-error" aria-hidden="true">
+
+          *
+        </span>
+      </label>
+
+      <div class="relative">
+        <i class="fa-regular fa-user
+                 pointer-events-none
+                 absolute left-4 top-1/2
+                 z-10 -translate-y-1/2
+                 text-base-content/40">
+        </i>
+
+        <input id="login-username" type="text" formControlName="username" autocomplete="username" inputmode="text"
+          class="input input-bordered
+                 w-full pl-11 pr-4
+                 transition-colors
+                 focus:input-primary" [class.input-error]="
+            formLogin.get('username')?.invalid
+            && formLogin.get('username')?.touched
+          " [attr.aria-invalid]="
+            formLogin.get('username')?.invalid
+            && formLogin.get('username')?.touched
+          " aria-describedby="username-error" placeholder="Ingresa tu usuario o DNI" />
+      </div>
+
+      @if (
+      formLogin.get('username')?.hasError('required')
+      && formLogin.get('username')?.touched
+      ) {
+      <p id="username-error" class="mt-1.5 flex items-center
+                 gap-1.5 text-xs text-error">
+
+        <i class="fa-solid fa-circle-exclamation"></i>
+
+        El usuario es obligatorio.
+      </p>
+      } @else {
+      <p class="mt-1.5 text-xs
+                 text-base-content/45">
+
+        Utiliza el usuario asignado por la institución.
+      </p>
+      }
+    </div>
+
+    <!-- ================================================= -->
+    <!-- CONTRASEÑA -->
+    <!-- ================================================= -->
+    <div>
+      <div class="mb-2 flex items-center justify-between gap-3">
+        <label for="login-password" class="block text-sm font-semibold">
+          Contraseña
+          <span class="text-error" aria-hidden="true">
+            *
+          </span>
+        </label>
+      </div>
+
+      <div class="relative">
+        <i class="fa-solid fa-lock
+                 pointer-events-none
+                 absolute left-4 top-1/2
+                 z-10 -translate-y-1/2
+                 text-base-content/40">
+        </i>
+
+        <input id="login-password" [type]="
+            showPassword
+              ? 'text'
+              : 'password'
+          " formControlName="password" autocomplete="current-password" class="input input-bordered
+                 w-full pl-11 pr-12
+                 transition-colors
+                 focus:input-primary" [class.input-error]="
+            formLogin.get('password')?.invalid
+            && formLogin.get('password')?.touched
+          " [attr.aria-invalid]="
+            formLogin.get('password')?.invalid
+            && formLogin.get('password')?.touched
+          " aria-describedby="password-error" placeholder="Ingresa tu contraseña" />
+
+        <button type="button" class="btn btn-square btn-ghost
+                 btn-sm absolute right-2
+                 top-1/2 -translate-y-1/2" [attr.aria-label]="
+            showPassword
+              ? 'Ocultar contraseña'
+              : 'Mostrar contraseña'
+          " [attr.title]="
+            showPassword
+              ? 'Ocultar contraseña'
+              : 'Mostrar contraseña'
+          " (click)="togglePasswordVisibility()">
+
+          @if (showPassword) {
+          <i class="fa-regular fa-eye-slash"></i>
+          } @else {
+          <i class="fa-regular fa-eye"></i>
+          }
+        </button>
+      </div>
+
+      @if (
+      formLogin.get('password')?.hasError('required')
+      && formLogin.get('password')?.touched
+      ) {
+      <p id="password-error" class="mt-1.5 flex items-center gap-1.5 text-xs text-error">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        La contraseña es obligatoria.
+      </p>
+      }
+    </div>
+
+    <!-- ================================================= -->
+    <!-- BOTÓN DE INGRESO -->
+    <!-- ================================================= -->
+    <button type="submit" class="btn btn-primary min-h-12 w-full rounded-xl text-sm shadow-sm" [disabled]="loading">
+
+      @if (loading) {
+      <span class="loading loading-spinner
+                 loading-sm" aria-hidden="true">
+      </span>
+
+      <span>
+        Verificando credenciales...
+      </span>
+      } @else {
+      <i class="fa-solid fa-right-to-bracket"></i>
+
+      <span>
+        Ingresar al sistema
+      </span>
+      }
+    </button>
+  </form>
+
+  <!-- ================================================= -->
+  <!-- INFORMACIÓN DE SEGURIDAD -->
+  <!-- ================================================= -->
+  <div class="divider my-6 text-xs text-base-content/35">
+    Acceso seguro
+  </div>
+
+  <div class="flex items-start gap-3 rounded-2xl bg-base-200 px-4 py-3">
+    <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-success/15 text-success">
+      <i class="fa-solid fa-shield-halved"></i>
+    </div>
+
+    <div class="min-w-0">
+      <p class="text-xs font-semibold">
+        Área exclusiva para personal autorizado
+      </p>
+
+      <p class="mt-1 text-xs leading-5 text-base-content/55">
+        Por seguridad, no compartas tus credenciales
+        y cierra la sesión al terminar.
+      </p>
+    </div>
+  </div>
+</section>
