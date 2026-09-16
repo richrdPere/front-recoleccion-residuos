@@ -12,7 +12,7 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
 // Interfaces
-import { ChangeVehiculoEstadoOperativoRequest, ChangeVehiculoEstadoRequest, ChangeVehiculoEstadoResponse, CreateVehiculoRequest, CreateVehiculoResponse, DeleteVehiculoResponse, GetVehiculoByIdResponse, GetVehiculosPaginatedResponse, UpdateVehiculoRequest, UpdateVehiculoResponse, VehiculosPaginadosFilters } from '../models';
+import { ChangeVehiculoEstadoOperativoRequest, ChangeVehiculoEstadoResponse, CreateVehiculoRequest, CreateVehiculoResponse, DeleteVehiculoResponse, GetVehiculoByIdResponse, GetVehiculosPaginatedResponse, UpdateVehiculoRequest, UpdateVehiculoResponse, VehiculosPaginadosFilters } from '../models';
 
 @Injectable({
   providedIn: 'root'
