@@ -10,27 +10,26 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 
 // Helper
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
-import { ChangePersonalEstadoOperativoRequest, ChangePersonalEstadoResponse, CreatePersonalOperativoRequest, CreatePersonalOperativoResponse, DeletePersonalResponse, GetPersonalByIdResponse, GetPersonalPaginatedResponse, PersonalPaginadoFilters, UpdatePersonalOperativoRequest, UpdatePersonalOperativoResponse } from '../models';
 
-// Interface
-
+// Interfaces
+import { ChangeZonaEstadoRequest, ChangeZonaEstadoResponse, CreateZonaRequest, CreateZonaResponse, DeleteZonaResponse, GetZonaByIdResponse, GetZonasActivasResponse, GetZonasPaginatedResponse, UpdateZonaRequest, UpdateZonaResponse, ZonasPaginadasFilters } from '../interfaces/zonas';
 
 @Injectable({
   providedIn: 'root'
 })
-export class PersonalService {
-
+export class ZonasServices {
   // *********************************************************
   // ENDPOINTS
   // *********************************************************
-  private readonly API_BASE = environment.apiUrl + 'personal';
+  private readonly API_BASE = environment.apiUrl + 'rutas/zonas';
 
-  private readonly API_CREATE_PERSONAL: string = this.API_BASE + '/create';
-  private readonly API_GET_PERSONAL_PAGINATED: string = this.API_BASE + '/paginado';
-  private readonly API_GET_PERSONAL_BY_ID: string = this.API_BASE + '/view/';
-  private readonly API_UPDATE_PERSONAL: string = this.API_BASE + '/update/';
-  private readonly API_PATCH_ESTADO_PERSONAL: string = this.API_BASE + '/estado/';
-  private readonly API_DELETE_PERSONAL: string = this.API_BASE + '/delete/';
+  private readonly API_CREATE_ZONA: string = this.API_BASE + '/create';
+  private readonly API_GET_ZONAS_PAGINATED: string = this.API_BASE + '/paginado';
+  private readonly API_GET_ZONAS_ACTIVAS: string = this.API_BASE + '/activas';
+  private readonly API_GET_ZONA_BY_ID: string = this.API_BASE + '/view/';
+  private readonly API_UPDATE_ZONA: string = this.API_BASE + '/update/';
+  private readonly API_PATCH_ESTADO_ZONA: string = this.API_BASE + '/estado/';
+  private readonly API_DELETE_ZONA: string = this.API_BASE + '/delete/';
 
   constructor(
     private readonly http: HttpClient,
@@ -38,40 +37,84 @@ export class PersonalService {
   ) { }
 
   // *********************************************************
-  // 1. OBTENER PERSONAL PAGINADO
+  // 1. OBTENER ZONAS PAGINADAS
   // *********************************************************
-  getPersonalPaginated(
-    filters: PersonalPaginadoFilters = {},
-  ): Observable<GetPersonalPaginatedResponse> {
+  getZonasPaginated(
+    filters: ZonasPaginadasFilters = {},
+  ): Observable<GetZonasPaginatedResponse> {
     const params = HttpServiceHelper.buildParams(filters);
     const headers = this.getJsonHeaders();
 
     return this.http
-      .get<GetPersonalPaginatedResponse>(
-        this.API_GET_PERSONAL_PAGINATED,
+      .get<GetZonasPaginatedResponse>(
+        this.API_GET_ZONAS_PAGINATED,
         { params, headers },
       )
       .pipe(
         catchError((error) =>
           HttpServiceHelper.handleError(
             error,
-            'No se pudo obtener el personal operativo.',
+            'No se pudieron obtener las zonas.',
           ),
         ),
       );
   }
 
   // *********************************************************
-  // 2. CREAR PERSONAL OPERATIVO
+  // 2. OBTENER ZONAS ACTIVAS
   // *********************************************************
-  createPersonal(
-    request: CreatePersonalOperativoRequest,
-  ): Observable<CreatePersonalOperativoResponse> {
+  getZonasActivas(): Observable<GetZonasActivasResponse> {
     const headers = this.getJsonHeaders();
 
     return this.http
-      .post<CreatePersonalOperativoResponse>(
-        this.API_CREATE_PERSONAL,
+      .get<GetZonasActivasResponse>(
+        this.API_GET_ZONAS_ACTIVAS,
+        { headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudieron obtener las zonas activas.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 3. OBTENER ZONA POR ID
+  // *********************************************************
+  getZonaById(
+    idZona: number,
+  ): Observable<GetZonaByIdResponse> {
+    const headers = this.getJsonHeaders();
+
+    return this.http
+      .get<GetZonaByIdResponse>(
+        `${this.API_GET_ZONA_BY_ID}${idZona}`,
+        { headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo obtener la zona.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 4. CREAR ZONA
+  // *********************************************************
+  createZona(
+    request: CreateZonaRequest,
+  ): Observable<CreateZonaResponse> {
+    const headers = this.getJsonHeaders();
+
+    return this.http
+      .post<CreateZonaResponse>(
+        this.API_CREATE_ZONA,
         request,
         { headers },
       )
@@ -79,45 +122,24 @@ export class PersonalService {
         catchError((error) =>
           HttpServiceHelper.handleError(
             error,
-            'No se pudo registrar el personal operativo.',
+            'No se pudo registrar la zona.',
           ),
         ),
       );
   }
 
   // *********************************************************
-  // 3. OBTENER PERSONAL POR ID
+  // 5. ACTUALIZAR ZONA
   // *********************************************************
-  getPersonalById(idPersonal: number): Observable<GetPersonalByIdResponse> {
+  updateZona(
+    idZona: number,
+    request: UpdateZonaRequest,
+  ): Observable<UpdateZonaResponse> {
     const headers = this.getJsonHeaders();
 
     return this.http
-      .get<GetPersonalByIdResponse>(
-        `${this.API_GET_PERSONAL_BY_ID}${idPersonal}`,
-        { headers },
-      )
-      .pipe(
-        catchError((error) =>
-          HttpServiceHelper.handleError(
-            error,
-            'No se pudo obtener la información del personal operativo.',
-          ),
-        ),
-      );
-  }
-
-  // *********************************************************
-  // 4. ACTUALIZAR PERSONAL OPERATIVO
-  // *********************************************************
-  updatePersonal(
-    idPersonal: number,
-    request: UpdatePersonalOperativoRequest,
-  ): Observable<UpdatePersonalOperativoResponse> {
-    const headers = this.getJsonHeaders();
-
-    return this.http
-      .put<UpdatePersonalOperativoResponse>(
-        `${this.API_UPDATE_PERSONAL}${idPersonal}`,
+      .put<UpdateZonaResponse>(
+        `${this.API_UPDATE_ZONA}${idZona}`,
         request,
         { headers },
       )
@@ -125,24 +147,24 @@ export class PersonalService {
         catchError((error) =>
           HttpServiceHelper.handleError(
             error,
-            'No se pudo actualizar el personal operativo.',
+            'No se pudo actualizar la zona.',
           ),
         ),
       );
   }
 
   // *********************************************************
-  // 5. CAMBIAR ESTADO OPERATIVO
+  // 6. CAMBIAR ESTADO DE ZONA
   // *********************************************************
-  changeEstadoPersonalOperativo(
-    idPersonal: number,
-    request: ChangePersonalEstadoOperativoRequest
-  ): Observable<ChangePersonalEstadoResponse> {
+  changeZonaEstado(
+    idZona: number,
+    request: ChangeZonaEstadoRequest,
+  ): Observable<ChangeZonaEstadoResponse> {
     const headers = this.getJsonHeaders();
 
     return this.http
-      .patch<ChangePersonalEstadoResponse>(
-        `${this.API_PATCH_ESTADO_PERSONAL}${idPersonal}`,
+      .patch<ChangeZonaEstadoResponse>(
+        `${this.API_PATCH_ESTADO_ZONA}${idZona}`,
         request,
         { headers },
       )
@@ -150,43 +172,43 @@ export class PersonalService {
         catchError((error) =>
           HttpServiceHelper.handleError(
             error,
-            'No se pudo cambiar el estado operativo del personal operativo.',
+            'No se pudo cambiar el estado de la zona.',
           ),
         ),
       );
   }
 
   // *********************************************************
-  // 6. ELIMINAR PERSONAL OPERATIVO
+  // 7. ELIMINAR VEHÍCULO
   // *********************************************************
-  deletePersonalOperativo(
-    idVehiculo: number,
-  ): Observable<DeletePersonalResponse> {
+  deleteZona(
+    idZona: number,
+  ): Observable<DeleteZonaResponse> {
     const headers = this.getJsonHeaders();
 
     return this.http
-      .delete<DeletePersonalResponse>(
-        `${this.API_DELETE_PERSONAL}${idVehiculo}`,
+      .delete<DeleteZonaResponse>(
+        `${this.API_DELETE_ZONA}${idZona}`,
         { headers },
       )
       .pipe(
         catchError((error) =>
           HttpServiceHelper.handleError(
             error,
-            'No se pudo eliminar el personal operativo.',
+            'No se pudo eliminar el vehículo.',
           ),
         ),
       );
   }
-
 
   // *********************************************************
   // MÉTODOS PRIVADOS
   // *********************************************************
+
   private getJsonHeaders(): HttpHeaders {
     return HttpServiceHelper.getHeaders({
-      token: this.authStorage.getAccessToken(),
+      token:
+        this.authStorage.getAccessToken(),
     });
   }
-
 }

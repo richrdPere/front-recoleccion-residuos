@@ -20,20 +20,23 @@ export interface PersonalPaginadoFilters {
 // ============================================================
 // DATA PAGINADA
 // ============================================================
-export interface PersonalPaginationData {
-  total: number;
-  page: number;
-  limit: number;
+// export interface PersonalPaginationData {
+//   total: number;
+//   page: number;
+//   limit: number;
 
-  total_pages: number;
+//   total_pages: number;
 
-  has_next_page: boolean;
-  has_previous_page: boolean;
-}
+//   has_next_page: boolean;
+//   has_previous_page: boolean;
+// }
 
 export interface PersonalPaginadoData {
   items: PersonalOperativoData[];
-  pagination: PersonalPaginationData;
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
 }
 
 // ============================================================

@@ -58,25 +58,25 @@ export class PublicLayoutComponent {
 
       {
         label: 'Cronogramas',
-        route: '/publico/cronogramas',
+        route: '/cronogramas',
         icon: 'fa-regular fa-calendar',
       },
 
       {
         label: 'Consultar sector',
-        route: '/publico/consulta',
+        route: '/consulta',
         icon: 'fa-solid fa-location-dot',
       },
 
       {
         label: 'Estado de rutas',
-        route: '/publico/rutas',
+        route: '/rutas',
         icon: 'fa-solid fa-route',
       },
 
       {
         label: 'Reportar problema',
-        route: '/publico/reportar',
+        route: '/reportar',
         icon: 'fa-solid fa-bullhorn',
       },
     ];

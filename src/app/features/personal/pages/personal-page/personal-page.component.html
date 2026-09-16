@@ -1,1 +1,724 @@
-<p>personal-page works!</p>
+<!-- ================================================= -->
+<!-- CONTENEDOR DEL PERSONAL -->
+<!-- ================================================= -->
+<div class="mx-auto w-full max-w-500">
+
+  <!-- ================================================= -->
+  <!-- ENCABEZADO -->
+  <!-- ================================================= -->
+  <header class="mb-5 flex flex-col gap-4
+             sm:flex-row sm:items-center
+             sm:justify-between">
+
+    <div class="flex min-w-0 items-center gap-3">
+
+      <div class="flex h-12 w-12 shrink-0
+                 items-center justify-center
+                 rounded-2xl bg-primary/10
+                 text-primary" aria-hidden="true">
+
+        <i class="fa-solid fa-car-side text-2xl"></i>
+      </div>
+
+      <div class="min-w-0">
+        <h1 class="text-2xl font-bold leading-tight text-base-content">
+          Personal
+        </h1>
+
+        <p class="mt-1 max-w-2xl text-sm leading-relaxed text-base-content/60">
+          Registre y administre el personal administrativo.
+        </p>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ================================================= -->
+  <!-- FILTROS -->
+  <!-- ================================================= -->
+  <section class="mb-6 overflow-hidden rounded-2xl
+         border border-base-300
+         bg-base-100 shadow-sm">
+
+    <div class="grid grid-cols-1
+           lg:grid-cols-[minmax(0,1fr)_170px]">
+
+      <!-- =============================================== -->
+      <!-- CAMPOS DE FILTRO -->
+      <!-- =============================================== -->
+      <div class="p-4 sm:p-5">
+
+        <div class="grid grid-cols-1 gap-4
+               sm:grid-cols-2
+               xl:grid-cols-[minmax(240px,1.4fr)_minmax(180px,1fr)_minmax(190px,1fr)_auto]">
+
+
+          <!-- Buscar  -->
+          <label class="form-control w-full">
+            <span class="mb-1.5 text-xs font-semibold
+                   uppercase tracking-wide
+                   text-base-content/60">
+              Nombres y Apellidos
+            </span>
+
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass
+                     pointer-events-none absolute
+                     left-3.5 top-1/2
+                     -translate-y-1/2
+                     text-base-content/35">
+              </i>
+
+              <input type="text" class="input input-bordered
+                     h-11 w-full rounded-xl
+                     bg-base-100 pl-10 pr-4
+                     focus:outline-none
+                     focus:ring-2
+                     focus:ring-primary/30" placeholder="Buscar por placa" autocomplete="off"
+                [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()" appUppercase />
+            </div>
+          </label>
+
+          <!-- Buscar por estado operativo -->
+
+
+          <!-- Buscar por tipo vehiculo -->
+
+        </div>
+      </div>
+
+      <!-- =============================================== -->
+      <!-- ILUSTRACIÓN DE BÚSQUEDA -->
+      <!-- =============================================== -->
+      <div class="hidden items-center justify-center border-base-300 px-5 lg:flex">
+
+        <img src="assets/img/search.png" alt="" aria-hidden="true" class="h-32 w-32
+               select-none object-contain
+               opacity-90
+               drop-shadow-sm" draggable="false" />
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ================================================= -->
+  <!-- MODALES -->
+  <!-- ================================================= -->
+
+
+  <!-- ================================================= -->
+  <!-- TABLA DE PERSONAL REGISTRADO -->
+  <!-- ================================================= -->
+  @if (isLoading || personal.length > 0) {
+  <section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm"
+    aria-label="Personal operativo registrado">
+    <!-- ===================================================== -->
+    <!-- CABECERA -->
+    <!-- ===================================================== -->
+
+    <div class="flex flex-col gap-4 border-b border-base-300 px-4 py-4
+             sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <!-- Cantidad por página -->
+      <div class="flex w-full items-center justify-between gap-3
+               text-sm text-base-content/70
+               sm:w-auto sm:justify-start">
+        <label for="personal-page-size" class="whitespace-nowrap">
+          Mostrar
+        </label>
+
+        <select id="personal-page-size" class="select select-bordered select-sm w-auto" [(ngModel)]="limit"
+          (change)="cambiarLimite()">
+          @for (size of pageSizeOptions; track size) {
+          <option [ngValue]="size">
+            {{ size }}
+          </option>
+          }
+        </select>
+
+        <span class="whitespace-nowrap">
+          ítems por página
+        </span>
+      </div>
+
+      <!-- Registrar personal -->
+      <div class="flex w-full justify-end sm:w-auto">
+        <button type="button" class="btn btn-primary min-h-10 w-full gap-2 rounded-xl
+                 border-none bg-info hover:bg-primary hover:text-white
+                 sm:w-auto sm:min-w-40" (click)="abrirModal()">
+          <i class="fa-solid fa-user-plus"></i>
+
+          Personal
+        </button>
+      </div>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- TABLA -->
+    <!-- ===================================================== -->
+    <div class="overflow-x-auto">
+      <table class="table min-w-350">
+        <thead class="bg-base-300/90">
+          <tr class="text-xs uppercase tracking-wide
+                   text-base-content/60">
+            <th class="w-14 text-center"> N.° </th>
+            <th class="min-w-64"> Personal </th>
+            <th class="min-w-64"> Contacto y documento </th>
+            <th class="min-w-48"> Roles </th>
+            <th class="min-w-44"> Contrato </th>
+            <th class="min-w-40"> Turno preferente </th>
+            <th class="min-w-40 text-center"> Estado laboral </th>
+            <th class="min-w-64"> Conductor </th>
+            <th class="min-w-36 text-center"> Estado </th>
+            <th class="min-w-44"> Actualización </th>
+            <th class="w-32 text-center"> Acciones </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <!-- ================================================= -->
+          <!-- CARGANDO -->
+          <!-- ================================================= -->
+
+          @if (isLoading) {
+          @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+          <tr>
+            <!-- Numeración -->
+            <td>
+              <div class="skeleton mx-auto h-4 w-8"></div>
+            </td>
+
+            <!-- Personal -->
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="skeleton h-11 w-11 rounded-full"></div>
+
+                <div class="space-y-2">
+                  <div class="skeleton h-4 w-36"></div>
+                  <div class="skeleton h-3 w-24"></div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Contacto -->
+            <td>
+              <div class="space-y-2">
+                <div class="skeleton h-4 w-40"></div>
+                <div class="skeleton h-3 w-32"></div>
+              </div>
+            </td>
+
+            <!-- Roles -->
+            <td>
+              <div class="skeleton h-6 w-28"></div>
+            </td>
+
+            <!-- Contrato -->
+            <td>
+              <div class="skeleton h-6 w-28"></div>
+            </td>
+
+            <!-- Turno -->
+            <td>
+              <div class="skeleton h-6 w-24"></div>
+            </td>
+
+            <!-- Estado laboral -->
+            <td>
+              <div class="skeleton mx-auto h-6 w-28"></div>
+            </td>
+
+            <!-- Conductor -->
+            <td>
+              <div class="space-y-2">
+                <div class="skeleton h-4 w-32"></div>
+                <div class="skeleton h-3 w-28"></div>
+              </div>
+            </td>
+
+            <!-- Estado -->
+            <td>
+              <div class="skeleton mx-auto h-6 w-24"></div>
+            </td>
+
+            <!-- Actualización -->
+            <td>
+              <div class="skeleton h-4 w-32"></div>
+            </td>
+
+            <!-- Acciones -->
+            <td>
+              <div class="flex justify-center gap-1">
+                <div class="skeleton h-8 w-8 rounded-full"></div>
+                <div class="skeleton h-8 w-8 rounded-full"></div>
+                <div class="skeleton h-8 w-8 rounded-full"></div>
+              </div>
+            </td>
+          </tr>
+          }
+          } @else {
+          <!-- =============================================== -->
+          <!-- FILAS DE PERSONAL -->
+          <!-- =============================================== -->
+
+          @for ( pers of personal; track pers.id_personal; let i = $index ) {
+          <tr class="transition-colors hover:bg-base-200/40">
+            <!-- Numeración paginada -->
+            <td class="text-center text-base-content/60">
+              {{ ((page - 1) * limit) + i + 1 }}
+            </td>
+
+            <!-- =========================================== -->
+            <!-- PERSONAL -->
+            <!-- =========================================== -->
+            <td>
+              <div class="flex items-center gap-3">
+                <!-- Fotografía -->
+                <div class="flex h-11 w-11 shrink-0 items-center
+                             justify-center overflow-hidden rounded-full
+                             bg-primary/10 text-primary">
+                  @if (pers.usuario.persona.foto_url) {
+                  <img [src]="pers.usuario.persona.foto_url" [alt]="
+                            'Fotografía de ' +
+                            pers.usuario.persona.nombres +
+                            ' ' +
+                            pers.usuario.persona.apellidos
+                          " class="h-full w-full object-cover" />
+                  } @else {
+                  <i class="fa-solid fa-user text-base"></i>
+                  }
+                </div>
+
+                <!-- Nombre y código -->
+                <div class="min-w-0 max-w-52">
+                  <p class="truncate text-sm font-semibold" [title]="
+                          pers.usuario.persona.nombres +
+                          ' ' +
+                          pers.usuario.persona.apellidos
+                        ">
+                    {{ pers.usuario.persona.nombres }}
+                    {{ pers.usuario.persona.apellidos }}
+                  </p>
+
+                  <p class="mt-0.5 truncate text-xs font-medium
+                               uppercase tracking-wide
+                               text-base-content/50" [title]="pers.codigo_empleado">
+                    {{ pers.codigo_empleado }}
+                  </p>
+                </div>
+              </div>
+            </td>
+
+            <!-- =========================================== -->
+            <!-- CONTACTO Y DOCUMENTO -->
+            <!-- =========================================== -->
+
+            <td>
+              <div class="max-w-60 space-y-1">
+                <p class="truncate text-sm font-medium" [title]="
+                        pers.usuario.persona.tipo_documento +
+                        ': ' +
+                        pers.usuario.persona.numero_documento
+                      ">
+                  <i class="fa-regular fa-id-card mr-1.5
+                               text-base-content/40"></i>
+
+                  {{ pers.usuario.persona.tipo_documento }}:
+                  {{ pers.usuario.persona.numero_documento }}
+                </p>
+
+                <p class="truncate text-xs text-base-content/55" [title]="pers.usuario.email_acceso">
+                  <i class="fa-regular fa-envelope mr-1.5
+                               text-base-content/40"></i>
+
+                  {{ pers.usuario.email_acceso }}
+                </p>
+
+                @if (pers.usuario.persona.celular) {
+                <p class="truncate text-xs text-base-content/55" [title]="pers.usuario.persona.celular">
+                  <i class="fa-solid fa-phone mr-1.5
+                                 text-base-content/40"></i>
+
+                  {{ pers.usuario.persona.celular }}
+                </p>
+                }
+              </div>
+            </td>
+
+            <!-- =========================================== -->
+            <!-- ROLES -->
+            <!-- =========================================== -->
+
+            <td>
+              <div class="flex max-w-52 flex-wrap gap-1.5">
+                @for (
+                rol of pers.usuario.roles;
+                track rol.id_rol
+                ) {
+                <span class="badge badge-outline whitespace-nowrap
+                               text-xs" [title]="rol.descripcion ?? rol.nombre">
+                  <i class="fa-solid fa-user-shield"></i>
+
+                  {{ rol.nombre.replaceAll('_', ' ') }}
+                </span>
+                } @empty {
+                <span class="text-xs italic text-base-content/45">
+                  Sin roles
+                </span>
+                }
+              </div>
+            </td>
+
+            <!-- =========================================== -->
+            <!-- CONTRATO -->
+            <!-- =========================================== -->
+
+            <td>
+              <span class="badge badge-soft badge-info
+                           whitespace-nowrap">
+                <i class="fa-regular fa-file-lines"></i>
+
+                {{ pers.tipo_contrato.replaceAll('_', ' ') }}
+              </span>
+
+              <p class="mt-1.5 text-xs text-base-content/50">
+                Desde
+                {{ pers.fecha_ingreso | date: 'dd/MM/yyyy' }}
+              </p>
+
+              @if (pers.fecha_salida) {
+              <p class="mt-0.5 text-xs text-base-content/50">
+                Hasta
+                {{ pers.fecha_salida | date: 'dd/MM/yyyy' }}
+              </p>
+              }
+            </td>
+
+            <!-- =========================================== -->
+            <!-- TURNO PREFERENTE -->
+            <!-- =========================================== -->
+
+            <td>
+              @if (pers.turno_preferente) {
+              <span class="badge badge-outline gap-1.5
+                             whitespace-nowrap">
+                @switch (pers.turno_preferente) {
+                @case ('MANANA') {
+                <i class="fa-solid fa-sun text-warning"></i>
+                }
+
+                @case ('TARDE') {
+                <i class="fa-solid fa-cloud-sun
+                                   text-warning"></i>
+                }
+
+                @case ('NOCHE') {
+                <i class="fa-solid fa-moon text-info"></i>
+                }
+
+                @default {
+                <i class="fa-solid fa-rotate
+                                   text-base-content/50"></i>
+                }
+                }
+
+                {{
+                pers.turno_preferente === 'MANANA'
+                ? 'MAÑANA'
+                : pers.turno_preferente.replaceAll('_', ' ')
+                }}
+              </span>
+              } @else {
+              <span class="text-xs italic text-base-content/45">
+                No especificado
+              </span>
+              }
+            </td>
+
+            <!-- =========================================== -->
+            <!-- ESTADO LABORAL -->
+            <!-- =========================================== -->
+
+            <td class="text-center">
+              <span class="badge badge-soft whitespace-nowrap" [ngClass]="
+                      getEstadoOperativoClass(pers.estado_laboral)
+                    ">
+                {{ pers.estado_laboral.replaceAll('_', ' ') }}
+              </span>
+            </td>
+
+            <!-- =========================================== -->
+            <!-- PERFIL DE CONDUCTOR -->
+            <!-- =========================================== -->
+
+            <td>
+              @if (pers.conductor) {
+              <div class="max-w-60">
+                <div class="flex items-center gap-2">
+                  <span class="flex h-8 w-8 shrink-0 items-center
+                                 justify-center rounded-lg
+                                 bg-success/10 text-success">
+                    <i class="fa-solid fa-id-card"></i>
+                  </span>
+
+                  <div class="min-w-0">
+                    <p class="truncate text-sm font-semibold" [title]="pers.conductor.numero_licencia">
+                      {{ pers.conductor.numero_licencia }}
+                    </p>
+
+                    <p class="truncate text-xs text-base-content/50">
+                      Categoría:
+                      {{ pers.conductor.categoria_licencia }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mt-2 flex flex-wrap gap-1.5">
+                  <span class="badge badge-sm badge-soft" [class.badge-success]="
+                            pers.conductor.estado_licencia === 'VIGENTE'
+                          " [class.badge-warning]="
+                            pers.conductor.estado_licencia ===
+                            'POR_VENCER'
+                          " [class.badge-error]="
+                            pers.conductor.estado_licencia === 'VENCIDA' ||
+                            pers.conductor.estado_licencia ===
+                            'SUSPENDIDA'
+                          ">
+                    {{
+                    pers.conductor.estado_licencia
+                    .replaceAll('_', ' ')
+                    }}
+                  </span>
+
+                  <span class="text-xs text-base-content/50" [title]="
+                            'Vence el ' +
+                            (
+                              pers.conductor.fecha_vencimiento_licencia
+                              | date: 'dd/MM/yyyy'
+                            )
+                          ">
+                    Vence:
+                    {{
+                    pers.conductor.fecha_vencimiento_licencia
+                    | date: 'dd/MM/yyyy'
+                    }}
+                  </span>
+                </div>
+              </div>
+              } @else {
+              <div class="inline-flex items-center gap-2
+                             text-xs text-base-content/45">
+                <i class="fa-solid fa-user"></i>
+
+                No es conductor
+              </div>
+              }
+            </td>
+
+            <!-- =========================================== -->
+            <!-- ESTADO DEL REGISTRO -->
+            <!-- =========================================== -->
+
+            <td class="text-center">
+              <div class="inline-flex items-center justify-center gap-2">
+                <input type="checkbox" class="toggle toggle-sm border-error bg-error/70
+                             checked:border-success checked:bg-success" [checked]="pers.estado"
+                  (change)="cambiarEstado(pers)" [attr.aria-label]="
+                        pers.estado
+                          ? 'Desactivar personal'
+                          : 'Activar personal'
+                      " />
+
+                <span class="min-w-14 text-left text-xs font-medium" [class.text-success]="pers.estado"
+                  [class.text-error]="!pers.estado">
+                  {{ pers.estado ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+            </td>
+
+            <!-- =========================================== -->
+            <!-- ACTUALIZACIÓN -->
+            <!-- =========================================== -->
+
+            <td class="whitespace-nowrap text-sm">
+              <p>
+                {{ pers.updated_at | date: 'dd/MM/yyyy' }}
+              </p>
+
+              <p class="text-xs text-base-content/50">
+                {{ pers.updated_at | date: 'hh:mm a' }}
+              </p>
+            </td>
+
+            <!-- =========================================== -->
+            <!-- ACCIONES -->
+            <!-- =========================================== -->
+
+            <td>
+              <div class="flex items-center justify-center gap-1">
+                <!-- Ver -->
+                <div class="tooltip tooltip-left" data-tip="Ver personal">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="verPersonal(pers)"
+                    aria-label="Ver detalle del personal">
+                    <i class="fa-regular fa-eye"></i>
+                  </button>
+                </div>
+
+                <!-- Editar -->
+                <div class="tooltip tooltip-left" data-tip="Editar personal">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="editarPersonal(pers)"
+                    aria-label="Editar personal">
+                    <i class="fa-regular fa-pen-to-square"></i>
+                  </button>
+                </div>
+
+                <!-- Eliminar -->
+                <div class="tooltip tooltip-left" data-tip="Eliminar personal">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm
+                               text-error hover:bg-error/10" (click)="eliminarPersonal(pers)"
+                    aria-label="Eliminar personal">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <!-- ============================================= -->
+          <!-- SIN RESULTADOS EN LA TABLA -->
+          <!-- ============================================= -->
+
+          <tr>
+            <td colspan="11" class="py-16 text-center">
+              <div class="mx-auto flex max-w-sm flex-col
+                           items-center">
+                <div class="flex h-16 w-16 items-center justify-center
+                             rounded-2xl bg-base-200
+                             text-base-content/30">
+                  <i class="fa-solid fa-users text-2xl"></i>
+                </div>
+
+                <h3 class="mt-4 text-base font-semibold">
+                  No se encontró personal
+                </h3>
+
+                <p class="mt-1 text-sm text-base-content/60">
+                  Cambia los filtros o registra un nuevo integrante
+                  del personal operativo.
+                </p>
+              </div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- PAGINACIÓN -->
+    <!-- ===================================================== -->
+
+    @if (!isLoading && totalItems > 0) {
+    <footer class="flex flex-col gap-4 border-t border-base-300
+               bg-base-200/50 px-4 py-4
+               lg:flex-row lg:items-center lg:justify-between
+               sm:px-5">
+      <!-- Resumen -->
+      <div class="text-center sm:text-left">
+        <h2 class="font-semibold text-base-content">
+          Personal registrado
+        </h2>
+
+        <p class="mt-0.5 text-sm text-base-content/55">
+          {{ totalItems }}
+
+          {{
+          totalItems === 1
+          ? 'integrante encontrado'
+          : 'integrantes encontrados'
+          }}
+        </p>
+      </div>
+
+      <!-- Controles -->
+      <div class="flex w-full flex-col items-center gap-3
+                 text-sm text-base-content/70
+                 sm:w-auto sm:flex-row">
+        <span class="whitespace-nowrap">
+          @if (totalPages > 0) {
+          Página
+
+          <strong class="text-base-content">
+            {{ page }}
+          </strong>
+
+          de
+
+          <strong class="text-base-content">
+            {{ totalPages }}
+          </strong>
+          } @else {
+          Sin páginas disponibles
+          }
+        </span>
+
+        <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+          <button type="button" class="btn btn-sm w-full gap-2 rounded-lg sm:w-auto" [disabled]="isLoading || page <= 1"
+            (click)="cambiarPagina(page - 1)">
+            <i class="fa-solid fa-chevron-left"></i>
+
+            Anterior
+          </button>
+
+          <button type="button" class="btn btn-sm w-full gap-2 rounded-lg sm:w-auto" [disabled]="
+                isLoading ||
+                totalPages === 0 ||
+                page >= totalPages
+              " (click)="cambiarPagina(page + 1)">
+            Siguiente
+
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </footer>
+    }
+  </section>
+  }
+
+  <!-- ======================================================= -->
+  <!-- ESTADO VACÍO GENERAL -->
+  <!-- ======================================================= -->
+
+  @if (!isLoading && personal.length === 0) {
+  <section class="rounded-2xl border border-dashed border-base-300
+           bg-base-100 px-6 py-16 text-center shadow-sm">
+    <div class="mx-auto flex h-20 w-20 items-center justify-center
+             rounded-full bg-base-200 text-base-content/35">
+      <i class="fa-solid fa-users text-3xl"></i>
+    </div>
+
+    <h2 class="mt-5 text-lg font-bold">
+      No se encontró personal operativo
+    </h2>
+
+    <p class="mx-auto mt-2 max-w-md
+             text-sm text-base-content/55">
+      No existe personal registrado o no se encontraron resultados
+      para los filtros seleccionados.
+    </p>
+
+    @if (
+    searchBusqueda ||
+    estadoLaboralBusqueda ||
+    tipoContratoBusqueda
+    ) {
+    <button type="button" class="btn btn-primary btn-sm mt-5" (click)="limpiarFiltros()">
+      <i class="fa-solid fa-filter-circle-xmark"></i>
+
+      Limpiar filtros
+    </button>
+    }
+  </section>
+  }
+</div>

@@ -9,9 +9,9 @@ import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directiv
 
 // Service
 import { VehiculosService } from '../../services/vehiculos.service';
-import { EstadoOperativoVehiculo, TipoVehiculo, VehiculoData, VehiculosPaginadosFilters } from '../../models';
 
-// Interface
+// Inteerface
+import { EstadoOperativoVehiculo, TipoVehiculo, VehiculoData, VehiculosPaginadosFilters } from '../../models';
 
 @Component({
   selector: 'app-vehiculos-page',
@@ -61,7 +61,6 @@ export class VehiculosPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.getVehiculosPaginated();
-
   }
 
   // ================================
