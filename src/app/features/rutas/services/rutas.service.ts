@@ -10,11 +10,10 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 
 // Helper
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
-import { ChangeRutaEstadoOperativoRequest, ChangeRutaEstadoOperativoResponse, CreateRutaRequest, CreateRutaResponse, GetRutaByIdResponse, GetRutasActivasResponse, GetRutasPaginatedResponse, RutasPaginadasFilters, UpdateRutaRequest, UpdateRutaResponse } from '../interfaces/rutas';
-import { GetRutasByZonaResponse } from '../interfaces/rutas/get-ruta-by-zona-id.interface';
 
 // Interfaces
-
+import { ChangeRutaEstadoOperativoRequest, ChangeRutaEstadoOperativoResponse, CreateRutaRequest, CreateRutaResponse, GetRutaByIdResponse, GetRutasActivasResponse, GetRutasPaginatedResponse, RutasPaginadasFilters, UpdateRutaRequest, UpdateRutaResponse } from '../interfaces/rutas';
+import { GetRutasByZonaResponse } from '../interfaces/rutas/get-ruta-by-zona-id.interface';
 
 @Injectable({
   providedIn: 'root'
