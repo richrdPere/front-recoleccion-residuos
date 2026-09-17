@@ -214,7 +214,7 @@ export const adminFeatureRoutes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['SUPER_ADMIN', 'ADMIN', 'SUPERVISOR'] },
         loadComponent: () =>
-          import('./rutas/pages/zonas-page/zonas-page.component').then(
+          import('./zonas/pages/zonas-page/zonas-page.component').then(
             (m) => m.ZonasPageComponent,
           ),
       },

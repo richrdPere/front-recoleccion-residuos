@@ -1,7 +1,8 @@
 import { ApiResponse } from "src/app/core/models/api-response.model";
-import { ZonaData } from "../zonas";
+import { ZonaData } from "../../../zonas/interfaces";
 import { RutaData } from "./create-ruta.interface";
 import { RutaHorarioData, RutaVersionDetalleData } from "./get-ruta-by-zona-id.interface";
+import { TipoRutaPunto } from "../ruta-puntos";
 
 // *********************************************************
 // REQUEST PARA ACTUALIZAR RUTA
@@ -22,7 +23,7 @@ export interface RutaPuntoData {
   codigo: string;
   nombre: string;
   descripcion: string | null;
-  tipo_punto: string;
+  tipo_punto: TipoRutaPunto;
 
   latitud: string;
   longitud: string;

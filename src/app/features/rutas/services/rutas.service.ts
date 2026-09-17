@@ -12,7 +12,7 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
 // Interfaces
-import { ChangeRutaEstadoOperativoRequest, ChangeRutaEstadoOperativoResponse, CreateRutaRequest, CreateRutaResponse, GetRutaByIdResponse, GetRutasActivasResponse, GetRutasPaginatedResponse, RutasPaginadasFilters, UpdateRutaRequest, UpdateRutaResponse } from '../interfaces/rutas';
+import { ChangeRutaEstadoOperativoRequest, ChangeRutaEstadoOperativoResponse, ChangeRutaEstadoRequest, ChangeRutaEstadoResponse, CreateRutaRequest, CreateRutaResponse, DeleteRutaResponse, GetRutaByIdResponse, GetRutasActivasResponse, GetRutasPaginatedResponse, RutasPaginadasFilters, UpdateRutaRequest, UpdateRutaResponse } from '../interfaces/rutas';
 import { GetRutasByZonaResponse } from '../interfaces/rutas/get-ruta-by-zona-id.interface';
 
 @Injectable({
@@ -33,7 +33,7 @@ export class RutasServices {
   private readonly API_GET_RUTA_BY_ID: string = this.API_BASE + '/view/';
   private readonly API_UPDATE_RUTA: string = this.API_BASE + '/update/';
   private readonly API_CHANGE_RUTA_ESTADO_OPERATIVO: string = this.API_BASE + '/estado-ruta/';
-  private readonly API_PATCH_ESTADO_RUTA: string = this.API_BASE + '/estado/';
+  private readonly API_CHANGE_RUTA_ESTADO: string = this.API_BASE + '/estado/';
   private readonly API_DELETE_RUTA: string = this.API_BASE + '/delete/';
 
   constructor(
@@ -202,6 +202,52 @@ export class RutasServices {
           HttpServiceHelper.handleError(
             error,
             'No se pudo obtener la ruta.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 8. CAMBIAR ESTADO DEL REGISTRO DE RUTA
+  // *********************************************************
+  changeRutaEstado(
+    idRuta: number,
+    request: ChangeRutaEstadoRequest,
+  ): Observable<ChangeRutaEstadoResponse> {
+    const headers = this.getJsonHeaders();
+
+    return this.http
+      .patch<ChangeRutaEstadoResponse>(
+        `${this.API_CHANGE_RUTA_ESTADO}${idRuta}`,
+        request,
+        { headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo cambiar el estado del registro de la ruta.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 9. ELIMINAR RUTA
+  // *********************************************************
+  deleteVehiculo(idRuta: number): Observable<DeleteRutaResponse> {
+    const headers = this.getJsonHeaders();
+
+    return this.http
+      .delete<DeleteRutaResponse>(
+        `${this.API_DELETE_RUTA}${idRuta}`,
+        { headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo eliminar el vehículo.',
           ),
         ),
       );

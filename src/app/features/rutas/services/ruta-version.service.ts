@@ -12,24 +12,23 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
 // Interfaces
-import { ChangeZonaEstadoRequest, ChangeZonaEstadoResponse, CreateZonaRequest, CreateZonaResponse, DeleteZonaResponse, GetZonaByIdResponse, GetZonasActivasResponse, GetZonasPaginatedResponse, UpdateZonaRequest, UpdateZonaResponse, ZonasPaginadasFilters } from '../interfaces/zonas';
+import { ActivateRutaVersionResponse, CreateRutaVersionRequest, CreateRutaVersionResponse, DeleteRutaVersionResponse, GetVersionesByRutaResponse, GetVersionVigenteByRutaResponse, UpdateRutaVersionRequest, UpdateRutaVersionResponse } from '../interfaces/ruta-versiones';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ZonasServices {
+export class RutaVersionService {
   // *********************************************************
   // ENDPOINTS
   // *********************************************************
-  private readonly API_BASE = environment.apiUrl + 'rutas/zonas';
+  private readonly API_BASE = environment.apiUrl + 'rutas';
 
-  private readonly API_CREATE_ZONA: string = this.API_BASE + '/create';
-  private readonly API_GET_ZONAS_PAGINATED: string = this.API_BASE + '/paginado';
-  private readonly API_GET_ZONAS_ACTIVAS: string = this.API_BASE + '/activas';
-  private readonly API_GET_ZONA_BY_ID: string = this.API_BASE + '/view/';
-  private readonly API_UPDATE_ZONA: string = this.API_BASE + '/update/';
-  private readonly API_PATCH_ESTADO_ZONA: string = this.API_BASE + '/estado/';
-  private readonly API_DELETE_ZONA: string = this.API_BASE + '/delete/';
+  private readonly API_CREATE_RUTA_VERSION: string = this.API_BASE + '/';
+  private readonly API_GET_VERSIONES_BY_RUTA: string = this.API_BASE + '/';
+  private readonly API_GET_VERSION_VIGENTE_BY_RUTA: string = this.API_BASE + '/';
+  private readonly API_UPDATE_RUTA_VERSION: string = this.API_BASE + '/versiones/';
+  private readonly API_ACTIVATE_RUTA_VERSION: string = this.API_BASE + '/versiones/';
+  private readonly API_DELETE_RUTA_VERSION: string = this.API_BASE + '/versiones/';
 
   constructor(
     private readonly http: HttpClient,
@@ -37,84 +36,17 @@ export class ZonasServices {
   ) { }
 
   // *********************************************************
-  // 1. OBTENER ZONAS PAGINADAS
+  // 1. CREAR VERSIÓN DE RUTA
   // *********************************************************
-  getZonasPaginated(
-    filters: ZonasPaginadasFilters = {},
-  ): Observable<GetZonasPaginatedResponse> {
-    const params = HttpServiceHelper.buildParams(filters);
+  createRutaVersion(
+    idRuta: number,
+    request: CreateRutaVersionRequest,
+  ): Observable<CreateRutaVersionResponse> {
     const headers = this.getJsonHeaders();
 
     return this.http
-      .get<GetZonasPaginatedResponse>(
-        this.API_GET_ZONAS_PAGINATED,
-        { params, headers },
-      )
-      .pipe(
-        catchError((error) =>
-          HttpServiceHelper.handleError(
-            error,
-            'No se pudieron obtener las zonas.',
-          ),
-        ),
-      );
-  }
-
-  // *********************************************************
-  // 2. OBTENER ZONAS ACTIVAS
-  // *********************************************************
-  getZonasActivas(): Observable<GetZonasActivasResponse> {
-    const headers = this.getJsonHeaders();
-
-    return this.http
-      .get<GetZonasActivasResponse>(
-        this.API_GET_ZONAS_ACTIVAS,
-        { headers },
-      )
-      .pipe(
-        catchError((error) =>
-          HttpServiceHelper.handleError(
-            error,
-            'No se pudieron obtener las zonas activas.',
-          ),
-        ),
-      );
-  }
-
-  // *********************************************************
-  // 3. OBTENER ZONA POR ID
-  // *********************************************************
-  getZonaById(
-    idZona: number,
-  ): Observable<GetZonaByIdResponse> {
-    const headers = this.getJsonHeaders();
-
-    return this.http
-      .get<GetZonaByIdResponse>(
-        `${this.API_GET_ZONA_BY_ID}${idZona}`,
-        { headers },
-      )
-      .pipe(
-        catchError((error) =>
-          HttpServiceHelper.handleError(
-            error,
-            'No se pudo obtener la zona.',
-          ),
-        ),
-      );
-  }
-
-  // *********************************************************
-  // 4. CREAR ZONA
-  // *********************************************************
-  createZona(
-    request: CreateZonaRequest,
-  ): Observable<CreateZonaResponse> {
-    const headers = this.getJsonHeaders();
-
-    return this.http
-      .post<CreateZonaResponse>(
-        this.API_CREATE_ZONA,
+      .post<CreateRutaVersionResponse>(
+        `${this.API_CREATE_RUTA_VERSION}${idRuta}/versiones`,
         request,
         { headers },
       )
@@ -122,24 +54,68 @@ export class ZonasServices {
         catchError((error) =>
           HttpServiceHelper.handleError(
             error,
-            'No se pudo registrar la zona.',
+            'No se pudo registrar la versión de la ruta.',
           ),
         ),
       );
   }
 
   // *********************************************************
-  // 5. ACTUALIZAR ZONA
+  // 2. OBTENER VERSIONES POR ID DE RUTA
   // *********************************************************
-  updateZona(
-    idZona: number,
-    request: UpdateZonaRequest,
-  ): Observable<UpdateZonaResponse> {
+  getVersionesByRuta(idRuta: number): Observable<GetVersionesByRutaResponse> {
     const headers = this.getJsonHeaders();
 
     return this.http
-      .put<UpdateZonaResponse>(
-        `${this.API_UPDATE_ZONA}${idZona}`,
+      .get<GetVersionesByRutaResponse>(
+        `${this.API_GET_VERSIONES_BY_RUTA}${idRuta}/versiones`,
+        { headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudieron obtener las versiones de la ruta.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 3. OBTENER VERSIÓN VIGENTE POR ID DE RUTA
+  // *********************************************************
+  getVersionVigenteByRuta(
+    idRuta: number,
+  ): Observable<GetVersionVigenteByRutaResponse> {
+    const headers = this.getJsonHeaders();
+
+    return this.http
+      .get<GetVersionVigenteByRutaResponse>(
+        `${this.API_GET_VERSION_VIGENTE_BY_RUTA}${idRuta}/version-vigente`,
+        { headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo obtener la versión vigente de la ruta.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 4. ACTUALIZAR VERSIÓN DE RUTA
+  // *********************************************************
+  updateRutaVersion(
+    idRutaVersion: number,
+    request: UpdateRutaVersionRequest,
+  ): Observable<UpdateRutaVersionResponse> {
+    const headers = this.getJsonHeaders();
+
+    return this.http
+      .put<UpdateRutaVersionResponse>(
+        `${this.API_UPDATE_RUTA_VERSION}${idRutaVersion}`,
         request,
         { headers },
       )
@@ -147,64 +123,61 @@ export class ZonasServices {
         catchError((error) =>
           HttpServiceHelper.handleError(
             error,
-            'No se pudo actualizar la zona.',
+            'No se pudo actualizar la versión de la ruta.',
           ),
         ),
       );
   }
 
   // *********************************************************
-  // 6. CAMBIAR ESTADO DE ZONA
+  // 5. ACTIVAR VERSIÓN DE RUTA COMO VIGENTE
   // *********************************************************
-  changeZonaEstado(
-    idZona: number,
-    request: ChangeZonaEstadoRequest,
-  ): Observable<ChangeZonaEstadoResponse> {
+  activateRutaVersion(idRutaVersion: number): Observable<ActivateRutaVersionResponse> {
     const headers = this.getJsonHeaders();
 
     return this.http
-      .patch<ChangeZonaEstadoResponse>(
-        `${this.API_PATCH_ESTADO_ZONA}${idZona}`,
-        request,
+      .patch<ActivateRutaVersionResponse>(
+        `${this.API_ACTIVATE_RUTA_VERSION}${idRutaVersion}/activar`,
+        null,
         { headers },
       )
       .pipe(
         catchError((error) =>
           HttpServiceHelper.handleError(
             error,
-            'No se pudo cambiar el estado de la zona.',
+            'No se pudo activar la versión de la ruta.',
           ),
         ),
       );
   }
 
   // *********************************************************
-  // 7. ELIMINAR VEHÍCULO
+  // 6. ELIMINAR VERSIÓN DE RUTA
   // *********************************************************
-  deleteZona(
-    idZona: number,
-  ): Observable<DeleteZonaResponse> {
+  deleteRutaVersion(
+    idRutaVersion: number,
+  ): Observable<DeleteRutaVersionResponse> {
     const headers = this.getJsonHeaders();
 
     return this.http
-      .delete<DeleteZonaResponse>(
-        `${this.API_DELETE_ZONA}${idZona}`,
+      .delete<DeleteRutaVersionResponse>(
+        `${this.API_DELETE_RUTA_VERSION}${idRutaVersion}`,
         { headers },
       )
       .pipe(
         catchError((error) =>
           HttpServiceHelper.handleError(
             error,
-            'No se pudo eliminar el vehículo.',
+            'No se pudo eliminar la versión de la ruta.',
           ),
         ),
       );
   }
+
 
   // *********************************************************
   // MÉTODOS PRIVADOS
   // *********************************************************
-
   private getJsonHeaders(): HttpHeaders {
     return HttpServiceHelper.getHeaders({
       token:

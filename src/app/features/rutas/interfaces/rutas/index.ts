@@ -5,3 +5,5 @@ export * from './update-ruta.interface';
 export * from './actived-ruta.interface';
 export * from './get-rutas-activas.interface';
 export * from './get-ruta-by-id.interface';
+export * from './change-ruta.interface';
+export * from './delete-ruta.interface';

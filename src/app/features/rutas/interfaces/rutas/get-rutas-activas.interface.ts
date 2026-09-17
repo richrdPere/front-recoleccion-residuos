@@ -1,5 +1,5 @@
 import { ApiResponse } from "src/app/core/models/api-response.model";
-import { ZonaData } from "../zonas";
+import { ZonaData } from "../../../zonas/interfaces";
 import { RutaData } from "./create-ruta.interface";
 import { RutaVersionDetalleData } from "./get-ruta-by-zona-id.interface";
 
