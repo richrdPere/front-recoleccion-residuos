@@ -29,7 +29,6 @@ export class RutasServices {
   private readonly API_GET_RUTAS_PAGINATED: string = this.API_BASE + '/paginado';
   private readonly API_GET_RUTAS_BY_ZONA: string = this.API_BASE + '/activas';
   private readonly API_GET_RUTAS_ACTIVAS: string = this.API_BASE + '/activas';
-  private readonly API_GET_RUTA_BY_ZONA_ID: string = this.API_BASE + '/view/';
   private readonly API_GET_RUTA_BY_ID: string = this.API_BASE + '/view/';
   private readonly API_UPDATE_RUTA: string = this.API_BASE + '/update/';
   private readonly API_CHANGE_RUTA_ESTADO_OPERATIVO: string = this.API_BASE + '/estado-ruta/';
