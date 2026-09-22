@@ -4,8 +4,8 @@ import {
 } from './get-puntos-recorrido.interface';
 
 import { RecoleccionEvidenciaData } from './anular-evidencia.interface';
-import { RecorridoData } from '../../recorridos/interfaces';
 import { ApiResponse } from 'src/app/core/models/api-response.model';
+import { RecorridoData } from '../../recorridos/interfaces/recorridos';
 
 // *********************************************************
 // DETALLE

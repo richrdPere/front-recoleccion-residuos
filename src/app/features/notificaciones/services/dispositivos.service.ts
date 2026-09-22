@@ -11,44 +11,44 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 // Helper
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
-// Interfaces
-import { CancelarRecorridoRequest, CancelarRecorridoResponse, GetRecorridoActivoResponse, GetRecorridoByIdResponse, GetRecorridoEventosParams, GetRecorridoEventosResponse } from '../interfaces/recorridos';
+// Interface
+import { DesactivarDispositivoRequest, DesactivarDispositivoResponse, DesactivarDispositivoTokenRequest, DesactivarDispositivoTokenResponse, GetMisDispositivosResponse, RegistrarDispositivoRequest, RegistrarDispositivoResponse } from '../interfaces/dispositivos';
 
 @Injectable({
   providedIn: 'root'
 })
-export class RecorridosService {
+export class DispositivoService {
 
   // *********************************************************
   // ENDPOINTS
   // *********************************************************
-  private readonly API_BASE = environment.apiUrl + 'recorridos';
+  private readonly API_BASE = environment.apiUrl + 'notificaciones/dispositivos';
 
-  private readonly API_CANCELAR_RECORRIDO: string = this.API_BASE + '/cancelar/';
-  private readonly API_GET_RECORRIDO_ACTIVO: string = this.API_BASE + '/activo';
-  private readonly API_GET_RECORRIDO_DETALLE: string = this.API_BASE + '/view/';
-  private readonly API_GET_EVENTOS_POR_RECORRIDO: string = this.API_BASE + '/';
+  private readonly API_REGISTER_DISPOSITIVO: string = this.API_BASE + '/register';
+  private readonly API_GET_MIS_DISPOSITIVOS: string = this.API_BASE + '/mis-dispositivos';
+  private readonly API_DESACTIVATED_DISPOSITIVO_BY_TOKEN: string = this.API_BASE + '/token/desactivar';
+  private readonly API_DESACTIVATED_DISPOSITIVO_BY_ID: string = this.API_BASE + '/';
 
   constructor(
     private readonly http: HttpClient,
     private readonly authStorage: AuthStorageService
   ) { }
 
+
   // *********************************************************
-  // 1. CANCELAR RECORRIDO
+  // 1. REGISTRAR DISPOSITIVO
   // *********************************************************
-  cancelarRecorrido(
-    idRecorrido: number,
-    request: CancelarRecorridoRequest,
-  ): Observable<CancelarRecorridoResponse> {
+  registrarDispositivo(
+    request: RegistrarDispositivoRequest,
+  ): Observable<RegistrarDispositivoResponse> {
     const headers = this.getJsonHeaders().set(
       'x-client-origin',
       'WEB',
     );
 
     return this.http
-      .patch<CancelarRecorridoResponse>(
-        `${this.API_CANCELAR_RECORRIDO}${idRecorrido}`,
+      .post<RegistrarDispositivoResponse>(
+        this.API_REGISTER_DISPOSITIVO,
         request,
         { headers },
       )
@@ -56,90 +56,90 @@ export class RecorridosService {
         catchError((error) =>
           HttpServiceHelper.handleError(
             error,
-            'No se pudo cancelar el recorrido.',
+            'No se pudo registrar el dispositivo.',
           ),
         ),
       );
   }
 
   // *********************************************************
-  // 2. OBTENER RECORRIDO ACTIVO
+  // 2. OBTENER MIS DISPOSITIVOS
   // *********************************************************
-  getRecorridoActivo(): Observable<GetRecorridoActivoResponse> {
+  getMisDispositivos(): Observable<GetMisDispositivosResponse> {
     const headers = this.getJsonHeaders().set(
       'x-client-origin',
       'WEB',
     );
 
     return this.http
-      .get<GetRecorridoActivoResponse>(
-        this.API_GET_RECORRIDO_ACTIVO,
+      .get<GetMisDispositivosResponse>(
+        this.API_GET_MIS_DISPOSITIVOS,
         { headers },
       )
       .pipe(
         catchError((error) =>
           HttpServiceHelper.handleError(
             error,
-            'No se pudo obtener el recorrido activo.',
+            'No se pudieron obtener tus dispositivos.',
           ),
         ),
       );
   }
 
   // *********************************************************
-  // 3. OBTENER RECORRIDO POR ID
+  // 3. DESACTIVAR DISPOSITIVO
   // *********************************************************
-  getRecorridoById(
-    idRecorrido: number,
-  ): Observable<GetRecorridoByIdResponse> {
+  desactivarDispositivo(
+    idDispositivo: number,
+    request: DesactivarDispositivoRequest = {},
+  ): Observable<DesactivarDispositivoResponse> {
     const headers = this.getJsonHeaders().set(
       'x-client-origin',
       'WEB',
     );
 
     return this.http
-      .get<GetRecorridoByIdResponse>(
-        `${this.API_GET_RECORRIDO_DETALLE}${idRecorrido}`,
+      .patch<DesactivarDispositivoResponse>(
+        `${this.API_DESACTIVATED_DISPOSITIVO_BY_ID}${idDispositivo}/desactivar`,
+        request,
         { headers },
       )
       .pipe(
         catchError((error) =>
           HttpServiceHelper.handleError(
             error,
-            'No se pudo obtener el detalle del recorrido.',
+            'No se pudo desactivar el dispositivo.',
           ),
         ),
       );
   }
 
   // *********************************************************
-  // 4. OBTENER EVENTOS DEL RECORRIDO
+  // 4. DESACTIVAR DISPOSITIVO POR TOKEN
   // *********************************************************
-  getRecorridoEventos(
-    idRecorrido: number,
-    query: GetRecorridoEventosParams = {},
-  ): Observable<GetRecorridoEventosResponse> {
-    const params = HttpServiceHelper.buildParams(query);
+  desactivarDispositivoPorToken(
+    request: DesactivarDispositivoTokenRequest,
+  ): Observable<DesactivarDispositivoTokenResponse> {
     const headers = this.getJsonHeaders().set(
       'x-client-origin',
       'WEB',
     );
 
     return this.http
-      .get<GetRecorridoEventosResponse>(
-        `${this.API_GET_EVENTOS_POR_RECORRIDO}${idRecorrido}/eventos`,
-        { headers, params },
+      .patch<DesactivarDispositivoTokenResponse>(
+        this.API_DESACTIVATED_DISPOSITIVO_BY_TOKEN,
+        request,
+        { headers },
       )
       .pipe(
         catchError((error) =>
           HttpServiceHelper.handleError(
             error,
-            'No se pudieron obtener los eventos del recorrido.',
+            'No se pudo desactivar el dispositivo por token.',
           ),
         ),
       );
   }
-
 
   // *********************************************************
   // MÉTODOS PRIVADOS

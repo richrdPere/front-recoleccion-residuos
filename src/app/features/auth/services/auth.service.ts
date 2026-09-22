@@ -603,5 +603,4 @@ export class AuthService {
         currentRoles.includes(role),
     );
   }
-
 }
