@@ -12,6 +12,8 @@ import { VehiculosService } from '../../services/vehiculos.service';
 
 // Inteerface
 import { EstadoOperativoVehiculo, TipoVehiculo, VehiculoData, VehiculosPaginadosFilters } from '../../models';
+import { VehiculosFormComponent } from './vehiculos-form/vehiculos-form.component';
+import { VehiculosViewComponent } from './vehiculos-view/vehiculos-view.component';
 
 @Component({
   selector: 'app-vehiculos-page',
@@ -20,16 +22,17 @@ import { EstadoOperativoVehiculo, TipoVehiculo, VehiculoData, VehiculosPaginados
     FormsModule,
     CommonModule,
     UppercaseDirective,
-  ],
+    VehiculosFormComponent,
+    VehiculosViewComponent
+],
   templateUrl: './vehiculos-page.component.html',
   styles: ``,
 
 })
 export class VehiculosPageComponent implements OnInit {
 
-
   // Vehiculos
-  vehiculos: any[] = [];
+  vehiculos: VehiculoData[] = [];
   vehiculo_id: number | null = null;
   isLoading = true;
 

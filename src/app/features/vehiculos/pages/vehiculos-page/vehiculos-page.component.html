@@ -111,7 +111,14 @@
   <!-- MODALES -->
   <!-- ================================================= -->
 
+  <!-- Formulario para vehiculos -->
+  <vehiculos-form [mostrarModal]="mostrarModal" [modoEdicion]="modoEdicion"
+    [vehiculoSeleccionado]="vehiculoSeleccionado" (modalCerrado)="cerrarModal()"
+    (vehiculoCreado)="getVehiculosPaginated()"></vehiculos-form>
 
+  <!-- Modal para ver vehiculo -->
+  <vehiculos-view [mostrarModal]="mostrarModalView" [vehiculo_id]="vehiculo_id"
+    (modalCerrado)="cerrarModalInfo()"></vehiculos-view>
 
   <!-- ================================================= -->
   <!-- TABLA DE VEHICULOS -->
@@ -462,8 +469,8 @@
 
                 <!-- Editar -->
                 <div class="tooltip tooltip-left" data-tip="Editar vehículo">
-                  <button type="button" class="btn btn-ghost btn-circle btn-sm"
-                    (click)="editarUnidad(vehiculo)" aria-label="Editar vehículo">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="editarUnidad(vehiculo)"
+                    aria-label="Editar vehículo">
                     <i class="fa-regular fa-pen-to-square"></i>
                   </button>
                 </div>
