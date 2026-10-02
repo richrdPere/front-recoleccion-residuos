@@ -10,6 +10,8 @@ import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directiv
 // Service
 import { PersonalService } from '../../services/personal.service';
 import { EstadoLaboralPersonal, PersonalOperativoData, PersonalPaginadoFilters, TipoContratoPersonal } from '../../models';
+import { PersonalFormComponent } from '../personal-form/personal-form.component';
+import { PersonalViewComponent } from '../personal-view/personal-view.component';
 
 @Component({
   selector: 'app-personal-page',
@@ -18,7 +20,9 @@ import { EstadoLaboralPersonal, PersonalOperativoData, PersonalPaginadoFilters, 
     FormsModule,
     CommonModule,
     UppercaseDirective,
-  ],
+    PersonalFormComponent,
+    PersonalViewComponent
+],
   templateUrl: './personal-page.component.html',
   styles: ``,
 })

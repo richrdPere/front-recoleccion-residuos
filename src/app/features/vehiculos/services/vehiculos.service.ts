@@ -12,7 +12,7 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
 // Interfaces
-import { ChangeVehiculoEstadoOperativoRequest, ChangeVehiculoEstadoResponse, CreateVehiculoRequest, CreateVehiculoResponse, DeleteVehiculoResponse, GetVehiculoByIdResponse, GetVehiculosPaginatedResponse, UpdateVehiculoRequest, UpdateVehiculoResponse, VehiculosPaginadosFilters } from '../models';
+import { ChangeVehiculoEstadoOperativoRequest, ChangeVehiculoEstadoResponse, CreateVehiculoRequest, CreateVehiculoResponse, DeleteVehiculoResponse, GetVehiculoByIdResponse, GetVehiculosPaginatedResponse, UltimoCodigoResponse, UpdateVehiculoRequest, UpdateVehiculoResponse, VehiculosPaginadosFilters } from '../models';
 
 @Injectable({
   providedIn: 'root'
@@ -30,6 +30,7 @@ export class VehiculosService {
   private readonly API_UPDATE_VEHICULO: string = this.API_BASE + '/update/';
   private readonly API_PATCH_ESTADO_VEHICULO: string = this.API_BASE + '/estado/';
   private readonly API_DELETE_VEHICULO: string = this.API_BASE + '/delete/';
+  private readonly API_GET_ULTIMO_CODIGO: string = this.API_BASE + '/codigo';
 
   constructor(
     private readonly http: HttpClient,
@@ -201,6 +202,30 @@ export class VehiculosService {
         ),
       );
   }
+
+  // *********************************************************
+  // 8. OBTENER ULTIMO CODIGO VEHICULO
+  // *********************************************************
+  getLastCodigoVehiculo(
+  ): Observable<UltimoCodigoResponse> {
+    const headers = this.getJsonHeaders();
+
+    return this.http
+      .get<UltimoCodigoResponse>(
+        this.API_GET_ULTIMO_CODIGO,
+        { headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo obtener el último código de vehículo.',
+          ),
+        ),
+      );
+  }
+
+
 
   // *********************************************************
   // MÉTODOS PRIVADOS

@@ -1,0 +1,275 @@
+@if (mostrarModal) {
+<div class="modal modal-open">
+  <div class="fixed inset-0 z-50 flex items-center justify-center
+             bg-black/30 p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="personal-form-title"
+    [attr.aria-busy]="isLoading">
+    <section class="relative flex max-h-[92vh] w-full flex-col
+               overflow-hidden rounded-2xl border border-base-300
+               bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+      <!-- HEADER -->
+      <header class="flex shrink-0 items-center justify-between gap-4
+                 border-b border-base-300 px-5 py-4 sm:px-6">
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center
+                     rounded-2xl bg-primary/10 text-primary">
+            <i class="fa-solid text-lg" [ngClass]="modoEdicion ? 'fa-pen-to-square' : 'fa-user-plus'"
+              aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="personal-form-title" class="truncate text-lg font-bold sm:text-xl">
+              {{
+              modoEdicion
+              ? 'Editar personal operativo'
+              : 'Nuevo personal operativo'
+              }}
+            </h2>
+
+            <p class="mt-0.5 text-sm text-base-content/55">
+              {{
+              modoEdicion
+              ? 'Actualice la información laboral del personal.'
+              : 'Registre un usuario como personal operativo.'
+              }}
+            </p>
+
+            @if (formPersonal.get('codigo_empleado')?.value) {
+            <span class="badge badge-primary badge-outline mt-2 font-mono">
+              {{ formPersonal.get('codigo_empleado')?.value }}
+            </span>
+            }
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-circle btn-ghost btn-sm shrink-0" aria-label="Cerrar formulario"
+          [disabled]="isLoading" (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <form [formGroup]="formPersonal" (ngSubmit)="crearOEditarPersonal()" class="flex min-h-0 flex-1 flex-col"
+        novalidate>
+
+        <!-- CONTENIDO CON SCROLL -->
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain
+                   px-5 py-5 sm:px-6">
+          <fieldset class="min-w-0 space-y-6" [disabled]="isLoading">
+
+            <!-- IDENTIFICACIÓN -->
+            <div class="space-y-3">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-user text-primary" aria-hidden="true"></i>
+                Identificación del personal
+              </h3>
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+                <!-- Usuario -->
+                <div class="form-control">
+                  <label class="label" for="personal-usuario">
+                    <span class="label-text">
+                      Usuario <span class="font-bold text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <select id="personal-usuario" formControlName="id_usuario" class="select select-bordered w-full"
+                    [class.select-error]="campoInvalido('id_usuario')">
+                    <option [ngValue]="null" disabled>
+                      Seleccionar usuario
+                    </option>
+
+                    @if (usuarioSeleccionadoFueraDeLista) {
+                    <option [ngValue]="formPersonal.get('id_usuario')?.value">
+                      {{
+                      nombreUsuarioSeleccionado ||
+                      ('Usuario #' + formPersonal.get('id_usuario')?.value)
+                      }}
+                    </option>
+                    }
+
+                    @for (usuario of usuarios; track usuario.id_usuario) {
+                    <option [ngValue]="usuario.id_usuario">
+                      {{ usuario.nombre }}
+                    </option>
+                    }
+                  </select>
+
+                  @if (campoInvalido('id_usuario')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('id_usuario') }}
+                  </p>
+                  }
+
+                  <p class="mt-1 text-xs text-base-content/55">
+                    Seleccione al conductor o recolector correspondiente.
+                  </p>
+                </div>
+
+                <!-- Código -->
+                <div class="form-control">
+                  <label class="label" for="personal-codigo">
+                    <span class="label-text">
+                      Código de empleado
+                      <span class="font-bold text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <input id="personal-codigo" type="text" formControlName="codigo_empleado" placeholder="Ej. EM0007"
+                    class="input input-bordered w-full placeholder-gray-400"
+                    [class.input-error]="campoInvalido('codigo_empleado')" (blur)="normalizarCodigo()" />
+
+                  @if (campoInvalido('codigo_empleado')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('codigo_empleado') }}
+                  </p>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- INFORMACIÓN LABORAL -->
+            <div class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-briefcase text-primary" aria-hidden="true"></i>
+                Información laboral
+              </h3>
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+                <!-- Fecha de ingreso -->
+                <div class="form-control">
+                  <label class="label" for="personal-fecha">
+                    <span class="label-text">
+                      Fecha de ingreso
+                      <span class="font-bold text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <input id="personal-fecha" type="date" formControlName="fecha_ingreso"
+                    class="input input-bordered w-full" [class.input-error]="campoInvalido('fecha_ingreso')" />
+
+                  @if (campoInvalido('fecha_ingreso')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('fecha_ingreso') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Contrato -->
+                <div class="form-control">
+                  <label class="label" for="personal-contrato">
+                    <span class="label-text">
+                      Tipo de contrato
+                      <span class="font-bold text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <select id="personal-contrato" formControlName="tipo_contrato" class="select select-bordered w-full"
+                    [class.select-error]="campoInvalido('tipo_contrato')">
+                    <option [ngValue]="null" disabled>
+                      Seleccionar tipo de contrato
+                    </option>
+
+                    @for (opcion of tiposContrato; track opcion.value) {
+                    <option [ngValue]="opcion.value">
+                      {{ opcion.label }}
+                    </option>
+                    }
+                  </select>
+
+                  @if (campoInvalido('tipo_contrato')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('tipo_contrato') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Turno -->
+                <div class="form-control">
+                  <label class="label" for="personal-turno">
+                    <span class="label-text">Turno preferente</span>
+                    <span class="label-text-alt">Opcional</span>
+                  </label>
+
+                  <select id="personal-turno" formControlName="turno_preferente" class="select select-bordered w-full">
+                    <option [ngValue]="null">Sin preferencia</option>
+
+                    @for (opcion of turnosPreferentes; track opcion.value) {
+                    <option [ngValue]="opcion.value">
+                      {{ opcion.label }}
+                    </option>
+                    }
+                  </select>
+                </div>
+
+                <!-- Estado laboral -->
+                <div class="form-control">
+                  <label class="label" for="personal-estado">
+                    <span class="label-text">Estado laboral</span>
+                    <span class="label-text-alt">Opcional</span>
+                  </label>
+
+                  <select id="personal-estado" formControlName="estado_laboral" class="select select-bordered w-full">
+                    <option [ngValue]="null">
+                      Usar estado predeterminado
+                    </option>
+
+                    @for (opcion of estadosLaborales; track opcion.value) {
+                    <option [ngValue]="opcion.value">
+                      {{ opcion.label }}
+                    </option>
+                    }
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- OBSERVACIONES -->
+            <div class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-clipboard text-primary" aria-hidden="true"></i>
+                Observaciones
+              </h3>
+
+              <div class="form-control">
+                <label class="label" for="personal-observacion">
+                  <span class="label-text">Información adicional</span>
+                  <span class="label-text-alt">Opcional</span>
+                </label>
+
+                <textarea id="personal-observacion" formControlName="observacion" rows="3"
+                  placeholder="Ingrese observaciones sobre el personal."
+                  class="textarea textarea-bordered w-full"></textarea>
+              </div>
+            </div>
+
+          </fieldset>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="flex shrink-0 flex-col-reverse gap-3
+                   border-t border-base-300 bg-base-100 px-5 py-4
+                   sm:flex-row sm:items-center sm:justify-center sm:px-6">
+          <div class="flex flex-col-reverse gap-5 sm:flex-row">
+            <button type="button" class="btn btn-error" [disabled]="isLoading" (click)="cerrarModal()">
+              Cancelar
+            </button>
+
+            <button type="submit" class="btn btn-primary" [disabled]="formPersonal.invalid || isLoading">
+              @if (isLoading) {
+              <span class="loading loading-spinner loading-sm"></span>
+              {{ modoEdicion ? 'Actualizando...' : 'Guardando...' }}
+              } @else {
+              <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+              {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+              }
+            </button>
+          </div>
+        </footer>
+
+      </form>
+    </section>
+  </div>
+</div>
+}

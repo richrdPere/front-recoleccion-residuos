@@ -85,10 +85,59 @@
             </div>
           </label>
 
-          <!-- Buscar por estado operativo -->
+          <!-- Filtrar por tipo de vehiculo -->
+          <label class="form-control w-full">
+            <span class="mb-1.5 text-xs font-semibold
+                   uppercase tracking-wide
+                   text-base-content/60">
 
+              Tipo de vehiculo
+            </span>
 
-          <!-- Buscar por tipo vehiculo -->
+            <select id="filtro-tipo" class="select select-bordered
+                   h-11 min-h-11 w-full
+                   rounded-xl bg-base-100
+                   focus:outline-none
+                   focus:ring-2
+                   focus:ring-primary/30" [(ngModel)]="tipoVehiculoBusqueda" (ngModelChange)="onSearchChange()">
+              <option value="">
+                Todos los tipos
+              </option>
+
+              @for (opcion of tiposVehiculo; track opcion.value) {
+              <option [value]="opcion.value">
+                {{ opcion.label }}
+              </option>
+              }
+            </select>
+          </label>
+
+          <!-- Filtrar por estado operativo -->
+          <label class="form-control w-full">
+            <span class="mb-1.5 text-xs font-semibold
+                   uppercase tracking-wide
+                   text-base-content/60">
+
+              Estado operativo
+            </span>
+
+            <select id="filtro-estado" class="select select-bordered
+                   h-11 min-h-11 w-full
+                   rounded-xl bg-base-100
+                   focus:outline-none
+                   focus:ring-2
+                   focus:ring-primary/30" [(ngModel)]="estadoOperativoBusqueda" (ngModelChange)="onSearchChange()">
+              <option value="">
+                Todos los estados
+              </option>
+
+              @for (estado of estadosOperativos; track estado.value) {
+              <option [value]="estado.value">
+                {{ estado.label }}
+              </option>
+              }
+            </select>
+          </label>
 
         </div>
       </div>
@@ -111,12 +160,12 @@
   <!-- MODALES -->
   <!-- ================================================= -->
 
-  <!-- Formulario para vehiculos -->
+  <!-- Formulario modal para vehiculos -->
   <vehiculos-form [mostrarModal]="mostrarModal" [modoEdicion]="modoEdicion"
     [vehiculoSeleccionado]="vehiculoSeleccionado" (modalCerrado)="cerrarModal()"
     (vehiculoCreado)="getVehiculosPaginated()"></vehiculos-form>
 
-  <!-- Modal para ver vehiculo -->
+  <!-- Modal para ver detalle delvehiculo -->
   <vehiculos-view [mostrarModal]="mostrarModalView" [vehiculo_id]="vehiculo_id"
     (modalCerrado)="cerrarModalInfo()"></vehiculos-view>
 

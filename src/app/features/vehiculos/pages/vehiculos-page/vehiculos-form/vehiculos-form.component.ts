@@ -221,7 +221,6 @@ export class VehiculosFormComponent implements OnChanges {
   // ============================================================
   // CICLO DE VIDA
   // ============================================================
-
   ngOnChanges(changes: SimpleChanges): void {
     if (!this.mostrarModal) {
       if (changes['mostrarModal']) {
@@ -246,6 +245,8 @@ export class VehiculosFormComponent implements OnChanges {
     }
 
     this.resetearFormulario();
+    this.getCodigo();
+    this.setModalWidth('lg');
   }
 
   // ============================================================
@@ -404,7 +405,7 @@ export class VehiculosFormComponent implements OnChanges {
         },
 
         error: (err) => {
-          const mensaje = err?.error?.message;
+          const mensaje = err?.error?.message ?? err?.message;
 
           void Swal.fire({
             icon: 'error',
@@ -423,7 +424,6 @@ export class VehiculosFormComponent implements OnChanges {
   // ============================================================
   // NORMALIZACIÓN DE TEXTO
   // ============================================================
-
   private normalizarCamposTexto(): void {
     const form = this.formVehiculo.getRawValue();
 
@@ -466,6 +466,33 @@ export class VehiculosFormComponent implements OnChanges {
   // ============================================================
   // VALIDACIONES PARA EL HTML
   // ============================================================
+  getCodigo(): void {
+    this.vehiculosService
+      .getLastCodigoVehiculo()
+      .subscribe({
+        next: (resp) => {
+          // Evita aplicar la respuesta si se cerró el modal
+          // o se cambió a modo edición mientras cargaba.
+          if (!this.mostrarModal || this.modoEdicion) {
+            return;
+          }
+
+          if (!resp.success || !resp.data?.codigo) {
+            return;
+          }
+
+          this.formVehiculo.patchValue({
+            codigo: resp.data.codigo,
+          });
+
+          this.cdr.markForCheck();
+        },
+
+        error: (error) => {
+          console.error('Error al obtener el código del vehículo:', error);
+        },
+      });
+  }
 
   campoInvalido(campo: string): boolean {
     const control = this.formVehiculo.get(campo);
@@ -534,7 +561,6 @@ export class VehiculosFormComponent implements OnChanges {
   // ============================================================
   // HELPERS
   // ============================================================
-
   get tituloModal(): string {
     return this.modoEdicion
       ? 'Editar vehículo'

@@ -11,7 +11,7 @@ import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directiv
 import { VehiculosService } from '../../services/vehiculos.service';
 
 // Inteerface
-import { EstadoOperativoVehiculo, TipoVehiculo, VehiculoData, VehiculosPaginadosFilters } from '../../models';
+import { EstadoOperativoVehiculo, TipoVehiculo, UnidadCapacidad, VehiculoData, VehiculosPaginadosFilters } from '../../models';
 import { VehiculosFormComponent } from './vehiculos-form/vehiculos-form.component';
 import { VehiculosViewComponent } from './vehiculos-view/vehiculos-view.component';
 
@@ -24,7 +24,7 @@ import { VehiculosViewComponent } from './vehiculos-view/vehiculos-view.componen
     UppercaseDirective,
     VehiculosFormComponent,
     VehiculosViewComponent
-],
+  ],
   templateUrl: './vehiculos-page.component.html',
   styles: ``,
 
@@ -57,6 +57,57 @@ export class VehiculosPageComponent implements OnInit {
 
   pageSizeOptions = [5, 10, 20, 50];
 
+
+  // Selectores
+  readonly tiposVehiculo: {
+    value: TipoVehiculo;
+    label: string;
+  }[] = [
+      {
+        value: 'CAMION_COMPACTADOR',
+        label: 'Camión compactador',
+      },
+      {
+        value: 'CAMION_BARANDA',
+        label: 'Camión baranda',
+      },
+      {
+        value: 'CAMION_VOLQUETE',
+        label: 'Camión volquete',
+      },
+      {
+        value: 'MOTOFURGON',
+        label: 'Motofurgón',
+      },
+      {
+        value: 'OTRO',
+        label: 'Otro',
+      },
+    ];
+
+  readonly estadosOperativos: {
+    value: EstadoOperativoVehiculo;
+    label: string;
+  }[] = [
+      {
+        value: 'DISPONIBLE',
+        label: 'Disponible',
+      },
+      {
+        value: 'EN_RUTA',
+        label: 'En ruta',
+      },
+      {
+        value: 'EN_MANTENIMIENTO',
+        label: 'En mantenimiento',
+      },
+      {
+        value: 'FUERA_DE_SERVICIO',
+        label: 'Fuera de servicio',
+      },
+    ];
+
+
   constructor(
     private vehiculosService: VehiculosService,
     private cdr: ChangeDetectorRef,
@@ -78,6 +129,8 @@ export class VehiculosPageComponent implements OnInit {
       tipo_vehiculo: this.tipoVehiculoBusqueda || undefined,
       // sortOrder: 'ASC'
     };
+
+    console.log("PARAMS: ", params);
 
     this.isLoading = true;
 

@@ -30,7 +30,14 @@
 
           <div class="min-w-0">
             <h2 id="patrullaje-form-title" class="truncate text-lg font-bold sm:text-xl">
-              {{ modoEdicion ? 'Editar vehículo' : 'Nuevo vehículo' }}
+              {{ modoEdicion ? 'Editar vehículo - ' : 'Nuevo vehículo - ' }}
+
+              <!-- Badge código -->
+              @if (formVehiculo.get('codigo')?.value) {
+              <span class="badge badge-primary badge-outline px-3 font-mono text-sm">
+                {{ formVehiculo.get('codigo')?.value }}
+              </span>
+              }
             </h2>
 
             <p class="mt-0.5 text-sm text-base-content/55">
@@ -39,6 +46,8 @@
               ? 'Actualice los datos del vehículo.'
               : 'Agrege un nuevo vehículo.'
               }}
+
+
             </p>
           </div>
         </div>
@@ -66,11 +75,11 @@
                 Información inicial del vehículo
               </h3>
 
-              <!-- Código + Placa -->
-              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <!-- Código, Placa, Modelo -->
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 
                 <!-- Código -->
-                <div class="form-control">
+                <!-- <div class="form-control">
                   <label class="label" for="vehiculo-codigo">
                     <span class="label-text flex items-center gap-1">
                       Código
@@ -91,7 +100,7 @@
                     {{ obtenerError('codigo') }}
                   </p>
                   }
-                </div>
+                </div> -->
 
                 <!-- Placa -->
                 <div class="form-control">
@@ -116,10 +125,6 @@
                   </p>
                   }
                 </div>
-              </div>
-
-              <!-- Marca + Modelo -->
-              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 
                 <!-- Marca -->
                 <div class="form-control">
@@ -168,8 +173,8 @@
                 </div>
               </div>
 
-              <!-- Año + Color -->
-              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <!-- Año, Color -->
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 
                 <!-- Año -->
                 <div class="form-control">

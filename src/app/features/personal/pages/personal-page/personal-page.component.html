@@ -105,6 +105,13 @@
   <!-- MODALES -->
   <!-- ================================================= -->
 
+  <!-- Formulario modal para personal -->
+  <personal-form [mostrarModal]="mostrarModal" [modoEdicion]="modoEdicion" [personalSeleccionado]="personalSeleccionado"
+    (modalCerrado)="cerrarModal()" (personalCreado)="getPersonalPaginated()"></personal-form>
+
+  <!-- Modal para ver detalle del personal -->
+  <personal-view [mostrarModal]="mostrarModalView" [personal_id]="personal_id"
+    (modalCerrado)="cerrarModalInfo()" />
 
   <!-- ================================================= -->
   <!-- TABLA DE PERSONAL REGISTRADO -->
