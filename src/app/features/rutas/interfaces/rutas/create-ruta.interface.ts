@@ -1,8 +1,7 @@
-// *********************************************************
-// REQUEST PARA CREAR RUTA
-
 import { ApiResponse } from "src/app/core/models/api-response.model";
 
+// *********************************************************
+// REQUEST PARA CREAR RUTA
 // *********************************************************
 export interface CreateRutaRequest {
   id_zona: number;

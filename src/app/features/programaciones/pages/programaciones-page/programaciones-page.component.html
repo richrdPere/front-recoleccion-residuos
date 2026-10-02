@@ -1,1 +1,490 @@
-<p>programaciones-page works!</p>
+<div class="mx-auto w-full max-w-500">
+
+  <!-- ENCABEZADO -->
+  <header class="mb-5 flex flex-col gap-4
+           sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex min-w-0 items-center gap-3">
+      <div class="flex h-12 w-12 shrink-0 items-center justify-center
+               rounded-2xl bg-primary/10 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-calendar-days text-2xl"></i>
+      </div>
+
+      <div class="min-w-0">
+        <h1 class="text-2xl font-bold leading-tight">
+          Programaciones
+        </h1>
+
+        <p class="mt-1 max-w-2xl text-sm text-base-content/60">
+          Administre las fechas, rutas, vehículos y personal
+          de las operaciones de recolección.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- FILTROS -->
+  <section class="mb-6 overflow-hidden rounded-2xl
+           border border-base-300 bg-base-100 shadow-sm">
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_170px]">
+      <div class="p-4 sm:p-5">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+
+          <!-- Búsqueda -->
+          <label class="form-control w-full">
+            <span class="mb-1.5 text-xs font-semibold uppercase
+                     tracking-wide text-base-content/60">
+              Buscar
+            </span>
+
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass pointer-events-none
+                       absolute left-3.5 top-1/2 -translate-y-1/2
+                       text-base-content/35" aria-hidden="true"></i>
+
+              <input type="text" class="input input-bordered h-11 w-full rounded-xl pl-10"
+                placeholder="Buscar programación" autocomplete="off" [(ngModel)]="searchBusqueda"
+                (ngModelChange)="onSearchChange()" />
+            </div>
+          </label>
+
+          <!-- Desde -->
+          <label class="form-control w-full">
+            <span class="mb-1.5 text-xs font-semibold uppercase
+                     tracking-wide text-base-content/60">
+              Fecha desde
+            </span>
+
+            <input type="date" class="input input-bordered h-11 w-full rounded-xl" [(ngModel)]="fechaDesdeBusqueda"
+              (ngModelChange)="onFiltroChange()" [class.input-error]="!!errorFiltros" />
+          </label>
+
+          <!-- Hasta -->
+          <label class="form-control w-full">
+            <span class="mb-1.5 text-xs font-semibold uppercase
+                     tracking-wide text-base-content/60">
+              Fecha hasta
+            </span>
+
+            <input type="date" class="input input-bordered h-11 w-full rounded-xl" [(ngModel)]="fechaHastaBusqueda"
+              (ngModelChange)="onFiltroChange()" [class.input-error]="!!errorFiltros" />
+          </label>
+
+          <!-- Estado -->
+          <label class="form-control w-full">
+            <span class="mb-1.5 text-xs font-semibold uppercase
+                     tracking-wide text-base-content/60">
+              Estado de programación
+            </span>
+
+            <select class="select select-bordered h-11 min-h-11 w-full rounded-xl"
+              [(ngModel)]="estadoProgramacionBusqueda" (ngModelChange)="onFiltroChange()">
+              <option value="">Todos los estados</option>
+
+              @for (opcion of estadosProgramacion; track opcion.value) {
+              <option [value]="opcion.value">
+                {{ opcion.label }}
+              </option>
+              }
+            </select>
+          </label>
+
+          <!-- Ruta -->
+          <label class="form-control w-full">
+            <span class="mb-1.5 text-xs font-semibold uppercase
+                     tracking-wide text-base-content/60">
+              Ruta
+            </span>
+
+            <select class="select select-bordered h-11 min-h-11 w-full rounded-xl" [(ngModel)]="rutaBusqueda"
+              (ngModelChange)="onFiltroChange()">
+              <option [ngValue]="null">Todas las rutas</option>
+
+              @for (ruta of rutasFiltro; track ruta.id_ruta) {
+              <option [ngValue]="ruta.id_ruta">
+                {{ ruta.codigo }} — {{ ruta.nombre }}
+              </option>
+              }
+            </select>
+          </label>
+
+          <!-- Vehículo -->
+          <label class="form-control w-full">
+            <span class="mb-1.5 text-xs font-semibold uppercase
+                     tracking-wide text-base-content/60">
+              Vehículo
+            </span>
+
+            <select class="select select-bordered h-11 min-h-11 w-full rounded-xl" [(ngModel)]="vehiculoBusqueda"
+              (ngModelChange)="onFiltroChange()">
+              <option [ngValue]="null">Todos los vehículos</option>
+
+              @for (
+              vehiculo of vehiculosFiltro;
+              track vehiculo.id_vehiculo
+              ) {
+              <option [ngValue]="vehiculo.id_vehiculo">
+                {{ vehiculo.codigo }} — {{ vehiculo.placa }}
+              </option>
+              }
+            </select>
+          </label>
+        </div>
+
+        @if (errorFiltros) {
+        <p class="mt-3 text-sm text-error" role="alert">
+          {{ errorFiltros }}
+        </p>
+        }
+
+        @if (hayFiltros) {
+        <div class="mt-4 flex justify-end">
+          <button type="button" class="btn btn-ghost btn-sm" (click)="limpiarFiltros()">
+            <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i>
+            Limpiar filtros
+          </button>
+        </div>
+        }
+      </div>
+
+      <div class="hidden items-center justify-center px-5 lg:flex">
+        <img src="assets/img/search.png" alt="" aria-hidden="true"
+          class="h-32 w-32 select-none object-contain opacity-90" draggable="false" />
+      </div>
+    </div>
+  </section>
+
+
+  <!-- MODALES -->
+
+  <!-- Formulario para programacion -->
+  <programaciones-form [mostrarModal]="mostrarModal" [modoEdicion]="modoEdicion"
+    [programacionSeleccionada]="programacionSeleccionada" (modalCerrado)="cerrarModal()"
+    (programacionGuardada)="getProgramacionesPaginated()" />
+
+  <!-- Modal para ver detalle de programacion -->
+  <programaciones-view [mostrarModal]="mostrarModalView" [programacion_id]="programacion_id"
+    (modalCerrado)="cerrarModalInfo()"></programaciones-view>
+
+  <!-- TABLA -->
+  <section class="overflow-hidden rounded-2xl
+           border border-base-300 bg-base-100 shadow-sm" aria-label="Programaciones registradas"
+    [attr.aria-busy]="isLoading">
+
+    <!-- CABECERA -->
+    <div class="flex flex-col gap-4 border-b border-base-300 px-4 py-4
+             sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <div class="flex items-center justify-between gap-3
+               text-sm sm:justify-start">
+        <label for="programaciones-page-size">
+          Mostrar
+        </label>
+
+        <select id="programaciones-page-size" class="select select-bordered select-sm w-auto" [(ngModel)]="limit"
+          (change)="cambiarLimite()">
+          @for (size of pageSizeOptions; track size) {
+          <option [ngValue]="size">{{ size }}</option>
+          }
+        </select>
+
+        <span class="whitespace-nowrap">
+          ítems por página
+        </span>
+      </div>
+
+      <button type="button" class="btn btn-primary w-full gap-2 rounded-xl sm:w-auto" (click)="abrirModal()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        Nueva programación
+      </button>
+    </div>
+
+    <!-- ERROR -->
+    @if (!isLoading && errorCarga) {
+    <div class="p-5">
+      <div class="alert alert-error" role="alert">
+        <span>{{ errorCarga }}</span>
+
+        <button type="button" class="btn btn-sm" (click)="getProgramacionesPaginated()">
+          Reintentar
+        </button>
+      </div>
+    </div>
+    } @else {
+    <div class="overflow-x-auto">
+      <table class="table min-w-325">
+        <thead class="bg-base-300/90">
+          <tr class="text-xs uppercase tracking-wide text-base-content/60">
+            <th class="w-14 text-center">N.°</th>
+            <th>Programación</th>
+            <th>Ruta</th>
+            <th>Vehículo</th>
+            <th>Personal asignado</th>
+            <th>Turno</th>
+            <th class="text-center">Estado</th>
+            <th>Actualización</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <!-- SKELETON -->
+          @if (isLoading) {
+          @for (item of [1, 2, 3, 4, 5]; track item) {
+          <tr aria-hidden="true">
+            @for (
+            columna of [1,2,3,4,5,6,7,8,9];
+            track columna
+            ) {
+            <td>
+              <div class="skeleton h-5 w-full min-w-10"></div>
+            </td>
+            }
+          </tr>
+          }
+          } @else {
+          @for (
+          programacion of programaciones;
+          track programacion.id_programacion;
+          let i = $index
+          ) {
+          <tr class="transition-colors hover:bg-base-200/40">
+
+            <!-- Numeración -->
+            <td class="text-center text-base-content/60">
+              {{ ((page - 1) * limit) + i + 1 }}
+            </td>
+
+            <!-- Fecha y horario -->
+            <td class="whitespace-nowrap">
+              <p class="text-sm font-semibold">
+                {{ programacion.fecha_programada | date:'dd/MM/yyyy' }}
+              </p>
+
+              <p class="mt-1 text-xs text-base-content/60">
+                <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                {{ getHora(programacion.hora_inicio_programada) }}
+                —
+                {{ getHora(programacion.hora_fin_programada) }}
+              </p>
+
+              <p class="mt-1 text-xs text-base-content/40">
+                Programación #{{ programacion.id_programacion }}
+              </p>
+            </td>
+
+            <!-- Ruta y versión -->
+            <td>
+              <div class="max-w-56">
+                <p class="truncate text-sm font-medium" [title]="programacion.ruta.nombre">
+                  {{ programacion.ruta.nombre }}
+                </p>
+
+                <p class="mt-1 text-xs text-base-content/50">
+                  {{ programacion.ruta.codigo }}
+                </p>
+
+                <span class="badge badge-outline badge-sm mt-1">
+                  Versión {{ programacion.version_ruta.numero_version }}
+                </span>
+              </div>
+            </td>
+
+            <!-- Vehículo -->
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 shrink-0 items-center
+                               justify-center rounded-xl
+                               bg-primary/10 text-primary">
+                  <i class="fa-solid fa-truck" aria-hidden="true"></i>
+                </div>
+
+                <div>
+                  <p class="text-sm font-semibold">
+                    {{ programacion.vehiculo.placa }}
+                  </p>
+
+                  <p class="text-xs text-base-content/50">
+                    {{ programacion.vehiculo.codigo }}
+                  </p>
+
+                  <p class="mt-1 text-xs text-base-content/50">
+                    {{ programacion.vehiculo.marca }}
+                    {{ programacion.vehiculo.modelo }}
+                  </p>
+                </div>
+              </div>
+            </td>
+
+            <!-- Personal -->
+            <td>
+              <div class="min-w-52 space-y-2">
+                @for (
+                asignacion of programacion.personal_asignado;
+                track asignacion.id_programacion_personal
+                ) {
+                <div>
+                  <p class="text-sm font-medium">
+                    {{ getNombrePersonal(asignacion) }}
+
+                    @if (asignacion.es_principal) {
+                    <i class="fa-solid fa-star ml-1 text-xs text-warning" title="Personal principal"
+                      aria-label="Personal principal"></i>
+                    }
+                  </p>
+
+                  <p class="text-xs text-base-content/50">
+                    {{ getFuncion(asignacion.funcion) }}
+                    · {{ asignacion.estado_asignacion }}
+                  </p>
+                </div>
+                } @empty {
+                <span class="text-sm text-base-content/50">
+                  Sin personal asignado
+                </span>
+                }
+              </div>
+            </td>
+
+            <!-- Turno -->
+            <td class="whitespace-nowrap">
+              {{ getTurno(programacion.turno) }}
+            </td>
+
+            <!-- Estado -->
+            <td class="text-center">
+              <span class="badge whitespace-nowrap" [ngClass]="
+                        getEstadoProgramacion(
+                          programacion.estado_programacion
+                        ).class
+                      ">
+                {{
+                getEstadoProgramacion(
+                programacion.estado_programacion
+                ).label
+                }}
+              </span>
+
+              @if (programacion.motivo_cancelacion) {
+              <p class="mt-2 max-w-48 truncate text-xs text-error" [title]="programacion.motivo_cancelacion">
+                {{ programacion.motivo_cancelacion }}
+              </p>
+              }
+            </td>
+
+            <!-- Actualización -->
+            <td class="whitespace-nowrap text-sm">
+              {{
+              programacion.updated_at
+              | date:'dd/MM/yyyy, hh:mm a'
+              }}
+            </td>
+
+            <!-- Acciones -->
+            <td>
+              <div class="flex items-center justify-center gap-1">
+                <button type="button" class="btn btn-ghost btn-circle btn-sm" title="Ver programación"
+                  aria-label="Ver detalle de la programación" (click)="abrirDetalle(programacion)">
+                  <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                </button>
+
+                <button type="button" class="btn btn-ghost btn-circle btn-sm" title="Editar programación"
+                  aria-label="Editar programación" [disabled]="
+                          estaProcesando(programacion.id_programacion)
+                        " (click)="abrirEdicion(programacion)">
+                  <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                </button>
+
+                <button type="button" class="btn btn-ghost btn-circle btn-sm text-error" title="Cancelar programación"
+                  aria-label="Cancelar programación" [disabled]="
+                          !puedeCancelar(programacion) ||
+                          estaProcesando(programacion.id_programacion)
+                        " (click)="cancelarProgramacion(programacion)">
+                  @if (
+                  estaProcesando(programacion.id_programacion)
+                  ) {
+                  <span class="loading loading-spinner loading-xs"></span>
+                  } @else {
+                  <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                  }
+                </button>
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="9" class="py-16 text-center">
+              <div class="mx-auto flex max-w-sm flex-col items-center">
+                <div class="flex h-16 w-16 items-center justify-center
+                               rounded-2xl bg-base-200 text-base-content/35">
+                  <i class="fa-regular fa-calendar text-2xl" aria-hidden="true"></i>
+                </div>
+
+                <h3 class="mt-4 font-semibold">
+                  No se encontraron programaciones
+                </h3>
+
+                <p class="mt-1 text-sm text-base-content/60">
+                  Registre una programación o cambie los filtros.
+                </p>
+
+                @if (hayFiltros) {
+                <button type="button" class="btn btn-primary btn-sm mt-4" (click)="limpiarFiltros()">
+                  Limpiar filtros
+                </button>
+                }
+              </div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+
+    <!-- PAGINACIÓN -->
+    @if (
+    !isLoading &&
+    !errorCarga &&
+    !errorFiltros &&
+    totalItems > 0
+    ) {
+    <footer class="flex flex-col gap-4 border-t border-base-300
+               bg-base-200/50 px-4 py-4 sm:px-5
+               lg:flex-row lg:items-center lg:justify-between">
+      <div>
+        <h2 class="font-semibold">Programaciones registradas</h2>
+
+        <p class="mt-0.5 text-sm text-base-content/55">
+          {{ totalItems }}
+          {{
+          totalItems === 1
+          ? 'programación encontrada'
+          : 'programaciones encontradas'
+          }}
+        </p>
+      </div>
+
+      <div class="flex flex-col items-center gap-3 sm:flex-row">
+        <span class="whitespace-nowrap text-sm">
+          Página <strong>{{ page }}</strong>
+          de <strong>{{ totalPages }}</strong>
+        </span>
+
+        <div class="flex gap-2">
+          <button type="button" class="btn btn-sm" [disabled]="isLoading || page <= 1"
+            (click)="cambiarPagina(page - 1)">
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+            Anterior
+          </button>
+
+          <button type="button" class="btn btn-sm" [disabled]="isLoading || page >= totalPages"
+            (click)="cambiarPagina(page + 1)">
+            Siguiente
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </footer>
+    }
+  </section>
+</div>

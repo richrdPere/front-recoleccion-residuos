@@ -1,0 +1,403 @@
+@if (mostrarModal) {
+<div class="modal modal-open">
+  <div class="fixed inset-0 z-50 flex items-center justify-center
+             bg-black/30 p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="programacion-form-title"
+    [attr.aria-busy]="isLoading">
+    <section class="relative flex max-h-[92vh] w-full flex-col
+               overflow-hidden rounded-2xl border border-base-300
+               bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+      <!-- HEADER -->
+      <header class="flex shrink-0 items-center justify-between gap-4
+                 border-b border-base-300 px-5 py-4 sm:px-6">
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center
+                     rounded-2xl bg-primary/10 text-primary">
+            <i class="fa-solid text-lg" [ngClass]="
+                  modoEdicion ? 'fa-pen-to-square' : 'fa-calendar-plus'
+                " aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="programacion-form-title" class="truncate text-lg font-bold sm:text-xl">
+              {{
+              modoEdicion
+              ? 'Editar programación'
+              : 'Nueva programación'
+              }}
+            </h2>
+
+            <p class="mt-0.5 text-sm text-base-content/55">
+              Asigne una ruta, un vehículo y el equipo operativo.
+            </p>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-circle btn-ghost btn-sm shrink-0" aria-label="Cerrar formulario"
+          [disabled]="isLoading" (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <form [formGroup]="formProgramacion" (ngSubmit)="crearOEditarProgramacion()" class="flex min-h-0 flex-1 flex-col"
+        novalidate>
+
+        <!-- CONTENIDO CON SCROLL -->
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain
+                   px-5 py-5 sm:px-6">
+          <fieldset class="min-w-0 space-y-6" [disabled]="isLoading">
+
+            <!-- RUTA Y VEHÍCULO -->
+            <div class="space-y-3">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-route text-primary" aria-hidden="true"></i>
+                Ruta y vehículo
+              </h3>
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div class="form-control">
+                  <label class="label" for="programacion-ruta">
+                    <span class="label-text">
+                      Ruta <span class="text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <select id="programacion-ruta" formControlName="id_ruta" class="select select-bordered w-full"
+                    [class.select-error]="campoInvalido('id_ruta')" (change)="onRutaChange()">
+                    <option [ngValue]="null" disabled>Seleccionar ruta</option>
+
+                    @for (ruta of rutasDisponibles; track ruta.id_ruta) {
+                    <option [ngValue]="ruta.id_ruta">
+                      {{ ruta.codigo }} — {{ ruta.nombre }}
+                    </option>
+                    }
+                  </select>
+
+                  @if (campoInvalido('id_ruta')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('id_ruta') }}
+                  </p>
+                  }
+                </div>
+
+                <div class="form-control">
+                  <label class="label" for="programacion-version">
+                    <span class="label-text">
+                      Versión de ruta <span class="text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <select id="programacion-version" formControlName="id_ruta_version"
+                    class="select select-bordered w-full" [class.select-error]="campoInvalido('id_ruta_version')">
+                    <option [ngValue]="null" disabled>
+                      Seleccionar versión
+                    </option>
+
+                    @for (
+                    version of versionesDisponibles;
+                    track version.id_ruta_version
+                    ) {
+                    <option [ngValue]="version.id_ruta_version">
+                      Versión {{ version.numero_version }}
+                    </option>
+                    }
+                  </select>
+
+                  @if (campoInvalido('id_ruta_version')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('id_ruta_version') }}
+                  </p>
+                  }
+
+                  @if (!formProgramacion.get('id_ruta')?.value) {
+                  <p class="mt-1 text-xs text-base-content/55">
+                    Seleccione primero una ruta.
+                  </p>
+                  } @else if (versionesDisponibles.length === 0) {
+                  <p class="mt-1 text-xs text-warning">
+                    No hay versiones disponibles para esta ruta.
+                  </p>
+                  }
+                </div>
+
+                <div class="form-control">
+                  <label class="label" for="programacion-vehiculo">
+                    <span class="label-text">
+                      Vehículo <span class="text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <select id="programacion-vehiculo" formControlName="id_vehiculo" class="select select-bordered w-full"
+                    [class.select-error]="campoInvalido('id_vehiculo')">
+                    <option [ngValue]="null" disabled>
+                      Seleccionar vehículo
+                    </option>
+
+                    @for (
+                    vehiculo of vehiculosDisponibles;
+                    track vehiculo.id_vehiculo
+                    ) {
+                    <option [ngValue]="vehiculo.id_vehiculo">
+                      {{ vehiculo.codigo }} — {{ vehiculo.placa }}
+                    </option>
+                    }
+                  </select>
+
+                  @if (campoInvalido('id_vehiculo')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('id_vehiculo') }}
+                  </p>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- FECHA / HORARIO -->
+            <div class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-calendar-days text-primary" aria-hidden="true"></i>
+                Fecha y horario
+              </h3>
+
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="form-control">
+                  <label class="label" for="programacion-fecha">
+                    <span class="label-text">
+                      Fecha <span class="text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <input id="programacion-fecha" type="date" formControlName="fecha_programada"
+                    class="input input-bordered w-full" [class.input-error]="campoInvalido('fecha_programada')" />
+
+                  @if (campoInvalido('fecha_programada')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('fecha_programada') }}
+                  </p>
+                  }
+                </div>
+
+                <div class="form-control">
+                  <label class="label" for="programacion-inicio">
+                    <span class="label-text">
+                      Hora de inicio <span class="text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <input id="programacion-inicio" type="time" step="1" formControlName="hora_inicio_programada"
+                    class="input input-bordered w-full" [class.input-error]="
+                        campoInvalido('hora_inicio_programada')
+                      " />
+
+                  @if (campoInvalido('hora_inicio_programada')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('hora_inicio_programada') }}
+                  </p>
+                  }
+                </div>
+
+                <div class="form-control">
+                  <label class="label" for="programacion-fin">
+                    <span class="label-text">
+                      Hora de fin <span class="text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <input id="programacion-fin" type="time" step="1" formControlName="hora_fin_programada"
+                    class="input input-bordered w-full" [class.input-error]="
+                        campoInvalido('hora_fin_programada')
+                      " />
+
+                  @if (campoInvalido('hora_fin_programada')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('hora_fin_programada') }}
+                  </p>
+                  }
+                </div>
+
+                <div class="form-control">
+                  <label class="label" for="programacion-turno">
+                    <span class="label-text">
+                      Turno <span class="text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <select id="programacion-turno" formControlName="turno" class="select select-bordered w-full"
+                    [class.select-error]="campoInvalido('turno')">
+                    <option value="" disabled>Seleccionar turno</option>
+
+                    @for (turno of turnosDisponibles; track turno.value) {
+                    <option [value]="turno.value">
+                      {{ turno.label }}
+                    </option>
+                    }
+                  </select>
+
+                  @if (campoInvalido('turno')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('turno') }}
+                  </p>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- EQUIPO -->
+            <div class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-users text-primary" aria-hidden="true"></i>
+                Equipo operativo
+              </h3>
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div class="form-control">
+                  <label class="label" for="programacion-conductor">
+                    <span class="label-text">
+                      Conductor <span class="text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <select id="programacion-conductor" formControlName="id_conductor"
+                    class="select select-bordered w-full" [class.select-error]="campoInvalido('id_conductor')">
+                    <option [ngValue]="null" disabled>
+                      Seleccionar conductor
+                    </option>
+
+                    @for (
+                    personal of conductoresDisponibles;
+                    track personal.id_personal
+                    ) {
+                    <option [ngValue]="personal.id_personal">
+                      {{ personal.nombre }} — {{ personal.codigo_empleado }}
+                    </option>
+                    }
+                  </select>
+
+                  @if (campoInvalido('id_conductor')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('id_conductor') }}
+                  </p>
+                  }
+                </div>
+
+                <div class="form-control">
+                  <label class="label" for="programacion-supervisor">
+                    <span class="label-text">Supervisor</span>
+                    <span class="label-text-alt">Opcional</span>
+                  </label>
+
+                  <select id="programacion-supervisor" formControlName="id_supervisor"
+                    class="select select-bordered w-full">
+                    <option [ngValue]="null">Sin supervisor</option>
+
+                    @for (
+                    personal of supervisoresDisponibles;
+                    track personal.id_personal
+                    ) {
+                    <option [ngValue]="personal.id_personal">
+                      {{ personal.nombre }} — {{ personal.codigo_empleado }}
+                    </option>
+                    }
+                  </select>
+                </div>
+              </div>
+
+              <!-- RECOLECTORES -->
+              <div>
+                <div class="mb-3 flex items-center justify-between gap-3">
+                  <p class="text-sm font-medium">Recolectores</p>
+
+                  <span class="badge badge-outline">
+                    {{ cantidadRecolectores }} seleccionados
+                  </span>
+                </div>
+
+                <div class="grid max-h-64 grid-cols-1 gap-3
+                           overflow-y-auto md:grid-cols-2">
+                  @for (
+                  personal of recolectoresDisponibles;
+                  track personal.id_personal
+                  ) {
+                  <label class="flex cursor-pointer items-center gap-3
+                               rounded-xl border border-base-300 p-3
+                               hover:bg-base-200/40">
+                    <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" [checked]="
+                            recolectorSeleccionado(personal.id_personal)
+                          " (change)="
+                            toggleRecolector(personal.id_personal, $event)
+                          " />
+
+                    <span class="min-w-0">
+                      <span class="block text-sm font-medium">
+                        {{ personal.nombre }}
+                      </span>
+
+                      <span class="block text-xs text-base-content/55">
+                        {{ personal.codigo_empleado }}
+                      </span>
+                    </span>
+                  </label>
+                  } @empty {
+                  <p class="text-sm text-base-content/55 md:col-span-2">
+                    No hay recolectores disponibles.
+                  </p>
+                  }
+                </div>
+
+                @if (campoInvalido('recolectores')) {
+                <p class="mt-1 text-sm text-red-500">
+                  {{ obtenerError('recolectores') }}
+                </p>
+                }
+              </div>
+            </div>
+
+            <!-- OBSERVACIÓN -->
+            <div class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-clipboard text-primary" aria-hidden="true"></i>
+                Observaciones
+              </h3>
+
+              <label class="form-control">
+                <span class="label">
+                  <span class="label-text">Información adicional</span>
+                  <span class="label-text-alt">Opcional</span>
+                </span>
+
+                <textarea formControlName="observacion" rows="3" class="textarea textarea-bordered w-full"
+                  placeholder="Ingrese observaciones de la programación."></textarea>
+              </label>
+            </div>
+          </fieldset>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="flex shrink-0 flex-col-reverse gap-3
+                   border-t border-base-300 bg-base-100 px-5 py-4
+                   sm:flex-row sm:items-center sm:justify-center sm:px-6">
+          <div class="flex flex-col-reverse gap-5 sm:flex-row">
+            <button type="button" class="btn btn-error" [disabled]="isLoading" (click)="cerrarModal()">
+              Cancelar
+            </button>
+
+            <button type="submit" class="btn btn-primary" [disabled]="
+                  isLoading ||
+                  (modoEdicion && !programacionSeleccionada)
+                ">
+              @if (isLoading) {
+              <span class="loading loading-spinner loading-sm"></span>
+              {{ modoEdicion ? 'Actualizando...' : 'Guardando...' }}
+              } @else {
+              <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+              {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+              }
+            </button>
+          </div>
+        </footer>
+
+      </form>
+    </section>
+  </div>
+</div>
+}

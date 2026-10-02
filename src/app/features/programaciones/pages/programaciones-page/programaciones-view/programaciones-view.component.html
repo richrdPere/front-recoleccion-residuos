@@ -1,0 +1,447 @@
+@if (mostrarModal) {
+<div class="modal modal-open">
+
+  <!-- MODAL: DETALLE DE PROGRAMACIÓN -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center
+             bg-black/30 p-4" role="dialog" aria-modal="true" aria-labelledby="programacion-info-title"
+    [attr.aria-busy]="loading" (click)="cerrarModal()">
+    <section class="relative flex max-h-[92vh] w-full flex-col
+               overflow-hidden rounded-2xl border border-base-300
+               bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+      <!-- HEADER -->
+      <header class="flex shrink-0 items-start justify-between gap-4
+                 border-b border-base-300 bg-base-200/50
+                 px-5 py-4 sm:px-6">
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center
+                     rounded-xl bg-primary/10 text-primary">
+            <i class="fa-solid fa-calendar-days text-lg" aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="programacion-info-title" class="truncate text-lg font-bold sm:text-xl">
+              Información de la programación
+            </h2>
+
+            <p class="mt-0.5 text-sm text-base-content/60">
+              Ruta, horario, vehículo y equipo operativo asignado.
+            </p>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-ghost btn-circle btn-sm shrink-0" aria-label="Cerrar modal"
+          (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <!-- CONTENIDO CON SCROLL -->
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain
+                 px-5 py-5 sm:px-6 sm:py-6">
+
+        <!-- CARGANDO -->
+        @if (loading) {
+        <div class="space-y-5" role="status" aria-live="polite">
+          <span class="sr-only">
+            Cargando información de la programación.
+          </span>
+
+          <div class="flex gap-4 rounded-2xl border border-base-300
+                       bg-base-200/40 p-5" aria-hidden="true">
+            <div class="skeleton h-14 w-14 rounded-xl"></div>
+
+            <div class="flex-1 space-y-3">
+              <div class="skeleton h-6 w-40"></div>
+              <div class="skeleton h-4 w-64 max-w-full"></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-3" aria-hidden="true">
+            @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+            <div class="rounded-lg bg-base-200 p-4">
+              <div class="skeleton mb-3 h-3 w-24"></div>
+              <div class="skeleton h-5 w-32 max-w-full"></div>
+            </div>
+            }
+          </div>
+
+          <div class="skeleton h-32 w-full" aria-hidden="true"></div>
+        </div>
+
+        <!-- ERROR -->
+        } @else if (errorCarga) {
+        <div class="flex min-h-64 flex-col items-center
+                     justify-center text-center" role="alert">
+          <div class="mb-4 flex h-16 w-16 items-center justify-center
+                       rounded-full bg-error/10 text-error">
+            <i class="fa-solid fa-triangle-exclamation text-2xl" aria-hidden="true"></i>
+          </div>
+
+          <h3 class="font-semibold">
+            No se pudo cargar la programación
+          </h3>
+
+          <p class="mt-1 max-w-sm text-sm text-base-content/60">
+            {{ errorCarga }}
+          </p>
+
+          <button type="button" class="btn btn-primary btn-sm mt-4" (click)="cargarDatosProgramacion()">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            Reintentar
+          </button>
+        </div>
+
+        <!-- INFORMACIÓN -->
+        } @else if (programacion; as detalle) {
+        <div class="space-y-6">
+
+          <!-- RESUMEN -->
+          <div class="flex flex-col gap-4 rounded-2xl border border-base-300
+                       bg-base-200/40 p-5 sm:flex-row sm:items-center">
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center
+                         rounded-xl bg-primary/10 text-primary">
+              <i class="fa-solid fa-calendar-check text-2xl" aria-hidden="true"></i>
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <h3 class="text-lg font-semibold">
+                Programación #{{ detalle.id_programacion }}
+              </h3>
+
+              <p class="mt-1 wrap-break-word text-sm text-base-content/60">
+                {{ detalle.ruta.nombre }}
+              </p>
+            </div>
+
+            <span class="badge h-auto min-h-6 self-start py-1 sm:self-center"
+              [ngClass]="obtenerEstado(detalle.estado_programacion).class">
+              {{ obtenerEstado(detalle.estado_programacion).label }}
+            </span>
+          </div>
+
+          <!-- FECHA / HORARIO -->
+          <div>
+            <h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+              <i class="fa-regular fa-clock text-primary" aria-hidden="true"></i>
+              Fecha y horario
+            </h3>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">
+                  Fecha programada
+                </p>
+
+                <p class="font-medium">
+                  {{ detalle.fecha_programada | date:'dd/MM/yyyy' }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Hora de inicio</p>
+                <p class="font-medium">
+                  {{ obtenerHora(detalle.hora_inicio_programada) }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Hora de fin</p>
+                <p class="font-medium">
+                  {{ obtenerHora(detalle.hora_fin_programada) }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Turno</p>
+                <p class="font-medium">
+                  {{ obtenerTurno(detalle.turno) }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- RUTA -->
+          <div>
+            <h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+              <i class="fa-solid fa-route text-primary" aria-hidden="true"></i>
+              Ruta asignada
+            </h3>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Código de ruta</p>
+                <p class="font-mono font-medium">
+                  {{ detalle.ruta.codigo }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Nombre de ruta</p>
+                <p class="wrap-break-word font-medium">
+                  {{ detalle.ruta.nombre }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">
+                  Versión asignada
+                </p>
+
+                <span class="badge badge-outline mt-1">
+                  Versión {{ detalle.version_ruta.numero_version }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- VEHÍCULO -->
+          <div>
+            <h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+              <i class="fa-solid fa-truck text-primary" aria-hidden="true"></i>
+              Vehículo asignado
+            </h3>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Código</p>
+                <p class="font-mono font-medium">
+                  {{ detalle.vehiculo.codigo }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Placa</p>
+                <p class="font-medium">{{ detalle.vehiculo.placa }}</p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Marca y modelo</p>
+                <p class="wrap-break-word font-medium">
+                  {{ detalle.vehiculo.marca }}
+                  {{ detalle.vehiculo.modelo }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- EQUIPO -->
+          <div>
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-users text-primary" aria-hidden="true"></i>
+                Equipo operativo
+              </h3>
+
+              <span class="badge badge-outline">
+                {{ detalle.personal_asignado.length }} asignados
+              </span>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-base-300">
+              <table class="table min-w-187.5">
+                <thead class="bg-base-200">
+                  <tr class="text-xs uppercase text-base-content/60">
+                    <th>Personal</th>
+                    <th>Código</th>
+                    <th>Función</th>
+                    <th class="text-center">Principal</th>
+                    <th>Estado de asignación</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  @for (
+                  asignacion of detalle.personal_asignado;
+                  track asignacion.id_programacion_personal
+                  ) {
+                  <tr class="hover:bg-base-200/40">
+                    <td>
+                      <p class="font-medium">
+                        {{
+                        obtenerNombre(
+                        asignacion.personal.usuario.persona.nombres,
+                        asignacion.personal.usuario.persona.apellidos
+                        )
+                        }}
+                      </p>
+
+                      <p class="mt-1 text-xs text-base-content/50">
+                        {{ asignacion.personal.usuario.username }}
+                      </p>
+                    </td>
+
+                    <td class="font-mono text-sm">
+                      {{ asignacion.personal.codigo_empleado }}
+                    </td>
+
+                    <td>
+                      <span class="badge badge-outline">
+                        {{ obtenerFuncion(asignacion.funcion) }}
+                      </span>
+                    </td>
+
+                    <td class="text-center">
+                      @if (asignacion.es_principal) {
+                      <span class="badge badge-warning gap-1">
+                        <i class="fa-solid fa-star" aria-hidden="true"></i>
+                        Sí
+                      </span>
+                      } @else {
+                      <span class="text-base-content/50">No</span>
+                      }
+                    </td>
+
+                    <td class="text-sm">
+                      {{ asignacion.estado_asignacion }}
+                    </td>
+                  </tr>
+                  } @empty {
+                  <tr>
+                    <td colspan="5" class="py-8 text-center text-base-content/60">
+                      No hay personal asignado a esta programación.
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- OBSERVACIONES -->
+          <div>
+            <h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+              <i class="fa-solid fa-clipboard text-primary" aria-hidden="true"></i>
+              Observaciones
+            </h3>
+
+            <div class="rounded-lg bg-base-200 p-3">
+              <p class="whitespace-pre-wrap wrap-break-word text-sm">
+                {{
+                detalle.observacion ||
+                'Sin observaciones registradas.'
+                }}
+              </p>
+            </div>
+          </div>
+
+          <!-- CANCELACIÓN -->
+          @if (
+          detalle.estado_programacion === 'CANCELADA' ||
+          detalle.motivo_cancelacion ||
+          detalle.fecha_cancelacion
+          ) {
+          <div>
+            <h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+              <i class="fa-solid fa-ban text-error" aria-hidden="true"></i>
+              Información de cancelación
+            </h3>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div class="rounded-lg border border-error/20
+                             bg-error/5 p-3 md:col-span-2">
+                <p class="text-xs text-base-content/60">Motivo</p>
+
+                <p class="mt-1 whitespace-pre-wrap wrap-break-word text-sm">
+                  {{
+                  detalle.motivo_cancelacion ||
+                  'Sin motivo registrado.'
+                  }}
+                </p>
+              </div>
+
+              <div class="rounded-lg border border-error/20 bg-error/5 p-3">
+                <p class="text-xs text-base-content/60">
+                  Fecha de cancelación
+                </p>
+
+                <p class="text-sm font-medium">
+                  {{
+                  (detalle.fecha_cancelacion
+                  | date:'dd/MM/yyyy hh:mm a')
+                  || 'No registrada'
+                  }}
+                </p>
+              </div>
+            </div>
+          </div>
+          }
+
+          <!-- INFORMACIÓN DEL SISTEMA -->
+          <div>
+            <h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+              <i class="fa-solid fa-clock text-primary" aria-hidden="true"></i>
+              Información del sistema
+            </h3>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">
+                  ID del usuario creador
+                </p>
+                <p class="font-medium">
+                  {{ detalle.id_usuario_creacion }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Creado el</p>
+                <p class="text-sm font-medium">
+                  {{ detalle.created_at | date:'dd/MM/yyyy hh:mm a' }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Actualizado el</p>
+                <p class="text-sm font-medium">
+                  {{ detalle.updated_at | date:'dd/MM/yyyy hh:mm a' }}
+                </p>
+              </div>
+
+              @if (detalle.deleted_at) {
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Eliminado el</p>
+                <p class="text-sm font-medium text-error">
+                  {{ detalle.deleted_at | date:'dd/MM/yyyy hh:mm a' }}
+                </p>
+              </div>
+              }
+            </div>
+          </div>
+
+        </div>
+
+        <!-- SIN DATOS -->
+        } @else {
+        <div class="flex min-h-64 flex-col items-center
+                     justify-center text-center">
+          <i class="fa-regular fa-calendar mb-4 text-3xl text-base-content/40" aria-hidden="true"></i>
+
+          <h3 class="font-semibold">No hay información disponible</h3>
+
+          <p class="mt-1 text-sm text-base-content/60">
+            No se encontraron datos de la programación seleccionada.
+          </p>
+        </div>
+        }
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="flex shrink-0 flex-col-reverse gap-3
+                 border-t border-base-300 px-5 py-4
+                 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div class="flex items-center gap-2 text-xs text-base-content/50">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          <span>Consulte la información de la programación.</span>
+        </div>
+
+        <button type="button" class="btn btn-accent min-w-28" (click)="cerrarModal()">
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
+          Cerrar
+        </button>
+      </footer>
+
+    </section>
+  </div>
+</div>
+}

@@ -234,7 +234,7 @@ export class RutasServices {
   // *********************************************************
   // 9. ELIMINAR RUTA
   // *********************************************************
-  deleteVehiculo(idRuta: number): Observable<DeleteRutaResponse> {
+  deleteRuta(idRuta: number): Observable<DeleteRutaResponse> {
     const headers = this.getJsonHeaders();
 
     return this.http

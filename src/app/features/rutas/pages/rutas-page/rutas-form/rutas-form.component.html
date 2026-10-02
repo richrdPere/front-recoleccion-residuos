@@ -1,0 +1,279 @@
+@if (mostrarModal) {
+<div class="modal modal-open">
+
+  <!-- MODAL: FORMULARIO DE RUTAS -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center
+             bg-black/30 p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="ruta-form-title"
+    [attr.aria-busy]="isLoading">
+    <section class="relative flex max-h-[92vh] w-full flex-col
+               overflow-hidden rounded-2xl border border-base-300
+               bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+      <!-- HEADER -->
+      <header class="flex shrink-0 items-center justify-between gap-4
+                 border-b border-base-300 px-5 py-4 sm:px-6">
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center
+                     rounded-2xl bg-primary/10 text-primary">
+            <i class="fa-solid text-lg" [ngClass]="modoEdicion ? 'fa-pen-to-square' : 'fa-route'"
+              aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="ruta-form-title" class="truncate text-lg font-bold sm:text-xl">
+              {{ modoEdicion ? 'Editar ruta' : 'Nueva ruta' }}
+            </h2>
+
+            <p class="mt-0.5 text-sm text-base-content/55">
+              {{
+              modoEdicion
+              ? 'Actualice la información de la ruta.'
+              : 'Registre una nueva ruta de recolección.'
+              }}
+            </p>
+
+            @if (formRuta.get('codigo')?.value) {
+            <span class="badge badge-primary badge-outline mt-2 font-mono">
+              {{ formRuta.get('codigo')?.value }}
+            </span>
+            }
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-circle btn-ghost btn-sm shrink-0" aria-label="Cerrar formulario"
+          [disabled]="isLoading" (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <form [formGroup]="formRuta" (ngSubmit)="crearOEditarRuta()" class="flex min-h-0 flex-1 flex-col" novalidate>
+
+        <!-- CONTENIDO CON SCROLL -->
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain
+                   px-5 py-5 sm:px-6">
+          <fieldset class="min-w-0 space-y-6" [disabled]="isLoading">
+
+            <!-- INFORMACIÓN GENERAL -->
+            <div class="space-y-3">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-route text-primary" aria-hidden="true"></i>
+                Información general
+              </h3>
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+                <!-- Zona -->
+                <div class="form-control">
+                  <label class="label" for="ruta-zona">
+                    <span class="label-text">
+                      Zona
+                      <span class="font-bold text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <select id="ruta-zona" formControlName="id_zona" class="select select-bordered w-full"
+                    [class.select-error]="campoInvalido('id_zona')">
+                    <option [ngValue]="null" disabled>
+                      Seleccionar zona
+                    </option>
+
+                    @if (zonaSeleccionadaFueraDeLista) {
+                    <option [ngValue]="formRuta.get('id_zona')?.value">
+                      Zona #{{ formRuta.get('id_zona')?.value }}
+                    </option>
+                    }
+
+                    @for (zona of zonas; track zona.id_zona) {
+                    <option [ngValue]="zona.id_zona">
+                      {{ zona.nombre }}
+                    </option>
+                    }
+                  </select>
+
+                  @if (campoInvalido('id_zona')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('id_zona') }}
+                  </p>
+                  }
+
+                  @if (modoEdicion) {
+                  <p class="mt-1 text-xs text-base-content/55">
+                    La zona asignada se conserva al editar.
+                  </p>
+                  } @else if (zonas.length === 0) {
+                  <p class="mt-1 text-xs text-warning">
+                    No hay zonas disponibles para seleccionar.
+                  </p>
+                  }
+                </div>
+
+                <!-- Código -->
+                <div class="form-control">
+                  <label class="label" for="ruta-codigo">
+                    <span class="label-text">
+                      Código
+                      <span class="font-bold text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <input id="ruta-codigo" type="text" formControlName="codigo" placeholder="Ej. RUT-001"
+                    class="input input-bordered w-full placeholder-gray-400"
+                    [class.input-error]="campoInvalido('codigo')" (blur)="normalizarCampo('codigo', true)" />
+
+                  @if (campoInvalido('codigo')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('codigo') }}
+                  </p>
+                  }
+
+                  @if (modoEdicion) {
+                  <p class="mt-1 text-xs text-base-content/55">
+                    El código se conserva al editar.
+                  </p>
+                  }
+                </div>
+
+                <!-- Nombre -->
+                <div class="form-control md:col-span-2">
+                  <label class="label" for="ruta-nombre">
+                    <span class="label-text">
+                      Nombre de la ruta
+                      <span class="font-bold text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <input id="ruta-nombre" type="text" formControlName="nombre"
+                    placeholder="Ej. Recolección del sector centro"
+                    class="input input-bordered w-full placeholder-gray-400"
+                    [class.input-error]="campoInvalido('nombre')" (blur)="normalizarCampo('nombre')" />
+
+                  @if (campoInvalido('nombre')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('nombre') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Descripción -->
+                <div class="form-control md:col-span-2">
+                  <label class="label" for="ruta-descripcion">
+                    <span class="label-text">
+                      Descripción
+                      <span class="font-bold text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <textarea id="ruta-descripcion" formControlName="descripcion" rows="4"
+                    placeholder="Describa el recorrido y los sectores atendidos." class="textarea textarea-bordered w-full
+                             placeholder-gray-400" [class.textarea-error]="campoInvalido('descripcion')"></textarea>
+
+                  @if (campoInvalido('descripcion')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('descripcion') }}
+                  </p>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- COLOR -->
+            <div class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-palette text-primary" aria-hidden="true"></i>
+                Identificación visual
+              </h3>
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div class="form-control">
+                  <label class="label" for="ruta-color">
+                    <span class="label-text">
+                      Color de la ruta
+                      <span class="font-bold text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <div class="flex items-center gap-3">
+                    <input id="ruta-color-selector" type="color" aria-label="Seleccionar color de la ruta" class="h-12 w-14 shrink-0 cursor-pointer
+                               rounded-lg border border-base-300 p-1" [value]="colorVistaPrevia" (input)="
+                          formRuta.get('color')?.setValue(
+                            $any($event.target).value
+                          );
+                          formRuta.get('color')?.markAsDirty()
+                        " />
+
+                    <input id="ruta-color" type="text" formControlName="color" placeholder="#2563EB"
+                      class="input input-bordered w-full font-mono" [class.input-error]="campoInvalido('color')" />
+                  </div>
+
+                  @if (campoInvalido('color')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('color') }}
+                  </p>
+                  }
+
+                  <p class="mt-1 text-xs text-base-content/55">
+                    Seleccione un color o escriba su código hexadecimal.
+                  </p>
+                </div>
+
+                <!-- Vista previa -->
+                <div class="flex items-center gap-3 rounded-xl
+                           border border-base-300 bg-base-200/40 p-4">
+                  <div class="flex h-12 w-12 shrink-0 items-center justify-center
+                             rounded-xl border border-base-300" [style.background-color]="colorVistaPrevia">
+                    <i class="fa-solid fa-route text-white drop-shadow" aria-hidden="true"></i>
+                  </div>
+
+                  <div class="min-w-0">
+                    <p class="truncate font-semibold">
+                      {{
+                      formRuta.get('nombre')?.value ||
+                      'Nombre de la ruta'
+                      }}
+                    </p>
+
+                    <p class="mt-1 text-xs text-base-content/55">
+                      Vista previa del color
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </fieldset>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="flex shrink-0 flex-col-reverse gap-3
+                   border-t border-base-300 bg-base-100
+                   px-5 py-4 sm:flex-row sm:items-center
+                   sm:justify-center sm:px-6">
+          <div class="flex flex-col-reverse gap-5 sm:flex-row">
+            <button type="button" class="btn btn-error" [disabled]="isLoading" (click)="cerrarModal()">
+              Cancelar
+            </button>
+
+            <button type="submit" class="btn btn-primary" [disabled]="
+                  formRuta.invalid ||
+                  isLoading ||
+                  (modoEdicion && !rutaSeleccionada) ||
+                  (!modoEdicion && zonas.length === 0)
+                ">
+              @if (isLoading) {
+              <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+
+              {{ modoEdicion ? 'Actualizando...' : 'Guardando...' }}
+              } @else {
+              <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+
+              {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+              }
+            </button>
+          </div>
+        </footer>
+
+      </form>
+    </section>
+  </div>
+</div>
+}
