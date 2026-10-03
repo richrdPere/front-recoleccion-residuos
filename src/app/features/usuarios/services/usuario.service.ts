@@ -12,7 +12,8 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
 // Interfaces
-import { AddRolUsuarioRequest, AddRolUsuarioResponse, GetUsuarioByIdResponse, GetUsuarioRolesResponse, GetUsuarioSelectorResponse, GetUsuariosPaginatedResponse, RemoveRolUsuarioResponse, UsuarioIdentificador, UsuarioRolesFilters, UsuarioSelectorFilters, UsuariosPaginadosFilters } from '../interfaces';
+import { AddRolUsuarioRequest, AddRolUsuarioResponse, ChangeEstadoUsuarioRequest, ChangeEstadoUsuarioResponse, CreateUsuarioRequest, CreateUsuarioResponse, DeleteUsuarioResponse, GetUsuarioByIdResponse, GetUsuarioRolesResponse, GetUsuarioSelectorResponse, GetUsuariosPaginatedResponse, RemoveRolUsuarioResponse, ResetPasswordUsuarioRequest, ResetPasswordUsuarioResponse, UpdateUsuarioRequest, UpdateUsuarioResponse, UsuarioIdentificador, UsuarioRolesFilters, UsuarioSelectorFilters, UsuariosPaginadosFilters } from '../interfaces';
+
 
 @Injectable({
   providedIn: 'root'
@@ -27,7 +28,12 @@ export class UsuarioService {
   private readonly API_GET_USUARIOS_PAGINATED: string = this.API_BASE + '/paginado';
   private readonly API_GET_USUARIO_SELECTOR: string = this.API_BASE + '/selector';
   private readonly API_GET_USUARIO_BY_ID: string = this.API_BASE + '/view';
+  private readonly API_CREATE_USUARIO: string = this.API_BASE + '/create';
   private readonly API_GET_USUARIO_ROLES: string = this.API_BASE + '/';
+  private readonly API_UPDATE_USUARIO: string = this.API_BASE + '/update/';
+  private readonly API_CHANGE_ESTADO_USUARIO: string = this.API_BASE + '/estado/';
+  private readonly API_RESET_PASSWORD_USUARIO: string = this.API_BASE + '/reset-password/';
+  private readonly API_DELETE_USUARIO: string = this.API_BASE + '/delete/';
 
   // Gestion de roles
   private readonly API_ADD_ROL_USUARIO: string = this.API_BASE + '/';
@@ -185,6 +191,132 @@ export class UsuarioService {
           HttpServiceHelper.handleError(
             error,
             'No se pudo remover el rol del usuario.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 7. CREAR USUARIO
+  // *********************************************************
+  createUsuario(
+    request: CreateUsuarioRequest,
+  ): Observable<CreateUsuarioResponse> {
+    const headers = this.getJsonHeaders();
+
+    return this.http
+      .post<CreateUsuarioResponse>(
+        this.API_CREATE_USUARIO,
+        request,
+        { headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo registrar el usuario.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 8. ACTUALIZAR USUARIO
+  // *********************************************************
+  updateUsuario(
+    idUsuario: UsuarioIdentificador,
+    request: UpdateUsuarioRequest,
+  ): Observable<UpdateUsuarioResponse> {
+    const headers = this.getJsonHeaders();
+    const usuarioId = encodeURIComponent(String(idUsuario));
+
+    return this.http
+      .put<UpdateUsuarioResponse>(
+        `${this.API_UPDATE_USUARIO}${usuarioId}`,
+        request,
+        { headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo actualizar el usuario.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 9. ACTIVAR O DESACTIVAR USUARIO
+  // *********************************************************
+  changeEstadoUsuario(
+    idUsuario: UsuarioIdentificador,
+    request: ChangeEstadoUsuarioRequest,
+  ): Observable<ChangeEstadoUsuarioResponse> {
+    const headers = this.getJsonHeaders();
+    const usuarioId = encodeURIComponent(String(idUsuario));
+
+    return this.http
+      .patch<ChangeEstadoUsuarioResponse>(
+        `${this.API_CHANGE_ESTADO_USUARIO}${usuarioId}`,
+        request,
+        { headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo actualizar el estado del usuario.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 10. RESTABLECER CONTRASEÑA DEL USUARIO
+  // *********************************************************
+  resetPasswordUsuario(
+    idUsuario: UsuarioIdentificador,
+    request: ResetPasswordUsuarioRequest,
+  ): Observable<ResetPasswordUsuarioResponse> {
+    const headers = this.getJsonHeaders();
+    const usuarioId = encodeURIComponent(String(idUsuario));
+
+    return this.http
+      .patch<ResetPasswordUsuarioResponse>(
+        `${this.API_RESET_PASSWORD_USUARIO}${usuarioId}`,
+        request,
+        { headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo restablecer la contraseña del usuario.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 11. ELIMINAR USUARIO
+  // *********************************************************
+  deleteUsuario(
+    idUsuario: UsuarioIdentificador,
+  ): Observable<DeleteUsuarioResponse> {
+    const headers = this.getJsonHeaders();
+    const usuarioId = encodeURIComponent(String(idUsuario));
+
+    return this.http
+      .delete<DeleteUsuarioResponse>(
+        `${this.API_DELETE_USUARIO}${usuarioId}`,
+        { headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo eliminar el usuario.',
           ),
         ),
       );

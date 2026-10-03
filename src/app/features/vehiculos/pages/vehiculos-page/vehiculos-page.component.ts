@@ -261,6 +261,7 @@ export class VehiculosPageComponent implements OnInit {
 
     return 'fa-truck-field-un';
   }
+
   onSearchChange() {
     clearTimeout(this.searchTimeout);
 

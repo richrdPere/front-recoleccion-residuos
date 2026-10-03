@@ -1,1 +1,584 @@
-<p>usuarios-page works!</p>
+<!-- ================================================= -->
+<!-- CONTENEDOR DEL USUARIOS -->
+<!-- ================================================= -->
+<div class="mx-auto w-full max-w-500">
+
+  <!-- ================================================= -->
+  <!-- ENCABEZADO -->
+  <!-- ================================================= -->
+  <header class="mb-5 flex flex-col gap-4
+             sm:flex-row sm:items-center
+             sm:justify-between">
+
+    <div class="flex min-w-0 items-center gap-3">
+
+      <div class="flex h-12 w-12 shrink-0
+                 items-center justify-center
+                 rounded-2xl bg-primary/10
+                 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-users text-xl sm:text-2xl"> </i>
+      </div>
+
+      <div class="min-w-0">
+        <h1 class="text-2xl font-bold
+                   leading-tight text-base-content">
+
+          Gestión de usuarios
+        </h1>
+
+        <p class="mt-1 max-w-2xl
+                   text-sm leading-relaxed
+                   text-base-content/60">
+
+          Administra usuarios, roles y accesos
+          del personal de recolección.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================================================= -->
+  <!-- FILTROS -->
+  <!-- ================================================= -->
+  <section class="mb-6 overflow-hidden rounded-2xl
+         border border-base-300 bg-base-100 shadow-sm">
+    <div class="grid grid-cols-1
+           lg:grid-cols-[minmax(0,1fr)_170px]">
+
+      <!-- ================================================= -->
+      <!-- CAMPOS DE FILTRO -->
+      <!-- ================================================= -->
+      <div class="min-w-0 p-4 sm:p-5">
+        <div class="grid grid-cols-1 items-end gap-4
+               sm:grid-cols-2
+               xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+
+          <!-- Buscar por nombre o dni -->
+          <div class="min-w-0">
+            <label for="filtro-placa" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Busqueda
+            </label>
+
+            <div class="relative">
+              <input id="filtro-placa" type="text" class="input input-bordered h-11 min-h-11
+                     w-full min-w-0 rounded-xl bg-base-100
+                     pl-11 pr-4 focus:outline-none
+                     focus:ring-2 focus:ring-primary/30" placeholder="Buscar por nombres o dni" autocomplete="off"
+                [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()" appUppercase />
+
+              <span class="pointer-events-none absolute inset-y-0 left-0 z-10
+                     flex w-11 items-center justify-center
+                     text-base-content/50" aria-hidden="true">
+                <i class="fa-solid fa-magnifying-glass text-base"></i>
+              </span>
+            </div>
+          </div>
+
+          <!-- Roles de usuario -->
+          <div class="min-w-0">
+            <label for="filtro-tipo" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Rol de usuario
+            </label>
+
+            <select id="filtro-tipo" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-100
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [(ngModel)]="rolBusqueda" (ngModelChange)="onSearchChange()">
+              <option value="">Todos los roles</option>
+
+              @for (opcion of rolesUsuario; track opcion.id) {
+              <option [value]="opcion.id">
+                {{ opcion.label }}
+              </option>
+              }
+            </select>
+          </div>
+
+          <!-- Estado operativo -->
+          <!-- <div class="min-w-0">
+            <label for="filtro-estado" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Estado operativo
+            </label>
+
+            <select id="filtro-estado" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-100
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [(ngModel)]="estadoOperativoBusqueda" (ngModelChange)="onSearchChange()">
+              <option value="">Todos los estados</option>
+
+              @for (estado of estadosOperativos; track estado.value) {
+              <option [value]="estado.value">
+                {{ estado.label }}
+              </option>
+              }
+            </select>
+          </div> -->
+
+          <!-- Limpiar -->
+          <div class="min-w-0">
+            <button type="button" class="btn btn-secondary h-11 min-h-11
+                   w-full gap-2 rounded-xl
+                   xl:w-auto xl:min-w-28" [disabled]="
+              !searchBusqueda &&
+              !rolBusqueda
+            " (click)="limpiarFiltros()">
+              <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+              Limpiar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================= -->
+      <!-- ILUSTRACIÓN -->
+      <!-- ================================================= -->
+      <div class="hidden items-center justify-center px-5 lg:flex">
+        <img src="assets/img/search.png" alt="" aria-hidden="true" class="h-32 w-32 select-none object-contain
+               opacity-90 drop-shadow-sm" draggable="false" />
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ================================================= -->
+  <!-- MODALES -->
+  <!-- ================================================= -->
+
+  <!-- ================================================= -->
+  <!-- TABLA DE VEHICULOS -->
+  <!-- ================================================= -->
+  @if (isLoading || usuarios.length > 0) {
+  <section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm"
+    aria-label="Usuarios registrados">
+    <!-- Cabecera -->
+    <div class="flex flex-col gap-4 border-b border-base-300 px-4 py-4
+           sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <div>
+        <h2 class="flex items-center gap-2 font-semibold">
+          <i class="fa-solid fa-users text-primary" aria-hidden="true"></i>
+
+          Usuarios registrados
+        </h2>
+
+        <p class="mt-1 text-sm text-base-content/55">
+          Cuentas de acceso y roles del sistema.
+        </p>
+      </div>
+
+      <!-- Tamaño de página -->
+      <div class="flex items-center justify-between gap-3
+             text-sm text-base-content/70 sm:justify-start">
+        <label for="usuarios-page-size" class="whitespace-nowrap">
+          Mostrar
+        </label>
+
+        <select id="usuarios-page-size" class="select select-bordered select-sm w-auto" [(ngModel)]="limit"
+          (change)="cambiarLimite()" [disabled]="isLoading">
+          @for (size of pageSizeOptions; track size) {
+          <option [ngValue]="size">
+            {{ size }}
+          </option>
+          }
+        </select>
+
+        <span class="whitespace-nowrap">
+          ítems por página
+        </span>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="overflow-x-auto">
+      <table class="table min-w-300">
+        <thead class="bg-base-300/90">
+          <tr class="text-xs uppercase tracking-wide text-base-content/60">
+            <th scope="col" class="w-14 text-center">N.°</th>
+            <th scope="col" class="min-w-60">Usuario</th>
+            <th scope="col" class="min-w-36">Documento</th>
+            <th scope="col" class="min-w-52">Contacto</th>
+            <th scope="col" class="min-w-44">Roles</th>
+            <th scope="col" class="min-w-28 text-center">Estado</th>
+            <th scope="col" class="min-w-40">Último acceso</th>
+            <th scope="col" class="min-w-40">Actualización</th>
+            <th scope="col" class="w-28 text-center">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @if (isLoading) {
+          <!-- Cargando -->
+          @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+          <tr aria-hidden="true">
+            <td>
+              <div class="skeleton mx-auto h-4 w-8"></div>
+            </td>
+
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="skeleton h-11 w-11 rounded-xl"></div>
+
+                <div class="space-y-2">
+                  <div class="skeleton h-4 w-36"></div>
+                  <div class="skeleton h-3 w-24"></div>
+                </div>
+              </div>
+            </td>
+
+            <td>
+              <div class="space-y-2">
+                <div class="skeleton h-3 w-10"></div>
+                <div class="skeleton h-4 w-24"></div>
+              </div>
+            </td>
+
+            <td>
+              <div class="space-y-2">
+                <div class="skeleton h-4 w-40"></div>
+                <div class="skeleton h-3 w-24"></div>
+              </div>
+            </td>
+
+            <td>
+              <div class="space-y-2">
+                <div class="skeleton h-6 w-28"></div>
+                <div class="skeleton h-6 w-24"></div>
+              </div>
+            </td>
+
+            <td>
+              <div class="skeleton mx-auto h-6 w-20"></div>
+            </td>
+
+            <td>
+              <div class="skeleton h-4 w-32"></div>
+            </td>
+
+            <td>
+              <div class="skeleton h-4 w-32"></div>
+            </td>
+
+            <td>
+              <div class="flex justify-center gap-1">
+                <div class="skeleton h-8 w-8 rounded-full"></div>
+                <div class="skeleton h-8 w-8 rounded-full"></div>
+              </div>
+            </td>
+          </tr>
+          }
+          } @else {
+          <!-- Usuarios -->
+          @for (
+          usuario of usuarios;
+          track usuario.id_usuario;
+          let i = $index
+          ) {
+          <tr class="transition-colors hover:bg-base-200/40">
+            <!-- Numeración paginada -->
+            <td class="text-center text-base-content/60">
+              {{ ((page - 1) * limit) + i + 1 }}
+            </td>
+
+            <!-- Foto, nombre y username -->
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="flex h-11 w-11 shrink-0 items-center
+                         justify-center overflow-hidden rounded-xl
+                         bg-primary/10 text-primary">
+                  @if (usuario.persona.foto_url) {
+                  <img [src]="usuario.persona.foto_url" [alt]="
+                      usuario.persona.nombres + ' ' +
+                      usuario.persona.apellidos
+                    " class="h-full w-full object-cover" loading="lazy" />
+                  } @else {
+                  <i class="fa-solid fa-user text-lg" aria-hidden="true"></i>
+                  }
+                </div>
+
+                <div class="min-w-0 max-w-60">
+                  <p class="truncate text-sm font-semibold" [title]="
+                      usuario.persona.nombres + ' ' +
+                      usuario.persona.apellidos
+                    ">
+                    {{ usuario.persona.nombres }}
+                    {{ usuario.persona.apellidos }}
+                  </p>
+
+                  <p class="mt-0.5 truncate text-xs text-base-content/50" [title]="usuario.username">
+                    <i class="fa-solid fa-at mr-1" aria-hidden="true"></i>
+                    {{ usuario.username }}
+                  </p>
+                </div>
+              </div>
+            </td>
+
+            <!-- Documento -->
+            <td>
+              <p class="text-xs font-medium text-base-content/50">
+                {{ usuario.persona.tipo_documento }}
+              </p>
+
+              <p class="mt-0.5 whitespace-nowrap text-sm font-medium">
+                {{ usuario.persona.numero_documento }}
+              </p>
+            </td>
+
+            <!-- Contacto -->
+            <td>
+              <div class="max-w-60">
+                <p class="truncate text-sm" [title]="usuario.email_acceso">
+                  <i class="fa-regular fa-envelope mr-1 text-base-content/40" aria-hidden="true"></i>
+
+                  {{ usuario.email_acceso }}
+                </p>
+
+                <p class="mt-1 text-xs text-base-content/50">
+                  <i class="fa-solid fa-phone mr-1" aria-hidden="true"></i>
+
+                  {{ usuario.persona.celular || 'Sin celular' }}
+                </p>
+              </div>
+            </td>
+
+            <!-- Roles y estado de sus asignaciones -->
+            <td class="align-middle">
+              <div class="flex flex-wrap gap-1 justify-start">
+                @for (rol of usuario.roles; track rol.id_usuario_rol) {
+                <span class="badge badge-soft badge-info badge-sm font-semibold">
+                  {{ rol.nombre.split('_').join(' ') }}
+                </span>
+                }
+              </div>
+            </td>
+            <!-- <td>
+              <div class="flex max-w-64 flex-wrap gap-1.5">
+                @for (
+                rol of usuario.roles;
+                track rol.id_usuario_rol
+                ) {
+                <span class="badge badge-soft badge-info badge-sm font-semibold" [class.badge-primary]="
+                    rol.estado && rol.estado_asignacion
+                  " [class.opacity-50]="
+                    !rol.estado || !rol.estado_asignacion
+                  " [title]="rol.descripcion || rol.nombre">
+                  {{ rol.nombre.split('_').join(' ') }}
+
+                  @if (!rol.estado) {
+                  <span>(Rol inactivo)</span>
+                  } @else if (!rol.estado_asignacion) {
+                  <span>(Desasignado)</span>
+                  }
+                </span>
+                } @empty {
+                <span class="text-xs italic text-base-content/45">
+                  Sin roles asignados
+                </span>
+                }
+              </div>
+            </td> -->
+
+            <!-- Estado de la cuenta -->
+            <!-- <td class="text-center">
+              <span class="badge badge-soft gap-1.5 whitespace-nowrap" [class.badge-success]="usuario.estado"
+                [class.badge-error]="!usuario.estado">
+                <i class="fa-solid" [class.fa-circle-check]="usuario.estado" [class.fa-circle-xmark]="!usuario.estado"
+                  aria-hidden="true"></i>
+
+                {{ usuario.estado ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td> -->
+
+            <!-- Estado -->
+            <td class="text-center">
+              <div class="inline-flex items-center justify-center gap-2">
+
+                <input type="checkbox" class="toggle toggle-sm
+                               border-error
+                               bg-error/70
+                               checked:border-success
+                               checked:bg-success" [checked]="usuario.estado" (change)="cambiarEstado(usuario)"
+                  [attr.aria-label]="
+                          usuario.estado
+                            ? 'Desactivar usuario'
+                            : 'Activar usuario'
+                        " />
+
+                <span class="min-w-14 text-left text-xs font-medium" [class.text-success]="usuario.estado"
+                  [class.text-error]="!usuario.estado">
+
+                  {{ usuario.estado ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+            </td>
+
+
+
+            <!-- Último acceso -->
+            <td class="whitespace-nowrap">
+              @if (usuario.ultimo_acceso) {
+              <p class="text-sm">
+                {{ usuario.ultimo_acceso | date: 'dd/MM/yyyy' }}
+              </p>
+
+              <p class="mt-0.5 text-xs text-base-content/50">
+                {{ usuario.ultimo_acceso | date: 'hh:mm a' }}
+              </p>
+              } @else {
+              <span class="text-xs italic text-base-content/45">
+                Sin acceso registrado
+              </span>
+              }
+            </td>
+
+            <!-- Actualización -->
+            <td class="whitespace-nowrap">
+              <p class="text-sm">
+                {{ usuario.updated_at | date: 'dd/MM/yyyy' }}
+              </p>
+
+              <p class="mt-0.5 text-xs text-base-content/50">
+                {{ usuario.updated_at | date: 'hh:mm a' }}
+              </p>
+            </td>
+
+            <!-- Acciones -->
+            <td>
+              <div class="flex items-center justify-center gap-1">
+
+                <!-- Resetear password -->
+                <div class="tooltip tooltip-left" data-tip="Restablecer contraseña">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm"
+                    (click)="resetPassword(usuario.id_usuario)" aria-label="Restablecer contraseña">
+                    <i class="fa-solid fa-key"></i>
+                  </button>
+                </div>
+
+                <!-- Ver detalles -->
+                <div class="tooltip tooltip-left" data-tip="Ver usuario">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="verUsuario(usuario)"
+                    [attr.aria-label]="
+                      'Ver detalle de ' +
+                      usuario.persona.nombres + ' ' +
+                      usuario.persona.apellidos
+                    ">
+                    <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                  </button>
+                </div>
+
+                <!-- Ver detalles -->
+                <div class="tooltip tooltip-left" data-tip="Gestionar roles">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm text-primary"
+                    (click)="gestionarRoles(usuario)" [attr.aria-label]="
+                      'Gestionar roles de ' +
+                      usuario.persona.nombres + ' ' +
+                      usuario.persona.apellidos
+                    ">
+                    <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
+                  </button>
+                </div>
+
+                <!-- Editar usuario -->
+                <div class="tooltip tooltip-left" data-tip="Editar usuario">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="editarUsuario(usuario)"
+                    aria-label="Editar usuario">
+
+                    <i class="fa-solid fa-pen-to-square"></i>
+                  </button>
+                </div>
+
+                <!-- Eliminar usuario -->
+                <div class="tooltip tooltip-left" data-tip="Eliminar usuario">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="eliminarUsuario(usuario)"
+                    aria-label="Eliminar usuario">
+
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    @if (!isLoading && totalItems > 0) {
+    <footer class="flex flex-col gap-4 border-t border-base-300
+           bg-base-200/50 px-4 py-4 sm:px-5
+           lg:flex-row lg:items-center lg:justify-between">
+      <div class="text-center sm:text-left">
+        <h3 class="font-semibold text-base-content">
+          Usuarios registrados
+        </h3>
+
+        <p class="mt-0.5 text-sm text-base-content/55">
+          {{ totalItems }}
+          {{ totalItems === 1 ? 'usuario encontrado' : 'usuarios encontrados' }}
+        </p>
+      </div>
+
+      <div class="flex w-full flex-col items-center gap-3
+             text-sm text-base-content/70 sm:w-auto sm:flex-row">
+        <span class="whitespace-nowrap">
+          Página
+          <strong class="text-base-content">{{ page }}</strong>
+          de
+          <strong class="text-base-content">{{ totalPages }}</strong>
+        </span>
+
+        <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+          <button type="button" class="btn btn-sm w-full gap-2 rounded-lg sm:w-auto" [disabled]="isLoading || page <= 1"
+            (click)="cambiarPagina(page - 1)">
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+
+            Anterior
+          </button>
+
+          <button type="button" class="btn btn-sm w-full gap-2 rounded-lg sm:w-auto" [disabled]="
+            isLoading ||
+            totalPages === 0 ||
+            page >= totalPages
+          " (click)="cambiarPagina(page + 1)">
+            Siguiente
+
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </footer>
+    }
+  </section>
+  }
+
+  <!-- ===================================================== -->
+  <!-- VACÍO -->
+  <!-- ===================================================== -->
+  @if (!isLoading && usuarios.length === 0) {
+  <section class="rounded-2xl border border-dashed border-base-300
+         bg-base-100 px-6 py-16 text-center shadow-sm" aria-label="Sin usuarios disponibles">
+    <div class="mx-auto flex h-20 w-20 items-center justify-center
+           rounded-full bg-base-200 text-base-content/35">
+      <i class="fa-solid fa-users text-3xl" aria-hidden="true"></i>
+    </div>
+
+    <h2 class="mt-5 text-lg font-bold">
+      No se encontraron usuarios
+    </h2>
+
+    <p class="mx-auto mt-2 max-w-md text-sm text-base-content/55">
+      No hay usuarios disponibles para la página y los filtros seleccionados.
+    </p>
+
+    <button type="button" class="btn btn-primary btn-sm mt-5" (click)="limpiarFiltros()">
+      <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i>
+
+      Limpiar filtros
+    </button>
+  </section>
+  }
+
+</div>
