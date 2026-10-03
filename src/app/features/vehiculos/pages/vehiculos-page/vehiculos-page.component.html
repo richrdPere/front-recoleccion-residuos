@@ -38,71 +38,56 @@
     </div>
   </header>
 
-
   <!-- ================================================= -->
   <!-- FILTROS -->
   <!-- ================================================= -->
   <section class="mb-6 overflow-hidden rounded-2xl
-         border border-base-300
-         bg-base-100 shadow-sm">
-
+         border border-base-300 bg-base-100 shadow-sm">
     <div class="grid grid-cols-1
            lg:grid-cols-[minmax(0,1fr)_170px]">
 
-      <!-- =============================================== -->
+      <!-- ================================================= -->
       <!-- CAMPOS DE FILTRO -->
-      <!-- =============================================== -->
-      <div class="p-4 sm:p-5">
-
-        <div class="grid grid-cols-1 gap-4
+      <!-- ================================================= -->
+      <div class="min-w-0 p-4 sm:p-5">
+        <div class="grid grid-cols-1 items-end gap-4
                sm:grid-cols-2
-               xl:grid-cols-[minmax(240px,1.4fr)_minmax(180px,1fr)_minmax(190px,1fr)_auto]">
+               xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
 
-
-          <!-- Buscar  -->
-          <label class="form-control w-full">
-            <span class="mb-1.5 text-xs font-semibold
-                   uppercase tracking-wide
-                   text-base-content/60">
+          <!-- Buscar por placa -->
+          <div class="min-w-0">
+            <label for="filtro-placa" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
               Placa
-            </span>
+            </label>
 
             <div class="relative">
-              <i class="fa-solid fa-magnifying-glass
-                     pointer-events-none absolute
-                     left-3.5 top-1/2
-                     -translate-y-1/2
-                     text-base-content/35">
-              </i>
-
-              <input type="text" class="input input-bordered
-                     h-11 w-full rounded-xl
-                     bg-base-100 pl-10 pr-4
-                     focus:outline-none
-                     focus:ring-2
-                     focus:ring-primary/30" placeholder="Buscar por placa" autocomplete="off"
+              <input id="filtro-placa" type="text" class="input input-bordered h-11 min-h-11
+                     w-full min-w-0 rounded-xl bg-base-100
+                     pl-11 pr-4 focus:outline-none
+                     focus:ring-2 focus:ring-primary/30" placeholder="Buscar por placa" autocomplete="off"
                 [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()" appUppercase />
+
+              <span class="pointer-events-none absolute inset-y-0 left-0 z-10
+                     flex w-11 items-center justify-center
+                     text-base-content/50" aria-hidden="true">
+                <i class="fa-solid fa-magnifying-glass text-base"></i>
+              </span>
             </div>
-          </label>
+          </div>
 
-          <!-- Filtrar por tipo de vehiculo -->
-          <label class="form-control w-full">
-            <span class="mb-1.5 text-xs font-semibold
-                   uppercase tracking-wide
-                   text-base-content/60">
+          <!-- Tipo de vehículo -->
+          <div class="min-w-0">
+            <label for="filtro-tipo" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Tipo de vehículo
+            </label>
 
-              Tipo de vehiculo
-            </span>
-
-            <select id="filtro-tipo" class="select select-bordered
-                   h-11 min-h-11 w-full
-                   rounded-xl bg-base-100
-                   focus:outline-none
-                   focus:ring-2
+            <select id="filtro-tipo" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-100
+                   focus:outline-none focus:ring-2
                    focus:ring-primary/30" [(ngModel)]="tipoVehiculoBusqueda" (ngModelChange)="onSearchChange()">
-              <option value="">
-                Todos los tipos
-              </option>
+              <option value="">Todos los tipos</option>
 
               @for (opcion of tiposVehiculo; track opcion.value) {
               <option [value]="opcion.value">
@@ -110,26 +95,20 @@
               </option>
               }
             </select>
-          </label>
+          </div>
 
-          <!-- Filtrar por estado operativo -->
-          <label class="form-control w-full">
-            <span class="mb-1.5 text-xs font-semibold
-                   uppercase tracking-wide
-                   text-base-content/60">
-
+          <!-- Estado operativo -->
+          <div class="min-w-0">
+            <label for="filtro-estado" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
               Estado operativo
-            </span>
+            </label>
 
-            <select id="filtro-estado" class="select select-bordered
-                   h-11 min-h-11 w-full
-                   rounded-xl bg-base-100
-                   focus:outline-none
-                   focus:ring-2
+            <select id="filtro-estado" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-100
+                   focus:outline-none focus:ring-2
                    focus:ring-primary/30" [(ngModel)]="estadoOperativoBusqueda" (ngModelChange)="onSearchChange()">
-              <option value="">
-                Todos los estados
-              </option>
+              <option value="">Todos los estados</option>
 
               @for (estado of estadosOperativos; track estado.value) {
               <option [value]="estado.value">
@@ -137,24 +116,33 @@
               </option>
               }
             </select>
-          </label>
+          </div>
 
+          <!-- Limpiar -->
+          <div class="min-w-0">
+            <button type="button" class="btn btn-secondary h-11 min-h-11
+                   w-full gap-2 rounded-xl
+                   xl:w-auto xl:min-w-28" [disabled]="
+              !searchBusqueda &&
+              !estadoOperativoBusqueda &&
+              !tipoVehiculoBusqueda
+            " (click)="limpiarFiltros()">
+              <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+              Limpiar
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- =============================================== -->
-      <!-- ILUSTRACIÓN DE BÚSQUEDA -->
-      <!-- =============================================== -->
-      <div class="hidden items-center justify-center border-base-300 px-5 lg:flex">
-
-        <img src="assets/img/search.png" alt="" aria-hidden="true" class="h-32 w-32
-               select-none object-contain
-               opacity-90
-               drop-shadow-sm" draggable="false" />
+      <!-- ================================================= -->
+      <!-- ILUSTRACIÓN -->
+      <!-- ================================================= -->
+      <div class="hidden items-center justify-center px-5 lg:flex">
+        <img src="assets/img/search.png" alt="" aria-hidden="true" class="h-32 w-32 select-none object-contain
+               opacity-90 drop-shadow-sm" draggable="false" />
       </div>
     </div>
   </section>
-
 
   <!-- ================================================= -->
   <!-- MODALES -->
@@ -238,7 +226,7 @@
                      text-base-content/60">
             <th class="w-14 text-center"> N.°</th>
             <th class="min-w-40"> Vehículo </th>
-            <th class="min-w-70"> Marca y modelo </th>
+            <th class="min-w-40"> Marca y modelo </th>
             <th class="min-w-42"> Tipo </th>
             <th class="min-w-40"> Capacidad </th>
             <th class="min-w-34"> Kilometraje </th>
@@ -464,9 +452,9 @@
             <!-- ============================================= -->
 
             <td>
-              <span class="badge badge-soft
-                   whitespace-nowrap" [ngClass]="getEstadoOperativoClass(vehiculo.estado_operativo)">
-                {{ vehiculo.estado_operativo }}
+              <span class="badge badge-soft whitespace-nowrap font-semibold"
+                [ngClass]="getEstadoOperativoClass(vehiculo.estado_operativo).class">
+                {{ getEstadoOperativoClass(vehiculo.estado_operativo).label }}
               </span>
             </td>
 

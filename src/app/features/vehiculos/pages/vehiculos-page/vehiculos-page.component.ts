@@ -10,8 +10,10 @@ import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directiv
 // Service
 import { VehiculosService } from '../../services/vehiculos.service';
 
-// Inteerface
-import { EstadoOperativoVehiculo, TipoVehiculo, UnidadCapacidad, VehiculoData, VehiculosPaginadosFilters } from '../../models';
+// Interface
+import { EstadoOperativoVehiculo, TipoVehiculo,  VehiculoData, VehiculosPaginadosFilters } from '../../models';
+
+// Componentes
 import { VehiculosFormComponent } from './vehiculos-form/vehiculos-form.component';
 import { VehiculosViewComponent } from './vehiculos-view/vehiculos-view.component';
 
@@ -333,7 +335,7 @@ export class VehiculosPageComponent implements OnInit {
         class: 'badge-primary'
       },
       EN_RUTA: {
-        label: 'ASIGNADO',
+        label: 'EN RUTA',
         class: 'badge-success'
       },
       EN_MANTENIMIENTO: {
