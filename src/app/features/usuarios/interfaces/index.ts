@@ -9,3 +9,4 @@ export * from './update-usuario.interface';
 export * from './change-estado-usuario.interface';
 export * from './reset-password-usuario.interface';
 export * from './delete-usuario.interface';
+export * from './get-roles.interface';

@@ -12,7 +12,7 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
 // Interfaces
-import { AddRolUsuarioRequest, AddRolUsuarioResponse, ChangeEstadoUsuarioRequest, ChangeEstadoUsuarioResponse, CreateUsuarioRequest, CreateUsuarioResponse, DeleteUsuarioResponse, GetUsuarioByIdResponse, GetUsuarioRolesResponse, GetUsuarioSelectorResponse, GetUsuariosPaginatedResponse, RemoveRolUsuarioResponse, ResetPasswordUsuarioRequest, ResetPasswordUsuarioResponse, UpdateUsuarioRequest, UpdateUsuarioResponse, UsuarioIdentificador, UsuarioRolesFilters, UsuarioSelectorFilters, UsuariosPaginadosFilters } from '../interfaces';
+import { AddRolUsuarioRequest, AddRolUsuarioResponse, ChangeEstadoUsuarioRequest, ChangeEstadoUsuarioResponse, CreateUsuarioRequest, CreateUsuarioResponse, DeleteUsuarioResponse, GetRolesResponse, GetUsuarioByIdResponse, GetUsuarioRolesResponse, GetUsuarioSelectorResponse, GetUsuariosPaginatedResponse, RemoveRolUsuarioResponse, ResetPasswordUsuarioRequest, ResetPasswordUsuarioResponse, UpdateUsuarioRequest, UpdateUsuarioResponse, UsuarioIdentificador, UsuarioRolesFilters, UsuarioSelectorFilters, UsuariosPaginadosFilters } from '../interfaces';
 
 
 @Injectable({
@@ -38,7 +38,7 @@ export class UsuarioService {
   // Gestion de roles
   private readonly API_ADD_ROL_USUARIO: string = this.API_BASE + '/';
   private readonly API_REMOVE_ROL_USUARIO: string = this.API_BASE + '/';
-
+  private readonly API_GET_ROLES: string = this.API_BASE + '/roles';
 
   constructor(
     private readonly http: HttpClient,
@@ -317,6 +317,27 @@ export class UsuarioService {
           HttpServiceHelper.handleError(
             error,
             'No se pudo eliminar el usuario.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 12. OBTENER CATÁLOGO DE ROLES
+  // *********************************************************
+  getRoles(): Observable<GetRolesResponse> {
+    const headers = this.getJsonHeaders();
+
+    return this.http
+      .get<GetRolesResponse>(
+        this.API_GET_ROLES,
+        { headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudieron obtener los roles.',
           ),
         ),
       );

@@ -88,9 +88,9 @@
                    focus:ring-primary/30" [(ngModel)]="rolBusqueda" (ngModelChange)="onSearchChange()">
               <option value="">Todos los roles</option>
 
-              @for (opcion of rolesUsuario; track opcion.id) {
-              <option [value]="opcion.id">
-                {{ opcion.label }}
+              @for (opcion of rolesDisponibles; track opcion.id_rol) {
+              <option [value]="opcion.id_rol">
+                {{ opcion.nombre }}
               </option>
               }
             </select>
@@ -147,37 +147,45 @@
   <!-- MODALES -->
   <!-- ================================================= -->
 
+  <!-- Formulario modal -->
+  <usuario-form [mostrarModal]="mostrarModal" [modoEdicion]="modoEdicion" [usuarioSeleccionado]="usuarioSeleccionado"
+    [rolesDisponibles]="rolesDisponibles" (modalCerrado)="cerrarModal()" (usuarioCreado)="getUsuariosPaginated()">
+  </usuario-form>
+
+  <!-- Modal para ver detalle de un usuario -->
+  <usuario-view [mostrarModal]="mostrarModalView" [usuario_id]="usuario_id"
+    (modalCerrado)="cerrarModalInfo()"></usuario-view>
+
+  <!-- Gestionar roles -->
+  <usuario-roles [mostrarModal]="mostrarModalRoles" [usuarioSeleccionado]="usuarioRolesSeleccionado"
+    [rolesDisponibles]="rolesDisponibles" (modalCerrado)="cerrarModalRoles()"
+    (rolesActualizados)="getUsuariosPaginated()">
+  </usuario-roles>
+
   <!-- ================================================= -->
   <!-- TABLA DE VEHICULOS -->
   <!-- ================================================= -->
   @if (isLoading || usuarios.length > 0) {
   <section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm"
     aria-label="Usuarios registrados">
-    <!-- Cabecera -->
+
+    <!-- Cabecera de tabla -->
     <div class="flex flex-col gap-4 border-b border-base-300 px-4 py-4
            sm:flex-row sm:items-center sm:justify-between sm:px-5">
-      <div>
-        <h2 class="flex items-center gap-2 font-semibold">
-          <i class="fa-solid fa-users text-primary" aria-hidden="true"></i>
 
-          Usuarios registrados
-        </h2>
-
-        <p class="mt-1 text-sm text-base-content/55">
-          Cuentas de acceso y roles del sistema.
-        </p>
-      </div>
-
-      <!-- Tamaño de página -->
-      <div class="flex items-center justify-between gap-3
-             text-sm text-base-content/70 sm:justify-start">
-        <label for="usuarios-page-size" class="whitespace-nowrap">
+      <!-- Total -->
+      <div class="flex w-full items-center
+                 justify-between gap-3
+                 text-sm text-base-content/70
+                 sm:w-auto sm:justify-start">
+        <label for="incidentes-page-size" class="whitespace-nowrap">
           Mostrar
         </label>
 
-        <select id="usuarios-page-size" class="select select-bordered select-sm w-auto" [(ngModel)]="limit"
-          (change)="cambiarLimite()" [disabled]="isLoading">
-          @for (size of pageSizeOptions; track size) {
+        <select id="incidentes-page-size" class="select select-bordered
+                   select-sm w-auto" [(ngModel)]="limit" (change)="cambiarLimite()">
+
+          @for ( size of pageSizeOptions; track size ) {
           <option [ngValue]="size">
             {{ size }}
           </option>
@@ -187,6 +195,22 @@
         <span class="whitespace-nowrap">
           ítems por página
         </span>
+      </div>
+
+      <!-- Botón crear -->
+      <div class="flex w-full items-center
+                 justify-end sm:w-auto">
+
+        <button type="button" class="btn btn-primary
+                  min-h-10 w-full gap-2
+                  rounded-xl border-none
+                hover:text-white bg-info hover:bg-primary
+                  sm:w-auto sm:min-w-36" (click)="abrirModal()">
+
+          <i class="fa-solid fa-plus"></i>
+
+          Usuario
+        </button>
       </div>
     </div>
 
@@ -343,7 +367,7 @@
             </td>
 
             <!-- Roles y estado de sus asignaciones -->
-            <td class="align-middle">
+            <!-- <td class="align-middle">
               <div class="flex flex-wrap gap-1 justify-start">
                 @for (rol of usuario.roles; track rol.id_usuario_rol) {
                 <span class="badge badge-soft badge-info badge-sm font-semibold">
@@ -351,24 +375,21 @@
                 </span>
                 }
               </div>
-            </td>
-            <!-- <td>
+            </td> -->
+            <td>
               <div class="flex max-w-64 flex-wrap gap-1.5">
                 @for (
-                rol of usuario.roles;
+                rol of getRolesAsignados(usuario);
                 track rol.id_usuario_rol
                 ) {
-                <span class="badge badge-soft badge-info badge-sm font-semibold" [class.badge-primary]="
-                    rol.estado && rol.estado_asignacion
-                  " [class.opacity-50]="
-                    !rol.estado || !rol.estado_asignacion
-                  " [title]="rol.descripcion || rol.nombre">
+                <span class="badge badge-soft badge-sm font-semibold" [class.badge-primary]="rol.estado"
+                  [class.badge-neutral]="!rol.estado" [class.opacity-50]="!rol.estado"
+                  [title]="rol.descripcion || rol.nombre">
+
                   {{ rol.nombre.split('_').join(' ') }}
 
                   @if (!rol.estado) {
                   <span>(Rol inactivo)</span>
-                  } @else if (!rol.estado_asignacion) {
-                  <span>(Desasignado)</span>
                   }
                 </span>
                 } @empty {
@@ -377,43 +398,25 @@
                 </span>
                 }
               </div>
-            </td> -->
-
-            <!-- Estado de la cuenta -->
-            <!-- <td class="text-center">
-              <span class="badge badge-soft gap-1.5 whitespace-nowrap" [class.badge-success]="usuario.estado"
-                [class.badge-error]="!usuario.estado">
-                <i class="fa-solid" [class.fa-circle-check]="usuario.estado" [class.fa-circle-xmark]="!usuario.estado"
-                  aria-hidden="true"></i>
-
-                {{ usuario.estado ? 'Activo' : 'Inactivo' }}
-              </span>
-            </td> -->
+            </td>
 
             <!-- Estado -->
             <td class="text-center">
               <div class="inline-flex items-center justify-center gap-2">
 
-                <input type="checkbox" class="toggle toggle-sm
-                               border-error
-                               bg-error/70
-                               checked:border-success
-                               checked:bg-success" [checked]="usuario.estado" (change)="cambiarEstado(usuario)"
-                  [attr.aria-label]="
-                          usuario.estado
-                            ? 'Desactivar usuario'
-                            : 'Activar usuario'
-                        " />
+                <input type="checkbox"
+                  class="toggle toggle-sm border-error bg-error/70 checked:border-success checked:bg-success"
+                  [checked]="usuario.estado" [disabled]="estaCambiandoEstado(usuario)"
+                  (change)="cambiarEstado(usuario, $event)" [attr.aria-busy]="estaCambiandoEstado(usuario)"
+                  [attr.aria-label]="usuario.estado ? 'Desactivar usuario' : 'Activar usuario'" />
 
                 <span class="min-w-14 text-left text-xs font-medium" [class.text-success]="usuario.estado"
                   [class.text-error]="!usuario.estado">
-
                   {{ usuario.estado ? 'Activo' : 'Inactivo' }}
                 </span>
+
               </div>
             </td>
-
-
 
             <!-- Último acceso -->
             <td class="whitespace-nowrap">
@@ -447,11 +450,12 @@
             <td>
               <div class="flex items-center justify-center gap-1">
 
-                <!-- Resetear password -->
+                <!-- Restablecer contraseña -->
                 <div class="tooltip tooltip-left" data-tip="Restablecer contraseña">
-                  <button type="button" class="btn btn-ghost btn-circle btn-sm"
-                    (click)="resetPassword(usuario.id_usuario)" aria-label="Restablecer contraseña">
-                    <i class="fa-solid fa-key"></i>
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="resetPassword(usuario)"
+                    aria-label="Restablecer contraseña">
+
+                    <i class="fa-solid fa-key" aria-hidden="true"></i>
                   </button>
                 </div>
 
@@ -467,10 +471,10 @@
                   </button>
                 </div>
 
-                <!-- Ver detalles -->
+                <!-- Gestionar roles -->
                 <div class="tooltip tooltip-left" data-tip="Gestionar roles">
-                  <button type="button" class="btn btn-ghost btn-circle btn-sm text-primary"
-                    (click)="gestionarRoles(usuario)" [attr.aria-label]="
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="abrirModalRoles(usuario)"
+                    [attr.aria-label]="
                       'Gestionar roles de ' +
                       usuario.persona.nombres + ' ' +
                       usuario.persona.apellidos

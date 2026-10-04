@@ -1,7 +1,7 @@
 import { CommonModule, DatePipe, } from '@angular/common';
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { finalize, firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 
 // Directives
@@ -11,8 +11,12 @@ import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directiv
 import { UsuarioService } from '../../services/usuario.service';
 
 // Interfaces
-import { UsuarioIdentificador, UsuarioPaginadoItem, UsuarioRolNombre, UsuariosPaginadosFilters } from '../../interfaces';
+import { UsuarioIdentificador, UsuarioPaginadoItem, UsuarioRolAsignado, UsuarioRolCatalogo, UsuarioRolNombre, UsuariosPaginadosFilters } from '../../interfaces';
 
+// Componentes
+import { UsuarioViewComponent } from '../usuario-view/usuario-view.component';
+import { UsuarioFormComponent } from '../usuario-form/usuario-form.component';
+import { UsuarioRolesComponent } from '../usuario-roles/usuario-roles.component';
 
 @Component({
   selector: 'app-usuarios-page',
@@ -21,14 +25,14 @@ import { UsuarioIdentificador, UsuarioPaginadoItem, UsuarioRolNombre, UsuariosPa
     FormsModule,
     CommonModule,
     UppercaseDirective,
+    UsuarioViewComponent,
+    UsuarioFormComponent,
+    UsuarioRolesComponent
   ],
   templateUrl: './usuarios-page.component.html',
   styles: ``,
 })
 export class UsuariosPageComponent implements OnInit {
-
-
-
 
   // Usuarios
   usuarios: UsuarioPaginadoItem[] = [];
@@ -39,6 +43,8 @@ export class UsuariosPageComponent implements OnInit {
   mostrarModalView = false;
   modoEdicion = false;
   usuarioSeleccionado: any = null;
+  mostrarModalRoles = false;
+  usuarioRolesSeleccionado: UsuarioPaginadoItem | null = null;
 
   searchTimeout: any;
 
@@ -56,46 +62,94 @@ export class UsuariosPageComponent implements OnInit {
 
   pageSizeOptions = [5, 10, 20, 50];
 
+  // Estado switch
+  readonly usuariosCambiandoEstado = new Set<string>();
+
   // Selectores
-  readonly rolesUsuario: {
-    id: number,
-    value: UsuarioRolNombre;
-    label: string;
-  }[] = [
-      // {
-      //   value: 'SUPER_ADMIN',
-      //   label: 'Camión compactador',
-      // },
-      {
-        id: 2,
-        value: 'ADMIN',
-        label: 'Administrador',
-      },
-      {
-        id: 3,
-        value: 'SUPERVISOR',
-        label: 'Supervisor',
-      },
-      {
-        id: 4,
-        value: 'OPERADOR',
-        label: 'Operador',
-      },
-      {
-        id: 5,
-        value: 'CONDUCTOR',
-        label: 'Conductor',
-      },
-      {
-        id: 6,
-        value: 'RECOLECTOR',
-        label: 'Recolector',
-      },
-      // {
-      //   value: 'CIUDADANO',
-      //   label: 'Ciudadano',
-      // },
-    ];
+  rolesDisponibles: UsuarioRolCatalogo[] = [];
+
+  // readonly rolesDisponibles: {
+  //   id_rol: number,
+  //   nombre: string;
+  //   descripcion: string;
+  // }[] = [
+  //     // {
+  //     //   id_rol: 1,
+  //     //   value: 'SUPER_ADMIN',
+  //     //   label: 'Camión compactador',
+  //     // },
+  //     {
+  //       id_rol: 2,
+  //       descripcion: 'Gestión institucional de usuarios, rutas y vehículos',
+  //       nombre: 'Administrador',
+  //     },
+  //     {
+  //       id_rol: 3,
+  //       // value: 'SUPERVISOR',
+  //       nombre: 'Supervisor',
+  //     },
+  //     {
+  //       id_rol: 4,
+  //       // value: 'OPERADOR',
+  //       nombre: 'Operador',
+  //     },
+  //     {
+  //       id_rol: 5,
+  //       // value: 'CONDUCTOR',
+  //       nombre: 'Conductor',
+  //     },
+  //     {
+  //       id_rol: 6,
+  //       // value: 'RECOLECTOR',
+  //       nombre: 'Recolector',
+  //     },
+  //     {
+  //       id_rol: 7,
+  //       // value: 'CIUDADANO',
+  //       nombre: 'Ciudadano',
+  //     },
+  //   ];
+
+
+  // readonly rolesUsuario: {
+  //   id: number,
+  //   value: UsuarioRolNombre;
+  //   label: string;
+  // }[] = [
+  //     // {
+  //     //   value: 'SUPER_ADMIN',
+  //     //   label: 'Camión compactador',
+  //     // },
+  //     {
+  //       id: 2,
+  //       value: 'ADMIN',
+  //       label: 'Administrador',
+  //     },
+  //     {
+  //       id: 3,
+  //       value: 'SUPERVISOR',
+  //       label: 'Supervisor',
+  //     },
+  //     {
+  //       id: 4,
+  //       value: 'OPERADOR',
+  //       label: 'Operador',
+  //     },
+  //     {
+  //       id: 5,
+  //       value: 'CONDUCTOR',
+  //       label: 'Conductor',
+  //     },
+  //     {
+  //       id: 6,
+  //       value: 'RECOLECTOR',
+  //       label: 'Recolector',
+  //     },
+  //     // {
+  //     //   value: 'CIUDADANO',
+  //     //   label: 'Ciudadano',
+  //     // },
+  //   ];
 
 
   constructor(
@@ -105,6 +159,7 @@ export class UsuariosPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.getUsuariosPaginated();
+    this.cargarRoles()
   }
 
   // ================================
@@ -115,7 +170,7 @@ export class UsuariosPageComponent implements OnInit {
       page: this.page,
       limit: this.limit,
       search: this.searchBusqueda,
-      estado: this.estadoBusqueda,
+      // estado: this.estadoBusqueda,
       id_rol: this.rolBusqueda,
       sort_by: 'created_at',
       sort_order: 'DESC',
@@ -156,56 +211,325 @@ export class UsuariosPageComponent implements OnInit {
       });
   }
 
-  // - Add rol
+  cargarRoles(): void {
+    this.usuarioService.getRoles().subscribe({
+      next: (response) => {
+        this.rolesDisponibles = response.success
+          ? response.data
+          : [];
 
-  // - Remove rol
+        this.cdr.markForCheck();
+      },
+
+      error: (error) => {
+        this.rolesDisponibles = [];
+        this.cdr.markForCheck();
+
+        void Swal.fire({
+          icon: 'error',
+          title: 'No se pudieron cargar los roles',
+          text: error?.error?.message ??
+            error?.message ??
+            'Intenta nuevamente.',
+        });
+      },
+    });
+  }
 
   // - Ver usuario
   verUsuario(usuario: UsuarioPaginadoItem) {
-    throw new Error('Method not implemented.');
+    this.usuario_id = usuario.id_usuario;
+    this.mostrarModalView = true;
   }
 
-  gestionarRoles(usuario: UsuarioPaginadoItem) {
-    throw new Error('Method not implemented.');
+  // - Gestionar roles usuario
+  abrirModalRoles(usuario: UsuarioPaginadoItem): void {
+    this.usuarioRolesSeleccionado = usuario;
+    this.mostrarModalRoles = true;
   }
 
   // - Reset password
-  resetPassword(usuario: any) {
-    throw new Error('Method not implemented.');
+  async resetPassword(usuario: UsuarioPaginadoItem): Promise<void> {
+    const dni = usuario.persona.tipo_documento === 'DNI'
+      ? usuario.persona.numero_documento.trim()
+      : '';
+
+    const resultado = await Swal.fire({
+      icon: 'warning',
+      title: 'Restablecer contraseña',
+
+      text: dni
+        ? 'Se propone el DNI del usuario. Puedes reemplazarlo por otra contraseña antes de confirmar.'
+        : 'Ingresa la nueva contraseña del usuario.',
+
+      input: 'password',
+      inputLabel: 'Nueva contraseña',
+      inputValue: dni,
+      inputPlaceholder: 'Mínimo 8 caracteres',
+
+      inputAttributes: {
+        autocomplete: 'new-password',
+        autocapitalize: 'off',
+        spellcheck: 'false',
+      },
+
+      // Preserva exactamente la contraseña ingresada.
+      inputAutoTrim: false,
+
+      showCancelButton: true,
+      confirmButtonText: 'Restablecer',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#f59e0b',
+      cancelButtonColor: '#64748b',
+
+      reverseButtons: true,
+      focusCancel: true,
+      showLoaderOnConfirm: true,
+
+      allowOutsideClick: () => !Swal.isLoading(),
+      allowEscapeKey: () => !Swal.isLoading(),
+
+      preConfirm: async (nuevaPassword: string) => {
+        if (!nuevaPassword || !nuevaPassword.trim()) {
+          Swal.showValidationMessage('Ingresa una contraseña.');
+          return false;
+        }
+
+        if (nuevaPassword.length < 8) {
+          Swal.showValidationMessage(
+            'La contraseña debe tener al menos 8 caracteres.',
+          );
+          return false;
+        }
+
+        if (new TextEncoder().encode(nuevaPassword).length > 72) {
+          Swal.showValidationMessage(
+            'La contraseña no puede superar los 72 bytes.',
+          );
+          return false;
+        }
+
+        try {
+          const response = await firstValueFrom(
+            this.usuarioService.resetPasswordUsuario(
+              usuario.id_usuario,
+              {
+                nueva_password: nuevaPassword,
+              },
+            ),
+          );
+
+          if (!response.success) {
+            Swal.showValidationMessage(
+              response.message || 'No se pudo restablecer la contraseña.',
+            );
+            return false;
+          }
+
+          return response;
+        } catch (error: unknown) {
+          const err = error as {
+            error?: { message?: unknown } | string;
+            message?: unknown;
+          } | null;
+
+          const mensajeBackend = typeof err?.error === 'string'
+            ? err.error
+            : err?.error?.message;
+
+          const mensaje = mensajeBackend ?? err?.message;
+
+          Swal.showValidationMessage(
+            typeof mensaje === 'string' && mensaje.trim()
+              ? mensaje
+              : 'Ocurrió un error al restablecer la contraseña.',
+          );
+
+          return false;
+        }
+      },
+    });
+
+    if (!resultado.isConfirmed || !resultado.value) {
+      return;
+    }
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'Contraseña restablecida',
+      text: resultado.value.message ||
+        'La contraseña del usuario fue actualizada correctamente.',
+      confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#3085d6',
+    });
   }
 
   // - Eliminar usuario
   eliminarUsuario(usuario: UsuarioPaginadoItem) {
-    throw new Error('Method not implemented.');
+    Swal.fire({
+      title: '¿Eliminar usuario?',
+      text: `Se eliminará el usuario con username: @${usuario.username}`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6'
+    }).then((result) => {
+
+      if (result.isConfirmed) {
+
+        this.usuarioService.deleteUsuario(usuario.id_usuario)
+          .subscribe({
+            next: () => {
+
+              Swal.fire({
+                icon: 'success',
+                title: 'Usuario eliminado',
+                text: 'El Usuario fue eliminado correctamente',
+                timer: 2000,
+                showConfirmButton: false
+              });
+
+              this.getUsuariosPaginated();
+            },
+            error: (err) => {
+
+              console.error(err);
+
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo eliminar el usuario'
+              });
+
+            }
+          });
+      }
+    });
   }
 
   // - Editar usuario
   editarUsuario(usuario: UsuarioPaginadoItem) {
-    throw new Error('Method not implemented.');
+    this.modoEdicion = true;
+    this.usuarioSeleccionado = { ...usuario };
+    this.mostrarModal = true;
   }
 
   // - CAMBIAR ESTADO
-  cambiarEstado(usuario: UsuarioPaginadoItem) {
+  async cambiarEstado(
+    usuario: UsuarioPaginadoItem,
+    event: Event,
+  ): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const usuarioId = String(usuario.id_usuario);
 
-    // this.usuarioService
-    //   .changeStateUsuario(usuario.id, !usuario.estado)
-    //   .subscribe({
-    //     next: (res) => {
+    // El navegador ya cambió el checkbox; restauramos su estado.
+    input.checked = usuario.estado;
 
-    //       usuario.estado = res.data.estado;
+    if (this.usuariosCambiandoEstado.has(usuarioId)) {
+      return;
+    }
 
-    //       Swal.fire({
-    //         icon: 'success',
-    //         title: res.message,
-    //         timer: 1500,
-    //         showConfirmButton: false
-    //       });
-    //     },
-    //     error: (err) => console.error(err)
-    //   });
+    const nuevoEstado = !usuario.estado;
 
+    this.usuariosCambiandoEstado.add(usuarioId);
+    this.cdr.markForCheck();
+
+    try {
+      const resultado = await Swal.fire({
+        icon: 'warning',
+        title: nuevoEstado
+          ? '¿Activar usuario?'
+          : '¿Desactivar usuario?',
+
+        text: nuevoEstado
+          ? `Se habilitará la cuenta de ${usuario.username}.`
+          : `Se deshabilitará la cuenta de ${usuario.username}.`,
+
+        showCancelButton: true,
+        confirmButtonText: nuevoEstado
+          ? 'Sí, activar'
+          : 'Sí, desactivar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: nuevoEstado ? '#16a34a' : '#dc2626',
+
+        reverseButtons: true,
+        focusCancel: true,
+        showLoaderOnConfirm: true,
+
+        allowOutsideClick: () => !Swal.isLoading(),
+        allowEscapeKey: () => !Swal.isLoading(),
+
+        preConfirm: async () => {
+          try {
+            const response = await firstValueFrom(
+              this.usuarioService.changeEstadoUsuario(
+                usuario.id_usuario,
+                { estado: nuevoEstado },
+              ),
+            );
+
+            if (!response.success) {
+              Swal.showValidationMessage(
+                response.message || 'No se pudo actualizar el estado.',
+              );
+              return false;
+            }
+
+            return response;
+          } catch (error: unknown) {
+            const err = error as {
+              error?: { message?: unknown } | string;
+              message?: unknown;
+            } | null;
+
+            const mensajeBackend = typeof err?.error === 'string'
+              ? err.error
+              : err?.error?.message;
+
+            const mensaje = mensajeBackend ?? err?.message;
+
+            Swal.showValidationMessage(
+              typeof mensaje === 'string' && mensaje.trim()
+                ? mensaje
+                : 'Ocurrió un error al actualizar el estado del usuario.',
+            );
+
+            return false;
+          }
+        },
+      });
+
+      if (!resultado.isConfirmed || !resultado.value) {
+        return;
+      }
+
+      // Usa el estado confirmado por el backend.
+      usuario.estado = resultado.value.data.estado;
+      usuario.updated_at = resultado.value.data.updated_at;
+
+      input.checked = usuario.estado;
+      this.cdr.markForCheck();
+
+      void Swal.fire({
+        icon: 'success',
+        title: usuario.estado
+          ? 'Usuario activado'
+          : 'Usuario desactivado',
+        text: resultado.value.message,
+        timer: 1800,
+        showConfirmButton: false,
+      });
+    } finally {
+      this.usuariosCambiandoEstado.delete(usuarioId);
+      this.cdr.markForCheck();
+    }
   }
 
+  estaCambiandoEstado(usuario: UsuarioPaginadoItem): boolean {
+    return this.usuariosCambiandoEstado.has(String(usuario.id_usuario));
+  }
 
   // ================================
   // Helpers methods
@@ -240,6 +564,10 @@ export class UsuariosPageComponent implements OnInit {
     this.getUsuariosPaginated();
   }
 
+  getRolesAsignados(usuario: UsuarioPaginadoItem): UsuarioRolAsignado[] {
+    return usuario.roles.filter(rol => rol.estado_asignacion);
+  }
+
   limpiarFiltros(): void {
     this.searchBusqueda = '';
     this.rolBusqueda = '';
@@ -265,6 +593,13 @@ export class UsuariosPageComponent implements OnInit {
   cerrarModalInfo() {
     this.mostrarModalView = false;
     this.usuario_id = null;
+  }
+
+
+
+  cerrarModalRoles(): void {
+    this.mostrarModalRoles = false;
+    this.usuarioRolesSeleccionado = null;
   }
 
 }

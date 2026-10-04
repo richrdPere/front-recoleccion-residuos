@@ -75,14 +75,14 @@ export interface UsuarioPersona {
 // ROL ASIGNADO
 // *********************************************************
 export interface UsuarioRolAsignado {
-  id_rol: UsuarioIdentificador;
+  id_rol: number;
   nombre: UsuarioRolNombre;
   descripcion: string | null;
 
   // Estado del rol en el catálogo.
   estado: boolean;
 
-  id_usuario_rol: UsuarioIdentificador;
+  id_usuario_rol: number;
 
   // Estado de la asignación al usuario.
   estado_asignacion: boolean;
@@ -94,8 +94,8 @@ export interface UsuarioRolAsignado {
 // USUARIO DEL LISTADO
 // *********************************************************
 export interface UsuarioPaginadoItem {
-  id_usuario: UsuarioIdentificador;
-  id_persona: UsuarioIdentificador;
+  id_usuario: number;
+  id_persona: number;
   email_acceso: string;
   username: string;
   estado: boolean;

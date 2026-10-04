@@ -1,1 +1,546 @@
-<p>usuario-form works!</p>
+@if (mostrarModal) {
+
+<div class="modal modal-open">
+
+  <!-- ===================================================== -->
+  <!-- MODAL: FORM - USUARIOS -->
+  <!-- ===================================================== -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center
+           bg-black/30 p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="usuario-form-title">
+
+    <section class="relative flex max-h-[92vh] w-full flex-col
+             overflow-hidden rounded-2xl border border-base-300
+             bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+      <!-- ================================================= -->
+      <!-- HEADER MODAL -->
+      <!-- ================================================= -->
+      <header class="flex shrink-0 items-center justify-between gap-4
+         border-b border-base-300
+         px-5 py-4 sm:px-6">
+
+        <!-- Ícono e información -->
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-12 w-12 shrink-0 items-center
+                  justify-center rounded-2xl
+                  bg-primary/10 text-primary">
+            <i class="fa-solid text-lg" [ngClass]="modoEdicion ? 'fa-pen-to-square' : 'fa-truck'"
+              aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="patrullaje-form-title" class="truncate text-lg font-bold sm:text-xl">
+              {{ modoEdicion ? 'Editar usuario' : 'Nuevo usuario' }}
+            </h2>
+
+            <p class="mt-0.5 text-sm text-base-content/55">
+              {{
+              modoEdicion
+              ? 'Actualice los datos del usuario.'
+              : 'Agrege un nuevo usuario.'
+              }}
+            </p>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-circle btn-ghost btn-sm shrink-0" aria-label="Cerrar formulario"
+          [disabled]="isLoading" (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </header>
+
+      <!-- ================================================= -->
+      <!-- FORMULARIO -->
+      <!-- ================================================= -->
+      <form [formGroup]="formUsuario" (ngSubmit)="crearOEditarUsuario()" class="flex min-h-0 flex-1 flex-col">
+
+        <!-- CONTENIDO CON SCROLL -->
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
+
+          <fieldset class="min-w-0 space-y-6" [disabled]="isLoading">
+
+            <!-- ================================================= -->
+            <!-- DATOS DE ACCESO -->
+            <!-- ================================================= -->
+            <div class="space-y-3">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-user-lock text-primary" aria-hidden="true"></i>
+                Datos de acceso
+              </h3>
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+                <!-- Username -->
+                <div class="form-control">
+                  <label class="label" for="usuario-username">
+                    <span class="label-text flex items-center gap-1">
+                      Nombre de usuario
+                      @if (esRequerido('username')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <input id="usuario-username" type="text" formControlName="username" placeholder="Ej. carlos.pereira"
+                    autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="50"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
+                    [class.input-success]="campoCompleto('username')" [class.input-error]="campoInvalido('username')"
+                    [attr.aria-invalid]="campoInvalido('username')"
+                    [attr.aria-describedby]="campoInvalido('username') ? 'usuario-username-error' : null"
+                    (blur)="normalizarCampo('username')" />
+
+                  @if (campoInvalido('username')) {
+                  <p id="usuario-username-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('username') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Correo de acceso -->
+                <div class="form-control">
+                  <label class="label" for="usuario-email-acceso">
+                    <span class="label-text flex items-center gap-1">
+                      Correo de acceso
+                      @if (esRequerido('email_acceso')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <input id="usuario-email-acceso" type="email" formControlName="email_acceso"
+                    placeholder="Ej. carlos@example.com" autocomplete="off" autocapitalize="none" spellcheck="false"
+                    maxlength="150"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
+                    [class.input-success]="campoCompleto('email_acceso')"
+                    [class.input-error]="campoInvalido('email_acceso')"
+                    [attr.aria-invalid]="campoInvalido('email_acceso')"
+                    [attr.aria-describedby]="campoInvalido('email_acceso') ? 'usuario-email-acceso-error' : null"
+                    (blur)="normalizarCampo('email_acceso')" />
+
+                  @if (campoInvalido('email_acceso')) {
+                  <p id="usuario-email-acceso-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('email_acceso') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Contraseña: solamente al crear -->
+                @if (!modoEdicion) {
+                <div class="form-control">
+                  <label class="label" for="usuario-password">
+                    <span class="label-text flex items-center gap-1">
+                      Contraseña
+                      @if (esRequerido('password')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <div class="relative">
+                    <input id="usuario-password" [type]="mostrarPassword ? 'text' : 'password'"
+                      formControlName="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password"
+                      class="input input-bordered border-2 w-full pr-12 placeholder-gray-400 transition-colors duration-200"
+                      [class.input-success]="campoCompleto('password')" [class.input-error]="campoInvalido('password')"
+                      [attr.aria-invalid]="campoInvalido('password')"
+                      [attr.aria-describedby]="campoInvalido('password') ? 'usuario-password-error' : null" />
+
+                    <button type="button"
+                      class="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-base-content/60 hover:bg-base-200"
+                      [attr.aria-label]="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                      [attr.aria-pressed]="mostrarPassword" aria-controls="usuario-password"
+                      (click)="toggleMostrarPassword()">
+
+                      <i class="fa-solid" [ngClass]="mostrarPassword ? 'fa-eye-slash' : 'fa-eye'" aria-hidden="true">
+                      </i>
+                    </button>
+                  </div>
+
+                  @if (campoInvalido('password')) {
+                  <p id="usuario-password-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('password') }}
+                  </p>
+                  }
+                </div>
+                }
+              </div>
+            </div>
+
+            <!-- ================================================= -->
+            <!-- INFORMACIÓN PERSONAL -->
+            <!-- ================================================= -->
+            <div class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-address-card text-primary" aria-hidden="true"></i>
+                Información personal
+              </h3>
+
+              <!-- Nombres, apellidos y género -->
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+                <!-- Nombres -->
+                <div class="form-control">
+                  <label class="label" for="usuario-nombres">
+                    <span class="label-text flex items-center gap-1">
+                      Nombres
+                      @if (esRequerido('nombres')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <input id="usuario-nombres" type="text" formControlName="nombres" placeholder="Ingrese los nombres"
+                    maxlength="100"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
+                    [class.input-success]="campoCompleto('nombres')" [class.input-error]="campoInvalido('nombres')"
+                    [attr.aria-invalid]="campoInvalido('nombres')"
+                    [attr.aria-describedby]="campoInvalido('nombres') ? 'usuario-nombres-error' : null"
+                    (blur)="normalizarCampo('nombres', true)" appUppercase />
+
+                  @if (campoInvalido('nombres')) {
+                  <p id="usuario-nombres-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('nombres') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Apellidos -->
+                <div class="form-control">
+                  <label class="label" for="usuario-apellidos">
+                    <span class="label-text flex items-center gap-1">
+                      Apellidos
+                      @if (esRequerido('apellidos')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <input id="usuario-apellidos" type="text" formControlName="apellidos"
+                    placeholder="Ingrese los apellidos" maxlength="100"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
+                    [class.input-success]="campoCompleto('apellidos')" [class.input-error]="campoInvalido('apellidos')"
+                    [attr.aria-invalid]="campoInvalido('apellidos')"
+                    [attr.aria-describedby]="campoInvalido('apellidos') ? 'usuario-apellidos-error' : null"
+                    (blur)="normalizarCampo('apellidos', true)" appUppercase />
+
+                  @if (campoInvalido('apellidos')) {
+                  <p id="usuario-apellidos-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('apellidos') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Género -->
+                <div class="form-control">
+                  <label class="label" for="usuario-genero">
+                    <span class="label-text">Género</span>
+                    <span class="label-text-alt text-base-content/55">Opcional</span>
+                  </label>
+
+                  <select id="usuario-genero" formControlName="genero"
+                    class="select select-bordered border-2 w-full transition-colors duration-200"
+                    [class.select-success]="campoCompleto('genero')" [class.select-error]="campoInvalido('genero')"
+                    [attr.aria-invalid]="campoInvalido('genero')"
+                    [attr.aria-describedby]="campoInvalido('genero') ? 'usuario-genero-error' : null">
+
+                    <option [ngValue]="null">Sin especificar</option>
+
+                    @for (opcion of generos; track opcion.value) {
+                    <option [value]="opcion.value">{{ opcion.label }}</option>
+                    }
+                  </select>
+
+                  @if (campoInvalido('genero')) {
+                  <p id="usuario-genero-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('genero') }}
+                  </p>
+                  }
+                </div>
+              </div>
+
+              <!-- Documento y fecha de nacimiento -->
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+                <!-- Tipo de documento -->
+                <div class="form-control">
+                  <label class="label" for="usuario-tipo-documento">
+                    <span class="label-text flex items-center gap-1">
+                      Tipo de documento
+                      @if (esRequerido('tipo_documento')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <select id="usuario-tipo-documento" formControlName="tipo_documento"
+                    class="select select-bordered border-2 w-full transition-colors duration-200"
+                    [class.select-success]="campoCompleto('tipo_documento')"
+                    [class.select-error]="campoInvalido('tipo_documento')"
+                    [attr.aria-invalid]="campoInvalido('tipo_documento')"
+                    [attr.aria-describedby]="campoInvalido('tipo_documento') ? 'usuario-tipo-documento-error' : null">
+
+                    @for (opcion of tiposDocumento; track opcion.value) {
+                    <option [value]="opcion.value">{{ opcion.label }}</option>
+                    }
+                  </select>
+
+                  @if (campoInvalido('tipo_documento')) {
+                  <p id="usuario-tipo-documento-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('tipo_documento') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Número de documento -->
+                <div class="form-control">
+                  <label class="label" for="usuario-numero-documento">
+                    <span class="label-text flex items-center gap-1">
+                      Número de documento
+                      @if (esRequerido('numero_documento')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <input id="usuario-numero-documento" type="text" formControlName="numero_documento"
+                    inputmode="numeric" placeholder="Ingrese el número de documento" pattern="[0-9]*" maxlength="8"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
+                    [class.input-success]="campoCompleto('numero_documento')"
+                    [class.input-error]="campoInvalido('numero_documento')"
+                    [attr.aria-invalid]="campoInvalido('numero_documento')"
+                    [attr.aria-describedby]="campoInvalido('numero_documento') ? 'usuario-numero-documento-error' : null"
+                    (blur)="normalizarCampo('numero_documento', true)" (keypress)="soloNumeros($event)" appUppercase />
+
+                  @if (campoInvalido('numero_documento')) {
+                  <p id="usuario-numero-documento-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('numero_documento') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Fecha de nacimiento -->
+                <div class="form-control">
+                  <label class="label" for="usuario-fecha-nacimiento">
+                    <span class="label-text">Fecha de nacimiento</span>
+                    <span class="label-text-alt text-base-content/55">Opcional</span>
+                  </label>
+
+                  <input id="usuario-fecha-nacimiento" type="date" formControlName="fecha_nacimiento"
+                    class="input input-bordered border-2 w-full transition-colors duration-200"
+                    [class.input-success]="campoCompleto('fecha_nacimiento')"
+                    [class.input-error]="campoInvalido('fecha_nacimiento')"
+                    [attr.aria-invalid]="campoInvalido('fecha_nacimiento')"
+                    [attr.aria-describedby]="campoInvalido('fecha_nacimiento') ? 'usuario-fecha-nacimiento-error' : null" />
+
+                  @if (campoInvalido('fecha_nacimiento')) {
+                  <p id="usuario-fecha-nacimiento-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('fecha_nacimiento') }}
+                  </p>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- ================================================= -->
+            <!-- INFORMACIÓN DE CONTACTO -->
+            <!-- ================================================= -->
+            <div class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-address-book text-primary" aria-hidden="true"></i>
+                Información de contacto
+              </h3>
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+                <!-- Correo de contacto -->
+                <div class="form-control">
+                  <label class="label" for="usuario-email-contacto">
+                    <span class="label-text">Correo de contacto</span>
+                    <span class="label-text-alt text-base-content/55">Opcional</span>
+                  </label>
+
+                  <input id="usuario-email-contacto" type="email" formControlName="email_contacto"
+                    placeholder="Ej. contacto@example.com" autocapitalize="none" spellcheck="false" maxlength="150"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
+                    [class.input-success]="campoCompleto('email_contacto')"
+                    [class.input-error]="campoInvalido('email_contacto')"
+                    [attr.aria-invalid]="campoInvalido('email_contacto')"
+                    [attr.aria-describedby]="campoInvalido('email_contacto') ? 'usuario-email-contacto-error' : null"
+                    (blur)="normalizarCampo('email_contacto')" />
+
+                  @if (campoInvalido('email_contacto')) {
+                  <p id="usuario-email-contacto-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('email_contacto') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Celular -->
+                <div class="form-control">
+                  <label class="label" for="usuario-celular">
+                    <span class="label-text">Celular</span>
+                    <span class="label-text-alt text-base-content/55">Opcional</span>
+                  </label>
+
+                  <input id="usuario-celular" type="tel" formControlName="celular" placeholder="Ej. 987654321"
+                    inputmode="numeric" pattern="[0-9]*" maxlength="9"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
+                    [class.input-success]="campoCompleto('celular')" [class.input-error]="campoInvalido('celular')"
+                    [attr.aria-invalid]="campoInvalido('celular')"
+                    [attr.aria-describedby]="campoInvalido('celular') ? 'usuario-celular-error' : null"
+                    (blur)="normalizarCampo('celular')" (keypress)="soloNumeros($event)" />
+
+                  @if (campoInvalido('celular')) {
+                  <p id="usuario-celular-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('celular') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Foto URL -->
+                <div class="form-control">
+                  <label class="label" for="usuario-foto-url">
+                    <span class="label-text">URL de fotografía</span>
+                    <span class="label-text-alt text-base-content/55">Opcional</span>
+                  </label>
+
+                  <input id="usuario-foto-url" type="text" inputmode="url" formControlName="foto_url"
+                    placeholder="Ingrese la URL de la fotografía" autocapitalize="none" spellcheck="false"
+                    maxlength="255"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
+                    [class.input-success]="campoCompleto('foto_url')" [class.input-error]="campoInvalido('foto_url')"
+                    [attr.aria-invalid]="campoInvalido('foto_url')"
+                    [attr.aria-describedby]="campoInvalido('foto_url') ? 'usuario-foto-url-error' : null" />
+
+                  @if (campoInvalido('foto_url')) {
+                  <p id="usuario-foto-url-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('foto_url') }}
+                  </p>
+                  }
+                </div>
+              </div>
+
+              <!-- Dirección -->
+              <div class="form-control">
+                <label class="label" for="usuario-direccion">
+                  <span class="label-text">Dirección</span>
+                  <span class="label-text-alt text-base-content/55">Opcional</span>
+                </label>
+
+                <textarea id="usuario-direccion" formControlName="direccion" rows="3" maxlength="255"
+                  placeholder="Ingrese la dirección del usuario"
+                  class="textarea textarea-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
+                  [class.textarea-success]="campoCompleto('direccion')"
+                  [class.textarea-error]="campoInvalido('direccion')" [attr.aria-invalid]="campoInvalido('direccion')"
+                  [attr.aria-describedby]="campoInvalido('direccion') ? 'usuario-direccion-error' : null"
+                  (blur)="normalizarCampo('direccion', true)" appUppercase></textarea>
+
+                @if (campoInvalido('direccion')) {
+                <p id="usuario-direccion-error" class="mt-1 text-sm text-red-500">
+                  {{ obtenerError('direccion') }}
+                </p>
+                }
+              </div>
+            </div>
+
+            <!-- ================================================= -->
+            <!-- ROLES Y ESTADO: SOLAMENTE AL CREAR -->
+            <!-- ================================================= -->
+            @if (!modoEdicion) {
+            <div class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-user-shield text-primary" aria-hidden="true"></i>
+                Roles y estado
+              </h3>
+
+              <fieldset class="min-w-0 rounded-xl border-2 p-4 transition-colors duration-200"
+                [class.border-success]="campoCompleto('roles_ids')" [class.border-error]="campoInvalido('roles_ids')"
+                [attr.aria-describedby]="campoInvalido('roles_ids') ? 'usuario-roles-error' : null">
+
+                <legend class="px-2 text-sm font-medium">
+                  Roles del usuario
+                  @if (esRequerido('roles_ids')) {
+                  <span class="font-bold text-red-500">*</span>
+                  }
+                </legend>
+
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+                  @for (rol of rolesDisponibles; track rol.id_rol) {
+                  <label
+                    class="flex cursor-pointer items-center gap-3 rounded-xl border border-base-300 p-3 transition-colors hover:bg-base-200"
+                    [class.border-success]="rolSeleccionado(rol.id_rol)">
+
+                    <input type="checkbox" class="checkbox checkbox-success checkbox-sm"
+                      [checked]="rolSeleccionado(rol.id_rol)" (change)="toggleRol(rol.id_rol, $event)" />
+
+                    <span class="min-w-0 wrap-break-word text-sm font-medium">
+                      {{ rol.nombre }}
+                    </span>
+                  </label>
+                  } @empty {
+                  <p class="text-sm text-base-content/60 sm:col-span-2 md:col-span-3">
+                    No hay roles disponibles para seleccionar.
+                  </p>
+                  }
+                </div>
+
+                @if (campoInvalido('roles_ids')) {
+                <p id="usuario-roles-error" class="mt-3 text-sm text-red-500">
+                  {{ obtenerError('roles_ids') }}
+                </p>
+                }
+              </fieldset>
+
+              <!-- Estado de la cuenta -->
+              <div class="flex items-center justify-between gap-4 rounded-xl border border-base-300 p-4">
+                <div>
+                  <label for="usuario-estado" class="cursor-pointer text-sm font-semibold">
+                    Cuenta activa
+                  </label>
+
+                  <p class="mt-1 text-xs text-base-content/60">
+                    Permite que el usuario inicie sesión.
+                  </p>
+                </div>
+
+                <input id="usuario-estado" type="checkbox" formControlName="estado" class="toggle toggle-success" />
+              </div>
+            </div>
+            }
+
+          </fieldset>
+        </div>
+
+        <!-- ================================================= -->
+        <!-- FOOTER -->
+        <!-- ================================================= -->
+        <footer class="flex shrink-0 flex-col-reverse gap-3
+           border-t border-base-300 bg-base-100
+           px-5 py-4 sm:flex-row sm:items-center
+           sm:justify-center sm:px-6">
+
+          <div class="flex flex-col-reverse gap-5 sm:flex-row sm:justify-end">
+
+            <button type="button" class="btn btn-error" [disabled]="isLoading" (click)="cerrarModal()">
+              Cancelar
+            </button>
+
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading || formUsuario.invalid"
+              [attr.aria-busy]="isLoading">
+
+              @if (isLoading) {
+              <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+              {{ modoEdicion ? 'Actualizando...' : 'Guardando...' }}
+              } @else {
+              {{ textoBotonGuardar }}
+              }
+            </button>
+
+          </div>
+        </footer>
+      </form>
+
+    </section>
+  </div>
+
+</div>
+}

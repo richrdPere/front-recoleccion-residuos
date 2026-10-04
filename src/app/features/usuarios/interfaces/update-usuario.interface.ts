@@ -1,5 +1,4 @@
-import { ApiResponse } from
-  'src/app/core/models/api-response.model';
+import { ApiResponse } from  'src/app/core/models/api-response.model';
 
 import type {
   CreateUsuarioData,
@@ -10,13 +9,11 @@ import type {
 // REQUEST: PERSONA
 // ============================================================
 
-export type UpdateUsuarioPersonaRequest =
-  Partial<CreateUsuarioPersonaRequest>;
+export type UpdateUsuarioPersonaRequest = Partial<CreateUsuarioPersonaRequest>;
 
 // ============================================================
 // REQUEST: USUARIO
 // ============================================================
-
 export interface UpdateUsuarioRequest {
   username?: string;
   email_acceso?: string;
@@ -27,6 +24,4 @@ export interface UpdateUsuarioRequest {
 // ============================================================
 // RESPONSE
 // ============================================================
-
-export type UpdateUsuarioResponse =
-  ApiResponse<CreateUsuarioData>;
+export type UpdateUsuarioResponse = ApiResponse<CreateUsuarioData>;

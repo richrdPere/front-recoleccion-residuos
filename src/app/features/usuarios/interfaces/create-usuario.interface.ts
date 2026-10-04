@@ -38,6 +38,14 @@ export interface CreateUsuarioRequest {
 }
 
 // ============================================================
+// SELECTED ROLES
+// ============================================================
+export interface UsuarioRolOpcion {
+  id_rol: UsuarioIdentificador;
+  nombre: string;
+}
+
+// ============================================================
 // RESPONSE: PERSONA
 // ============================================================
 

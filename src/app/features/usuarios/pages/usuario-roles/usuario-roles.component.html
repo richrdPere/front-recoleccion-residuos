@@ -1,0 +1,198 @@
+@if (mostrarModal) {
+<div class="modal modal-open">
+
+  <!-- ===================================================== -->
+  <!-- MODAL: GESTIONAR ROLES DE UN USUARIO -->
+  <!-- ===================================================== -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" role="dialog" aria-modal="true"
+    aria-labelledby="usuario-info-title" [attr.aria-busy]="isLoading" (click)="cerrarModal()">
+    <section class="relative flex max-h-[92vh] w-full flex-col
+               overflow-hidden rounded-2xl border border-base-300
+               bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+      <!-- ===================================================== -->
+      <!-- HEADER MODAL -->
+      <!-- ===================================================== -->
+      <header class="flex shrink-0 items-start justify-between gap-4
+                 border-b border-base-300 bg-base-200/50
+                 px-5 py-4 sm:px-6">
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center
+                     rounded-xl bg-primary/10 text-primary">
+            <i class="fa-solid fa-user-shield text-lg" aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="usuario-roles-title" class="truncate text-lg font-bold text-base-content sm:text-xl">
+              Gestionar roles
+            </h2>
+
+            <p class="mt-0.5 truncate text-sm text-base-content/60">
+              {{ nombreUsuario }}
+            </p>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-ghost btn-circle btn-sm shrink-0" aria-label="Cerrar gestión de roles"
+          title="Cerrar" [disabled]="isLoading" (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <!-- ===================================================== -->
+      <!-- CONTENIDO CON SCROLL -->
+      <!-- ===================================================== -->
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain
+                 px-5 py-5 sm:px-6 sm:py-6">
+
+        <!-- CARGANDO -->
+        @if (isLoading) {
+        <div class="space-y-5" role="status" aria-live="polite">
+          <span class="sr-only">
+            Cargando roles del usuario.
+          </span>
+
+          <div class="flex flex-col gap-4 rounded-2xl border
+                       border-base-300 bg-base-200/40 p-5
+                       sm:flex-row sm:items-center" aria-hidden="true">
+            <div class="skeleton h-16 w-16 rounded-2xl"></div>
+
+            <div class="flex-1 space-y-3">
+              <div class="skeleton h-6 w-40"></div>
+              <div class="skeleton h-4 w-64 max-w-full"></div>
+            </div>
+
+            <div class="skeleton h-7 w-28 rounded-full"></div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3" aria-hidden="true">
+            @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+            <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+              <div class="skeleton mb-3 h-3 w-24"></div>
+              <div class="skeleton h-5 w-36 max-w-full"></div>
+            </div>
+            }
+          </div>
+
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4" aria-hidden="true">
+            <div class="skeleton mb-3 h-3 w-28"></div>
+            <div class="skeleton h-4 w-full"></div>
+            <div class="skeleton mt-2 h-4 w-3/4"></div>
+          </div>
+        </div>
+
+        <!-- INFORMACIÓN -->
+        } @else if (usuarioSeleccionado; as usuario) {
+        <!-- Resumen -->
+        <div class="flex flex-wrap items-center justify-between gap-3
+                   rounded-xl border border-base-300 bg-base-200/40 p-4">
+
+          <div class="min-w-0">
+            <p class="text-xs font-semibold uppercase text-base-content/55">
+              Cuenta
+            </p>
+
+            <p class="mt-1 break-all font-semibold">
+              {{ usuario.username }}
+            </p>
+          </div>
+
+          <span class="badge badge-primary badge-outline">
+            {{ rolesAsignadosIds.length }} rol(es) asignado(s)
+          </span>
+        </div>
+
+        <!-- Roles -->
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          @for (rol of roles; track rol.id_rol) {
+          <article class="flex min-w-0 flex-col gap-4 rounded-xl
+                       border-2 p-4 transition-colors duration-200" [class.border-success]="tieneRol(rol.id_rol)"
+            [class.border-base-300]="!tieneRol(rol.id_rol)">
+
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <h3 class="wrap-break-word text-sm font-bold">
+                  {{ rol.nombre }}
+                </h3>
+
+                <p class="mt-1 text-sm text-base-content/60">
+                  {{ rol.descripcion }}
+                </p>
+              </div>
+
+              <i class="fa-solid mt-0.5 shrink-0" [ngClass]="tieneRol(rol.id_rol)
+                      ? 'fa-circle-check text-success'
+                      : 'fa-circle-plus text-base-content/35'" aria-hidden="true">
+              </i>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <span class="badge badge-sm" [class.badge-success]="tieneRol(rol.id_rol)"
+                [class.badge-ghost]="!tieneRol(rol.id_rol)">
+                {{ tieneRol(rol.id_rol) ? 'Asignado' : 'Sin asignar' }}
+              </span>
+
+              @if (rol.estado === false) {
+              <span class="badge badge-warning badge-sm">
+                Rol inactivo
+              </span>
+              }
+            </div>
+
+            <button type="button" class="btn btn-sm mt-auto w-full" [class.btn-error]="tieneRol(rol.id_rol)"
+              [class.btn-outline]="tieneRol(rol.id_rol)" [class.btn-primary]="!tieneRol(rol.id_rol)"
+              [disabled]="isLoading || (!tieneRol(rol.id_rol) && rol.estado === false)"
+              [attr.aria-label]="(tieneRol(rol.id_rol) ? 'Quitar rol ' : 'Asignar rol ') + rol.nombre"
+              (click)="cambiarRol(rol)">
+
+              @if (estaProcesando(rol.id_rol)) {
+              <span class="loading loading-spinner loading-sm" aria-hidden="true">
+              </span>
+              Procesando...
+              } @else {
+              <i class="fa-solid" [ngClass]="tieneRol(rol.id_rol) ? 'fa-minus' : 'fa-plus'" aria-hidden="true">
+              </i>
+
+              {{ tieneRol(rol.id_rol) ? 'Quitar rol' : 'Asignar rol' }}
+              }
+            </button>
+          </article>
+          } @empty {
+          <div class="rounded-xl border border-dashed border-base-300
+                       p-8 text-center sm:col-span-2">
+            <i class="fa-solid fa-user-shield mb-3 text-3xl text-base-content/30" aria-hidden="true">
+            </i>
+
+            <p class="text-sm text-base-content/60">
+              No hay roles disponibles.
+            </p>
+          </div>
+          }
+        </div>
+        } @else {
+        <p class="py-6 text-center text-base-content/60">
+          Selecciona un usuario para gestionar sus roles.
+        </p>
+        }
+
+      </div>
+      <!-- ===================================================== -->
+      <!-- FOOTER MODAL -->
+      <!-- ===================================================== -->
+      <footer class="flex shrink-0 flex-col-reverse gap-3
+                 border-t border-base-300 px-5 py-4
+                 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div class="flex items-center gap-2 text-xs text-base-content/50">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          <span>Asigna o quita los roles del usuario. Cada cambio se guarda inmediatamente.</span>
+        </div>
+
+        <button type="button" class="btn btn-accent min-w-28" (click)="cerrarModal()">
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
+          Cerrar
+        </button>
+      </footer>
+    </section>
+  </div>
+</div>
+}

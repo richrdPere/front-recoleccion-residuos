@@ -1,1 +1,446 @@
-<p>usuario-view works!</p>
+@if (mostrarModal) {
+<div class="modal modal-open">
+
+  <!-- ===================================================== -->
+  <!-- MODAL: INFORMACIÓN DEL USUARIO -->
+  <!-- ===================================================== -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" role="dialog" aria-modal="true"
+    aria-labelledby="usuario-info-title" [attr.aria-busy]="loading" (click)="cerrarModal()">
+    <section class="relative flex max-h-[92vh] w-full flex-col
+               overflow-hidden rounded-2xl border border-base-300
+               bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+      <!-- ===================================================== -->
+      <!-- HEADER MODAL -->
+      <!-- ===================================================== -->
+      <header class="flex shrink-0 items-start justify-between gap-4
+                 border-b border-base-300 bg-base-200/50
+                 px-5 py-4 sm:px-6">
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center
+                     rounded-xl bg-primary/10 text-primary">
+            <i class="fa-solid fa-user text-lg" aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="usuario-info-title" class="truncate text-lg font-bold text-base-content sm:text-xl">
+              Información del usuario
+            </h2>
+
+            <p class="mt-0.5 text-sm text-base-content/60">
+              Datos personales, cuenta y roles asignados.
+            </p>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-ghost btn-circle btn-sm shrink-0" aria-label="Cerrar modal" title="Cerrar"
+          (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <!-- ===================================================== -->
+      <!-- CONTENIDO CON SCROLL -->
+      <!-- ===================================================== -->
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain
+                 px-5 py-5 sm:px-6 sm:py-6">
+
+        <!-- CARGANDO -->
+        @if (loading) {
+        <div class="space-y-5" role="status" aria-live="polite">
+          <span class="sr-only">
+            Cargando información del usuario.
+          </span>
+
+          <div class="flex flex-col gap-4 rounded-2xl border
+                       border-base-300 bg-base-200/40 p-5
+                       sm:flex-row sm:items-center" aria-hidden="true">
+            <div class="skeleton h-16 w-16 rounded-2xl"></div>
+
+            <div class="flex-1 space-y-3">
+              <div class="skeleton h-6 w-40"></div>
+              <div class="skeleton h-4 w-64 max-w-full"></div>
+            </div>
+
+            <div class="skeleton h-7 w-28 rounded-full"></div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3" aria-hidden="true">
+            @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+            <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+              <div class="skeleton mb-3 h-3 w-24"></div>
+              <div class="skeleton h-5 w-36 max-w-full"></div>
+            </div>
+            }
+          </div>
+
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4" aria-hidden="true">
+            <div class="skeleton mb-3 h-3 w-28"></div>
+            <div class="skeleton h-4 w-full"></div>
+            <div class="skeleton mt-2 h-4 w-3/4"></div>
+          </div>
+        </div>
+
+        <!-- ERROR -->
+        } @else if (errorCarga) {
+        <div class="flex min-h-64 flex-col items-center justify-center text-center" role="alert">
+          <div class="mb-4 flex h-16 w-16 items-center justify-center
+                       rounded-full bg-error/10 text-error">
+            <i class="fa-solid fa-triangle-exclamation text-2xl" aria-hidden="true"></i>
+          </div>
+
+          <h3 class="font-semibold text-base-content">
+            No se pudo cargar el usuario
+          </h3>
+
+          <p class="mt-1 max-w-sm text-sm text-base-content/60">
+            {{ errorCarga }}
+          </p>
+
+          <button type="button" class="btn btn-primary btn-sm mt-4" (click)="cargarDatosUsuario()">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            Reintentar
+          </button>
+        </div>
+
+        <!-- INFORMACIÓN -->
+        } @else if (usuario; as detalle) {
+        <div class="space-y-5">
+
+          <!-- INFORMACIÓN GENERAL -->
+          <div>
+            <h4 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+              <i class="fa-solid fa-user text-primary" aria-hidden="true"></i>
+              Información general
+            </h4>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">
+                  Correo de acceso
+                </p>
+                <p class="wrap-break-word font-medium">
+                  {{ detalle.email_acceso || 'No registrado' }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">
+                  Nombre de usuario
+                </p>
+                <p class="wrap-break-word font-medium">
+                  {{ detalle.username || 'No registrado' }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Nombres</p>
+                <p class="wrap-break-word font-medium">
+                  {{ detalle.persona.nombres || 'No registrados' }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Apellidos</p>
+                <p class="wrap-break-word font-medium">
+                  {{ detalle.persona.apellidos || 'No registrados' }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">
+                  Tipo de documento
+                </p>
+                <p class="font-medium">
+                  {{ detalle.persona.tipo_documento }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">
+                  Número de documento
+                </p>
+                <p class="wrap-break-word font-medium">
+                  {{ detalle.persona.numero_documento }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">
+                  Fecha de nacimiento
+                </p>
+                <p class="font-medium">
+                  {{
+                  (detalle.persona.fecha_nacimiento | date:'dd/MM/yyyy')
+                  || 'No registrada'
+                  }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Género</p>
+                <p class="font-medium">
+                  {{
+                  detalle.persona.genero === 'M' ? 'Masculino' :
+                  detalle.persona.genero === 'F' ? 'Femenino' :
+                  detalle.persona.genero === 'OTRO' ? 'Otro' :
+                  'No registrado'
+                  }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">
+                  Estado del perfil personal
+                </p>
+
+                <span class="badge mt-1 gap-1" [ngClass]="
+                        detalle.persona.estado ? 'badge-success' : 'badge-error'
+                      ">
+                  <i class="fa-solid" [ngClass]="
+                          detalle.persona.estado ? 'fa-check' : 'fa-xmark'
+                        " aria-hidden="true"></i>
+
+                  {{ detalle.persona.estado ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CONTACTO -->
+          <div>
+            <h4 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+              <i class="fa-solid fa-address-book text-primary" aria-hidden="true"></i>
+              Información de contacto
+            </h4>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">
+                  Correo de contacto
+                </p>
+                <p class="wrap-break-word font-medium">
+                  {{ detalle.persona.email_contacto || 'No registrado' }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Celular</p>
+                <p class="font-medium">
+                  {{ detalle.persona.celular || 'No registrado' }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Dirección</p>
+                <p class="whitespace-pre-wrap wrap-break-word font-medium">
+                  {{ detalle.persona.direccion || 'No registrada' }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- FOTOGRAFÍA -->
+          @if (detalle.persona.foto_url) {
+          <div>
+            <h4 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+              <i class="fa-solid fa-image text-primary" aria-hidden="true"></i>
+              Fotografía del usuario
+            </h4>
+
+            <div class="overflow-hidden rounded-lg border border-base-300
+                           bg-base-200 p-3">
+              <img [src]="detalle.persona.foto_url" [alt]="
+                        'Fotografía de ' + detalle.persona.nombres +
+                        ' ' + detalle.persona.apellidos
+                      " class="mx-auto max-h-64 max-w-full rounded-lg object-contain" loading="lazy" />
+            </div>
+          </div>
+          }
+
+          <!-- ROLES ASIGNADOS -->
+          <div>
+            <h4 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+              <i class="fa-solid fa-user-shield text-primary" aria-hidden="true"></i>
+              Roles asignados
+            </h4>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+              @for (rol of detalle.roles; track rol.id_usuario_rol) {
+              <div class="rounded-lg bg-base-200 p-3">
+                <span class="badge badge-primary badge-outline">
+                  {{ rol.nombre }}
+                </span>
+
+                <p class="mt-2 wrap-break-word text-sm text-base-content/70">
+                  {{ rol.descripcion || 'Sin descripción.' }}
+                </p>
+
+                <div class="mt-3 space-y-2">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs text-base-content/60">
+                      Asignación:
+                    </span>
+
+                    <span class="badge badge-sm" [ngClass]="
+                              rol.estado_asignacion
+                                ? 'badge-success'
+                                : 'badge-neutral'
+                            ">
+                      {{ rol.estado_asignacion ? 'Activa' : 'Inactiva' }}
+                    </span>
+                  </div>
+
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs text-base-content/60">
+                      Rol en catálogo:
+                    </span>
+
+                    <span class="badge badge-sm" [ngClass]="rol.estado ? 'badge-success' : 'badge-error'">
+                      {{ rol.estado ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </div>
+
+                  <p class="text-xs text-base-content/60">
+                    Asignado el:
+                    {{
+                    (rol.fecha_asignacion | date:'dd/MM/yyyy hh:mm a')
+                    || 'No registrado'
+                    }}
+                  </p>
+                </div>
+              </div>
+              } @empty {
+              <div class="rounded-lg bg-base-200 p-3 md:col-span-3">
+                <p class="text-sm text-base-content/60">
+                  No hay roles disponibles en la información recibida.
+                </p>
+              </div>
+              }
+            </div>
+          </div>
+
+          <!-- INFORMACIÓN DEL SISTEMA -->
+          <div>
+            <h4 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+              <i class="fa-solid fa-clock text-primary" aria-hidden="true"></i>
+              Información del sistema
+            </h4>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">ID del usuario</p>
+                <p class="font-medium">{{ detalle.id_usuario }}</p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">ID de la persona</p>
+                <p class="font-medium">{{ detalle.id_persona }}</p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Estado de la cuenta</p>
+
+                <div class="mt-1">
+                  <span class="badge gap-1" [ngClass]="detalle.estado ? 'badge-success' : 'badge-error'">
+                    <i class="fa-solid" [ngClass]="detalle.estado ? 'fa-check' : 'fa-xmark'" aria-hidden="true"></i>
+
+                    {{ detalle.estado ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Último acceso</p>
+                <p class="text-sm font-medium">
+                  {{
+                  (detalle.ultimo_acceso | date:'dd/MM/yyyy hh:mm a')
+                  || 'Sin acceso registrado'
+                  }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Cuenta creada el</p>
+                <p class="text-sm font-medium">
+                  {{
+                  (detalle.created_at | date:'dd/MM/yyyy hh:mm a')
+                  || 'No registrado'
+                  }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Cuenta actualizada el</p>
+                <p class="text-sm font-medium">
+                  {{
+                  (detalle.updated_at | date:'dd/MM/yyyy hh:mm a')
+                  || 'No registrado'
+                  }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Perfil creado el</p>
+                <p class="text-sm font-medium">
+                  {{
+                  (detalle.persona.createdAt | date:'dd/MM/yyyy hh:mm a')
+                  || 'No registrado'
+                  }}
+                </p>
+              </div>
+
+              <div class="rounded-lg bg-base-200 p-3">
+                <p class="text-xs text-base-content/60">Perfil actualizado el</p>
+                <p class="text-sm font-medium">
+                  {{
+                  (detalle.persona.updatedAt | date:'dd/MM/yyyy hh:mm a')
+                  || 'No registrado'
+                  }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- SIN DATOS -->
+        } @else {
+        <div class="flex min-h-64 flex-col items-center justify-center text-center">
+          <div class="mb-4 flex h-16 w-16 items-center justify-center
+                       rounded-full bg-base-200 text-base-content/40">
+            <i class="fa-solid fa-user text-2xl" aria-hidden="true"></i>
+          </div>
+
+          <h3 class="font-semibold text-base-content">
+            No hay información disponible
+          </h3>
+
+          <p class="mt-1 max-w-sm text-sm text-base-content/60">
+            No fue posible encontrar los datos del usuario seleccionado.
+          </p>
+        </div>
+        }
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- FOOTER MODAL -->
+      <!-- ===================================================== -->
+      <footer class="flex shrink-0 flex-col-reverse gap-3
+                 border-t border-base-300 px-5 py-4
+                 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div class="flex items-center gap-2 text-xs text-base-content/50">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          <span>Consulte la información completa del usuario.</span>
+        </div>
+
+        <button type="button" class="btn btn-accent min-w-28" (click)="cerrarModal()">
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
+          Cerrar
+        </button>
+      </footer>
+
+    </section>
+  </div>
+</div>
+}
