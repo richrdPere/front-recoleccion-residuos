@@ -5,11 +5,16 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import Swal from 'sweetalert2';
 
+// Directives
+import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directive';
+
+
 // Services
 import { PersonalService } from 'src/app/features/personal/services/personal.service';
 
 // Interfaces
-import { CreatePersonalOperativoRequest, EstadoLaboralPersonal, PersonalOperativoData, TipoContratoPersonal, TurnoPreferentePersonal } from '../../models';
+import { CreatePersonalOperativoRequest, EstadoLaboralPersonal, PersonalOperativoData, TipoContratoPersonal, TurnoPreferentePersonal } from '../../models/personal_operativo';
+import { UsuarioSelectorItem } from 'src/app/features/usuarios/interfaces';
 
 // ============================================================
 // OPCIONES PARA SELECTORES
@@ -85,6 +90,7 @@ const fechaValida: ValidatorFn = (
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    UppercaseDirective,
   ],
   templateUrl: './personal-form.component.html',
   styles: ``,
@@ -98,10 +104,8 @@ export class PersonalFormComponent implements OnChanges {
   // ============================================================
   @Input() mostrarModal = false;
   @Input() modoEdicion = false;
-
   @Input() personalSeleccionado: PersonalOperativoData | null = null;
-
-  @Input() usuarios: UsuarioPersonalOption[] = [];
+  @Input() usuariosDisponibles: UsuarioSelectorItem[] = [];
 
   @Input() tiposContrato: PersonalSelectOption<TipoContratoPersonal>[] = [];
   @Input() turnosPreferentes: PersonalSelectOption<TurnoPreferentePersonal>[] = [];
@@ -158,6 +162,7 @@ export class PersonalFormComponent implements OnChanges {
     }
 
     this.resetearFormulario();
+    this.getCodigo();
     this.setModalWidth('lg');
   }
 
@@ -171,7 +176,8 @@ export class PersonalFormComponent implements OnChanges {
       id_usuario: [null, [Validators.required, idValido]],
       codigo_empleado: ['', [Validators.required, textoNoVacio]],
       fecha_ingreso: ['', [Validators.required, fechaValida]],
-      tipo_contrato: [null, [Validators.required]],
+      fecha_salida: ['', [Validators.required, fechaValida]],
+      tipo_contrato: ['CONTRATADO', [Validators.required]],
       turno_preferente: [null],
       estado_laboral: [null],
       observacion: [''],
@@ -184,6 +190,7 @@ export class PersonalFormComponent implements OnChanges {
       id_usuario: null,
       codigo_empleado: '',
       fecha_ingreso: '',
+      fecha_salida: '',
       tipo_contrato: null,
       turno_preferente: null,
       estado_laboral: null,
@@ -197,6 +204,7 @@ export class PersonalFormComponent implements OnChanges {
       id_usuario: personal.id_usuario,
       codigo_empleado: personal.codigo_empleado,
       fecha_ingreso: personal.fecha_ingreso?.slice(0, 10) ?? '',
+      fecha_salida: personal.fecha_salida?.slice(0, 10) ?? '',
       tipo_contrato: personal.tipo_contrato,
       turno_preferente: personal.turno_preferente ?? null,
       estado_laboral: personal.estado_laboral ?? null,
@@ -226,14 +234,12 @@ export class PersonalFormComponent implements OnChanges {
       (opcion) => opcion.value === form.tipo_contrato,
     );
 
-    const turnoValido =
-      form.turno_preferente === null ||
+    const turnoValido = form.turno_preferente === null ||
       this.turnosPreferentes.some(
         (opcion) => opcion.value === form.turno_preferente,
       );
 
-    const estadoValido =
-      form.estado_laboral === null ||
+    const estadoValido = form.estado_laboral === null ||
       this.estadosLaborales.some(
         (opcion) => opcion.value === form.estado_laboral,
       );
@@ -268,6 +274,7 @@ export class PersonalFormComponent implements OnChanges {
       id_usuario: Number(form.id_usuario),
       codigo_empleado: form.codigo_empleado,
       fecha_ingreso: form.fecha_ingreso,
+      fecha_salida: form.fecha_salida,
       tipo_contrato: form.tipo_contrato,
       turno_preferente: form.turno_preferente ?? null,
       observacion: String(form.observacion ?? '').trim() || null,
@@ -346,6 +353,34 @@ export class PersonalFormComponent implements OnChanges {
   // ============================================================
   // HELPERS
   // ============================================================
+  getCodigo(): void {
+    this.personalService
+      .getLastCodigoPersonal()
+      .subscribe({
+        next: (resp) => {
+          // Evita aplicar la respuesta si se cerró el modal
+          // o se cambió a modo edición mientras cargaba.
+          if (!this.mostrarModal || this.modoEdicion) {
+            return;
+          }
+
+          if (!resp.success || !resp.data?.codigo) {
+            return;
+          }
+
+          this.formPersonal.patchValue({
+            codigo_empleado: resp.data.codigo,
+          });
+
+          this.cdr.markForCheck();
+        },
+
+        error: (error) => {
+          console.error('Error al obtener el código del vehículo:', error);
+        },
+      });
+  }
+
   normalizarCodigo(): void {
     const control = this.formPersonal.get('codigo_empleado');
 
@@ -360,7 +395,7 @@ export class PersonalFormComponent implements OnChanges {
 
     return (
       id !== null &&
-      !this.usuarios.some(
+      !this.usuariosDisponibles.some(
         (usuario) => usuario.id_usuario === Number(id),
       )
     );
@@ -414,6 +449,26 @@ export class PersonalFormComponent implements OnChanges {
     };
 
     this.modalWidthClass = clases[size];
+  }
+
+  campoCompleto(campo: string): boolean {
+    const control = this.formPersonal.get(campo);
+
+    if (!control || !control.valid) {
+      return false;
+    }
+
+    const valor = control.value;
+
+    if (typeof valor === 'string') {
+      return valor.trim().length > 0;
+    }
+
+    if (Array.isArray(valor)) {
+      return valor.length > 0;
+    }
+
+    return valor !== null && valor !== undefined;
   }
 
   cerrarModal(): void {

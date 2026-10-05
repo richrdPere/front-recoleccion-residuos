@@ -10,6 +10,7 @@ export interface CreatePersonalOperativoRequest {
 
   codigo_empleado: string;
   fecha_ingreso: string;
+  fecha_salida?: string;
   tipo_contrato: TipoContratoPersonal;
   turno_preferente?: TurnoPreferentePersonal | null;
   estado_laboral?: EstadoLaboralPersonal;

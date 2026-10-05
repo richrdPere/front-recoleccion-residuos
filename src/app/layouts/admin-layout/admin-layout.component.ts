@@ -352,16 +352,9 @@ export class AdminLayoutComponent {
 
           {
             label: 'Notificaciones',
-
-            description:
-              'Avisos operativos y ciudadanos',
-
-            route:
-              '/admin/notificaciones',
-
-            icon:
-              'fa-regular fa-bell',
-
+            description: 'Avisos operativos y ciudadanos',
+            route: '/admin/notificaciones',
+            icon: 'fa-regular fa-bell',
             roles: [
               'SUPER_ADMIN',
               'ADMIN',
@@ -378,16 +371,9 @@ export class AdminLayoutComponent {
         items: [
           {
             label: 'Reportes',
-
-            description:
-              'Consultas y exportaciones',
-
-            route:
-              '/admin/reportes',
-
-            icon:
-              'fa-regular fa-file-lines',
-
+            description: 'Consultas y exportaciones',
+            route: '/admin/reportes',
+            icon: 'fa-regular fa-file-lines',
             roles: [
               'SUPER_ADMIN',
               'ADMIN',
@@ -421,16 +407,9 @@ export class AdminLayoutComponent {
         items: [
           {
             label: 'Usuarios',
-
-            description:
-              'Cuentas del sistema',
-
-            route:
-              '/admin/usuarios',
-
-            icon:
-              'fa-solid fa-user-gear',
-
+            description: 'Cuentas del sistema',
+            route: '/admin/usuarios',
+            icon: 'fa-solid fa-user-gear',
             roles: [
               'SUPER_ADMIN',
               'ADMIN',

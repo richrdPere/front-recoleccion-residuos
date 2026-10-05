@@ -6,7 +6,7 @@ import { finalize, Subscription } from 'rxjs';
 import { PersonalService } from 'src/app/features/personal/services/personal.service';
 
 // Interfaces
-import { PersonalOperativoData } from '../../models';
+import { PersonalOperativoData } from '../../models/personal_operativo/data/personal-operativo-data.model';
 
 interface CampoDetalle {
   clave: string;

@@ -9,9 +9,16 @@ import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directiv
 
 // Service
 import { PersonalService } from '../../services/personal.service';
-import { EstadoLaboralPersonal, PersonalOperativoData, PersonalPaginadoFilters, TipoContratoPersonal } from '../../models';
+import { UsuarioService } from 'src/app/features/usuarios/services/usuario.service';
+
+// Interfaces
+import { EstadoLaboralPersonal, PersonalOperativoData, PersonalPaginadoFilters, TipoContratoPersonal, TurnoPreferentePersonal } from '../../models/personal_operativo';
+import { UsuarioSelectorItem } from 'src/app/features/usuarios/interfaces';
+
+// Componentes
 import { PersonalFormComponent } from '../personal-form/personal-form.component';
 import { PersonalViewComponent } from '../personal-view/personal-view.component';
+
 
 @Component({
   selector: 'app-personal-page',
@@ -22,7 +29,7 @@ import { PersonalViewComponent } from '../personal-view/personal-view.component'
     UppercaseDirective,
     PersonalFormComponent,
     PersonalViewComponent
-],
+  ],
   templateUrl: './personal-page.component.html',
   styles: ``,
 })
@@ -45,6 +52,87 @@ export class PersonalPageComponent implements OnInit {
   estadoLaboralBusqueda: EstadoLaboralPersonal | '' = '';
   tipoContratoBusqueda: TipoContratoPersonal | '' = '';
 
+  // ============================================================
+  // SELECTORES
+  // ============================================================
+  readonly tiposContrato: {
+    value: TipoContratoPersonal;
+    label: string;
+  }[] = [
+      {
+        value: 'NOMBRADO',
+        label: 'Nombrado',
+      },
+      {
+        value: 'CONTRATADO',
+        label: 'Contratado',
+      },
+      {
+        value: 'CAS',
+        label: 'CAS',
+      },
+      {
+        value: 'LOCADOR',
+        label: 'Locador',
+      },
+      {
+        value: 'TERCERO',
+        label: 'Tercero',
+      },
+      {
+        value: 'OTRO',
+        label: 'Otro',
+      },
+    ];
+
+  readonly turnosPreferentes: {
+    value: TurnoPreferentePersonal;
+    label: string;
+  }[] = [
+      {
+        value: 'MANANA',
+        label: 'Mañana',
+      },
+      {
+        value: 'TARDE',
+        label: 'Tarde',
+      },
+      {
+        value: 'NOCHE',
+        label: 'Noche',
+      },
+      {
+        value: 'ROTATIVO',
+        label: 'Rotativo',
+      },
+    ];
+
+  readonly estadosLaborales: {
+    value: EstadoLaboralPersonal;
+    label: string;
+  }[] = [
+      {
+        value: 'ACTIVO',
+        label: 'Activo',
+      },
+      {
+        value: 'VACACIONES',
+        label: 'Vacaciones',
+      },
+      {
+        value: 'DESCANSO_MEDICO',
+        label: 'Descanso medico',
+      },
+      {
+        value: 'SUSPENDIDO',
+        label: 'Suspendido',
+      },
+      {
+        value: 'CESADO',
+        label: 'Cesado',
+      },
+    ];
+
   // Paginado
   page = 1;
   limit = 5;
@@ -54,13 +142,20 @@ export class PersonalPageComponent implements OnInit {
 
   pageSizeOptions = [5, 10, 20, 50];
 
+  // Estado switch
+
+  // Selectores
+  usuariosDisponibles: UsuarioSelectorItem[] = [];
+
   constructor(
     private personalService: PersonalService,
+    private usuarioService: UsuarioService,
     private cdr: ChangeDetectorRef,
   ) { }
 
   ngOnInit(): void {
     this.getPersonalPaginated();
+    this.initUsuariosSinPersonal();
   }
 
   // ================================
@@ -106,6 +201,31 @@ export class PersonalPageComponent implements OnInit {
           this.totalPages = 0;
         }
       });
+  }
+
+  initUsuariosSinPersonal(): void {
+    this.usuarioService.getUsuariosSinPersonal().subscribe({
+      next: (response) => {
+        this.usuariosDisponibles = response.success
+          ? response.data
+          : [];
+
+        this.cdr.markForCheck();
+      },
+
+      error: (error) => {
+        this.usuariosDisponibles = [];
+        this.cdr.markForCheck();
+
+        void Swal.fire({
+          icon: 'error',
+          title: 'No se pudieron cargar los usuarios',
+          text: error?.error?.message ??
+            error?.message ??
+            'Intenta nuevamente.',
+        });
+      },
+    });
   }
 
   // - Eliminar personal
@@ -166,7 +286,12 @@ export class PersonalPageComponent implements OnInit {
     this.mostrarModalView = true;
   }
 
-  // CAMBIAR ESTADO
+  // - Sabe conducir
+  conductorPersonal(_t107: PersonalOperativoData) {
+    throw new Error('Method not implemented.');
+  }
+
+  // - CAMBIAR ESTADO
   cambiarEstado(personal: PersonalOperativoData) {
 
     // TODO:

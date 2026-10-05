@@ -17,7 +17,7 @@
                  rounded-2xl bg-primary/10
                  text-primary" aria-hidden="true">
 
-        <i class="fa-solid fa-car-side text-2xl"></i>
+        <i class="fa-solid fa-users text-2xl"></i>
       </div>
 
       <div class="min-w-0">
@@ -107,11 +107,12 @@
 
   <!-- Formulario modal para personal -->
   <personal-form [mostrarModal]="mostrarModal" [modoEdicion]="modoEdicion" [personalSeleccionado]="personalSeleccionado"
-    (modalCerrado)="cerrarModal()" (personalCreado)="getPersonalPaginated()"></personal-form>
+    [usuariosDisponibles]="usuariosDisponibles" [tiposContrato]="tiposContrato" [turnosPreferentes]="turnosPreferentes"
+    [estadosLaborales]="estadosLaborales" (modalCerrado)="cerrarModal()"
+    (personalCreado)="getPersonalPaginated()"></personal-form>
 
   <!-- Modal para ver detalle del personal -->
-  <personal-view [mostrarModal]="mostrarModalView" [personal_id]="personal_id"
-    (modalCerrado)="cerrarModalInfo()" />
+  <personal-view [mostrarModal]="mostrarModalView" [personal_id]="personal_id" (modalCerrado)="cerrarModalInfo()" />
 
   <!-- ================================================= -->
   <!-- TABLA DE PERSONAL REGISTRADO -->
@@ -562,6 +563,16 @@
 
             <td>
               <div class="flex items-center justify-center gap-1">
+
+                <!-- Condutor -->
+                <div class="tooltip tooltip-left" data-tip="Datos de conductor">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="conductorPersonal(pers)"
+                    aria-label="Ver detalle del personal">
+
+                    <i class="fa-regular fa-id-card"></i>
+                  </button>
+                </div>
+
                 <!-- Ver -->
                 <div class="tooltip tooltip-left" data-tip="Ver personal">
                   <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="verPersonal(pers)"

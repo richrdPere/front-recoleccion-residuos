@@ -12,7 +12,7 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
 // Interfaces
-import { AddRolUsuarioRequest, AddRolUsuarioResponse, ChangeEstadoUsuarioRequest, ChangeEstadoUsuarioResponse, CreateUsuarioRequest, CreateUsuarioResponse, DeleteUsuarioResponse, GetRolesResponse, GetUsuarioByIdResponse, GetUsuarioRolesResponse, GetUsuarioSelectorResponse, GetUsuariosPaginatedResponse, RemoveRolUsuarioResponse, ResetPasswordUsuarioRequest, ResetPasswordUsuarioResponse, UpdateUsuarioRequest, UpdateUsuarioResponse, UsuarioIdentificador, UsuarioRolesFilters, UsuarioSelectorFilters, UsuariosPaginadosFilters } from '../interfaces';
+import { AddRolUsuarioRequest, AddRolUsuarioResponse, ChangeEstadoUsuarioRequest, ChangeEstadoUsuarioResponse, CreateUsuarioRequest, CreateUsuarioResponse, DeleteUsuarioResponse, GetRolesResponse, GetUsuarioByIdResponse, GetUsuarioRolesResponse, GetUsuarioSelectorResponse, GetUsuariosPaginatedResponse, GetUsuariosSinPersonalResponse, RemoveRolUsuarioResponse, ResetPasswordUsuarioRequest, ResetPasswordUsuarioResponse, UpdateUsuarioRequest, UpdateUsuarioResponse, UsuarioIdentificador, UsuarioRolesFilters, UsuarioSelectorFilters, UsuariosPaginadosFilters, UsuariosSinPersonalFilters } from '../interfaces';
 
 
 @Injectable({
@@ -39,6 +39,7 @@ export class UsuarioService {
   private readonly API_ADD_ROL_USUARIO: string = this.API_BASE + '/';
   private readonly API_REMOVE_ROL_USUARIO: string = this.API_BASE + '/';
   private readonly API_GET_ROLES: string = this.API_BASE + '/roles';
+  private readonly API_GET_USUARIOS_SIN_PERSONAL: string = this.API_BASE + '/sin-personal';
 
   constructor(
     private readonly http: HttpClient,
@@ -338,6 +339,30 @@ export class UsuarioService {
           HttpServiceHelper.handleError(
             error,
             'No se pudieron obtener los roles.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 13. OBTENER USUARIOS DISPONIBLES PARA CREAR PERSONAL OPERATIVO
+  // *********************************************************
+  getUsuariosSinPersonal(
+    filters: UsuariosSinPersonalFilters = {},
+  ): Observable<GetUsuariosSinPersonalResponse> {
+    const headers = this.getJsonHeaders();
+    const params = HttpServiceHelper.buildParams(filters);
+
+    return this.http
+      .get<GetUsuariosSinPersonalResponse>(
+        this.API_GET_USUARIOS_SIN_PERSONAL,
+        { headers, params },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudieron obtener los usuarios disponibles.',
           ),
         ),
       );

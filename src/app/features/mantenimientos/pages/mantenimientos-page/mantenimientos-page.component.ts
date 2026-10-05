@@ -1,12 +1,246 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { CommonModule, DatePipe, CurrencyPipe, DecimalPipe } from '@angular/common';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
+import Swal from 'sweetalert2';
+
+// Directives
+import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directive';
+
+// Service
+import { MantenimientoService } from '../../services/mantenimiento.service';
+
+// Interfaces
+import { EstadoMantenimiento, MantenimientoPaginadoItem, MantenimientosPaginadosFilters, TipoMantenimiento } from '../../interfaces';
+
+// Componentes
 
 @Component({
   selector: 'app-mantenimientos-page',
-  imports: [],
+  imports: [
+    CurrencyPipe,
+    DatePipe,
+    DecimalPipe,
+    FormsModule,
+    CommonModule,
+    UppercaseDirective,
+  ],
   templateUrl: './mantenimientos-page.component.html',
   styles: ``,
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MantenimientosPageComponent {
+export class MantenimientosPageComponent implements OnInit {
+
+
+  // Mantenimiento
+  mantenimientos: MantenimientoPaginadoItem[] = [];
+  mantenimiento_id: number | null = null;
+  isLoading = true;
+
+  mostrarModal = false;
+  mostrarModalView = false;
+  modoEdicion = false;
+  mantenimientoSeleccionado: any = null;
+
+  searchTimeout: any;
+
+  // Search
+  searchBusqueda: string = '';
+  tipoMantenimientoBusqueda: TipoMantenimiento | '' = '';
+  estadoMantenimientoBusqueda: EstadoMantenimiento | '' = '';
+
+  // Paginado
+  page = 1;
+  limit = 5;
+  totalItems = 0;
+  totalPages = 0;
+  currentPage = 1;
+
+  pageSizeOptions = [5, 10, 20, 50];
+
+  // Estado switch
+
+  // Selectores
+  readonly tipoMantenimiento: {
+    value: TipoMantenimiento;
+    label: string;
+  }[] = [
+      {
+        value: 'PREVENTIVO',
+        label: 'Preventivo',
+      },
+      {
+        value: 'CORRECTIVO',
+        label: 'Correctivo',
+      },
+    ];
+
+  readonly estadoMantenimiento: {
+    value: EstadoMantenimiento;
+    label: string;
+  }[] = [
+      {
+        value: 'PROGRAMADO',
+        label: 'Programado',
+      },
+      {
+        value: 'EN_PROCESO',
+        label: 'En proceso',
+      },
+      {
+        value: 'FINALIZADO',
+        label: 'Finalizado',
+      },
+      {
+        value: 'CANCELADO',
+        label: 'Cancelado',
+      },
+    ];
+
+  constructor(
+    private mantenimientoService: MantenimientoService,
+    private cdr: ChangeDetectorRef,
+  ) { }
+
+  ngOnInit(): void {
+    this.getMantenimientoPaginated();
+    // this.initUsuariosSinPersonal();
+  }
+
+  // ================================
+  // Methods
+  // ================================
+
+  // - Obtener mantenimientos
+  getMantenimientoPaginated() {
+    const params: MantenimientosPaginadosFilters = {
+      page: this.page,
+      limit: this.limit,
+      search: this.searchBusqueda,
+      tipo_mantenimiento: this.tipoMantenimientoBusqueda || undefined,
+      estado_mantenimiento: this.estadoMantenimientoBusqueda || undefined,
+    };
+
+    this.isLoading = true;
+
+    this.mantenimientoService.getMantenimientosPaginated(params)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe({
+        next: (res) => {
+
+          const items = res.data.items;
+          const paginacion = res.data.pagination;
+
+          this.mantenimientos = items;
+          this.totalItems = paginacion.total;
+          this.currentPage = paginacion.page;
+
+          this.page = paginacion.page;
+          this.limit = paginacion.limit;
+          this.totalPages = paginacion.total_pages;
+        },
+        error: (err) => {
+          console.error(err);
+          this.isLoading = false;
+
+          this.mantenimientos = [];
+          this.totalItems = 0;
+          this.totalPages = 0;
+        }
+      });
+  }
+
+  // Finalizar mantenimiento
+  finalizarMantenimiento(_t151: MantenimientoPaginadoItem) {
+    throw new Error('Method not implemented.');
+  }
+
+  // Cancelar mantenimiento
+  cancelarMantenimiento(_t151: MantenimientoPaginadoItem) {
+    throw new Error('Method not implemented.');
+  }
+
+  // - Iniciar mantenimiento
+  iniciarMantenimiento(_t151: MantenimientoPaginadoItem) {
+    throw new Error('Method not implemented.');
+  }
+
+  // - Editar mantenimiento
+  editarMantenimiento(_t151: MantenimientoPaginadoItem) {
+    throw new Error('Method not implemented.');
+  }
+
+  // - Ver mantenimiento
+  verMantenimiento(_t151: MantenimientoPaginadoItem) {
+    throw new Error('Method not implemented.');
+  }
+
+  // ================================
+  // Helpers methods
+  // ================================
+  limpiarFiltros(): void {
+    this.searchBusqueda = '';
+    this.tipoMantenimientoBusqueda = '';
+    this.estadoMantenimientoBusqueda = '';
+    this.page = 1;
+
+    this.getMantenimientoPaginated();
+  }
+
+  onSearchChange() {
+    clearTimeout(this.searchTimeout);
+
+    this.searchTimeout = setTimeout(() => {
+      this.page = 1;
+      this.getMantenimientoPaginated();
+    }, 300);
+  }
+
+  onPageSizeChange() {
+    this.currentPage = 1; // vuelve a la primera página
+  }
+
+  onFiltroChange() {
+    this.page = 1;
+    this.getMantenimientoPaginated();
+  }
+
+  cambiarPagina(nuevaPagina: number) {
+    if (nuevaPagina < 1 || nuevaPagina > this.totalPages) return;
+    this.page = nuevaPagina;
+    this.getMantenimientoPaginated();
+  }
+
+  cambiarLimite() {
+    this.limit = Number(this.limit);
+    this.page = 1;
+    this.getMantenimientoPaginated();
+  }
+
+  // ================================
+  // Modales methods
+  // ================================
+  abrirModal() {
+    this.modoEdicion = false;
+    this.mantenimientoSeleccionado = null;
+    this.mostrarModal = true;
+  }
+
+  cerrarModal() {
+    this.mostrarModal = false;
+  }
+
+  cerrarModalInfo() {
+    this.mostrarModalView = false;
+    this.mantenimiento_id = null;
+  }
+
+
+
+
 
 }

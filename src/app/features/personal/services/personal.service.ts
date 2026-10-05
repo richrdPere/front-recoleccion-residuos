@@ -10,10 +10,9 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 
 // Helper
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
-import { ChangePersonalEstadoOperativoRequest, ChangePersonalEstadoResponse, CreatePersonalOperativoRequest, CreatePersonalOperativoResponse, DeletePersonalResponse, GetPersonalByIdResponse, GetPersonalPaginatedResponse, PersonalPaginadoFilters, UpdatePersonalOperativoRequest, UpdatePersonalOperativoResponse } from '../models';
 
 // Interface
-
+import { ChangePersonalEstadoOperativoRequest, ChangePersonalEstadoResponse, CreatePersonalOperativoRequest, CreatePersonalOperativoResponse, DeletePersonalResponse, GetPersonalByIdResponse, GetPersonalPaginatedResponse, PersonalPaginadoFilters, UltimoCodigoPersonalData, UltimoCodigoPersonalResponse, UpdatePersonalOperativoRequest, UpdatePersonalOperativoResponse } from '../models/personal_operativo';
 
 @Injectable({
   providedIn: 'root'
@@ -31,6 +30,7 @@ export class PersonalService {
   private readonly API_UPDATE_PERSONAL: string = this.API_BASE + '/update/';
   private readonly API_PATCH_ESTADO_PERSONAL: string = this.API_BASE + '/estado/';
   private readonly API_DELETE_PERSONAL: string = this.API_BASE + '/delete/';
+  private readonly API_GET_ULTIMO_CODIGO_PERSONAL: string = this.API_BASE + '/codigo';
 
   constructor(
     private readonly http: HttpClient,
@@ -174,6 +174,28 @@ export class PersonalService {
           HttpServiceHelper.handleError(
             error,
             'No se pudo eliminar el personal operativo.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 7. OBTENER ULTIMO CODIGO VEHICULO
+  // *********************************************************
+  getLastCodigoPersonal(
+  ): Observable<UltimoCodigoPersonalResponse> {
+    const headers = this.getJsonHeaders();
+
+    return this.http
+      .get<UltimoCodigoPersonalResponse>(
+        this.API_GET_ULTIMO_CODIGO_PERSONAL,
+        { headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo obtener el último código de vehículo.',
           ),
         ),
       );

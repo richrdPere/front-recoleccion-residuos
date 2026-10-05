@@ -1,6 +1,7 @@
 import { ApiResponse } from "src/app/core/models/api-response.model";
-import { PersonalOperativoData } from "./data/personal-operativo-data.model";
 import { EstadoLaboralPersonal, NombreRol, TipoContratoPersonal } from "./data/personal-operativo.types";
+import { PersonalOperativoData } from "./data/personal-operativo-data.model";
+
 
 // ============================================================
 // FILTROS
@@ -40,9 +41,18 @@ export interface PersonalPaginadoData {
 }
 
 // ============================================================
+// ULTIMO CODIGO
+// ============================================================
+export interface UltimoCodigoPersonalData {
+  codigo: string;
+}
+
+// ============================================================
 // RESPONSE
 // ============================================================
 export type GetPersonalPaginatedResponse = ApiResponse<PersonalPaginadoData>;
+
+export type UltimoCodigoPersonalResponse = ApiResponse<UltimoCodigoPersonalData>;
 
 // export interface GetPersonalPaginatedResponse {
 //   success: boolean;
