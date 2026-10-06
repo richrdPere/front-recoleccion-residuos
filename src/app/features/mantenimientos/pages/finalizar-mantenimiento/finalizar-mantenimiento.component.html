@@ -1,0 +1,467 @@
+@if (mostrarModal) {
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+  (click)="cerrarModal()">
+
+  <section
+    class="relative flex max-h-[92vh] w-full flex-col overflow-hidden
+           rounded-2xl border border-base-300 bg-base-100 shadow-2xl"
+    [ngClass]="modalWidthClass"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="finalizar-mantenimiento-title"
+    [attr.aria-busy]="isLoading"
+    (click)="$event.stopPropagation()">
+
+    <!-- ===================================================== -->
+    <!-- HEADER -->
+    <!-- ===================================================== -->
+    <header
+      class="flex shrink-0 items-start justify-between gap-4
+             border-b border-base-300 bg-base-200/50 px-5 py-4 sm:px-6">
+
+      <div class="flex min-w-0 items-center gap-3">
+        <div
+          class="flex h-11 w-11 shrink-0 items-center justify-center
+                 rounded-xl bg-success/10 text-success">
+          <i class="fa-solid fa-check-double text-lg" aria-hidden="true"></i>
+        </div>
+
+        <div class="min-w-0">
+          <h2
+            id="finalizar-mantenimiento-title"
+            class="text-lg font-bold sm:text-xl">
+            Finalizar mantenimiento
+          </h2>
+
+          <p class="mt-1 text-sm text-base-content/60">
+            Registra los trabajos realizados y el resultado de la intervención.
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-ghost btn-circle btn-sm shrink-0"
+        aria-label="Cerrar modal"
+        [disabled]="isLoading"
+        (click)="cerrarModal()">
+        <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <form
+      class="flex min-h-0 flex-1 flex-col"
+      [formGroup]="formFinalizacion"
+      (ngSubmit)="finalizar()">
+
+      <!-- ===================================================== -->
+      <!-- CONTENIDO -->
+      <!-- ===================================================== -->
+      <div
+        class="min-h-0 flex-1 space-y-6 overflow-y-auto
+               overscroll-contain px-5 py-5 sm:px-6">
+
+        @if (mantenimientoSeleccionado; as mantenimiento) {
+        <!-- RESUMEN DE LA ORDEN -->
+        <section
+          class="rounded-xl border border-base-300 bg-base-200/40 p-4">
+
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p class="text-xs text-base-content/60">
+                Orden de mantenimiento
+              </p>
+
+              <h3 class="mt-1 font-bold">
+                #{{ mantenimiento.id_mantenimiento }}
+                · {{ mantenimiento.vehiculo.codigo }}
+                · {{ mantenimiento.vehiculo.placa }}
+              </h3>
+            </div>
+
+            <span class="badge badge-outline">
+              {{ mantenimiento.tipo_mantenimiento }}
+            </span>
+          </div>
+
+          <p class="mt-3 whitespace-pre-wrap text-sm text-base-content/70">
+            {{ mantenimiento.motivo }}
+          </p>
+
+          <dl class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <dt class="text-xs text-base-content/60">
+                Inicio real
+              </dt>
+
+              <dd class="mt-1 text-sm font-medium">
+                @if (mantenimiento.fecha_inicio_real) {
+                {{
+                  mantenimiento.fecha_inicio_real
+                    | date:'dd/MM/yyyy HH:mm':'-0500'
+                }}
+                } @else {
+                Sin registrar
+                }
+              </dd>
+            </div>
+
+            <div>
+              <dt class="text-xs text-base-content/60">
+                Kilometraje de ingreso
+              </dt>
+
+              <dd class="mt-1 text-sm font-medium">
+                @if (mantenimiento.kilometraje_ingreso !== null) {
+                {{ mantenimiento.kilometraje_ingreso | number:'1.0-2' }} km
+                } @else {
+                Sin registrar
+                }
+              </dd>
+            </div>
+          </dl>
+        </section>
+        }
+
+        @if (!puedeFinalizar) {
+        <div class="alert alert-warning" role="alert">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          <span>
+            Solo se pueden finalizar órdenes en estado EN PROCESO.
+          </span>
+        </div>
+        }
+
+        @if (errorFormulario) {
+        <div class="alert alert-error" role="alert">
+          <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+          <span>{{ errorFormulario }}</span>
+        </div>
+        }
+
+        <fieldset
+          class="space-y-6"
+          [disabled]="isLoading || !puedeFinalizar">
+
+          <!-- ===================================================== -->
+          <!-- TRABAJOS Y DIAGNÓSTICO -->
+          <!-- ===================================================== -->
+          <section class="space-y-4">
+            <h3 class="flex items-center gap-2 font-semibold">
+              <i class="fa-solid fa-screwdriver-wrench text-primary"
+                 aria-hidden="true"></i>
+              Información de la intervención
+            </h3>
+
+            <!-- TRABAJOS REALIZADOS -->
+            <div class="form-control">
+              <label class="label" for="finalizacion-trabajos">
+                <span class="label-text">
+                  Trabajos realizados
+                  <span class="font-bold text-error">*</span>
+                </span>
+              </label>
+
+              <textarea
+                id="finalizacion-trabajos"
+                formControlName="trabajos_realizados"
+                rows="4"
+                class="textarea textarea-bordered w-full"
+                placeholder="Describe las reparaciones, reemplazos y pruebas realizadas."
+                [class.textarea-error]="campoInvalido('trabajos_realizados')"
+                [attr.aria-invalid]="campoInvalido('trabajos_realizados')"
+                [attr.aria-describedby]="
+                  campoInvalido('trabajos_realizados')
+                    ? 'finalizacion-trabajos-error'
+                    : null
+                ">
+              </textarea>
+
+              @if (campoInvalido('trabajos_realizados')) {
+              <p id="finalizacion-trabajos-error" class="mt-1 text-sm text-error">
+                {{ obtenerError('trabajos_realizados') }}
+              </p>
+              }
+            </div>
+
+            <!-- DIAGNÓSTICO -->
+            <div class="form-control">
+              <label class="label" for="finalizacion-diagnostico">
+                <span class="label-text">Diagnóstico</span>
+                <span class="label-text-alt text-base-content/50">
+                  Opcional
+                </span>
+              </label>
+
+              <textarea
+                id="finalizacion-diagnostico"
+                formControlName="diagnostico"
+                rows="3"
+                class="textarea textarea-bordered w-full"
+                placeholder="Describe las fallas identificadas y su diagnóstico.">
+              </textarea>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <!-- TALLER -->
+              <div class="form-control">
+                <label class="label" for="finalizacion-taller">
+                  <span class="label-text">Taller</span>
+                  <span class="label-text-alt text-base-content/50">
+                    Opcional
+                  </span>
+                </label>
+
+                <input
+                  id="finalizacion-taller"
+                  type="text"
+                  formControlName="taller"
+                  maxlength="150"
+                  class="input input-bordered w-full"
+                  placeholder="Nombre del taller"
+                  [class.input-error]="campoInvalido('taller')"
+                  [attr.aria-invalid]="campoInvalido('taller')"
+                  [attr.aria-describedby]="
+                    campoInvalido('taller') ? 'finalizacion-taller-error' : null
+                  " />
+
+                @if (campoInvalido('taller')) {
+                <p id="finalizacion-taller-error" class="mt-1 text-sm text-error">
+                  {{ obtenerError('taller') }}
+                </p>
+                }
+              </div>
+
+              <!-- RESPONSABLE -->
+              <div class="form-control">
+                <label class="label" for="finalizacion-responsable">
+                  <span class="label-text">Responsable técnico</span>
+                  <span class="label-text-alt text-base-content/50">
+                    Opcional
+                  </span>
+                </label>
+
+                <input
+                  id="finalizacion-responsable"
+                  type="text"
+                  formControlName="responsable_tecnico"
+                  maxlength="150"
+                  class="input input-bordered w-full"
+                  placeholder="Nombre del responsable"
+                  [class.input-error]="campoInvalido('responsable_tecnico')"
+                  [attr.aria-invalid]="campoInvalido('responsable_tecnico')"
+                  [attr.aria-describedby]="
+                    campoInvalido('responsable_tecnico')
+                      ? 'finalizacion-responsable-error'
+                      : null
+                  " />
+
+                @if (campoInvalido('responsable_tecnico')) {
+                <p
+                  id="finalizacion-responsable-error"
+                  class="mt-1 text-sm text-error">
+                  {{ obtenerError('responsable_tecnico') }}
+                </p>
+                }
+              </div>
+            </div>
+          </section>
+
+          <!-- ===================================================== -->
+          <!-- RESULTADO -->
+          <!-- ===================================================== -->
+          <section class="space-y-4 border-t border-base-300 pt-5">
+            <h3 class="flex items-center gap-2 font-semibold">
+              <i class="fa-solid fa-clipboard-check text-primary"
+                 aria-hidden="true"></i>
+              Resultado del mantenimiento
+            </h3>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <!-- KILOMETRAJE -->
+              <div class="form-control">
+                <label class="label" for="finalizacion-kilometraje">
+                  <span class="label-text">Kilometraje de salida</span>
+                  <span class="label-text-alt text-base-content/50">
+                    Opcional
+                  </span>
+                </label>
+
+                <input
+                  id="finalizacion-kilometraje"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  formControlName="kilometraje_salida"
+                  class="input input-bordered w-full"
+                  placeholder="Ejemplo: 5000"
+                  [class.input-error]="campoInvalido('kilometraje_salida')"
+                  [attr.aria-invalid]="campoInvalido('kilometraje_salida')"
+                  aria-describedby="finalizacion-kilometraje-ayuda"
+                  [attr.aria-errormessage]="
+                    campoInvalido('kilometraje_salida')
+                      ? 'finalizacion-kilometraje-error'
+                      : null
+                  " />
+
+                <p
+                  id="finalizacion-kilometraje-ayuda"
+                  class="mt-2 text-xs text-base-content/60">
+                  Si lo dejas vacío, se conservará el kilometraje de ingreso.
+                </p>
+
+                @if (campoInvalido('kilometraje_salida')) {
+                <p
+                  id="finalizacion-kilometraje-error"
+                  class="mt-1 text-sm text-error">
+                  {{ obtenerError('kilometraje_salida') }}
+                </p>
+                }
+              </div>
+
+              <!-- COSTO -->
+              <div class="form-control">
+                <label class="label" for="finalizacion-costo">
+                  <span class="label-text">Costo total (S/)</span>
+                  <span class="label-text-alt text-base-content/50">
+                    Opcional
+                  </span>
+                </label>
+
+                <input
+                  id="finalizacion-costo"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  formControlName="costo_total"
+                  class="input input-bordered w-full"
+                  placeholder="Ejemplo: 850.50"
+                  [class.input-error]="campoInvalido('costo_total')"
+                  [attr.aria-invalid]="campoInvalido('costo_total')"
+                  [attr.aria-describedby]="
+                    campoInvalido('costo_total')
+                      ? 'finalizacion-costo-error'
+                      : null
+                  " />
+
+                @if (campoInvalido('costo_total')) {
+                <p id="finalizacion-costo-error" class="mt-1 text-sm text-error">
+                  {{ obtenerError('costo_total') }}
+                </p>
+                }
+              </div>
+            </div>
+
+            <!-- CONDICIÓN DEL VEHÍCULO -->
+            <div class="form-control">
+              <label class="label" for="finalizacion-operativo">
+                <span class="label-text">
+                  ¿El vehículo quedó operativo?
+                  <span class="font-bold text-error">*</span>
+                </span>
+              </label>
+
+              <select
+                id="finalizacion-operativo"
+                formControlName="vehiculo_operativo"
+                class="select select-bordered w-full"
+                [class.select-error]="campoInvalido('vehiculo_operativo')"
+                [attr.aria-invalid]="campoInvalido('vehiculo_operativo')"
+                [attr.aria-describedby]="
+                  campoInvalido('vehiculo_operativo')
+                    ? 'finalizacion-operativo-error'
+                    : null
+                ">
+                <option [ngValue]="null" disabled>
+                  Selecciona el resultado
+                </option>
+                <option [ngValue]="true">
+                  Sí, quedó operativo
+                </option>
+                <option [ngValue]="false">
+                  No, quedó fuera de servicio
+                </option>
+              </select>
+
+              @if (campoInvalido('vehiculo_operativo')) {
+              <p
+                id="finalizacion-operativo-error"
+                class="mt-1 text-sm text-error">
+                {{ obtenerError('vehiculo_operativo') }}
+              </p>
+              }
+
+              @if (formFinalizacion.get('vehiculo_operativo')?.value === true) {
+              <p class="mt-2 text-sm text-success" role="status">
+                La unidad podrá habilitarse para operación si su registro
+                administrativo está activo.
+              </p>
+              } @else if (
+                formFinalizacion.get('vehiculo_operativo')?.value === false
+              ) {
+              <p class="mt-2 text-sm text-warning" role="status">
+                La orden se finalizará y el vehículo quedará fuera de servicio.
+              </p>
+              }
+            </div>
+
+            <!-- OBSERVACIONES -->
+            <div class="form-control">
+              <label class="label" for="finalizacion-observacion">
+                <span class="label-text">Observaciones</span>
+                <span class="label-text-alt text-base-content/50">
+                  Opcional
+                </span>
+              </label>
+
+              <textarea
+                id="finalizacion-observacion"
+                formControlName="observacion"
+                rows="3"
+                class="textarea textarea-bordered w-full"
+                placeholder="Información complementaria sobre la intervención.">
+              </textarea>
+            </div>
+          </section>
+        </fieldset>
+
+        <div class="rounded-xl bg-base-200 p-4 text-sm text-base-content/70">
+          Al finalizar se registrarán los resultados y la fecha de cierre
+          de la intervención.
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- FOOTER -->
+      <!-- ===================================================== -->
+      <footer
+        class="flex shrink-0 flex-col-reverse gap-3 border-t border-base-300
+               px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+
+        <button
+          type="button"
+          class="btn btn-ghost"
+          [disabled]="isLoading"
+          (click)="cerrarModal()">
+          Cerrar
+        </button>
+
+        <button
+          type="submit"
+          class="btn btn-success"
+          [disabled]="isLoading || !puedeFinalizar">
+
+          @if (isLoading) {
+          <span class="loading loading-spinner loading-sm"></span>
+          Finalizando…
+          } @else {
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
+          Finalizar mantenimiento
+          }
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>
+}

@@ -12,12 +12,14 @@ import { MantenimientoService } from '../../services/mantenimiento.service';
 import { VehiculosService } from 'src/app/features/vehiculos/services/vehiculos.service';
 
 // Interfaces
-import { EstadoMantenimiento, MantenimientoPaginadoItem, MantenimientosPaginadosFilters, TipoMantenimiento } from '../../interfaces';
+import { EstadoMantenimiento, MantenimientoDetalleData, MantenimientoPaginadoItem, MantenimientosPaginadosFilters, TipoMantenimiento } from '../../interfaces';
 import { VehiculoSelectorItem } from 'src/app/features/vehiculos/models';
 
 // Componentes
 import { MantenimientoFormComponent } from '../mantenimiento-form/mantenimiento-form.component';
 import { MantenimientoViewComponent } from '../mantenimiento-view/mantenimiento-view.component';
+import { IniciarMantenimientoComponent } from '../iniciar-mantenimiento/iniciar-mantenimiento.component';
+import { FinalizarMantenimientoComponent } from '../finalizar-mantenimiento/finalizar-mantenimiento.component';
 
 @Component({
   selector: 'app-mantenimientos-page',
@@ -29,8 +31,10 @@ import { MantenimientoViewComponent } from '../mantenimiento-view/mantenimiento-
     CommonModule,
     UppercaseDirective,
     MantenimientoFormComponent,
-    MantenimientoViewComponent
-  ],
+    MantenimientoViewComponent,
+    IniciarMantenimientoComponent,
+    FinalizarMantenimientoComponent
+],
   templateUrl: './mantenimientos-page.component.html',
   styles: ``,
 })
@@ -46,6 +50,12 @@ export class MantenimientosPageComponent implements OnInit {
   mostrarModalView = false;
   modoEdicion = false;
   mantenimientoSeleccionado: any = null;
+
+  mostrarModalInicio = false;
+  mantenimientoParaIniciar: MantenimientoPaginadoItem | null = null;
+
+  mostrarModalFinalizacion = false;
+  mantenimientoParaFinalizar: MantenimientoPaginadoItem | null = null;
 
   searchTimeout: any;
 
@@ -189,8 +199,13 @@ export class MantenimientosPageComponent implements OnInit {
   }
 
   // Finalizar mantenimiento
-  finalizarMantenimiento(_t151: MantenimientoPaginadoItem) {
-    throw new Error('Method not implemented.');
+  finalizarMantenimiento(mant: MantenimientoPaginadoItem) {
+    if (mant.estado_mantenimiento !== 'EN_PROCESO') {
+      return;
+    }
+
+    this.mantenimientoParaFinalizar = mant;
+    this.mostrarModalFinalizacion = true;
   }
 
   // Cancelar mantenimiento
@@ -199,8 +214,13 @@ export class MantenimientosPageComponent implements OnInit {
   }
 
   // - Iniciar mantenimiento
-  iniciarMantenimiento(_t151: MantenimientoPaginadoItem) {
-    throw new Error('Method not implemented.');
+  iniciarMantenimiento(mant: MantenimientoPaginadoItem) {
+    if (mant.estado_mantenimiento !== 'PROGRAMADO') {
+      return;
+    }
+
+    this.mantenimientoParaIniciar = mant;
+    this.mostrarModalInicio = true;
   }
 
   // - Editar mantenimiento
@@ -276,8 +296,27 @@ export class MantenimientosPageComponent implements OnInit {
     this.mantenimiento_id = null;
   }
 
+  cerrarModalInicio(): void {
+    this.mostrarModalInicio = false;
+    this.mantenimientoParaIniciar = null;
+  }
+
+  onMantenimientoIniciado(mantenimiento: MantenimientoDetalleData): void {
+    // Reemplaza por el nombre real de tu método de recarga.
+    this.getMantenimientoPaginated();
+  }
 
 
+  cerrarModalFinalizacion(): void {
+    this.mostrarModalFinalizacion = false;
+    this.mantenimientoParaFinalizar = null;
+  }
 
+  onMantenimientoFinalizado(
+    _mantenimiento: MantenimientoDetalleData,
+  ): void {
+    // Sustituye por el nombre real de tu método de recarga.
+    this.getMantenimientoPaginated();
+  }
 
 }

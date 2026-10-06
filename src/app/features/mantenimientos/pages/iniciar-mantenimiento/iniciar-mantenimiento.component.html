@@ -1,0 +1,174 @@
+@if (mostrarModal) {
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="cerrarModal()">
+
+  <section class="flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden
+           rounded-2xl border border-base-300 bg-base-100 shadow-2xl" role="dialog" aria-modal="true"
+    aria-labelledby="mantenimiento-iniciar-title" [attr.aria-busy]="isLoading" (click)="$event.stopPropagation()">
+
+    <!-- HEADER -->
+    <header class="flex items-start justify-between gap-4 border-b
+             border-base-300 bg-base-200/50 px-5 py-4">
+
+      <div class="flex items-center gap-3">
+        <div class="flex h-11 w-11 items-center justify-center
+                 rounded-xl bg-warning/15 text-warning">
+          <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>
+        </div>
+
+        <div>
+          <h2 id="mantenimiento-iniciar-title" class="text-lg font-bold">
+            Iniciar mantenimiento
+          </h2>
+
+          <p class="mt-1 text-sm text-base-content/60">
+            Registra el inicio de la intervención.
+          </p>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-ghost btn-circle btn-sm" aria-label="Cerrar modal" [disabled]="isLoading"
+        (click)="cerrarModal()">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <form [formGroup]="formInicio" (ngSubmit)="iniciar()" class="flex min-h-0 flex-1 flex-col">
+
+      <div class="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
+
+        @if (mantenimientoSeleccionado; as mantenimiento) {
+        <!-- ORDEN SELECCIONADA -->
+        <div class="rounded-xl border border-base-300 bg-base-200/40 p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="font-semibold">
+              Orden #{{ mantenimiento.id_mantenimiento }}
+            </span>
+
+            <span class="badge badge-outline">
+              {{ mantenimiento.tipo_mantenimiento }}
+            </span>
+          </div>
+
+          <p class="mt-2 font-medium">
+            {{ mantenimiento.vehiculo.codigo }}
+            · {{ mantenimiento.vehiculo.placa }}
+          </p>
+
+          <p class="mt-2 whitespace-pre-wrap text-sm text-base-content/70">
+            {{ mantenimiento.motivo }}
+          </p>
+
+          <p class="mt-3 text-xs text-base-content/60">
+            Fin programado:
+            {{
+            mantenimiento.fecha_fin_programada
+            | date:'dd/MM/yyyy HH:mm':'-0500'
+            }}
+            (hora de Perú)
+          </p>
+        </div>
+        }
+
+        @if (!puedeIniciar) {
+        <div class="alert alert-warning" role="alert">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          <span>
+            Selecciona una orden en estado PROGRAMADO para iniciar.
+          </span>
+        </div>
+        }
+
+        @if (errorFormulario) {
+        <div class="alert alert-error" role="alert">
+          <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+          <span>{{ errorFormulario }}</span>
+        </div>
+        }
+
+        <fieldset class="space-y-4" [disabled]="isLoading || !puedeIniciar">
+
+          <!-- KILOMETRAJE -->
+          <div class="form-control">
+            <label class="label" for="inicio-kilometraje">
+              <span class="label-text font-medium">
+                Kilometraje de ingreso
+              </span>
+              <span class="label-text-alt text-base-content/50">
+                Opcional
+              </span>
+            </label>
+
+            <input id="inicio-kilometraje" type="number" min="0" step="0.01" formControlName="kilometraje_ingreso"
+              class="input input-bordered w-full" placeholder="Ejemplo: 5000"
+              [class.input-error]="campoInvalido('kilometraje_ingreso')"
+              [attr.aria-invalid]="campoInvalido('kilometraje_ingreso')"
+              aria-describedby="inicio-kilometraje-ayuda inicio-kilometraje-error" />
+
+            <p id="inicio-kilometraje-ayuda" class="mt-2 text-xs text-base-content/60">
+              Si lo dejas vacío, se utilizará el kilometraje actual del vehículo.
+            </p>
+
+            @if (campoInvalido('kilometraje_ingreso')) {
+            <p id="inicio-kilometraje-error" class="mt-1 text-sm text-error">
+              Ingresa un kilometraje válido mayor o igual a cero.
+            </p>
+            }
+          </div>
+
+          <!-- NUEVA FECHA DE FIN -->
+          <div class="form-control">
+            <label class="label" for="inicio-fecha-fin">
+              <span class="label-text font-medium">
+                Nueva fecha de fin programada
+              </span>
+              <span class="label-text-alt text-base-content/50">
+                Opcional
+              </span>
+            </label>
+
+            <input id="inicio-fecha-fin" type="datetime-local" step="1" formControlName="fecha_fin_programada"
+              class="input input-bordered w-full" [class.input-error]="campoInvalido('fecha_fin_programada')"
+              [attr.aria-invalid]="campoInvalido('fecha_fin_programada')"
+              aria-describedby="inicio-fecha-ayuda inicio-fecha-error" />
+
+            <p id="inicio-fecha-ayuda" class="mt-2 text-xs text-base-content/60">
+              Hora de Perú. Déjala vacía para conservar la fecha actual.
+              Si la modificas, debe ser una fecha futura.
+            </p>
+
+            @if (campoInvalido('fecha_fin_programada')) {
+            <p id="inicio-fecha-error" class="mt-1 text-sm text-error">
+              Ingresa una fecha válida.
+            </p>
+            }
+          </div>
+        </fieldset>
+
+        <div class="rounded-xl bg-warning/10 p-4 text-sm">
+          Al iniciar, la orden pasará a EN PROCESO y el vehículo quedará
+          EN MANTENIMIENTO.
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="flex justify-end gap-3 border-t border-base-300 px-5 py-4">
+
+        <button type="button" class="btn btn-ghost" [disabled]="isLoading" (click)="cerrarModal()">
+          Cerrar
+        </button>
+
+        <button type="submit" class="btn btn-warning" [disabled]="isLoading || !puedeIniciar">
+
+          @if (isLoading) {
+          <span class="loading loading-spinner loading-sm"></span>
+          Iniciando…
+          } @else {
+          <i class="fa-solid fa-play" aria-hidden="true"></i>
+          Iniciar intervención
+          }
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>
+}

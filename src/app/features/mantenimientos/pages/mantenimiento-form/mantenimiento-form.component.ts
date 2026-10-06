@@ -336,8 +336,6 @@ export class MantenimientoFormComponent implements OnChanges {
       return;
     }
 
-    // this.normalizarCodigo();
-
     if (this.formMantenimiento.invalid) {
       this.formMantenimiento.markAllAsTouched();
       return;
@@ -371,22 +369,35 @@ export class MantenimientoFormComponent implements OnChanges {
       return;
     }
 
-    const payload: CreateMantenimientoRequest = {
-      id_vehiculo: Number(form.id_vehiculo),
+    // Campos compartidos entre creación y actualización.
+    const datosComunes = {
       tipo_mantenimiento: form.tipo_mantenimiento,
       fecha_inicio_programada: fechaInicioISO,
       fecha_fin_programada: fechaFinISO,
       motivo: String(form.motivo ?? '').trim(),
       taller: String(form.taller ?? '').trim() || null,
-      responsable_tecnico: String(form.responsable_tecnico ?? '').trim() || null,
+      responsable_tecnico:
+        String(form.responsable_tecnico ?? '').trim() || null,
       observacion: String(form.observacion ?? '').trim() || null,
+    };
+
+    // Solo la actualización incluye diagnóstico.
+    // No contiene id_vehiculo ni id_mantenimiento.
+    const payloadActualizar: UpdateMantenimientoRequest = {
+      ...datosComunes,
+      diagnostico: String(form.diagnostico ?? '').trim() || null,
+    };
+
+    const payloadCrear: CreateMantenimientoRequest = {
+      ...datosComunes,
+      id_vehiculo: form.id_vehiculo,
     };
 
     // Supone que UpdatePersonalOperativoRequest acepta
     // los campos presentes en CreatePersonalOperativoRequest.
     const solicitud$ = esEdicion
-      ? this.mantenimientoService.updateMantenimiento(idMantenimiento, payload)
-      : this.mantenimientoService.createMantenimiento(payload);
+      ? this.mantenimientoService.updateMantenimiento(idMantenimiento, payloadActualizar)
+      : this.mantenimientoService.createMantenimiento(payloadCrear);
 
     this.isLoading = true;
 

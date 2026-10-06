@@ -1,6 +1,7 @@
 // Ajusta la ruta al archivo de interfaces anterior.
 import {
   MantenimientoDetalleData,
+  MantenimientoIdentificador,
   TipoMantenimiento,
 } from './create-mantenimiento.interface';
 

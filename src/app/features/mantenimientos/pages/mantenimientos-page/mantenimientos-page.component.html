@@ -46,11 +46,9 @@
       <!-- CAMPOS DE FILTRO -->
       <!-- =============================================== -->
       <div class="p-4 sm:p-5">
-
-        <div class="grid grid-cols-1 gap-4
+        <div class="grid grid-cols-1 items-end gap-4
                sm:grid-cols-2
-               xl:grid-cols-[minmax(240px,1.4fr)_minmax(180px,1fr)_minmax(190px,1fr)_auto]">
-
+               xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
 
           <!-- Buscar  -->
           <label class="form-control w-full">
@@ -162,6 +160,17 @@
   <!-- Modal para ver detalle de un mantenimiento -->
   <mantenimiento-view [mostrarModal]="mostrarModalView" [mantenimiento_id]="mantenimiento_id"
     (modalCerrado)="cerrarModalInfo()"></mantenimiento-view>
+
+  <!-- Modal iniciar mantenimiento -->
+  <iniciar-mantenimiento [mostrarModal]="mostrarModalInicio" [mantenimientoSeleccionado]="mantenimientoParaIniciar"
+    (modalCerrado)="cerrarModalInicio()"
+    (mantenimientoIniciado)="onMantenimientoIniciado($event)"></iniciar-mantenimiento>
+
+  <!-- Modal finalizar mantenimiento -->
+  <finalizar-mantenimiento [mostrarModal]="mostrarModalFinalizacion"
+    [mantenimientoSeleccionado]="mantenimientoParaFinalizar" (modalCerrado)="cerrarModalFinalizacion()"
+    (mantenimientoFinalizado)="onMantenimientoFinalizado($event)">
+    ></finalizar-mantenimiento>
 
   <!-- ================================================= -->
   <!-- TABLA DE PERSONAL REGISTRADO -->
