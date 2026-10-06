@@ -7,3 +7,4 @@ export * from './delete-vehiculo.model';
 export * from './get-vehiculo-by-id.model';
 export * from './get-vehiculos-paginated.model';
 export * from './update-vehiculo-request.model';
+export * from './get-vehiculo-selector.model';

@@ -4,30 +4,29 @@ import { finalize, Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 
 // Services
-import { UsuarioService } from '../../services/usuario.service';
+import { MantenimientoService } from '../../services/mantenimiento.service';
 
 // Interfaces
-import { UsuarioPaginadoItem } from '../../interfaces';
+import { MantenimientoDetalleData, MantenimientoPaginadoItem } from '../../interfaces';
 
 @Component({
-  selector: 'usuario-view',
-  standalone: true,
+  selector: 'mantenimiento-view',
   imports: [CommonModule],
-  templateUrl: './usuario-view.component.html',
+  templateUrl: './mantenimiento-view.component.html',
   styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class UsuarioViewComponent implements OnChanges, OnDestroy {
+export class MantenimientoViewComponent implements OnChanges, OnDestroy {
 
   // INPUTS / OUTPUTS
   @Input() mostrarModal = false;
-  @Input() usuario_id: number | null = null;
+  @Input() mantenimiento_id: number | null = null;
 
   @Output() modalCerrado = new EventEmitter<void>();
 
 
   // ESTADO
-  usuario: UsuarioPaginadoItem | null = null;
+  mantenimiento: MantenimientoDetalleData | null = null;
 
   loading = false;
   errorCarga: string | null = null;
@@ -38,7 +37,7 @@ export class UsuarioViewComponent implements OnChanges, OnDestroy {
   private destruido = false;
 
   constructor(
-    private readonly usuarioService: UsuarioService,
+    private readonly mantenimientoService: MantenimientoService,
     private readonly cdr: ChangeDetectorRef,
   ) { }
 
@@ -50,7 +49,7 @@ export class UsuarioViewComponent implements OnChanges, OnDestroy {
     }
 
     // También carga cuando se reabre el modal con el mismo ID.
-    if (changes['usuario_id'] || changes['mostrarModal']) {
+    if (changes['mantenimiento_id'] || changes['mostrarModal']) {
       this.cargarDatosUsuario();
     }
   }
@@ -71,14 +70,14 @@ export class UsuarioViewComponent implements OnChanges, OnDestroy {
       return;
     }
 
-    const idUsuario = this.usuario_id;
+    const idMantenimiento = this.mantenimiento_id;
 
     if (
-      idUsuario === null ||
-      !Number.isInteger(idUsuario) ||
-      idUsuario <= 0
+      idMantenimiento === null ||
+      !Number.isInteger(idMantenimiento) ||
+      idMantenimiento <= 0
     ) {
-      this.errorCarga = 'Selecciona un usuario válido.';
+      this.errorCarga = 'Selecciona un mantenimiento válido.';
       this.cdr.markForCheck();
       return;
     }
@@ -86,7 +85,7 @@ export class UsuarioViewComponent implements OnChanges, OnDestroy {
     this.loading = true;
     this.cdr.markForCheck();
 
-    this.cargaSubscription = this.usuarioService.getUsuarioById(idUsuario)
+    this.cargaSubscription = this.mantenimientoService.getMantenimientoById(idMantenimiento)
       .pipe(
         finalize(() => {
           this.loading = false;
@@ -106,7 +105,7 @@ export class UsuarioViewComponent implements OnChanges, OnDestroy {
             return;
           }
 
-          this.usuario = response.data;
+          this.mantenimiento = response.data;
           this.errorCarga = null;
           this.cdr.markForCheck();
         },
@@ -121,13 +120,13 @@ export class UsuarioViewComponent implements OnChanges, OnDestroy {
   // MANEJO DE ERRORES
   // ============================================================
   private mostrarError(mensaje: string): void {
-    this.usuario = null;
+    this.mantenimiento = null;
     this.errorCarga = mensaje;
     this.cdr.markForCheck();
 
     void Swal.fire({
       icon: 'error',
-      title: 'No se pudo obtener el usuario',
+      title: 'No se pudo obtener el mantenimiento',
       text: mensaje,
     });
   }
@@ -150,6 +149,8 @@ export class UsuarioViewComponent implements OnChanges, OnDestroy {
       ? mensaje
       : 'Ocurrió un error al cargar la información del vehículo.';
   }
+
+
 
   // ============================================================
   // MODAL
@@ -188,8 +189,7 @@ export class UsuarioViewComponent implements OnChanges, OnDestroy {
   }
 
   private limpiarDatos(): void {
-    this.usuario = null;
+    this.mantenimiento = null;
     this.errorCarga = null;
   }
-
 }

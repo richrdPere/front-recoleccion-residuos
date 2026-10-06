@@ -12,7 +12,7 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
 // Interfaces
-import { ChangeVehiculoEstadoOperativoRequest, ChangeVehiculoEstadoResponse, CreateVehiculoRequest, CreateVehiculoResponse, DeleteVehiculoResponse, GetVehiculoByIdResponse, GetVehiculosPaginatedResponse, UltimoCodigoResponse, UpdateVehiculoRequest, UpdateVehiculoResponse, VehiculosPaginadosFilters } from '../models';
+import { ChangeVehiculoEstadoOperativoRequest, ChangeVehiculoEstadoResponse, CreateVehiculoRequest, CreateVehiculoResponse, DeleteVehiculoResponse, GetVehiculoByIdResponse, GetVehiculoSelectorResponse, GetVehiculosPaginatedResponse, UltimoCodigoResponse, UpdateVehiculoRequest, UpdateVehiculoResponse, VehiculoSelectorFilters, VehiculosPaginadosFilters } from '../models';
 
 @Injectable({
   providedIn: 'root'
@@ -31,6 +31,7 @@ export class VehiculosService {
   private readonly API_PATCH_ESTADO_VEHICULO: string = this.API_BASE + '/estado/';
   private readonly API_DELETE_VEHICULO: string = this.API_BASE + '/delete/';
   private readonly API_GET_ULTIMO_CODIGO: string = this.API_BASE + '/codigo';
+  private readonly API_GET_VEHICULO_SELECTOR = this.API_BASE + '/selector';
 
   constructor(
     private readonly http: HttpClient,
@@ -225,6 +226,29 @@ export class VehiculosService {
       );
   }
 
+  // *********************************************************
+  // 9. OBTENER SELECTOR DE VEHÍCULOS
+  // *********************************************************
+  getVehiculoSelector(
+    filters: VehiculoSelectorFilters = {},
+  ): Observable<GetVehiculoSelectorResponse> {
+    const params = HttpServiceHelper.buildParams(filters);
+    const headers = this.getJsonHeaders();
+
+    return this.http
+      .get<GetVehiculoSelectorResponse>(
+        this.API_GET_VEHICULO_SELECTOR,
+        { params, headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo obtener el selector de vehículos.',
+          ),
+        ),
+      );
+  }
 
 
   // *********************************************************

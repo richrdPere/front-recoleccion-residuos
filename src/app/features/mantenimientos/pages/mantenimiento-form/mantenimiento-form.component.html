@@ -1,0 +1,434 @@
+@if (mostrarModal) {
+
+<div class="modal modal-open">
+
+  <!-- ===================================================== -->
+  <!-- MODAL: FORM - MANTENIMIENTOS -->
+  <!-- ===================================================== -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center
+           bg-black/30 p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="mantenimiento-form-title">
+
+    <section class="relative flex max-h-[92vh] w-full flex-col
+             overflow-hidden rounded-2xl border border-base-300
+             bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+      <!-- ================================================= -->
+      <!-- HEADER MODAL -->
+      <!-- ================================================= -->
+      <header class="flex shrink-0 items-center justify-between gap-4
+         border-b border-base-300
+         px-5 py-4 sm:px-6">
+
+        <!-- Ícono e información -->
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-12 w-12 shrink-0 items-center
+                  justify-center rounded-2xl
+                  bg-primary/10 text-primary">
+            <i class="fa-solid text-lg" [ngClass]="modoEdicion ? 'fa-pen-to-square' : 'fa-truck'"
+              aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="patrullaje-form-title" class="truncate text-lg font-bold sm:text-xl">
+              {{ modoEdicion ? 'Editar mantenimiento' : 'Registrar mantenimiento' }}
+
+              <!-- Badge código -->
+              <!-- @if (formMantenimiento.get('codigo')?.value) {
+              <span class="badge badge-primary badge-outline px-3 font-mono text-sm">
+                {{ formMantenimiento.get('codigo')?.value }}
+              </span>
+              } -->
+            </h2>
+
+            <p class="mt-0.5 text-sm text-base-content/55">
+              {{
+              modoEdicion
+              ? 'Actualice los datos de mantenimiento.'
+              : 'Genere un nuevo mantenimiento.'
+              }}
+
+            </p>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-circle btn-ghost btn-sm shrink-0" aria-label="Cerrar formulario"
+          [disabled]="isLoading" (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </header>
+
+      <!-- ================================================= -->
+      <!-- FORMULARIO DE MANTENIMIENTO -->
+      <!-- ================================================= -->
+
+      <form [formGroup]="formMantenimiento" (ngSubmit)="crearOEditarMantenimiento()"
+        class="flex min-h-0 flex-1 flex-col">
+
+        <!-- =============================================== -->
+        <!-- CONTENIDO CON SCROLL -->
+        <!-- =============================================== -->
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain
+                   px-5 py-5 sm:px-6">
+
+          <fieldset class="min-w-0 space-y-6" [disabled]="isLoading">
+
+            <!-- DATOS DEL MANTENIMIENTO -->
+            <div class="space-y-3">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-screwdriver-wrench text-primary" aria-hidden="true"></i>
+
+                Datos del mantenimiento
+              </h3>
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+                <!-- Vehículo -->
+                <div class="form-control">
+                  <label class="label" for="mantenimiento-vehiculo">
+                    <span class="label-text flex items-center gap-1">
+                      Vehículo
+                      @if (esRequerido('id_vehiculo')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <select id="mantenimiento-vehiculo" formControlName="id_vehiculo" [compareWith]="compararVehiculos"
+                    class="select select-bordered border-2 w-full transition-colors duration-200"
+                    [class.select-success]="campoCompleto('id_vehiculo')"
+                    [class.select-error]="campoInvalido('id_vehiculo')"
+                    [attr.aria-invalid]="campoInvalido('id_vehiculo')"
+                    [attr.aria-describedby]="campoInvalido('id_vehiculo') ? 'mantenimiento-vehiculo-error' : 'mantenimiento-vehiculo-ayuda'">
+                    <option [ngValue]="null">
+                      Selecciona un vehículo
+                    </option>
+
+                    @for ( vehiculo of vehiculosDisponibles; track vehiculo.id_vehiculo ) {
+                    <option [ngValue]="vehiculo.id_vehiculo">
+                      {{ vehiculo.codigo }} — {{ vehiculo.placa }}
+                    </option>
+                    }
+                  </select>
+
+                  <p id="mantenimiento-vehiculo-ayuda" class="mt-1 text-xs text-base-content/55">
+                    @if (modoEdicion) {
+                    El vehículo asignado no puede cambiarse.
+                    } @else if (vehiculosDisponibles.length === 0) {
+                    No hay vehículos disponibles en el selector.
+                    } @else {
+                    Selecciona la unidad para la intervención.
+                    }
+                  </p>
+
+                  @if (campoInvalido('id_vehiculo')) {
+                  <p id="mantenimiento-vehiculo-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('id_vehiculo') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Tipo -->
+                <div class="form-control">
+                  <label class="label" for="mantenimiento-tipo">
+                    <span class="label-text flex items-center gap-1">
+                      Tipo de mantenimiento
+
+                      @if (esRequerido('tipo_mantenimiento')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <select id="mantenimiento-tipo" formControlName="tipo_mantenimiento"
+                    class="select select-bordered border-2 w-full transition-colors duration-200"
+                    [class.select-success]="campoCompleto('tipo_mantenimiento')"
+                    [class.select-error]="campoInvalido('tipo_mantenimiento')"
+                    [attr.aria-invalid]="campoInvalido('tipo_mantenimiento')"
+                    [attr.aria-describedby]="campoInvalido('tipo_mantenimiento') ? 'mantenimiento-tipo-error' : null">
+
+                    @for ( opcion of tiposMantenimiento; track opcion.value ) {
+                    <option [value]="opcion.value">
+                      {{ opcion.label }}
+                    </option>
+                    }
+                  </select>
+
+                  @if (campoInvalido('tipo_mantenimiento')) {
+                  <p id="mantenimiento-tipo-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('tipo_mantenimiento') }}
+                  </p>
+                  }
+                </div>
+              </div>
+
+              <!-- Motivo -->
+              <div class="form-control">
+                <label class="label" for="mantenimiento-motivo">
+                  <span class="label-text flex items-center gap-1">
+                    Motivo del mantenimiento
+
+                    @if (esRequerido('motivo')) {
+                    <span class="font-bold text-red-500">*</span>
+                    }
+                  </span>
+                </label>
+
+                <textarea id="mantenimiento-motivo" formControlName="motivo" rows="3"
+                  placeholder="Describe el motivo de la intervención" class="textarea textarea-bordered border-2 w-full
+                   placeholder-gray-400 transition-colors duration-200"
+                  [class.textarea-success]="campoCompleto('motivo')" [class.textarea-error]="campoInvalido('motivo')"
+                  [attr.aria-invalid]="campoInvalido('motivo')" [attr.aria-describedby]="
+              campoInvalido('motivo')
+                ? 'mantenimiento-motivo-error'
+                : null
+            " (blur)="normalizarCampo('motivo')"></textarea>
+
+                @if (campoInvalido('motivo')) {
+                <p id="mantenimiento-motivo-error" class="mt-1 text-sm text-red-500">
+                  {{ obtenerError('motivo') }}
+                </p>
+                }
+              </div>
+            </div>
+
+            <!-- ================================================= -->
+            <!-- PROGRAMACIÓN -->
+            <!-- ================================================= -->
+            <div class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-regular fa-calendar-days text-primary" aria-hidden="true"></i>
+
+                Programación
+              </h3>
+
+              <p class="text-xs text-base-content/60">
+                Ingresa las fechas y horas correspondientes a Perú.
+              </p>
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <!-- Inicio -->
+                <div class="form-control">
+                  <label class="label" for="mantenimiento-inicio">
+                    <span class="label-text flex items-center gap-1">
+                      Inicio programado
+
+                      @if (esRequerido('fecha_inicio_programada')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <input id="mantenimiento-inicio" type="datetime-local" step="1"
+                    formControlName="fecha_inicio_programada" class="input input-bordered border-2 w-full
+                     transition-colors duration-200" [class.input-success]="campoCompleto('fecha_inicio_programada')"
+                    [class.input-error]="campoInvalido('fecha_inicio_programada')"
+                    [attr.aria-invalid]="campoInvalido('fecha_inicio_programada')"
+                    [attr.aria-describedby]="campoInvalido('fecha_inicio_programada') ? 'mantenimiento-intervalo-error' : null" />
+
+                  @if (campoInvalido('fecha_inicio_programada')) {
+                  <p id="mantenimiento-inicio-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('fecha_inicio_programada') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Fin -->
+                <div class="form-control">
+                  <label class="label" for="mantenimiento-fin">
+                    <span class="label-text flex items-center gap-1">
+                      Fin programado
+
+                      @if (esRequerido('fecha_fin_programada')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <input id="mantenimiento-fin" type="datetime-local" step="1" formControlName="fecha_fin_programada"
+                    class="input input-bordered border-2 w-full
+                     transition-colors duration-200" [class.input-success]="campoCompleto('fecha_fin_programada')"
+                    [class.input-error]="campoInvalido('fecha_fin_programada')"
+                    [attr.aria-invalid]="campoInvalido('fecha_fin_programada')"
+                    [attr.aria-describedby]="campoInvalido('fecha_fin_programada')                    ? 'mantenimiento-intervalo-error' : null" />
+
+                  @if (campoInvalido('fecha_fin_programada')) {
+                  <p id="mantenimiento-fin-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('fecha_fin_programada') }}
+                  </p>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- ================================================= -->
+            <!-- INFORMACIÓN TÉCNICA -->
+            <!-- ================================================= -->
+
+            <div class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-tools text-primary" aria-hidden="true"></i>
+
+                Información técnica
+              </h3>
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <!-- Taller -->
+                <div class="form-control">
+                  <label class="label" for="mantenimiento-taller">
+                    <span class="label-text">Taller</span>
+                    <span class="label-text-alt text-base-content/55">
+                      Opcional
+                    </span>
+                  </label>
+
+                  <input id="mantenimiento-taller" type="text" formControlName="taller" maxlength="150"
+                    placeholder="Ej. Taller municipal" class="input input-bordered border-2 w-full
+                     placeholder-gray-400 transition-colors duration-200"
+                    [class.input-success]="campoCompleto('taller')" [class.input-error]="campoInvalido('taller')"
+                    [attr.aria-invalid]="campoInvalido('taller')" [attr.aria-describedby]="
+                campoInvalido('taller')
+                  ? 'mantenimiento-taller-error'
+                  : null
+              " (blur)="normalizarCampo('taller')" />
+
+                  @if (campoInvalido('taller')) {
+                  <p id="mantenimiento-taller-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('taller') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Responsable -->
+                <div class="form-control">
+                  <label class="label" for="mantenimiento-responsable">
+                    <span class="label-text">Responsable técnico</span>
+                    <span class="label-text-alt text-base-content/55">
+                      Opcional
+                    </span>
+                  </label>
+
+                  <input id="mantenimiento-responsable" type="text" formControlName="responsable_tecnico"
+                    maxlength="150" placeholder="Nombre del técnico encargado" class="input input-bordered border-2 w-full
+                     placeholder-gray-400 transition-colors duration-200" [class.input-success]="
+                campoCompleto('responsable_tecnico')
+              " [class.input-error]="
+                campoInvalido('responsable_tecnico')
+              " [attr.aria-invalid]="
+                campoInvalido('responsable_tecnico')
+              " [attr.aria-describedby]="
+                campoInvalido('responsable_tecnico')
+                  ? 'mantenimiento-responsable-error'
+                  : null
+              " (blur)="normalizarCampo('responsable_tecnico')" />
+
+                  @if (campoInvalido('responsable_tecnico')) {
+                  <p id="mantenimiento-responsable-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('responsable_tecnico') }}
+                  </p>
+                  }
+                </div>
+              </div>
+
+              <!-- Diagnóstico: solamente en edición -->
+              @if (modoEdicion) {
+              <div class="form-control">
+                <label class="label" for="mantenimiento-diagnostico">
+                  <span class="label-text">Diagnóstico</span>
+                  <span class="label-text-alt text-base-content/55">
+                    Opcional
+                  </span>
+                </label>
+
+                <textarea id="mantenimiento-diagnostico" formControlName="diagnostico" rows="3"
+                  placeholder="Describe los resultados de la revisión técnica" class="textarea textarea-bordered border-2 w-full
+                     placeholder-gray-400 transition-colors duration-200"
+                  [class.textarea-success]="campoCompleto('diagnostico')"
+                  [class.textarea-error]="campoInvalido('diagnostico')"
+                  [attr.aria-invalid]="campoInvalido('diagnostico')" [attr.aria-describedby]="
+                campoInvalido('diagnostico')
+                  ? 'mantenimiento-diagnostico-error'
+                  : null
+              " (blur)="normalizarCampo('diagnostico')"></textarea>
+
+                @if (campoInvalido('diagnostico')) {
+                <p id="mantenimiento-diagnostico-error" class="mt-1 text-sm text-red-500">
+                  {{ obtenerError('diagnostico') }}
+                </p>
+                }
+              </div>
+              }
+            </div>
+
+            <!-- ================================================= -->
+            <!-- OBSERVACIONES -->
+            <!-- ================================================= -->
+
+            <div class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-regular fa-file-lines text-primary" aria-hidden="true"></i>
+
+                Información adicional
+              </h3>
+
+              <div class="form-control">
+                <label class="label" for="mantenimiento-observacion">
+                  <span class="label-text">Observaciones</span>
+                  <span class="label-text-alt text-base-content/55">
+                    Opcional
+                  </span>
+                </label>
+
+                <textarea id="mantenimiento-observacion" formControlName="observacion" rows="3"
+                  placeholder="Indicaciones o información adicional" class="textarea textarea-bordered border-2 w-full
+                   placeholder-gray-400 transition-colors duration-200"
+                  [class.textarea-success]="campoCompleto('observacion')"
+                  [class.textarea-error]="campoInvalido('observacion')"
+                  [attr.aria-invalid]="campoInvalido('observacion')" [attr.aria-describedby]="
+              campoInvalido('observacion')
+                ? 'mantenimiento-observacion-error'
+                : null
+            " (blur)="normalizarCampo('observacion')"></textarea>
+
+                @if (campoInvalido('observacion')) {
+                <p id="mantenimiento-observacion-error" class="mt-1 text-sm text-red-500">
+                  {{ obtenerError('observacion') }}
+                </p>
+                }
+              </div>
+            </div>
+          </fieldset>
+
+        </div>
+
+        <!-- ================================================= -->
+        <!-- FOOTER -->
+        <!-- ================================================= -->
+        <footer class="flex shrink-0 flex-col-reverse gap-3
+           border-t border-base-300 bg-base-100
+           px-5 py-4 sm:flex-row sm:items-center
+           sm:justify-center sm:px-6">
+
+          <div class="flex flex-col-reverse gap-5
+             sm:flex-row sm:justify-end">
+            <button type="button" class="btn btn-error" [disabled]="isLoading" (click)="cerrarModal()">
+              Cerrar
+            </button>
+
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading || formMantenimiento.invalid"
+              [attr.aria-busy]="isLoading">
+              @if (isLoading) {
+              <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+
+              {{ modoEdicion ? 'Actualizando...' : 'Guardando...' }}
+              } @else {
+              {{ textoBotonGuardar }}
+              }
+            </button>
+          </div>
+        </footer>
+      </form>
+
+    </section>
+  </div>
+</div>
+}

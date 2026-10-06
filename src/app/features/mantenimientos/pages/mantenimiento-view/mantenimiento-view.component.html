@@ -1,0 +1,625 @@
+@if (mostrarModal) {
+<div class="modal modal-open">
+
+  <!-- ===================================================== -->
+  <!-- MODAL: INFORMACIÓN DEL MANTENIMIENTO -->
+  <!-- ===================================================== -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" role="dialog" aria-modal="true"
+    aria-labelledby="usuario-info-title" [attr.aria-busy]="loading" (click)="cerrarModal()">
+
+    <section class="relative flex max-h-[92vh] w-full flex-col
+               overflow-hidden rounded-2xl border border-base-300
+               bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+      <!-- ===================================================== -->
+      <!-- HEADER MODAL -->
+      <!-- ===================================================== -->
+      <header class="flex shrink-0 items-start justify-between gap-4
+                 border-b border-base-300 bg-base-200/50
+                 px-5 py-4 sm:px-6">
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center
+                     rounded-xl bg-primary/10 text-primary">
+            <i class="fa-solid fa-user text-lg" aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="usuario-info-title" class="truncate text-lg font-bold text-base-content sm:text-xl">
+              Información del mantenimiento
+            </h2>
+
+            <p class="mt-0.5 text-sm text-base-content/60">
+              Datos personales, cuenta y roles asignados.
+            </p>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-ghost btn-circle btn-sm shrink-0" aria-label="Cerrar modal" title="Cerrar"
+          (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <!-- ===================================================== -->
+      <!-- CONTENIDO CON SCROLL -->
+      <!-- ===================================================== -->
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain
+                 px-5 py-5 sm:px-6 sm:py-6">
+
+        <!-- CARGANDO -->
+        @if (loading) {
+        <div class="space-y-5" role="status" aria-live="polite">
+          <span class="sr-only">
+            Cargando información del mantenimiento.
+          </span>
+
+          <div class="flex flex-col gap-4 rounded-2xl border
+                       border-base-300 bg-base-200/40 p-5
+                       sm:flex-row sm:items-center" aria-hidden="true">
+            <div class="skeleton h-16 w-16 rounded-2xl"></div>
+
+            <div class="flex-1 space-y-3">
+              <div class="skeleton h-6 w-40"></div>
+              <div class="skeleton h-4 w-64 max-w-full"></div>
+            </div>
+
+            <div class="skeleton h-7 w-28 rounded-full"></div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3" aria-hidden="true">
+            @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+            <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+              <div class="skeleton mb-3 h-3 w-24"></div>
+              <div class="skeleton h-5 w-36 max-w-full"></div>
+            </div>
+            }
+          </div>
+
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4" aria-hidden="true">
+            <div class="skeleton mb-3 h-3 w-28"></div>
+            <div class="skeleton h-4 w-full"></div>
+            <div class="skeleton mt-2 h-4 w-3/4"></div>
+          </div>
+        </div>
+
+        <!-- ERROR -->
+        } @else if (errorCarga) {
+        <div class="flex min-h-64 flex-col items-center justify-center text-center" role="alert">
+          <div class="mb-4 flex h-16 w-16 items-center justify-center
+                       rounded-full bg-error/10 text-error">
+            <i class="fa-solid fa-triangle-exclamation text-2xl" aria-hidden="true"></i>
+          </div>
+
+          <h3 class="font-semibold text-base-content">
+            No se pudo cargar el mantenimiento
+          </h3>
+
+          <p class="mt-1 max-w-sm text-sm text-base-content/60">
+            {{ errorCarga }}
+          </p>
+
+          <button type="button" class="btn btn-primary btn-sm mt-4" (click)="cargarDatosUsuario()">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            Reintentar
+          </button>
+        </div>
+
+        <!-- INFORMACIÓN -->
+        } @else if (mantenimiento; as detalle) {
+        <div class="space-y-6">
+
+          <!-- ================================================= -->
+          <!-- RESUMEN DE LA ORDEN -->
+          <!-- ================================================= -->
+          <div class="flex flex-col gap-4 rounded-2xl border border-base-300
+              bg-base-200/40 p-5 sm:flex-row sm:items-center">
+
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center
+                rounded-xl bg-primary/10 text-primary">
+              <i class="fa-solid fa-screwdriver-wrench text-2xl" aria-hidden="true"></i>
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <h3 class="text-lg font-bold">
+                Mantenimiento #{{ detalle.id_mantenimiento }}
+              </h3>
+
+              <p class="mt-1 text-sm text-base-content/60">
+                {{ detalle.vehiculo.codigo }} · {{ detalle.vehiculo.placa }}
+              </p>
+
+              <span class="badge badge-outline mt-2">
+                {{ detalle.tipo_mantenimiento === 'PREVENTIVO' ? 'Preventivo' : 'Correctivo' }}
+              </span>
+            </div>
+
+            <span class="badge badge-soft whitespace-nowrap"
+              [class.badge-info]="detalle.estado_mantenimiento === 'PROGRAMADO'"
+              [class.badge-warning]="detalle.estado_mantenimiento === 'EN_PROCESO'"
+              [class.badge-success]="detalle.estado_mantenimiento === 'FINALIZADO'"
+              [class.badge-error]="detalle.estado_mantenimiento === 'CANCELADO'">
+              @switch (detalle.estado_mantenimiento) {
+              @case ('PROGRAMADO') { Programado }
+              @case ('EN_PROCESO') { En proceso }
+              @case ('FINALIZADO') { Finalizado }
+              @case ('CANCELADO') { Cancelado }
+              }
+            </span>
+          </div>
+
+          <!-- ================================================= -->
+          <!-- VEHÍCULO -->
+          <!-- ================================================= -->
+          <section class="space-y-3">
+            <h3 class="flex items-center gap-2 text-base font-semibold">
+              <i class="fa-solid fa-truck text-primary" aria-hidden="true"></i>
+              Vehículo
+            </h3>
+
+            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Código y placa</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  {{ detalle.vehiculo.codigo }}
+                </dd>
+                <dd class="mt-1 text-sm text-base-content/65">
+                  {{ detalle.vehiculo.placa }}
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Marca y modelo</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  {{ detalle.vehiculo.marca }} {{ detalle.vehiculo.modelo }}
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Kilometraje actual</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  {{ detalle.vehiculo.kilometraje | number: '1.2-2' }} km
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Estado operativo actual</dt>
+                <dd class="mt-2">
+                  <span class="badge badge-soft"
+                    [class.badge-success]="detalle.vehiculo.estado_operativo === 'DISPONIBLE'" [class.badge-info]="
+              detalle.vehiculo.estado_operativo === 'ASIGNADO' ||
+              detalle.vehiculo.estado_operativo === 'EN_RUTA'
+            " [class.badge-warning]="detalle.vehiculo.estado_operativo === 'EN_MANTENIMIENTO'"
+                    [class.badge-error]="detalle.vehiculo.estado_operativo === 'FUERA_DE_SERVICIO'">
+                    @switch (detalle.vehiculo.estado_operativo) {
+                    @case ('DISPONIBLE') { Disponible }
+                    @case ('ASIGNADO') { Asignado }
+                    @case ('EN_RUTA') { En ruta }
+                    @case ('EN_MANTENIMIENTO') { En mantenimiento }
+                    @case ('FUERA_DE_SERVICIO') { Fuera de servicio }
+                    }
+                  </span>
+                </dd>
+              </div>
+
+              <!-- <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Estado administrativo del vehículo</dt>
+                <dd class="mt-2">
+                  <span class="badge badge-soft" [class.badge-success]="detalle.vehiculo.estado"
+                    [class.badge-error]="!detalle.vehiculo.estado">
+                    {{ detalle.vehiculo.estado ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </dd>
+              </div> -->
+            </dl>
+          </section>
+
+          <!-- ================================================= -->
+          <!-- PROGRAMACIÓN Y EJECUCIÓN -->
+          <!-- ================================================= -->
+          <section class="space-y-3 border-t border-base-300 pt-5">
+            <h3 class="flex items-center gap-2 text-base font-semibold">
+              <i class="fa-regular fa-calendar-days text-primary" aria-hidden="true"></i>
+              Programación y ejecución
+            </h3>
+
+            <p class="text-xs text-base-content/55">
+              Fechas y horas mostradas en hora de Perú.
+            </p>
+
+            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Inicio programado</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  {{ detalle.fecha_inicio_programada | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Fin programado</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  {{ detalle.fecha_fin_programada | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Inicio real</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  @if (detalle.fecha_inicio_real) {
+                  {{ detalle.fecha_inicio_real | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
+                  } @else {
+                  <span class="font-normal italic text-base-content/45">
+                    Sin inicio registrado
+                  </span>
+                  }
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Fin real</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  @if (detalle.fecha_fin_real) {
+                  {{ detalle.fecha_fin_real | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
+                  } @else {
+                  <span class="font-normal italic text-base-content/45">
+                    Sin finalización registrada
+                  </span>
+                  }
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          <!-- ================================================= -->
+          <!-- INFORMACIÓN TÉCNICA -->
+          <!-- ================================================= -->
+          <section class="space-y-3 border-t border-base-300 pt-5">
+            <h3 class="flex items-center gap-2 text-base font-semibold">
+              <i class="fa-solid fa-toolbox text-primary" aria-hidden="true"></i>
+              Información técnica
+            </h3>
+
+            <dl class="space-y-4">
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs font-medium text-base-content/55">Motivo</dt>
+                <dd class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ detalle.motivo }}</dd>
+              </div>
+
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">Taller</dt>
+                  <dd class="mt-2 wrap-break-word text-sm font-semibold">
+                    {{ detalle.taller ?? 'No registrado' }}
+                  </dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">Responsable técnico</dt>
+                  <dd class="mt-2 wrap-break-word text-sm font-semibold">
+                    {{ detalle.responsable_tecnico ?? 'No registrado' }}
+                  </dd>
+                </div>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs font-medium text-base-content/55">Diagnóstico</dt>
+                <dd class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ detalle.diagnostico ?? 'Sin diagnóstico
+                  registrado.' }}</dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs font-medium text-base-content/55">Trabajos realizados</dt>
+                <dd class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ detalle.trabajos_realizados ?? 'Sin trabajos
+                  registrados.' }}</dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs font-medium text-base-content/55">Observaciones</dt>
+                <dd class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ detalle.observacion ?? 'Sin observaciones.'
+                  }}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <!-- ================================================= -->
+          <!-- COSTO, KILOMETRAJE Y RESULTADO -->
+          <!-- ================================================= -->
+          <section class="space-y-3 border-t border-base-300 pt-5">
+            <h3 class="flex items-center gap-2 text-base font-semibold">
+              <i class="fa-solid fa-clipboard-check text-primary" aria-hidden="true"></i>
+              Resultado de la intervención
+            </h3>
+
+            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Kilometraje de ingreso</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  @if (detalle.kilometraje_ingreso !== null) {
+                  {{ detalle.kilometraje_ingreso | number: '1.2-2' }} km
+                  } @else {
+                  <span class="font-normal italic text-base-content/45">No registrado</span>
+                  }
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Kilometraje de salida</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  @if (detalle.kilometraje_salida !== null) {
+                  {{ detalle.kilometraje_salida | number: '1.2-2' }} km
+                  } @else {
+                  <span class="font-normal italic text-base-content/45">No registrado</span>
+                  }
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Costo total</dt>
+                <dd class="mt-2 text-lg font-bold">
+                  @if (detalle.costo_total !== null) {
+                  {{ detalle.costo_total | currency: 'PEN' : 'S/ ' : '1.2-2' }}
+                  } @else {
+                  <span class="text-sm font-normal italic text-base-content/45">
+                    No registrado
+                  </span>
+                  }
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Condición al finalizar</dt>
+                <dd class="mt-2">
+                  @if (detalle.vehiculo_operativo !== null) {
+                  <span class="badge badge-soft" [class.badge-success]="detalle.vehiculo_operativo"
+                    [class.badge-error]="!detalle.vehiculo_operativo">
+                    {{ detalle.vehiculo_operativo ? 'Quedó operativo' : 'Quedó fuera de servicio' }}
+                  </span>
+                  } @else {
+                  <span class="text-sm italic text-base-content/45">
+                    Sin resultado registrado
+                  </span>
+                  }
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          <!-- ================================================= -->
+          <!-- RESPONSABLES DE LA ORDEN -->
+          <!-- ================================================= -->
+          <section class="space-y-3 border-t border-base-300 pt-5">
+            <h3 class="flex items-center gap-2 text-base font-semibold">
+              <i class="fa-solid fa-user-check text-primary" aria-hidden="true"></i>
+              Usuarios responsables
+            </h3>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              @for (
+              responsable of [
+              {
+              etiqueta: 'Registro',
+              usuario: detalle.creador,
+              id: detalle.id_usuario_creacion,
+              fecha: detalle.created_at
+              },
+              {
+              etiqueta: 'Inicio',
+              usuario: detalle.usuario_inicio,
+              id: detalle.id_usuario_inicio,
+              fecha: detalle.fecha_inicio_real
+              },
+              {
+              etiqueta: 'Finalización',
+              usuario: detalle.usuario_finalizacion,
+              id: detalle.id_usuario_finalizacion,
+              fecha: detalle.fecha_fin_real
+              },
+              {
+              etiqueta: 'Cancelación',
+              usuario: detalle.usuario_cancelacion,
+              id: detalle.id_usuario_cancelacion,
+              fecha: detalle.fecha_cancelacion
+              }
+              ];
+              track responsable.etiqueta
+              ) {
+              <div class="rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">
+                  {{ responsable.etiqueta }}
+                </p>
+
+                @if (responsable.usuario; as usuario) {
+                <p class="mt-2 wrap-break-word text-sm font-semibold">
+                  {{ usuario.username }}
+                </p>
+                <p class="mt-1 wrap-break-word text-xs text-base-content/60">
+                  {{ usuario.email_acceso }}
+                </p>
+                } @else if (responsable.id !== null) {
+                <p class="mt-2 text-sm">
+                  Usuario #{{ responsable.id }}
+                </p>
+                } @else {
+                <p class="mt-2 text-sm italic text-base-content/45">
+                  Sin responsable registrado
+                </p>
+                }
+
+                @if (responsable.fecha) {
+                <p class="mt-2 text-xs text-base-content/55">
+                  {{ responsable.fecha | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
+                </p>
+                }
+              </div>
+              }
+            </div>
+          </section>
+
+          <!-- ================================================= -->
+          <!-- CANCELACIÓN -->
+          <!-- ================================================= -->
+          @if (detalle.estado_mantenimiento === 'CANCELADO') {
+          <section class="rounded-xl border border-error/30 bg-error/5 p-4">
+            <h3 class="flex items-center gap-2 font-semibold text-error">
+              <i class="fa-solid fa-ban" aria-hidden="true"></i>
+              Motivo de cancelación
+            </h3>
+
+            <p class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ detalle.motivo_cancelacion ?? 'Sin motivo
+              registrado.' }}</p>
+
+            @if (detalle.fecha_cancelacion) {
+            <p class="mt-3 text-xs text-base-content/60">
+              Cancelado el
+              {{ detalle.fecha_cancelacion | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
+            </p>
+            }
+          </section>
+          }
+
+          <!-- ================================================= -->
+          <!-- HISTORIAL -->
+          <!-- ================================================= -->
+          <!-- <section class="space-y-4 border-t border-base-300 pt-5">
+            <h3 class="flex items-center gap-2 text-base font-semibold">
+              <i class="fa-solid fa-clock-rotate-left text-primary" aria-hidden="true"></i>
+              Historial de la orden
+              <span class="badge badge-sm badge-outline">
+                {{ detalle.historial.length }}
+              </span>
+            </h3>
+
+            <div class="space-y-3">
+              @for (evento of detalle.historial; track evento.id_historial) {
+              <article class="rounded-xl border border-base-300 p-4">
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <h4 class="text-sm font-semibold">
+                    @switch (evento.tipo_evento) {
+                    @case ('CREACION') { Orden registrada }
+                    @case ('ACTUALIZACION') { Información actualizada }
+                    @case ('INICIO') { Intervención iniciada }
+                    @case ('FINALIZACION') { Intervención finalizada }
+                    @case ('CANCELACION') { Orden cancelada }
+                    }
+                  </h4>
+
+                  <time class="text-xs text-base-content/55" [attr.datetime]="evento.created_at">
+                    {{ evento.created_at | date: 'dd/MM/yyyy HH:mm:ss' : '-0500' }}
+                  </time>
+                </div>
+
+                <p class="mt-2 wrap-break-word text-xs text-base-content/60">
+                  Responsable:
+                  @if (evento.actor; as actor) {
+                  {{ actor.username }} · {{ actor.email_acceso }}
+                  } @else {
+                  Usuario #{{ evento.id_usuario }}
+                  }
+                </p>
+
+                <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                  @if (evento.estado_anterior) {
+                  <span class="badge badge-sm badge-outline">
+                    {{
+                    evento.estado_anterior === 'EN_PROCESO'
+                    ? 'EN PROCESO'
+                    : evento.estado_anterior
+                    }}
+                  </span>
+
+                  <i class="fa-solid fa-arrow-right text-base-content/40" aria-hidden="true"></i>
+                  <span class="sr-only">Cambió a</span>
+                  }
+
+                  <span class="badge badge-sm badge-soft">
+                    {{
+                    evento.estado_nuevo === 'EN_PROCESO'
+                    ? 'EN PROCESO'
+                    : evento.estado_nuevo
+                    }}
+                  </span>
+                </div>
+
+                @if (evento.observacion) {
+                <p class="mt-3 whitespace-pre-wrap wrap-break-word text-sm">{{ evento.observacion }}</p>
+                }
+
+                @if (evento.datos_anteriores || evento.datos_nuevos) {
+                <details class="mt-3 rounded-lg border border-base-300">
+                  <summary class="cursor-pointer px-3 py-2 text-xs font-medium">
+                    Consultar datos registrados en este evento
+                  </summary>
+
+                  <div class="grid min-w-0 grid-cols-1 gap-3 border-t border-base-300 p-3">
+                    @if (evento.datos_anteriores) {
+                    <div class="min-w-0">
+                      <p class="mb-2 text-xs font-semibold text-base-content/60">
+                        Datos anteriores
+                      </p>
+                      <pre
+                        class="max-h-52 overflow-auto rounded-lg bg-base-200 p-3 text-xs">{{ evento.datos_anteriores | json }}</pre>
+                    </div>
+                    }
+
+                    @if (evento.datos_nuevos) {
+                    <div class="min-w-0">
+                      <p class="mb-2 text-xs font-semibold text-base-content/60">
+                        Datos posteriores
+                      </p>
+                      <pre
+                        class="max-h-52 overflow-auto rounded-lg bg-base-200 p-3 text-xs">{{ evento.datos_nuevos | json }}</pre>
+                    </div>
+                    }
+                  </div>
+                </details>
+                }
+              </article>
+              } @empty {
+              <div class="rounded-xl border border-dashed border-base-300 p-6 text-center">
+                <p class="text-sm text-base-content/55">
+                  No hay eventos registrados para esta orden.
+                </p>
+              </div>
+              }
+            </div>
+          </section> -->
+
+          <!-- ================================================= -->
+          <!-- FECHAS DEL REGISTRO -->
+          <!-- ================================================= -->
+          <div class="flex flex-col gap-2 border-t border-base-300 pt-4
+              text-xs text-base-content/50 sm:flex-row sm:justify-between">
+            <p>
+              Registro:
+              {{ detalle.created_at | date: 'dd/MM/yyyy HH:mm:ss' : '-0500' }}
+            </p>
+
+            <p>
+              Última actualización:
+              {{ detalle.updated_at | date: 'dd/MM/yyyy HH:mm:ss' : '-0500' }}
+            </p>
+          </div>
+
+        </div>
+        }
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- FOOTER MODAL -->
+      <!-- ===================================================== -->
+      <footer class="flex shrink-0 flex-col-reverse gap-3
+                 border-t border-base-300 px-5 py-4
+                 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div class="flex items-center gap-2 text-xs text-base-content/50">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          <span>Consulte la información completa del usuario.</span>
+        </div>
+
+        <button type="button" class="btn btn-accent min-w-28" (click)="cerrarModal()">
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
+          Cerrar
+        </button>
+      </footer>
+    </section>
+  </div>
+</div>
+}

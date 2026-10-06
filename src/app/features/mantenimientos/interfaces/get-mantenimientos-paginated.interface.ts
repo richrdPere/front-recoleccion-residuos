@@ -62,8 +62,8 @@ export interface MantenimientosPaginadosData {
 // ITEM DEL LISTADO
 // *********************************************************
 
-export interface MantenimientoPaginadoItem
-  extends MantenimientoData {
+export interface MantenimientoPaginadoItem extends MantenimientoData {
+  creador: any;
   vehiculo: MantenimientoVehiculoResumen;
 }
 

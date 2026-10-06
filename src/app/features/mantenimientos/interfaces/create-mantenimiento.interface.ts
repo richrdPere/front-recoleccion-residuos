@@ -63,13 +63,13 @@ export interface CreateMantenimientoResponse {
 // *********************************************************
 
 export interface MantenimientoData {
-  id_mantenimiento: MantenimientoIdentificador;
-  id_vehiculo: MantenimientoIdentificador;
+  id_mantenimiento: number;
+  id_vehiculo: number;
 
-  id_usuario_creacion: MantenimientoIdentificador;
-  id_usuario_inicio: MantenimientoIdentificador | null;
-  id_usuario_finalizacion: MantenimientoIdentificador | null;
-  id_usuario_cancelacion: MantenimientoIdentificador | null;
+  id_usuario_creacion: number;
+  id_usuario_inicio: number | null;
+  id_usuario_finalizacion: number | null;
+  id_usuario_cancelacion: number | null;
 
   tipo_mantenimiento: TipoMantenimiento;
   estado_mantenimiento: EstadoMantenimiento;

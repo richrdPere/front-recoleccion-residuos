@@ -35,8 +35,6 @@ export class MantenimientoService {
   private readonly API_FINALIZAR_MANTENIMIENTO: string = this.API_BASE + '/';
   private readonly API_CANCELAR_MANTENIMIENTO: string = this.API_BASE + '/';
 
-
-
   constructor(
     private readonly http: HttpClient,
     private readonly authStorage: AuthStorageService

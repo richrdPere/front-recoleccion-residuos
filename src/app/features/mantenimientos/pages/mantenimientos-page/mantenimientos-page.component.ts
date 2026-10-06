@@ -9,11 +9,15 @@ import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directiv
 
 // Service
 import { MantenimientoService } from '../../services/mantenimiento.service';
+import { VehiculosService } from 'src/app/features/vehiculos/services/vehiculos.service';
 
 // Interfaces
 import { EstadoMantenimiento, MantenimientoPaginadoItem, MantenimientosPaginadosFilters, TipoMantenimiento } from '../../interfaces';
+import { VehiculoSelectorItem } from 'src/app/features/vehiculos/models';
 
 // Componentes
+import { MantenimientoFormComponent } from '../mantenimiento-form/mantenimiento-form.component';
+import { MantenimientoViewComponent } from '../mantenimiento-view/mantenimiento-view.component';
 
 @Component({
   selector: 'app-mantenimientos-page',
@@ -24,6 +28,8 @@ import { EstadoMantenimiento, MantenimientoPaginadoItem, MantenimientosPaginados
     FormsModule,
     CommonModule,
     UppercaseDirective,
+    MantenimientoFormComponent,
+    MantenimientoViewComponent
   ],
   templateUrl: './mantenimientos-page.component.html',
   styles: ``,
@@ -60,6 +66,8 @@ export class MantenimientosPageComponent implements OnInit {
   // Estado switch
 
   // Selectores
+  vehiculosDisponibles: VehiculoSelectorItem[] = [];
+
   readonly tipoMantenimiento: {
     value: TipoMantenimiento;
     label: string;
@@ -98,12 +106,13 @@ export class MantenimientosPageComponent implements OnInit {
 
   constructor(
     private mantenimientoService: MantenimientoService,
+    private vehiculosService: VehiculosService,
     private cdr: ChangeDetectorRef,
   ) { }
 
   ngOnInit(): void {
     this.getMantenimientoPaginated();
-    // this.initUsuariosSinPersonal();
+    this.initVehiculosDisponibles();
   }
 
   // ================================
@@ -154,6 +163,31 @@ export class MantenimientosPageComponent implements OnInit {
       });
   }
 
+  initVehiculosDisponibles(): void {
+    this.vehiculosService.getVehiculoSelector().subscribe({
+      next: (response) => {
+        this.vehiculosDisponibles = response.success
+          ? response.data
+          : [];
+
+        this.cdr.markForCheck();
+      },
+
+      error: (error) => {
+        this.vehiculosDisponibles = [];
+        this.cdr.markForCheck();
+
+        void Swal.fire({
+          icon: 'error',
+          title: 'No se pudieron cargar los vehiculos',
+          text: error?.error?.message ??
+            error?.message ??
+            'Intenta nuevamente.',
+        });
+      },
+    });
+  }
+
   // Finalizar mantenimiento
   finalizarMantenimiento(_t151: MantenimientoPaginadoItem) {
     throw new Error('Method not implemented.');
@@ -170,13 +204,16 @@ export class MantenimientosPageComponent implements OnInit {
   }
 
   // - Editar mantenimiento
-  editarMantenimiento(_t151: MantenimientoPaginadoItem) {
-    throw new Error('Method not implemented.');
+  editarMantenimiento(mant: MantenimientoPaginadoItem) {
+    this.modoEdicion = true;
+    this.mantenimientoSeleccionado = { ...mant };
+    this.mostrarModal = true;
   }
 
   // - Ver mantenimiento
-  verMantenimiento(_t151: MantenimientoPaginadoItem) {
-    throw new Error('Method not implemented.');
+  verMantenimiento(mant: MantenimientoPaginadoItem) {
+    this.mantenimiento_id = mant.id_mantenimiento;
+    this.mostrarModalView = true;
   }
 
   // ================================

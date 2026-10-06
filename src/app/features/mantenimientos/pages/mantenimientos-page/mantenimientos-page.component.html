@@ -154,6 +154,14 @@
   <!-- MODALES -->
   <!-- ================================================= -->
 
+  <!-- Formulario modal -->
+  <mantenimiento-form [mostrarModal]="mostrarModal" [modoEdicion]="modoEdicion"
+    [mantenimientoSeleccionado]="mantenimientoSeleccionado" [vehiculosDisponibles]="vehiculosDisponibles"
+    (modalCerrado)="cerrarModal()" (mantenimientoCreado)="getMantenimientoPaginated()"></mantenimiento-form>
+
+  <!-- Modal para ver detalle de un mantenimiento -->
+  <mantenimiento-view [mostrarModal]="mostrarModalView" [mantenimiento_id]="mantenimiento_id"
+    (modalCerrado)="cerrarModalInfo()"></mantenimiento-view>
 
   <!-- ================================================= -->
   <!-- TABLA DE PERSONAL REGISTRADO -->
@@ -376,7 +384,7 @@
                 </p>
                 }
 
-                @if (                mant.estado_mantenimiento === 'CANCELADO' &&                mant.motivo_cancelacion                ) {
+                @if ( mant.estado_mantenimiento === 'CANCELADO' && mant.motivo_cancelacion ) {
                 <p class="line-clamp-2 text-xs text-error" [title]="mant.motivo_cancelacion">
                   Cancelación: {{ mant.motivo_cancelacion }}
                 </p>
@@ -548,17 +556,20 @@
                 </div>
 
                 <!-- Editar: programado o en proceso -->
-                @if (
-                mant.estado_mantenimiento === 'PROGRAMADO' ||
-                mant.estado_mantenimiento === 'EN_PROCESO'
-                ) {
+                <!-- @if ( mant.estado_mantenimiento === 'PROGRAMADO' || mant.estado_mantenimiento === 'EN_PROCESO' ) {
                 <div class="tooltip tooltip-left" data-tip="Editar mantenimiento">
                   <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="editarMantenimiento(mant)"
                     aria-label="Editar mantenimiento">
                     <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
                   </button>
                 </div>
-                }
+                } -->
+                <div class="tooltip tooltip-left" data-tip="Editar mantenimiento">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="editarMantenimiento(mant)"
+                    aria-label="Editar mantenimiento">
+                    <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                  </button>
+                </div>
 
                 <!-- Iniciar y cancelar: solo programado -->
                 @if (mant.estado_mantenimiento === 'PROGRAMADO') {

@@ -7,3 +7,4 @@ export * from './iniciar-mantenimiento.interface';
 export * from './finalizar-mantenimiento.interface';
 export * from './cancelar-mantenimiento.interface';
 export * from './get-historial-vehiculo.interface';
+export * from './update-mantenimiento.interface';

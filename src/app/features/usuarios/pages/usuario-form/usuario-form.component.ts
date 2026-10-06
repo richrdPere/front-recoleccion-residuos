@@ -125,8 +125,6 @@ const passwordValida: ValidatorFn = (control) => {
 // ============================================================
 // CATÁLOGO DE ROLES PARA EL SELECT O CHECKBOXES
 // ============================================================
-
-
 @Component({
   selector: 'usuario-form',
   standalone: true,
@@ -242,87 +240,21 @@ export class UsuarioFormComponent implements OnChanges {
     return this.fb.group({
       id_usuario: [null],
 
-      username: [
-        '',
-        [
-          Validators.required,
-          textoNoVacio,
-          Validators.maxLength(50),
-        ],
-      ],
-
-      email_acceso: [
-        '',
-        [
-          Validators.required,
-          textoNoVacio,
-          Validators.email,
-          Validators.maxLength(150),
-        ],
-      ],
-
-      password: [
-        '',
-        [Validators.required, passwordValida],
-      ],
-
+      username: ['', [Validators.required, textoNoVacio, Validators.maxLength(50)]],
+      email_acceso: ['', [Validators.required, textoNoVacio, Validators.email, Validators.maxLength(150),]],
+      password: ['', [Validators.required, passwordValida]],
       estado: [true],
-
-      roles_ids: [
-        [],
-        [Validators.required, rolesValidos],
-      ],
-
-      nombres: [
-        '',
-        [
-          Validators.required,
-          textoNoVacio,
-          Validators.maxLength(100),
-        ],
-      ],
-
-      apellidos: [
-        '',
-        [
-          Validators.required,
-          textoNoVacio,
-          Validators.maxLength(100),
-        ],
-      ],
-
-      tipo_documento: [
-        'DNI',
-        [
-          Validators.required,
-          opcionPermitida(this.tiposDocumento.map(opcion => opcion.value)),
-        ],
-      ],
-
-      numero_documento: [
-        '',
-        [
-          Validators.required,
-          textoNoVacio,
-          Validators.maxLength(20),
-        ],
-      ],
-
-      email_contacto: [
-        '',
-        [Validators.email, Validators.maxLength(150)],
-      ],
-
+      roles_ids: [[], [Validators.required, rolesValidos]],
+      nombres: ['', [Validators.required, textoNoVacio, Validators.maxLength(100),]],
+      apellidos: ['', [Validators.required, textoNoVacio, Validators.maxLength(100),]],
+      tipo_documento: ['DNI', [Validators.required, opcionPermitida(this.tiposDocumento.map(opcion => opcion.value)),]],
+      numero_documento: ['', [Validators.required, textoNoVacio, Validators.maxLength(20),]],
+      email_contacto: ['', [Validators.email, Validators.maxLength(150)]],
       fecha_nacimiento: ['', fechaValida],
-
       celular: ['', Validators.maxLength(20)],
       direccion: ['', Validators.maxLength(255)],
       foto_url: ['', Validators.maxLength(255)],
-
-      genero: [
-        null,
-        opcionPermitida(this.generos.map(opcion => opcion.value)),
-      ],
+      genero: [null, opcionPermitida(this.generos.map(opcion => opcion.value))],
     });
   }
 
