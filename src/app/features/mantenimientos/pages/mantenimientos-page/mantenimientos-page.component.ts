@@ -20,6 +20,7 @@ import { MantenimientoFormComponent } from '../mantenimiento-form/mantenimiento-
 import { MantenimientoViewComponent } from '../mantenimiento-view/mantenimiento-view.component';
 import { IniciarMantenimientoComponent } from '../iniciar-mantenimiento/iniciar-mantenimiento.component';
 import { FinalizarMantenimientoComponent } from '../finalizar-mantenimiento/finalizar-mantenimiento.component';
+import { CancelarMantenimientoComponent } from '../cancelar-mantenimiento/cancelar-mantenimiento.component';
 
 @Component({
   selector: 'app-mantenimientos-page',
@@ -33,7 +34,8 @@ import { FinalizarMantenimientoComponent } from '../finalizar-mantenimiento/fina
     MantenimientoFormComponent,
     MantenimientoViewComponent,
     IniciarMantenimientoComponent,
-    FinalizarMantenimientoComponent
+    FinalizarMantenimientoComponent,
+    CancelarMantenimientoComponent
 ],
   templateUrl: './mantenimientos-page.component.html',
   styles: ``,
@@ -56,6 +58,9 @@ export class MantenimientosPageComponent implements OnInit {
 
   mostrarModalFinalizacion = false;
   mantenimientoParaFinalizar: MantenimientoPaginadoItem | null = null;
+
+  mostrarModalCancelacion = false;
+  mantenimientoParaCancelar: MantenimientoPaginadoItem | null = null;
 
   searchTimeout: any;
 
@@ -209,8 +214,13 @@ export class MantenimientosPageComponent implements OnInit {
   }
 
   // Cancelar mantenimiento
-  cancelarMantenimiento(_t151: MantenimientoPaginadoItem) {
-    throw new Error('Method not implemented.');
+  cancelarMantenimiento(mant: MantenimientoPaginadoItem) {
+    if (mant.estado_mantenimiento !== 'PROGRAMADO') {
+      return;
+    }
+
+    this.mantenimientoParaCancelar = mant;
+    this.mostrarModalCancelacion = true;
   }
 
   // - Iniciar mantenimiento
@@ -306,7 +316,6 @@ export class MantenimientosPageComponent implements OnInit {
     this.getMantenimientoPaginated();
   }
 
-
   cerrarModalFinalizacion(): void {
     this.mostrarModalFinalizacion = false;
     this.mantenimientoParaFinalizar = null;
@@ -319,4 +328,13 @@ export class MantenimientosPageComponent implements OnInit {
     this.getMantenimientoPaginated();
   }
 
+  cerrarModalCancelacion(): void {
+    this.mostrarModalCancelacion = false;
+    this.mantenimientoParaCancelar = null;
+  }
+
+  onMantenimientoCancelado(): void {
+    // Ajusta al nombre de tu método de recarga.
+    this.getMantenimientoPaginated();
+  }
 }

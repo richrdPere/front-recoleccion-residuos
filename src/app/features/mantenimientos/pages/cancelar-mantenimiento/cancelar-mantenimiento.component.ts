@@ -9,24 +9,11 @@ import Swal from 'sweetalert2';
 import { MantenimientoService } from '../../services/mantenimiento.service';
 
 // Interfaces
-import { FinalizarMantenimientoRequest, MantenimientoDetalleData, MantenimientoPaginadoItem } from '../../interfaces';
-
+import { CancelarMantenimientoRequest, MantenimientoDetalleData, MantenimientoPaginadoItem } from '../../interfaces';
 
 // ============================================================
-// UTILIDADES Y VALIDADORES
+// VALIDADORES
 // ============================================================
-
-function estaVacio(value: unknown): boolean {
-  return value === null ||
-    value === undefined ||
-    (typeof value === 'string' && value.trim() === '');
-}
-
-function textoOpcional(value: unknown): string | null {
-  const texto = String(value ?? '').trim();
-
-  return texto || null;
-}
 
 const textoNoVacio: ValidatorFn = (
   control: AbstractControl,
@@ -36,85 +23,49 @@ const textoNoVacio: ValidatorFn = (
     : { textoVacio: true };
 };
 
-const decimalNoNegativo: ValidatorFn = (
-  control: AbstractControl,
-): ValidationErrors | null => {
-  if (estaVacio(control.value)) {
-    return null;
-  }
-
-  const valor = String(control.value).trim();
-
-  // Hasta dos decimales, usando punto como separador.
-  if (!/^\d+(?:\.\d{1,2})?$/.test(valor)) {
-    return { decimalInvalido: true };
-  }
-
-  const numero = Number(valor);
-
-  return Number.isFinite(numero) && numero >= 0
-    ? null
-    : { decimalInvalido: true };
-};
-
-const booleanoRequerido: ValidatorFn = (
-  control: AbstractControl,
-): ValidationErrors | null => {
-  return typeof control.value === 'boolean'
-    ? null
-    : { booleanoRequerido: true };
-};
-
 // ============================================================
 // COMPONENTE
 // ============================================================
 
 @Component({
-  selector: 'finalizar-mantenimiento',
+  selector: 'cancelar-mantenimiento',
   standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
   ],
-  templateUrl: './finalizar-mantenimiento.component.html',
+  templateUrl: './cancelar-mantenimiento.component.html',
   styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FinalizarMantenimientoComponent implements OnChanges {
+export class CancelarMantenimientoComponent implements OnChanges {
+
   // ============================================================
   // INPUTS / OUTPUTS
   // ============================================================
-
   @Input() mostrarModal = false;
+  @Input() mantenimientoSeleccionado: MantenimientoPaginadoItem | null = null;
 
-  @Input()
-  mantenimientoSeleccionado: MantenimientoPaginadoItem | null = null;
-
-  @Output()
-  mantenimientoFinalizado =
-    new EventEmitter<MantenimientoDetalleData>();
-
-  @Output()
-  modalCerrado = new EventEmitter<void>();
+  @Output() mantenimientoCancelado = new EventEmitter<MantenimientoDetalleData>();
+  @Output() modalCerrado = new EventEmitter<void>();
 
   // ============================================================
   // ESTADO
   // ============================================================
 
   private readonly destroyRef = inject(DestroyRef);
-
-  readonly formFinalizacion: FormGroup;
+  readonly formCancelacion: FormGroup;
 
   isLoading = false;
   errorFormulario: string | null = null;
-  modalWidthClass = 'max-w-4xl';
+  modalWidthClass = 'max-w-xl';
 
   constructor(
     private readonly fb: FormBuilder,
     private readonly mantenimientoService: MantenimientoService,
     private readonly cdr: ChangeDetectorRef,
   ) {
-    this.formFinalizacion = this.initFormulario();
+    this.formCancelacion = this.initFormulario();
   }
 
   // ============================================================
@@ -158,57 +109,16 @@ export class FinalizarMantenimientoComponent implements OnChanges {
 
   private initFormulario(): FormGroup {
     return this.fb.group({
-      trabajos_realizados: [
+      motivo_cancelacion: [
         '',
         [Validators.required, textoNoVacio],
       ],
-
-      vehiculo_operativo: [
-        null,
-        [booleanoRequerido],
-      ],
-
-      kilometraje_salida: [
-        null,
-        [decimalNoNegativo],
-      ],
-
-      diagnostico: [''],
-
-      responsable_tecnico: [
-        '',
-        [Validators.maxLength(150)],
-      ],
-
-      taller: [
-        '',
-        [Validators.maxLength(150)],
-      ],
-
-      costo_total: [
-        null,
-        [decimalNoNegativo],
-      ],
-
-      observacion: [''],
     });
   }
 
   private resetFormulario(): void {
-    const mantenimiento = this.mantenimientoSeleccionado;
-
-    this.formFinalizacion.reset({
-      trabajos_realizados: mantenimiento?.trabajos_realizados ?? '',
-      vehiculo_operativo: null,
-
-      // Opcional: el backend determina el valor si no se envía.
-      kilometraje_salida: mantenimiento?.kilometraje_salida ?? null,
-
-      diagnostico: mantenimiento?.diagnostico ?? '',
-      responsable_tecnico: mantenimiento?.responsable_tecnico ?? '',
-      taller: mantenimiento?.taller ?? '',
-      costo_total: mantenimiento?.costo_total ?? null,
-      observacion: mantenimiento?.observacion ?? '',
+    this.formCancelacion.reset({
+      motivo_cancelacion: '',
     });
   }
 
@@ -216,34 +126,21 @@ export class FinalizarMantenimientoComponent implements OnChanges {
   // VALIDACIÓN PARA LA VISTA
   // ============================================================
 
-  get puedeFinalizar(): boolean {
+  get puedeCancelar(): boolean {
     return this.mantenimientoSeleccionado?.estado_mantenimiento ===
-      'EN_PROCESO';
+      'PROGRAMADO';
   }
 
   campoInvalido(nombre: string): boolean {
-    const control = this.formFinalizacion.get(nombre);
+    const control = this.formCancelacion.get(nombre);
 
     return !!control &&
       control.invalid &&
       (control.touched || control.dirty);
   }
 
-  campoCompleto(nombre: string): boolean {
-    const control = this.formFinalizacion.get(nombre);
-
-    return !!control &&
-      control.valid &&
-      !estaVacio(control.value);
-  }
-
-  esRequerido(nombre: string): boolean {
-    return nombre === 'trabajos_realizados' ||
-      nombre === 'vehiculo_operativo';
-  }
-
   obtenerError(nombre: string): string {
-    const control = this.formFinalizacion.get(nombre);
+    const control = this.formCancelacion.get(nombre);
 
     if (!control?.errors) {
       return '';
@@ -253,31 +150,17 @@ export class FinalizarMantenimientoComponent implements OnChanges {
       control.hasError('required') ||
       control.hasError('textoVacio')
     ) {
-      return 'Este campo es obligatorio.';
-    }
-
-    if (control.hasError('booleanoRequerido')) {
-      return 'Selecciona si el vehículo quedó operativo.';
-    }
-
-    if (control.hasError('decimalInvalido')) {
-      return 'Ingresa un número mayor o igual a cero con hasta dos decimales.';
-    }
-
-    if (control.hasError('maxlength')) {
-      const maximo = control.errors['maxlength'].requiredLength;
-
-      return `El campo admite hasta ${maximo} caracteres.`;
+      return 'El motivo de cancelación es obligatorio.';
     }
 
     return 'Revisa el valor ingresado.';
   }
 
   // ============================================================
-  // FINALIZAR MANTENIMIENTO
+  // CANCELAR MANTENIMIENTO
   // ============================================================
 
-  finalizar(): void {
+  cancelar(): void {
     if (this.isLoading) {
       return;
     }
@@ -299,72 +182,32 @@ export class FinalizarMantenimientoComponent implements OnChanges {
       return;
     }
 
-    if (!this.puedeFinalizar) {
+    if (!this.puedeCancelar) {
       this.errorFormulario =
-        'Solo se pueden finalizar mantenimientos en proceso.';
+        'Solo se pueden cancelar mantenimientos programados.';
       return;
     }
 
-    if (this.formFinalizacion.invalid) {
-      this.formFinalizacion.markAllAsTouched();
+    if (this.formCancelacion.invalid) {
+      this.formCancelacion.markAllAsTouched();
       return;
     }
 
-    const valores = this.formFinalizacion.getRawValue();
+    const valores = this.formCancelacion.getRawValue();
 
-    // Acepta tanto true como false.
-    if (typeof valores.vehiculo_operativo !== 'boolean') {
-      this.errorFormulario =
-        'Selecciona si el vehículo quedó operativo.';
-      return;
-    }
-
-    const request: FinalizarMantenimientoRequest = {
-      trabajos_realizados:
-        String(valores.trabajos_realizados ?? '').trim(),
-
-      vehiculo_operativo: valores.vehiculo_operativo,
-
-      diagnostico: textoOpcional(valores.diagnostico),
-      responsable_tecnico: textoOpcional(valores.responsable_tecnico),
-      taller: textoOpcional(valores.taller),
-      observacion: textoOpcional(valores.observacion),
+    const request: CancelarMantenimientoRequest = {
+      motivo_cancelacion:
+        String(valores.motivo_cancelacion ?? '').trim(),
     };
-
-    // No envía campos numéricos vacíos.
-    if (!estaVacio(valores.kilometraje_salida)) {
-      const kilometrajeSalida = Number(valores.kilometraje_salida);
-
-      if (mantenimiento.kilometraje_ingreso !== null) {
-        const kilometrajeIngreso = Number(
-          mantenimiento.kilometraje_ingreso,
-        );
-
-        if (
-          Number.isFinite(kilometrajeIngreso) &&
-          kilometrajeSalida < kilometrajeIngreso
-        ) {
-          this.errorFormulario =
-            'El kilometraje de salida no puede ser menor al de ingreso.';
-          return;
-        }
-      }
-
-      // Conserva el decimal como cadena para enviarlo.
-      request.kilometraje_salida = String(valores.kilometraje_salida).trim();
-    }
-
-    if (!estaVacio(valores.costo_total)) {
-      request.costo_total = String(valores.costo_total).trim();
-    }
 
     this.isLoading = true;
     this.cdr.markForCheck();
 
-    this.mantenimientoService.finalizarMantenimiento(
-      mantenimiento.id_mantenimiento,
-      request,
-    )
+    this.mantenimientoService
+      .cancelarMantenimiento(
+        mantenimiento.id_mantenimiento,
+        request,
+      )
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => {
@@ -377,7 +220,7 @@ export class FinalizarMantenimientoComponent implements OnChanges {
           if (!response.success || !response.data) {
             this.errorFormulario =
               response.message ||
-              'No se pudo finalizar el mantenimiento.';
+              'No se pudo cancelar el mantenimiento.';
 
             this.cdr.markForCheck();
             return;
@@ -387,11 +230,11 @@ export class FinalizarMantenimientoComponent implements OnChanges {
 
           void Swal.fire({
             icon: 'success',
-            title: 'Mantenimiento finalizado',
+            title: 'Mantenimiento cancelado',
             text: response.message,
           });
 
-          this.mantenimientoFinalizado.emit(response.data);
+          this.mantenimientoCancelado.emit(response.data);
           this.modalCerrado.emit();
         },
 
@@ -430,6 +273,6 @@ export class FinalizarMantenimientoComponent implements OnChanges {
 
     return typeof mensaje === 'string' && mensaje.trim()
       ? mensaje
-      : 'No se pudo finalizar el mantenimiento.';
+      : 'No se pudo cancelar el mantenimiento.';
   }
 }

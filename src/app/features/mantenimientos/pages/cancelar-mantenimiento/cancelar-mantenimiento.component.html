@@ -1,0 +1,170 @@
+@if (mostrarModal) {
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" (click)="cerrarModal()">
+
+  <section class="relative flex max-h-[92vh] w-full flex-col overflow-hidden
+           rounded-2xl border border-base-300 bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" role="dialog"
+    aria-modal="true" aria-labelledby="cancelar-mantenimiento-title" [attr.aria-busy]="isLoading"
+    (click)="$event.stopPropagation()">
+
+    <!-- ===================================================== -->
+    <!-- HEADER -->
+    <!-- ===================================================== -->
+    <header class="flex shrink-0 items-start justify-between gap-4
+             border-b border-base-300 bg-base-200/50 px-5 py-4 sm:px-6">
+
+      <div class="flex min-w-0 items-center gap-3">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center
+                 rounded-xl bg-error/10 text-error">
+          <i class="fa-solid fa-ban text-lg" aria-hidden="true"></i>
+        </div>
+
+        <div class="min-w-0">
+          <h2 id="cancelar-mantenimiento-title" class="text-lg font-bold sm:text-xl">
+            Cancelar mantenimiento
+          </h2>
+
+          <p class="mt-1 text-sm text-base-content/60">
+            Indica por qué no se ejecutará esta orden.
+          </p>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-ghost btn-circle btn-sm shrink-0" aria-label="Cerrar modal"
+        [disabled]="isLoading" (click)="cerrarModal()">
+        <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <form class="flex min-h-0 flex-1 flex-col" [formGroup]="formCancelacion" (ngSubmit)="cancelar()">
+
+      <!-- ===================================================== -->
+      <!-- CONTENIDO -->
+      <!-- ===================================================== -->
+      <div class="min-h-0 flex-1 space-y-5 overflow-y-auto
+               overscroll-contain px-5 py-5 sm:px-6">
+
+        @if (mantenimientoSeleccionado; as mantenimiento) {
+        <section class="rounded-xl border border-base-300 bg-base-200/40 p-4">
+
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h3 class="font-bold">
+              Orden #{{ mantenimiento.id_mantenimiento }}
+            </h3>
+
+            <span class="badge badge-outline">
+              {{ mantenimiento.tipo_mantenimiento }}
+            </span>
+          </div>
+
+          <p class="mt-2 font-medium">
+            {{ mantenimiento.vehiculo.codigo }}
+            · {{ mantenimiento.vehiculo.placa }}
+          </p>
+
+          <p class="mt-3 whitespace-pre-wrap text-sm text-base-content/70">
+            {{ mantenimiento.motivo }}
+          </p>
+
+          <dl class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <dt class="text-xs text-base-content/60">
+                Inicio programado
+              </dt>
+              <dd class="mt-1 text-sm">
+                {{
+                mantenimiento.fecha_inicio_programada
+                | date:'dd/MM/yyyy HH:mm':'-0500'
+                }}
+              </dd>
+            </div>
+
+            <div>
+              <dt class="text-xs text-base-content/60">
+                Fin programado
+              </dt>
+              <dd class="mt-1 text-sm">
+                {{
+                mantenimiento.fecha_fin_programada
+                | date:'dd/MM/yyyy HH:mm':'-0500'
+                }}
+              </dd>
+            </div>
+          </dl>
+        </section>
+        }
+
+        @if (!puedeCancelar) {
+        <div class="alert alert-warning" role="alert">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          <span>
+            Solo se pueden cancelar órdenes en estado PROGRAMADO.
+          </span>
+        </div>
+        }
+
+        @if (errorFormulario) {
+        <div class="alert alert-error" role="alert">
+          <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+          <span>{{ errorFormulario }}</span>
+        </div>
+        }
+
+        <fieldset [disabled]="isLoading || !puedeCancelar">
+          <div class="form-control">
+            <label class="label" for="cancelacion-motivo">
+              <span class="label-text font-medium">
+                Motivo de cancelación
+                <span class="font-bold text-error">*</span>
+              </span>
+            </label>
+
+            <textarea id="cancelacion-motivo" formControlName="motivo_cancelacion" rows="4"
+              class="textarea textarea-bordered w-full"
+              placeholder="Ejemplo: El taller no tiene disponibilidad. Se registrará una nueva orden."
+              [class.textarea-error]="campoInvalido('motivo_cancelacion')"
+              [attr.aria-invalid]="campoInvalido('motivo_cancelacion')" [attr.aria-describedby]="
+                campoInvalido('motivo_cancelacion')
+                  ? 'cancelacion-motivo-error'
+                  : null
+              ">
+            </textarea>
+
+            @if (campoInvalido('motivo_cancelacion')) {
+            <p id="cancelacion-motivo-error" class="mt-1 text-sm text-error">
+              {{ obtenerError('motivo_cancelacion') }}
+            </p>
+            }
+          </div>
+        </fieldset>
+
+        <div class="rounded-xl bg-base-200 p-4 text-sm text-base-content/70">
+          La orden pasará a CANCELADO. El motivo quedará registrado
+          en su historial.
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- FOOTER -->
+      <!-- ===================================================== -->
+      <footer class="flex shrink-0 flex-col-reverse gap-3 border-t border-base-300
+               px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+
+        <button type="button" class="btn btn-ghost" [disabled]="isLoading" (click)="cerrarModal()">
+          Cerrar
+        </button>
+
+        <button type="submit" class="btn btn-error" [disabled]="isLoading || !puedeCancelar">
+
+          @if (isLoading) {
+          <span class="loading loading-spinner loading-sm"></span>
+          Cancelando…
+          } @else {
+          <i class="fa-solid fa-ban" aria-hidden="true"></i>
+          Cancelar mantenimiento
+          }
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>
+}

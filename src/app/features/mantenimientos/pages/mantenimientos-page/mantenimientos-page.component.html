@@ -172,6 +172,13 @@
     (mantenimientoFinalizado)="onMantenimientoFinalizado($event)">
     ></finalizar-mantenimiento>
 
+
+  <!-- Modal para cancelar mantenimiento -->
+  <cancelar-mantenimiento [mostrarModal]="mostrarModalCancelacion"
+    [mantenimientoSeleccionado]="mantenimientoParaCancelar" (modalCerrado)="cerrarModalCancelacion()"
+    (mantenimientoCancelado)="onMantenimientoCancelado()">
+  </cancelar-mantenimiento>
+
   <!-- ================================================= -->
   <!-- TABLA DE PERSONAL REGISTRADO -->
   <!-- ================================================= -->
