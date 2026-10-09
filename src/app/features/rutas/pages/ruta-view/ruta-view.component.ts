@@ -7,7 +7,7 @@ import { RutasServices } from
   'src/app/features/rutas/services/rutas.service';
 
 // Interfaces
-import { RutaDetalleData } from '../../../interfaces/rutas/update-ruta.interface';
+import { RutaDetalleData } from '../../interfaces/rutas/update-ruta.interface';
 
 interface CampoDetalle {
   clave: string;
@@ -19,7 +19,7 @@ interface CampoDetalle {
   selector: 'rutas-view',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './rutas-view.component.html',
+  templateUrl: './ruta-view.component.html',
   styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

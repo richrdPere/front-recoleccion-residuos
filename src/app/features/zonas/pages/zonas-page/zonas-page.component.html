@@ -1,1 +1,486 @@
-<p>zonas-page works!</p>
+<!-- ================================================= -->
+<!-- CONTENEDOR DEL VEHICULO -->
+<!-- ================================================= -->
+<div class="mx-auto w-full max-w-500">
+
+  <!-- ================================================= -->
+  <!-- ENCABEZADO -->
+  <!-- ================================================= -->
+  <header class="mb-5 flex flex-col gap-4
+             sm:flex-row sm:items-center
+             sm:justify-between">
+
+    <div class="flex min-w-0 items-center gap-3">
+
+      <div class="flex h-12 w-12 shrink-0
+                 items-center justify-center
+                 rounded-2xl bg-primary/10
+                 text-primary" aria-hidden="true">
+
+        <i class="fa-solid fa-car-side text-2xl"></i>
+      </div>
+
+      <div class="min-w-0">
+        <h1 class="text-2xl font-bold
+                   leading-tight text-base-content">
+
+          Zonas
+        </h1>
+
+        <p class="mt-1 max-w-2xl
+                   text-sm leading-relaxed
+                   text-base-content/60">
+
+          Gestione las zonas disponibles para las operaciones de recorrido.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================================================= -->
+  <!-- FILTROS -->
+  <!-- ================================================= -->
+  <section class="mb-6 overflow-hidden rounded-2xl
+         border border-base-300 bg-base-100 shadow-sm">
+    <div class="grid grid-cols-1
+           lg:grid-cols-[minmax(0,1fr)_170px]">
+
+      <!-- ================================================= -->
+      <!-- CAMPOS DE FILTRO -->
+      <!-- ================================================= -->
+      <div class="min-w-0 p-4 sm:p-5">
+        <div class="grid grid-cols-1 items-end gap-4
+               sm:grid-cols-2
+               xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+
+          <!-- Buscar por nombre -->
+          <div class="min-w-0">
+            <label for="filtro-placa" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Descripción
+            </label>
+
+            <div class="relative">
+              <input id="filtro-placa" type="text" class="input input-bordered h-11 min-h-11
+                     w-full min-w-0 rounded-xl bg-base-100
+                     pl-11 pr-4 focus:outline-none
+                     focus:ring-2 focus:ring-primary/30" placeholder="Buscar por placa" autocomplete="off"
+                [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()" appUppercase />
+
+              <span class="pointer-events-none absolute inset-y-0 left-0 z-10
+                     flex w-11 items-center justify-center
+                     text-base-content/50" aria-hidden="true">
+                <i class="fa-solid fa-magnifying-glass text-base"></i>
+              </span>
+            </div>
+          </div>
+
+          <!-- Tipo de vehículo -->
+          <!-- <div class="min-w-0">
+            <label for="filtro-tipo" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Tipo de vehículo
+            </label>
+
+            <select id="filtro-tipo" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-100
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [(ngModel)]="tipoVehiculoBusqueda" (ngModelChange)="onSearchChange()">
+              <option value="">Todos los tipos</option>
+
+              @for (opcion of tiposVehiculo; track opcion.value) {
+              <option [value]="opcion.value">
+                {{ opcion.label }}
+              </option>
+              }
+            </select>
+          </div> -->
+
+          <!-- Estado operativo -->
+          <!-- <div class="min-w-0">
+            <label for="filtro-estado" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Estado operativo
+            </label>
+
+            <select id="filtro-estado" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-100
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [(ngModel)]="estadoOperativoBusqueda" (ngModelChange)="onSearchChange()">
+              <option value="">Todos los estados</option>
+
+              @for (estado of estadosOperativos; track estado.value) {
+              <option [value]="estado.value">
+                {{ estado.label }}
+              </option>
+              }
+            </select>
+          </div> -->
+
+          <!-- Limpiar -->
+          <div class="min-w-0">
+            <button type="button" class="btn btn-secondary h-11 min-h-11
+                   w-full gap-2 rounded-xl
+                   xl:w-auto xl:min-w-28" [disabled]="!searchBusqueda" (click)="limpiarFiltros()">
+              <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+              Limpiar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================= -->
+      <!-- ILUSTRACIÓN -->
+      <!-- ================================================= -->
+      <div class="hidden items-center justify-center px-5 lg:flex">
+        <img src="assets/img/search.png" alt="" aria-hidden="true" class="h-32 w-32 select-none object-contain
+               opacity-90 drop-shadow-sm" draggable="false" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================= -->
+  <!-- MODALES -->
+  <!-- ================================================= -->
+
+  <!-- Formulario modal para ZONAS -->
+  <zona-form [mostrarModal]="mostrarModal" [modoEdicion]="modoEdicion" [zonaSeleccionada]="zonaSeleccionada"
+    (modalCerrado)="cerrarModal()" (zonaCreada)="getZonasPaginated()"></zona-form>
+
+  <!-- Modal para ver detalle de una zona -->
+  <zona-view [mostrarModal]="mostrarModalView" [zona_id]="zona_id" (modalCerrado)="cerrarModalInfo()"></zona-view>
+
+  <!-- ================================================= -->
+  <!-- TABLA DE ZONAS -->
+  <!-- ================================================= -->
+  <section class="overflow-hidden rounded-2xl border border-base-300
+         bg-base-100 shadow-sm" aria-label="Zonas registradas" [attr.aria-busy]="isLoading">
+    <!-- CABECERA -->
+    <div class="flex flex-col gap-4 border-b border-base-300 px-4 py-4
+           sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <!-- TAMAÑO DE PÁGINA -->
+      <div class="flex w-full items-center justify-between gap-3
+             text-sm text-base-content/70 sm:w-auto sm:justify-start">
+        <label for="zonas-page-size" class="whitespace-nowrap">
+          Mostrar
+        </label>
+
+        <select id="zonas-page-size" class="select select-bordered select-sm w-auto" [(ngModel)]="limit"
+          (change)="cambiarLimite()" [disabled]="isLoading">
+          @for (size of pageSizeOptions; track size) {
+          <option [ngValue]="size">
+            {{ size }}
+          </option>
+          }
+        </select>
+
+        <span class="whitespace-nowrap">ítems por página</span>
+      </div>
+
+      <!-- CREAR -->
+      <button type="button" class="btn btn-primary min-h-10 w-full gap-2 rounded-xl
+             border-none bg-info hover:bg-primary hover:text-white
+             sm:w-auto sm:min-w-36" (click)="abrirModal()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        Nueva zona
+      </button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="overflow-x-auto">
+      <table class="table min-w-275">
+        <thead class="bg-base-300/90">
+          <tr class="text-xs uppercase tracking-wide text-base-content/60">
+            <th class="w-14 text-center">N.°</th>
+            <th class="min-w-48">Zona</th>
+            <th class="min-w-52">Descripción</th>
+            <th class="min-w-32">Color</th>
+            <th class="min-w-40">Cobertura</th>
+            <th class="min-w-44">Centro geográfico</th>
+            <th class="min-w-28 text-center">Estado</th>
+            <th class="min-w-40">Actualización</th>
+            <th class="w-28 text-center">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <!-- CARGANDO -->
+          @if (isLoading) {
+          @for (item of [1, 2, 3, 4, 5]; track item) {
+          <tr>
+            <td>
+              <div class="skeleton mx-auto h-4 w-8"></div>
+            </td>
+
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="skeleton h-10 w-10 rounded-xl"></div>
+                <div class="space-y-2">
+                  <div class="skeleton h-4 w-28"></div>
+                  <div class="skeleton h-3 w-20"></div>
+                </div>
+              </div>
+            </td>
+
+            <td>
+              <div class="skeleton h-4 w-44"></div>
+            </td>
+
+            <td>
+              <div class="skeleton h-6 w-24"></div>
+            </td>
+
+            <td>
+              <div class="skeleton h-6 w-28"></div>
+            </td>
+
+            <td>
+              <div class="space-y-2">
+                <div class="skeleton h-3 w-28"></div>
+                <div class="skeleton h-3 w-28"></div>
+              </div>
+            </td>
+
+            <td>
+              <div class="skeleton mx-auto h-6 w-20"></div>
+            </td>
+
+            <td>
+              <div class="skeleton h-4 w-32"></div>
+            </td>
+
+            <td>
+              <div class="flex justify-center gap-1">
+                @for (accion of [1, 2, 3]; track accion) {
+                <div class="skeleton h-8 w-8 rounded-full"></div>
+                }
+              </div>
+            </td>
+          </tr>
+          }
+          } @else {
+          <!-- FILAS -->
+          @for (zona of zonas; track zona.id_zona; let i = $index) {
+          <tr class="transition-colors hover:bg-base-200/40">
+            <!-- NUMERACIÓN -->
+            <td class="text-center text-base-content/60">
+              {{ ((currentPage - 1) * limit) + i + 1 }}
+            </td>
+
+            <!-- NOMBRE Y CÓDIGO -->
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center
+                           rounded-xl bg-primary/10 text-primary">
+                  <i class="fa-solid fa-map-location-dot text-base" aria-hidden="true"></i>
+                </div>
+
+                <div class="min-w-0 max-w-56">
+                  <p class="truncate text-sm font-semibold" [title]="zona.nombre">
+                    {{ zona.nombre }}
+                  </p>
+
+                  <p class="mt-0.5 truncate text-xs font-medium
+                             uppercase tracking-wide text-base-content/50" [title]="zona.codigo">
+                    {{ zona.codigo }}
+                  </p>
+                </div>
+              </div>
+            </td>
+
+            <!-- DESCRIPCIÓN -->
+            <td>
+              <p class="max-w-64 truncate text-sm text-base-content/70" [title]="zona.descripcion || 'Sin descripción'">
+                {{ zona.descripcion || 'Sin descripción' }}
+              </p>
+            </td>
+
+            <!-- COLOR -->
+            <td>
+              @if (zona.color) {
+              <div class="flex items-center gap-2">
+                <span class="inline-block h-5 w-5 shrink-0 rounded-md
+                             border border-base-content/20" [style.background-color]="zona.color"
+                  aria-hidden="true"></span>
+
+                <span class="font-mono text-xs uppercase">
+                  {{ zona.color }}
+                </span>
+              </div>
+              } @else {
+              <span class="text-xs text-base-content/50">
+                No registrado
+              </span>
+              }
+            </td>
+
+            <!-- POLÍGONO -->
+            <td>
+              @if (zona.poligono_geojson) {
+              <span class="badge badge-soft badge-success gap-1.5">
+                <i class="fa-solid fa-draw-polygon" aria-hidden="true"></i>
+                Con polígono
+              </span>
+              } @else {
+              <span class="badge badge-soft badge-warning gap-1.5">
+                <i class="fa-solid fa-map" aria-hidden="true"></i>
+                Sin delimitar
+              </span>
+              }
+            </td>
+
+            <!-- CENTRO -->
+            <td>
+              @if (
+              zona.centro_latitud !== null &&
+              zona.centro_longitud !== null &&
+              zona.centro_latitud !== '' &&
+              zona.centro_longitud !== ''
+              ) {
+              <div class="space-y-1 whitespace-nowrap text-xs">
+                <p>
+                  <span class="text-base-content/50">Lat:</span>
+                  {{ zona.centro_latitud | number:'1.4-6' }}
+                </p>
+
+                <p>
+                  <span class="text-base-content/50">Lng:</span>
+                  {{ zona.centro_longitud | number:'1.4-6' }}
+                </p>
+              </div>
+              } @else {
+              <span class="text-xs text-base-content/50">
+                No registrado
+              </span>
+              }
+            </td>
+
+            <!-- ESTADO -->
+            <td class="text-center">
+              <input type="checkbox"
+                class="toggle toggle-sm border-error bg-error/70 checked:border-success checked:bg-success"
+                [checked]="zona.estado" [disabled]="estaCambiandoEstado(zona)"
+                (change)="cambiarEstado(zona, $event)" [attr.aria-busy]="estaCambiandoEstado(zona)"
+                [attr.aria-label]="zona.estado ? 'Desactivar zona' : 'Activar zona'" />
+
+              <span class="min-w-14 text-left text-xs font-medium" [class.text-success]="zona.estado"
+                [class.text-error]="!zona.estado">
+                {{ zona.estado ? 'Activo' : 'Inactivo' }}
+              </span>
+
+
+              <!-- <span class="badge badge-soft font-semibold" [class.badge-success]="zona.estado"
+                [class.badge-error]="!zona.estado">
+                {{ zona.estado ? 'Activa' : 'Inactiva' }}
+              </span> -->
+            </td>
+
+            <!-- ACTUALIZACIÓN -->
+            <td class="whitespace-nowrap text-sm">
+              {{ zona.updated_at | date:'dd/MM/yyyy, hh:mm a':'-0500' }}
+            </td>
+
+            <!-- ACCIONES -->
+            <td>
+              <div class="flex items-center justify-center gap-1">
+                <div class="tooltip tooltip-left" data-tip="Ver zona">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="verZona(zona)"
+                    [attr.aria-label]="'Ver detalle de ' + zona.nombre">
+                    <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                  </button>
+                </div>
+
+                <div class="tooltip tooltip-left" data-tip="Editar zona">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="editarZona(zona)"
+                    [attr.aria-label]="'Editar ' + zona.nombre">
+                    <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                  </button>
+                </div>
+
+                <div class="tooltip tooltip-left" data-tip="Eliminar zona">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm text-error" (click)="eliminarZona(zona)"
+                    [attr.aria-label]="'Eliminar ' + zona.nombre">
+                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <!-- SIN RESULTADOS -->
+          <tr>
+            <td colspan="9" class="px-6 py-16 text-center">
+              <div class="mx-auto flex max-w-md flex-col items-center">
+                <div class="flex h-16 w-16 items-center justify-center
+                           rounded-2xl bg-base-200 text-base-content/35">
+                  <i class="fa-solid fa-map-location-dot text-2xl" aria-hidden="true"></i>
+                </div>
+
+                <h3 class="mt-4 text-base font-semibold">
+                  No se encontraron zonas
+                </h3>
+
+                <p class="mt-2 text-sm text-base-content/60">
+                  No hay zonas registradas o no existen resultados
+                  para los filtros seleccionados.
+                </p>
+
+                @if (searchBusqueda) {
+                <button type="button" class="btn btn-primary btn-sm mt-5" (click)="limpiarFiltros()">
+                  <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i>
+                  Limpiar filtros
+                </button>
+                }
+              </div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    @if (!isLoading && totalItems > 0) {
+    <footer class="flex flex-col gap-4 border-t border-base-300 bg-base-200/50
+             px-4 py-4 sm:px-5 lg:flex-row lg:items-center
+             lg:justify-between">
+      <div class="text-center sm:text-left">
+        <h2 class="font-semibold text-base-content">
+          Zonas registradas
+        </h2>
+
+        <p class="mt-0.5 text-sm text-base-content/55">
+          {{ totalItems }}
+          {{ totalItems === 1 ? 'zona encontrada' : 'zonas encontradas' }}
+        </p>
+      </div>
+
+      <div class="flex w-full flex-col items-center gap-3
+               text-sm text-base-content/70 sm:w-auto sm:flex-row">
+        <span class="whitespace-nowrap">
+          Página
+          <strong class="text-base-content">{{ page }}</strong>
+          de
+          <strong class="text-base-content">{{ totalPages }}</strong>
+        </span>
+
+        <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+          <button type="button" class="btn btn-sm w-full gap-2 rounded-lg sm:w-auto" [disabled]="isLoading || page <= 1"
+            (click)="cambiarPagina(page - 1)">
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+            Anterior
+          </button>
+
+          <button type="button" class="btn btn-sm w-full gap-2 rounded-lg sm:w-auto"
+            [disabled]="isLoading || totalPages === 0 || page >= totalPages" (click)="cambiarPagina(page + 1)">
+            Siguiente
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </footer>
+    }
+  </section>
+
+</div>

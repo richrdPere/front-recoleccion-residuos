@@ -1,0 +1,257 @@
+<section class="space-y-5 rounded-xl border border-base-300
+         bg-base-100 p-5" aria-labelledby="dashboard-recolecciones-titulo" [attr.aria-busy]="isLoading">
+  <!-- ENCABEZADO -->
+  <header class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h2 id="dashboard-recolecciones-titulo" class="text-lg font-bold">
+        <i class="fa-solid fa-recycle mr-2 text-primary" aria-hidden="true"></i>
+        Recolecciones
+      </h2>
+
+      <p class="mt-1 text-sm text-base-content/60">
+        Atención de puntos, registros y cantidades recolectadas.
+      </p>
+    </div>
+
+    <button type="button" class="btn btn-sm btn-outline" [disabled]="isLoading" (click)="getDashboardRecolecciones()">
+      <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+      Actualizar
+    </button>
+  </header>
+
+  @if (isLoading) {
+  <!-- LOADING -->
+  <div role="status">
+    <p class="sr-only">
+      Cargando indicadores de recolecciones...
+    </p>
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      @for (item of [1, 2, 3, 4]; track item) {
+      <div class="rounded-xl border border-base-300 p-4">
+        <div class="skeleton mb-3 h-4 w-2/3"></div>
+        <div class="skeleton h-8 w-1/2"></div>
+      </div>
+      }
+    </div>
+
+    <div class="skeleton mt-5 h-40 w-full"></div>
+  </div>
+  } @else if (errorCarga) {
+  <!-- ERROR -->
+  <div class="alert alert-error" role="alert">
+    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+
+    <span>{{ errorCarga }}</span>
+
+    <button type="button" class="btn btn-sm" (click)="getDashboardRecolecciones()">
+      Reintentar
+    </button>
+  </div>
+  } @else if (dashboard; as datos) {
+  <!-- PERÍODO -->
+  @if (camposPeriodo.length > 0) {
+  <dl class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+    @for (campo of camposPeriodo; track campo.clave) {
+    <div class="flex gap-1">
+      <dt class="text-base-content/60">
+        {{ campo.etiqueta }}:
+      </dt>
+
+      <dd class="font-medium">
+        {{ campo.valor }}
+      </dd>
+    </div>
+    }
+  </dl>
+  }
+
+  <!-- FILTROS APLICADOS -->
+  <div class="flex flex-wrap gap-2">
+    <span class="badge badge-outline h-auto py-2">
+      Zona:
+      {{
+      datos.periodo.id_zona !== null
+      ? '#' + datos.periodo.id_zona
+      : 'Todas'
+      }}
+    </span>
+
+    <span class="badge badge-outline h-auto py-2">
+      Ruta:
+      {{
+      datos.periodo.id_ruta !== null
+      ? '#' + datos.periodo.id_ruta
+      : 'Todas'
+      }}
+    </span>
+
+    <span class="badge badge-outline h-auto py-2">
+      Vehículo:
+      {{
+      datos.periodo.id_vehiculo !== null
+      ? '#' + datos.periodo.id_vehiculo
+      : 'Todos'
+      }}
+    </span>
+
+    @if (datos.periodo.agrupacion) {
+    <span class="badge badge-outline h-auto py-2">
+      Agrupación: {{ datos.periodo.agrupacion }}
+    </span>
+    }
+  </div>
+
+  <!-- INDICADORES DE ATENCIÓN -->
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <article class="rounded-xl border border-base-300 bg-base-200/40 p-4">
+      <h3 class="text-sm text-base-content/60">
+        Puntos programados
+      </h3>
+
+      <p class="mt-2 text-3xl font-bold text-primary">
+        {{ datos.indicadores.puntos_programados | number:'1.0-0' }}
+      </p>
+    </article>
+
+    <article class="rounded-xl border border-base-300 bg-base-200/40 p-4">
+      <h3 class="text-sm text-base-content/60">
+        Puntos atendidos
+      </h3>
+
+      <p class="mt-2 text-3xl font-bold text-success">
+        {{ datos.indicadores.puntos_atendidos | number:'1.0-0' }}
+      </p>
+    </article>
+
+    <article class="rounded-xl border border-base-300 bg-base-200/40 p-4">
+      <h3 class="text-sm text-base-content/60">
+        Puntos pendientes
+      </h3>
+
+      <p class="mt-2 text-3xl font-bold text-warning">
+        {{ datos.indicadores.puntos_pendientes | number:'1.0-0' }}
+      </p>
+    </article>
+
+    <article class="rounded-xl border border-base-300 bg-base-200/40 p-4">
+      <h3 class="text-sm text-base-content/60">
+        Avance de atención
+      </h3>
+
+      <p class="mt-2 text-3xl font-bold text-info">
+        {{ datos.indicadores.avance_porcentaje | number:'1.0-2' }}%
+      </p>
+    </article>
+  </div>
+
+  <!-- BARRA DE AVANCE -->
+  <div class="rounded-xl border border-base-300 p-4">
+    <div class="mb-3 flex flex-wrap justify-between gap-2 text-sm">
+      <h3 class="font-semibold">Atención de puntos</h3>
+
+      <span class="text-base-content/60">
+        {{ datos.indicadores.puntos_atendidos | number:'1.0-0' }}
+        de
+        {{ datos.indicadores.puntos_programados | number:'1.0-0' }}
+        puntos
+      </span>
+    </div>
+
+    <progress class="progress progress-success w-full" [value]="avanceVisual" max="100"
+      aria-label="Porcentaje de avance de atención de puntos"></progress>
+  </div>
+
+  <!-- REGISTROS / CANTIDADES -->
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+    <article class="rounded-xl border border-base-300 p-4">
+      <h3 class="mb-4 font-semibold">
+        <i class="fa-solid fa-clipboard-list mr-2" aria-hidden="true"></i>
+        Registros de recolección
+      </h3>
+
+      <dl class="grid grid-cols-2 gap-5">
+        <div>
+          <dt class="text-sm text-base-content/60">
+            Válidos
+          </dt>
+
+          <dd class="mt-1 text-2xl font-semibold text-success">
+            {{ datos.indicadores.registros_validos | number:'1.0-0' }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm text-base-content/60">
+            Anulados
+          </dt>
+
+          <dd class="mt-1 text-2xl font-semibold text-error">
+            {{ datos.indicadores.registros_anulados | number:'1.0-0' }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm text-base-content/60">
+            Con evidencia
+          </dt>
+
+          <dd class="mt-1 text-2xl font-semibold">
+            {{ datos.indicadores.registros_con_evidencia | number:'1.0-0' }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm text-base-content/60">
+            Sin evidencia
+          </dt>
+
+          <dd class="mt-1 text-2xl font-semibold">
+            {{ datos.indicadores.registros_sin_evidencia | number:'1.0-0' }}
+          </dd>
+        </div>
+      </dl>
+    </article>
+
+    <article class="rounded-xl border border-base-300 p-4">
+      <h3 class="mb-4 font-semibold">
+        <i class="fa-solid fa-scale-balanced mr-2" aria-hidden="true"></i>
+        Cantidades por unidad
+      </h3>
+
+      <div class="overflow-x-auto rounded-xl border border-base-300">
+        <table class="table table-sm">
+          <caption class="sr-only">
+            Cantidades recolectadas por unidad de medida
+          </caption>
+
+          <thead class="bg-base-200">
+            <tr>
+              <th scope="col">Unidad</th>
+              <th scope="col" class="text-right">Cantidad</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (cantidad of cantidadesPorUnidad; track cantidad.unidad) {
+            <tr class="hover">
+              <td>{{ cantidad.unidad }}</td>
+
+              <td class="text-right font-semibold">
+                {{ cantidad.cantidad | number:'1.0-2' }}
+              </td>
+            </tr>
+            } @empty {
+            <tr>
+              <td colspan="2" class="py-6 text-center text-base-content/60">
+                Sin cantidades registradas para este período.
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </article>
+  </div>
+  }
+</section>

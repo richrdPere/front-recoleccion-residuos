@@ -142,7 +142,6 @@ export class UsuarioFormComponent implements OnChanges {
   // ============================================================
   // INPUTS / OUTPUTS
   // ============================================================
-
   @Input() mostrarModal = false;
   @Input() modoEdicion = false;
   @Input() usuarioSeleccionado: UsuarioPaginadoItem | null = null;
@@ -159,7 +158,6 @@ export class UsuarioFormComponent implements OnChanges {
   // ============================================================
 
   private readonly destroyRef = inject(DestroyRef);
-
   readonly formUsuario: FormGroup;
 
   isLoading = false;

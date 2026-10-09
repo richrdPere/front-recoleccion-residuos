@@ -1,0 +1,435 @@
+@if (mostrarModal) {
+  <div class="modal modal-open">
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center
+             bg-black/30 p-4 sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="zona-info-title"
+      [attr.aria-busy]="loading"
+      (click)="cerrarModal()"
+    >
+      <section
+        class="relative flex max-h-[92vh] w-full flex-col
+               overflow-hidden rounded-2xl border border-base-300
+               bg-base-100 shadow-2xl"
+        [ngClass]="modalWidthClass"
+        (click)="$event.stopPropagation()"
+      >
+        <!-- HEADER -->
+        <header
+          class="flex shrink-0 items-start justify-between gap-4
+                 border-b border-base-300 bg-base-200/50
+                 px-5 py-4 sm:px-6"
+        >
+          <div class="flex min-w-0 items-center gap-3">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center
+                     justify-center rounded-2xl
+                     bg-primary/10 text-primary"
+            >
+              <i
+                class="fa-solid fa-map-location-dot text-xl"
+                aria-hidden="true"
+              ></i>
+            </div>
+
+            <div class="min-w-0">
+              <h2
+                id="zona-info-title"
+                class="text-lg font-bold sm:text-xl"
+              >
+                Información de la zona
+              </h2>
+
+              <p class="mt-1 text-sm text-base-content/60">
+                Datos generales, delimitación y rutas asociadas.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-circle btn-ghost btn-sm shrink-0"
+            aria-label="Cerrar detalle de zona"
+            (click)="cerrarModal()"
+          >
+            <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+          </button>
+        </header>
+
+        <!-- CONTENIDO CON SCROLL -->
+        <div
+          class="min-h-0 flex-1 overflow-y-auto overscroll-contain
+                 px-5 py-5 sm:px-6 sm:py-6"
+        >
+          @if (loading) {
+            <div class="space-y-5" role="status">
+              <span class="sr-only">Cargando información de la zona.</span>
+
+              <div class="skeleton h-8 w-2/3"></div>
+
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="skeleton h-20"></div>
+                <div class="skeleton h-20"></div>
+              </div>
+
+              <div class="skeleton h-72 w-full"></div>
+              <div class="skeleton h-24 w-full"></div>
+            </div>
+          } @else if (errorCarga) {
+            <div
+              class="flex flex-col items-center gap-4
+                     rounded-xl border border-error/20
+                     bg-error/5 px-6 py-10 text-center"
+              role="alert"
+            >
+              <i
+                class="fa-solid fa-circle-exclamation text-3xl text-error"
+                aria-hidden="true"
+              ></i>
+
+              <div>
+                <h3 class="font-semibold">
+                  No se pudo cargar la zona
+                </h3>
+
+                <p class="mt-2 text-sm text-base-content/65">
+                  {{ errorCarga }}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                class="btn btn-outline btn-sm"
+                (click)="cargarDatosZona()"
+              >
+                <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                Reintentar
+              </button>
+            </div>
+          } @else if (zona; as detalle) {
+            <div class="space-y-6">
+              <!-- INFORMACIÓN GENERAL -->
+              <section
+                class="rounded-xl border border-base-300 p-4 sm:p-5"
+                aria-labelledby="zona-datos-title"
+              >
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <span
+                      class="badge badge-primary badge-outline font-mono"
+                    >
+                      {{ detalle.codigo }}
+                    </span>
+
+                    <h3
+                      id="zona-datos-title"
+                      class="mt-3 wrap-break-word text-xl font-bold"
+                    >
+                      {{ detalle.nombre }}
+                    </h3>
+                  </div>
+
+                  <span
+                    class="badge"
+                    [ngClass]="detalle.estado
+                      ? 'badge-success'
+                      : 'badge-error'"
+                  >
+                    {{ detalle.estado ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </div>
+
+                <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <div class="sm:col-span-2">
+                    <dt class="text-sm text-base-content/60">
+                      Descripción
+                    </dt>
+
+                    <dd class="mt-1 whitespace-pre-line wrap-break-word">
+                      {{ detalle.descripcion || 'Sin descripción registrada.' }}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt class="text-sm text-base-content/60">
+                      Color de identificación
+                    </dt>
+
+                    <dd class="mt-2 flex items-center gap-2">
+                      <span
+                        class="h-6 w-6 rounded-md border border-base-300"
+                        [style.background-color]="detalle.color || '#2563eb'"
+                        aria-hidden="true"
+                      ></span>
+
+                      <span class="font-mono text-sm">
+                        {{ detalle.color || 'Sin color registrado' }}
+                      </span>
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt class="text-sm text-base-content/60">
+                      Rutas asociadas
+                    </dt>
+
+                    <dd class="mt-1 font-semibold">
+                      {{ detalle.rutas.length }}
+                    </dd>
+                  </div>
+                </dl>
+              </section>
+
+              <!-- MAPA -->
+              <section aria-labelledby="zona-mapa-title">
+                <div class="mb-3">
+                  <h3
+                    id="zona-mapa-title"
+                    class="flex items-center gap-2 font-semibold"
+                  >
+                    <i
+                      class="fa-solid fa-map text-primary"
+                      aria-hidden="true"
+                    ></i>
+                    Delimitación de la zona
+                  </h3>
+
+                  <p class="mt-1 text-sm text-base-content/60">
+                    Polígono registrado para el área de recolección.
+                  </p>
+                </div>
+
+                @if (detalle.poligono_geojson) {
+                  <div
+                    class="overflow-hidden rounded-xl
+                           border border-base-300"
+                  >
+                    <mapa-base [zonaVisual]="detalle"></mapa-base>
+                  </div>
+                } @else {
+                  <div
+                    class="rounded-xl border border-dashed
+                           border-base-300 bg-base-200/40
+                           px-5 py-10 text-center"
+                  >
+                    <i
+                      class="fa-solid fa-draw-polygon
+                             text-3xl text-base-content/40"
+                      aria-hidden="true"
+                    ></i>
+
+                    <p class="mt-3 text-sm text-base-content/65">
+                      Esta zona no tiene un polígono registrado.
+                    </p>
+                  </div>
+                }
+
+                <dl
+                  class="mt-3 grid grid-cols-1 gap-3
+                         rounded-xl bg-base-200/50 p-4 sm:grid-cols-2"
+                >
+                  <div>
+                    <dt class="text-xs text-base-content/60">
+                      Latitud del centro
+                    </dt>
+                    <dd class="mt-1 break-all font-mono text-sm">
+                      {{ detalle.centro_latitud ?? 'No registrada' }}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt class="text-xs text-base-content/60">
+                      Longitud del centro
+                    </dt>
+                    <dd class="mt-1 break-all font-mono text-sm">
+                      {{ detalle.centro_longitud ?? 'No registrada' }}
+                    </dd>
+                  </div>
+                </dl>
+              </section>
+
+              <!-- RUTAS ASOCIADAS -->
+              <section aria-labelledby="zona-rutas-title">
+                <div class="mb-3 flex items-center gap-2">
+                  <h3
+                    id="zona-rutas-title"
+                    class="flex items-center gap-2 font-semibold"
+                  >
+                    <i
+                      class="fa-solid fa-route text-primary"
+                      aria-hidden="true"
+                    ></i>
+                    Rutas asociadas
+                  </h3>
+
+                  <span class="badge badge-neutral badge-sm">
+                    {{ detalle.rutas.length }}
+                  </span>
+                </div>
+
+                @if (detalle.rutas.length > 0) {
+                  <div
+                    class="overflow-x-auto rounded-xl
+                           border border-base-300"
+                  >
+                    <table class="table table-zebra">
+                      <caption class="sr-only">
+                        Rutas asociadas a {{ detalle.nombre }}
+                      </caption>
+
+                      <thead class="bg-base-200">
+                        <tr>
+                          <th scope="col">Código</th>
+                          <th scope="col">Nombre</th>
+                          <th scope="col">Color</th>
+                          <th scope="col">Estado de ruta</th>
+                          <th scope="col">Registro</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        @for (ruta of detalle.rutas; track ruta.id_ruta) {
+                          <tr>
+                            <td class="whitespace-nowrap font-mono">
+                              {{ ruta.codigo }}
+                            </td>
+
+                            <td class="min-w-40 font-medium">
+                              {{ ruta.nombre }}
+                            </td>
+
+                            <td>
+                              <div class="flex items-center gap-2">
+                                <span
+                                  class="h-4 w-4 shrink-0 rounded
+                                         border border-base-300"
+                                  [style.background-color]="ruta.color || '#2563eb'"
+                                  aria-hidden="true"
+                                ></span>
+
+                                <span class="whitespace-nowrap font-mono text-xs">
+                                  {{ ruta.color || 'Sin color' }}
+                                </span>
+                              </div>
+                            </td>
+
+                            <td>
+                              <span class="badge badge-outline whitespace-nowrap">
+                                {{ ruta.estado_ruta }}
+                              </span>
+                            </td>
+
+                            <td>
+                              <span
+                                class="badge badge-sm"
+                                [ngClass]="ruta.estado
+                                  ? 'badge-success'
+                                  : 'badge-error'"
+                              >
+                                {{ ruta.estado ? 'Activo' : 'Inactivo' }}
+                              </span>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                } @else {
+                  <div
+                    class="rounded-xl border border-dashed
+                           border-base-300 px-5 py-8 text-center
+                           text-sm text-base-content/60"
+                  >
+                    No hay rutas asociadas a esta zona.
+                  </div>
+                }
+              </section>
+
+              <!-- INFORMACIÓN DEL REGISTRO -->
+              <section
+                class="rounded-xl border border-base-300 p-4 sm:p-5"
+                aria-labelledby="zona-registro-title"
+              >
+                <h3
+                  id="zona-registro-title"
+                  class="flex items-center gap-2 font-semibold"
+                >
+                  <i
+                    class="fa-solid fa-clock-rotate-left text-primary"
+                    aria-hidden="true"
+                  ></i>
+                  Información del registro
+                </h3>
+
+                <dl class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <dt class="text-sm text-base-content/60">
+                      ID de zona
+                    </dt>
+                    <dd class="mt-1 font-mono">
+                      {{ detalle.id_zona }}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt class="text-sm text-base-content/60">
+                      Fecha de creación
+                    </dt>
+                    <dd class="mt-1">
+                      {{ detalle.created_at | date:'dd/MM/yyyy HH:mm' }}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt class="text-sm text-base-content/60">
+                      Última actualización
+                    </dt>
+                    <dd class="mt-1">
+                      {{ detalle.updated_at | date:'dd/MM/yyyy HH:mm' }}
+                    </dd>
+                  </div>
+
+                  @if (detalle.deleted_at) {
+                    <div>
+                      <dt class="text-sm text-base-content/60">
+                        Fecha de eliminación
+                      </dt>
+                      <dd class="mt-1 text-error">
+                        {{ detalle.deleted_at | date:'dd/MM/yyyy HH:mm' }}
+                      </dd>
+                    </div>
+                  }
+                </dl>
+              </section>
+            </div>
+          } @else {
+            <div class="py-12 text-center text-base-content/60">
+              No hay información disponible de la zona.
+            </div>
+          }
+        </div>
+
+        <!-- FOOTER -->
+        <footer
+          class="flex shrink-0 flex-wrap items-center
+                 justify-between gap-3 border-t border-base-300
+                 bg-base-200/30 px-5 py-4 sm:px-6"
+        >
+          <p class="text-xs text-base-content/60">
+            Consulta del detalle de la zona.
+          </p>
+
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            (click)="cerrarModal()"
+          >
+            Cerrar
+          </button>
+        </footer>
+      </section>
+    </div>
+  </div>
+}

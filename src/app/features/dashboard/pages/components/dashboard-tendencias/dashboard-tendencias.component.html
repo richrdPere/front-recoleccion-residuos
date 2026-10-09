@@ -1,0 +1,262 @@
+<section class="space-y-5 rounded-xl border border-base-300
+         bg-base-100 p-5" aria-labelledby="dashboard-tendencias-titulo" [attr.aria-busy]="isLoading">
+  <!-- ENCABEZADO -->
+  <header class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h2 id="dashboard-tendencias-titulo" class="text-lg font-bold">
+        <i class="fa-solid fa-chart-line mr-2 text-primary" aria-hidden="true"></i>
+        Tendencias
+      </h2>
+
+      <p class="mt-1 text-sm text-base-content/60">
+        Evolución de las programaciones y la atención de puntos.
+      </p>
+    </div>
+
+    <button type="button" class="btn btn-sm btn-outline" [disabled]="isLoading" (click)="getDashboardTendencias()">
+      <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+      Actualizar
+    </button>
+  </header>
+
+  @if (isLoading) {
+  <!-- LOADING -->
+  <div role="status">
+    <p class="sr-only">Cargando tendencias...</p>
+
+    <div class="skeleton h-64 w-full"></div>
+    <div class="skeleton mt-5 h-40 w-full"></div>
+  </div>
+  } @else if (errorCarga) {
+  <!-- ERROR -->
+  <div class="alert alert-error" role="alert">
+    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+
+    <span>{{ errorCarga }}</span>
+
+    <button type="button" class="btn btn-sm" (click)="getDashboardTendencias()">
+      Reintentar
+    </button>
+  </div>
+  } @else if (dashboard; as datos) {
+  <!-- PERÍODO -->
+  @if (camposPeriodo.length > 0) {
+  <dl class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+    @for (campo of camposPeriodo; track campo.clave) {
+    <div class="flex gap-1">
+      <dt class="text-base-content/60">
+        {{ campo.etiqueta }}:
+      </dt>
+
+      <dd class="font-medium">{{ campo.valor }}</dd>
+    </div>
+    }
+  </dl>
+  }
+
+  <!-- FILTROS APLICADOS -->
+  <div class="flex flex-wrap gap-2">
+    <span class="badge badge-outline h-auto py-2">
+      Zona:
+      {{
+      datos.periodo.id_zona !== null
+      ? '#' + datos.periodo.id_zona
+      : 'Todas'
+      }}
+    </span>
+
+    <span class="badge badge-outline h-auto py-2">
+      Ruta:
+      {{
+      datos.periodo.id_ruta !== null
+      ? '#' + datos.periodo.id_ruta
+      : 'Todas'
+      }}
+    </span>
+
+    <span class="badge badge-outline h-auto py-2">
+      Vehículo:
+      {{
+      datos.periodo.id_vehiculo !== null
+      ? '#' + datos.periodo.id_vehiculo
+      : 'Todos'
+      }}
+    </span>
+
+    @if (datos.agrupacion) {
+    <span class="badge badge-outline h-auto py-2">
+      Agrupación: {{ datos.agrupacion }}
+    </span>
+    }
+  </div>
+
+  @if (tendencias.length === 0) {
+  <div class="rounded-xl border border-dashed
+               border-base-300 p-10 text-center">
+    <i class="fa-solid fa-chart-line mb-3 text-3xl
+                 text-base-content/30" aria-hidden="true"></i>
+
+    <p class="text-sm text-base-content/60">
+      No se encontraron tendencias para los filtros aplicados.
+    </p>
+  </div>
+  } @else {
+  <!-- GRÁFICA -->
+  <article class="rounded-xl border border-base-300 p-4">
+    <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+      <h3 class="font-semibold">{{ tituloGrafica }}</h3>
+
+      <div>
+        <label for="tendencias-metrica" class="mb-1 block text-xs text-base-content/60">
+          Indicador
+        </label>
+
+        <select id="tendencias-metrica" class="select select-bordered select-sm" [(ngModel)]="metricaSeleccionada"
+          (ngModelChange)="onMetricaChange()">
+          @for (metrica of metricas; track metrica.clave) {
+          <option [value]="metrica.clave">
+            {{ metrica.etiqueta }}
+          </option>
+          }
+        </select>
+      </div>
+    </div>
+
+    @if (puntosGrafica.length > 0) {
+    <div class="overflow-x-auto">
+      <svg viewBox="0 0 800 260" class="w-full min-w-[640px]" role="img"
+        [attr.aria-label]="'Evolución de ' + tituloGrafica">
+        <title>
+          Evolución de {{ tituloGrafica }} por período
+        </title>
+
+        <!-- LÍNEAS Y VALORES DEL EJE Y -->
+        @for (marca of marcasEjeY; track marca.y) {
+        <line x1="55" x2="780" [attr.y1]="marca.y" [attr.y2]="marca.y" stroke="currentColor"
+          class="text-base-content/15"></line>
+
+        <text x="45" [attr.y]="marca.y + 4" text-anchor="end" fill="currentColor" class="text-base-content/60"
+          font-size="11">
+          {{ marca.valor | number:'1.0-2' }}{{ esPorcentaje ? '%' : '' }}
+        </text>
+        }
+
+        <!-- LÍNEA DE EVOLUCIÓN -->
+        <polyline [attr.points]="lineaGrafica" fill="none" stroke="currentColor" stroke-width="3"
+          stroke-linejoin="round" stroke-linecap="round" class="text-primary"></polyline>
+
+        <!-- PUNTOS -->
+        @for (punto of puntosGrafica; track $index) {
+        <circle [attr.cx]="punto.x" [attr.cy]="punto.y" r="4" fill="currentColor" class="text-primary">
+          <title>
+            {{ punto.periodo }}:
+            {{ punto.valor | number:'1.0-2' }}{{ esPorcentaje ? '%' : '' }}
+          </title>
+        </circle>
+        }
+
+        <!-- ETIQUETAS DEL EJE X -->
+        @for (etiqueta of etiquetasGrafica; track $index) {
+        <text [attr.x]="etiqueta.x" y="240" text-anchor="middle" fill="currentColor" class="text-base-content/60"
+          font-size="11">
+          {{ etiqueta.periodo }}
+        </text>
+        }
+      </svg>
+    </div>
+    } @else {
+    <p class="text-sm text-base-content/60">
+      No hay valores válidos para el indicador seleccionado.
+    </p>
+    }
+  </article>
+
+  <!-- TABLA DE DETALLE -->
+  <div class="overflow-x-auto rounded-xl border border-base-300">
+    <table class="table table-sm">
+      <caption class="sr-only">
+        Detalle de tendencias por período
+      </caption>
+
+      <thead class="bg-base-200">
+        <tr>
+          <th scope="col">Período</th>
+          <th scope="col" class="text-right">Programaciones</th>
+          <th scope="col" class="text-right">Iniciadas</th>
+          <th scope="col" class="text-right">Finalizadas</th>
+          <th scope="col" class="text-right">Canceladas</th>
+          <th scope="col" class="text-right">Puntos programados</th>
+          <th scope="col" class="text-right">Puntos atendidos</th>
+          <th scope="col" class="text-right">Cumplimiento</th>
+          <th scope="col" class="text-right">Avance de recolección</th>
+          <th scope="col">Cantidades</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (serie of tendencias; track $index) {
+        <tr class="hover">
+          <td class="whitespace-nowrap font-semibold">
+            {{ serie.periodo }}
+          </td>
+
+          <td class="text-right">
+            {{ serie.programaciones | number:'1.0-0' }}
+          </td>
+
+          <td class="text-right">
+            {{ serie.iniciadas | number:'1.0-0' }}
+          </td>
+
+          <td class="text-right">
+            {{ serie.finalizadas | number:'1.0-0' }}
+          </td>
+
+          <td class="text-right">
+            {{ serie.canceladas | number:'1.0-0' }}
+          </td>
+
+          <td class="text-right">
+            {{ serie.puntos_programados | number:'1.0-0' }}
+          </td>
+
+          <td class="text-right">
+            {{ serie.puntos_atendidos | number:'1.0-0' }}
+          </td>
+
+          <td class="whitespace-nowrap text-right">
+            {{ serie.cumplimiento_porcentaje | number:'1.0-2' }}%
+          </td>
+
+          <td class="whitespace-nowrap text-right">
+            {{ serie.avance_recoleccion_porcentaje | number:'1.0-2' }}%
+          </td>
+
+          <td class="min-w-36">
+            <dl class="space-y-1 text-xs">
+              @for (
+              cantidad of serie.cantidadesVista;
+              track cantidad.unidad
+              ) {
+              <div class="flex justify-between gap-3">
+                <dt>{{ cantidad.unidad }}</dt>
+
+                <dd class="font-semibold">
+                  {{ cantidad.cantidad | number:'1.0-2' }}
+                </dd>
+              </div>
+              } @empty {
+              <span class="text-base-content/60">
+                Sin registros
+              </span>
+              }
+            </dl>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+  }
+</section>

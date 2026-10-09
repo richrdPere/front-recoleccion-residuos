@@ -1,0 +1,219 @@
+@if (mostrarModal) {
+<div class="modal modal-open">
+  <section class="modal-box w-11/12 max-w-3xl" role="dialog" aria-modal="true"
+    aria-labelledby="ruta-horario-form-titulo" [attr.aria-busy]="isSaving" (keydown.escape)="cerrarModal()">
+    <!-- ENCABEZADO -->
+    <header class="flex items-start justify-between gap-4
+               border-b border-base-300 pb-4">
+      <div>
+        <h2 id="ruta-horario-form-titulo" class="text-xl font-bold">
+          <i class="fa-solid fa-clock mr-2 text-primary" aria-hidden="true"></i>
+
+          {{ modoEdicion ? 'Editar horario' : 'Nuevo horario' }}
+        </h2>
+
+        <p class="mt-1 text-sm text-base-content/60">
+          {{
+          modoEdicion
+          ? 'Actualiza las horas y la observación del horario.'
+          : 'Registra un horario para la ruta seleccionada.'
+          }}
+        </p>
+
+        <span class="badge badge-outline mt-2">
+          Ruta #{{ ruta_id }}
+        </span>
+      </div>
+
+      <button type="button" class="btn btn-sm btn-circle btn-ghost" aria-label="Cerrar formulario" [disabled]="isSaving"
+        (click)="cerrarModal()">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <!-- FORMULARIO -->
+    <form [formGroup]="form" (ngSubmit)="guardarHorario()" class="mt-5">
+      @if (errorFormulario) {
+      <div class="alert alert-error mb-5" role="alert">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+        <span>{{ errorFormulario }}</span>
+      </div>
+      }
+
+      @if (modoEdicion) {
+      <p class="mb-5 rounded-xl bg-base-200 p-3
+                   text-sm text-base-content/70">
+        El día, la frecuencia y las fechas de vigencia
+        se conservan al editar.
+      </p>
+      }
+
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <!-- DÍA -->
+        <div>
+          <label for="horario-dia" class="mb-2 block text-sm font-semibold">
+            Día de la semana
+            <span class="text-error">*</span>
+          </label>
+
+          <input id="horario-dia" type="text" formControlName="dia_semana" class="input input-bordered w-full"
+            placeholder="Día de la semana" [class.input-error]="campoInvalido('dia_semana')" />
+
+          @if (campoInvalido('dia_semana')) {
+          <p class="mt-1 text-xs text-error">
+            Ingresa el día de la semana.
+          </p>
+          }
+        </div>
+
+        <!-- FRECUENCIA -->
+        <div>
+          <label for="horario-frecuencia" class="mb-2 block text-sm font-semibold">
+            Frecuencia
+            <span class="text-error">*</span>
+          </label>
+
+          <input id="horario-frecuencia" type="text" formControlName="frecuencia" class="input input-bordered w-full"
+            placeholder="Frecuencia del horario" [class.input-error]="campoInvalido('frecuencia')" />
+
+          @if (campoInvalido('frecuencia')) {
+          <p class="mt-1 text-xs text-error">
+            Ingresa la frecuencia.
+          </p>
+          }
+        </div>
+
+        <!-- HORA INICIO -->
+        <div>
+          <label for="horario-inicio" class="mb-2 block text-sm font-semibold">
+            Hora de inicio
+            <span class="text-error">*</span>
+          </label>
+
+          <input id="horario-inicio" type="time" step="1" formControlName="hora_inicio"
+            class="input input-bordered w-full" [class.input-error]="campoInvalido('hora_inicio')" />
+
+          @if (campoInvalido('hora_inicio')) {
+          <p class="mt-1 text-xs text-error">
+            Ingresa una hora de inicio válida.
+          </p>
+          }
+        </div>
+
+        <!-- HORA FIN -->
+        <div>
+          <label for="horario-fin" class="mb-2 block text-sm font-semibold">
+            Hora de finalización
+            <span class="text-error">*</span>
+          </label>
+
+          <input id="horario-fin" type="time" step="1" formControlName="hora_fin" class="input input-bordered w-full"
+            [class.input-error]="campoInvalido('hora_fin')" />
+
+          @if (campoInvalido('hora_fin')) {
+          <p class="mt-1 text-xs text-error">
+            Ingresa una hora de finalización válida.
+          </p>
+          }
+        </div>
+
+        <!-- FECHA DESDE -->
+        <div>
+          <label for="horario-fecha-desde" class="mb-2 block text-sm font-semibold">
+            Vigencia desde
+            <span class="text-error">*</span>
+          </label>
+
+          <input id="horario-fecha-desde" type="date" formControlName="fecha_vigencia_desde"
+            class="input input-bordered w-full" [class.input-error]="
+                campoInvalido('fecha_vigencia_desde')
+              " />
+
+          @if (campoInvalido('fecha_vigencia_desde')) {
+          <p class="mt-1 text-xs text-error">
+            Ingresa una fecha inicial válida.
+          </p>
+          }
+        </div>
+
+        <!-- FECHA HASTA -->
+        <div>
+          <label for="horario-fecha-hasta" class="mb-2 block text-sm font-semibold">
+            Vigencia hasta
+          </label>
+
+          <input id="horario-fecha-hasta" type="date" formControlName="fecha_vigencia_hasta"
+            class="input input-bordered w-full" [attr.min]="
+                form.controls.fecha_vigencia_desde.value || null
+              " [class.input-error]="
+                campoInvalido('fecha_vigencia_hasta') ||
+                (
+                  form.hasError('rangoFechasInvalido') &&
+                  form.controls.fecha_vigencia_hasta.touched
+                )
+              " />
+
+          @if (!modoEdicion) {
+          <p class="mt-1 text-xs text-base-content/60">
+            Déjalo vacío si no tiene fecha de finalización.
+          </p>
+          }
+
+          @if (campoInvalido('fecha_vigencia_hasta')) {
+          <p class="mt-1 text-xs text-error">
+            Ingresa una fecha final válida.
+          </p>
+          }
+
+          @if (
+          form.hasError('rangoFechasInvalido') &&
+          form.controls.fecha_vigencia_hasta.touched
+          ) {
+          <p class="mt-1 text-xs text-error">
+            La fecha final no puede ser anterior a la inicial.
+          </p>
+          }
+        </div>
+
+        <!-- OBSERVACIÓN -->
+        <div class="md:col-span-2">
+          <label for="horario-observacion" class="mb-2 block text-sm font-semibold">
+            Observación
+          </label>
+
+          <textarea id="horario-observacion" formControlName="observacion" class="textarea textarea-bordered w-full"
+            rows="3" placeholder="Indicaciones u observaciones del horario..."></textarea>
+        </div>
+      </div>
+
+      <!-- BOTONES -->
+      <footer class="mt-6 flex justify-end gap-3
+                 border-t border-base-300 pt-4">
+        <button type="button" class="btn" [disabled]="isSaving" (click)="cerrarModal()">
+          Cancelar
+        </button>
+
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+          @if (isSaving) {
+          <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+          Guardando...
+          } @else {
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+          {{
+          modoEdicion
+          ? 'Actualizar horario'
+          : 'Guardar horario'
+          }}
+          }
+        </button>
+      </footer>
+    </form>
+  </section>
+
+  <div class="modal-backdrop" aria-hidden="true">
+    <button type="button" tabindex="-1" aria-label="Cerrar" [disabled]="isSaving" (click)="cerrarModal()">
+      Cerrar
+    </button>
+  </div>
+</div>
+}

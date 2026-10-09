@@ -31,7 +31,6 @@ export class DashboardService {
   private readonly API_GET_DASHBOARD_RENDIMIENTO_RUTAS: string = this.API_BASE + '/rendimiento-rutas';
   private readonly API_GET_DASHBOARD_TENDENCIAS: string = this.API_BASE + '/tendencias';
 
-
   constructor(
     private readonly http: HttpClient,
     private readonly authStorage: AuthStorageService

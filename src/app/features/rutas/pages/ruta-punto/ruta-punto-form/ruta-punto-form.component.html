@@ -1,0 +1,282 @@
+@if (mostrarModal) {
+  <div class="modal modal-open">
+    <section
+      class="modal-box w-11/12 max-w-3xl"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ruta-punto-form-titulo"
+      [attr.aria-busy]="isSaving"
+      (keydown.escape)="cerrarModal()"
+    >
+      <!-- ENCABEZADO -->
+      <header
+        class="flex items-start justify-between gap-4
+               border-b border-base-300 pb-4"
+      >
+        <div>
+          <h2
+            id="ruta-punto-form-titulo"
+            class="text-xl font-bold"
+          >
+            <i
+              class="fa-solid fa-location-dot mr-2 text-primary"
+              aria-hidden="true"
+            ></i>
+
+            {{ modoEdicion ? 'Editar punto' : 'Nuevo punto' }}
+          </h2>
+
+          <p class="mt-1 text-sm text-base-content/60">
+            {{
+              modoEdicion
+                ? 'Actualiza los datos del punto seleccionado.'
+                : 'Registra un punto para esta versión de ruta.'
+            }}
+          </p>
+
+          <span class="badge badge-outline mt-2">
+            Versión #{{ idRutaVersion }}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-sm btn-circle btn-ghost"
+          aria-label="Cerrar formulario"
+          [disabled]="isSaving"
+          (click)="cerrarModal()"
+        >
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <!-- FORMULARIO -->
+      <form
+        [formGroup]="form"
+        (ngSubmit)="guardarPunto()"
+        class="mt-5"
+      >
+        @if (errorFormulario) {
+          <div class="alert alert-error mb-5" role="alert">
+            <i
+              class="fa-solid fa-circle-exclamation"
+              aria-hidden="true"
+            ></i>
+            <span>{{ errorFormulario }}</span>
+          </div>
+        }
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <!-- CÓDIGO -->
+          <div>
+            <label
+              for="punto-codigo"
+              class="mb-2 block text-sm font-semibold"
+            >
+              Código <span class="text-error">*</span>
+            </label>
+
+            <input
+              id="punto-codigo"
+              type="text"
+              formControlName="codigo"
+              class="input input-bordered w-full"
+              placeholder="Ej. PTO-001"
+              [class.input-error]="campoInvalido('codigo')"
+            />
+
+            @if (campoInvalido('codigo')) {
+              <p class="mt-1 text-xs text-error">
+                Ingresa el código del punto.
+              </p>
+            }
+          </div>
+
+          <!-- NOMBRE -->
+          <div>
+            <label
+              for="punto-nombre"
+              class="mb-2 block text-sm font-semibold"
+            >
+              Nombre <span class="text-error">*</span>
+            </label>
+
+            <input
+              id="punto-nombre"
+              type="text"
+              formControlName="nombre"
+              class="input input-bordered w-full"
+              placeholder="Nombre del punto"
+              [class.input-error]="campoInvalido('nombre')"
+            />
+
+            @if (campoInvalido('nombre')) {
+              <p class="mt-1 text-xs text-error">
+                Ingresa el nombre del punto.
+              </p>
+            }
+          </div>
+
+          <!-- TIPO -->
+          <div class="md:col-span-2">
+            <label
+              for="punto-tipo"
+              class="mb-2 block text-sm font-semibold"
+            >
+              Tipo de punto <span class="text-error">*</span>
+            </label>
+
+            <select
+              id="punto-tipo"
+              formControlName="tipo_punto"
+              class="select select-bordered w-full"
+              [class.select-error]="campoInvalido('tipo_punto')"
+            >
+              @for (tipo of tiposPunto; track tipo) {
+                <option [value]="tipo">{{ tipo }}</option>
+              }
+            </select>
+
+            @if (campoInvalido('tipo_punto')) {
+              <p class="mt-1 text-xs text-error">
+                Selecciona un tipo de punto válido.
+              </p>
+            }
+          </div>
+
+          <!-- CAMPOS NUMÉRICOS -->
+          @for (config of camposNumericos; track config.campo) {
+            <div>
+              <label
+                [for]="'punto-' + config.campo"
+                class="mb-2 block text-sm font-semibold"
+              >
+                {{ config.etiqueta }}
+                <span class="text-error">*</span>
+              </label>
+
+              <input
+                [id]="'punto-' + config.campo"
+                type="number"
+                [formControlName]="config.campo"
+                class="input input-bordered w-full"
+                [attr.min]="config.min"
+                [attr.max]="config.max"
+                [attr.step]="config.step"
+                [class.input-error]="campoInvalido(config.campo)"
+                [attr.aria-invalid]="campoInvalido(config.campo)"
+                [attr.aria-describedby]="
+                  campoInvalido(config.campo)
+                    ? 'error-' + config.campo
+                    : null
+                "
+              />
+
+              @if (campoInvalido(config.campo)) {
+                <p
+                  [id]="'error-' + config.campo"
+                  class="mt-1 text-xs text-error"
+                >
+                  {{ mensajeNumerico(config.campo) }}
+                </p>
+              }
+            </div>
+          }
+
+          <!-- DESCRIPCIÓN -->
+          <div class="md:col-span-2">
+            <label
+              for="punto-descripcion"
+              class="mb-2 block text-sm font-semibold"
+            >
+              Descripción
+            </label>
+
+            <textarea
+              id="punto-descripcion"
+              formControlName="descripcion"
+              class="textarea textarea-bordered w-full"
+              rows="3"
+              placeholder="Referencia o indicaciones del punto..."
+            ></textarea>
+          </div>
+
+          <!-- OBLIGATORIO -->
+          <div
+            class="rounded-xl border border-base-300
+                   bg-base-200/50 p-4 md:col-span-2"
+          >
+            <label
+              for="punto-obligatorio"
+              class="flex cursor-pointer items-start gap-3"
+            >
+              <input
+                id="punto-obligatorio"
+                type="checkbox"
+                formControlName="obligatorio"
+                class="checkbox checkbox-primary mt-1"
+              />
+
+              <span>
+                <span class="block text-sm font-semibold">
+                  Punto obligatorio
+                </span>
+
+                <span
+                  class="mt-1 block text-xs text-base-content/60"
+                >
+                  Marca esta opción si el punto es obligatorio
+                  dentro del recorrido.
+                </span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- BOTONES -->
+        <footer
+          class="mt-6 flex justify-end gap-3
+                 border-t border-base-300 pt-4"
+        >
+          <button
+            type="button"
+            class="btn"
+            [disabled]="isSaving"
+            (click)="cerrarModal()"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="isSaving"
+          >
+            @if (isSaving) {
+              <span
+                class="loading loading-spinner loading-sm"
+                aria-hidden="true"
+              ></span>
+              Guardando...
+            } @else {
+              <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+              {{ modoEdicion ? 'Actualizar punto' : 'Guardar punto' }}
+            }
+          </button>
+        </footer>
+      </form>
+    </section>
+
+    <div class="modal-backdrop" aria-hidden="true">
+      <button
+        type="button"
+        tabindex="-1"
+        aria-label="Cerrar"
+        [disabled]="isSaving"
+        (click)="cerrarModal()"
+      >
+        Cerrar
+      </button>
+    </div>
+  </div>
+}

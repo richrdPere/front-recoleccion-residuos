@@ -28,6 +28,7 @@ export class RecoleccionesService {
   private readonly API_ANULAR_EVIDENCIA: string = this.API_BASE + '/evidencias/';
   private readonly API_GET_EVIDENCIAS: string = this.API_BASE + '/';
   private readonly API_ANULAR_RECOLECCION: string = this.API_BASE + '/';
+  private readonly API_GET_RECOLECCION_BY_ID: string = this.API_BASE + '/view/';
   private readonly API_GET_CAPACIDAD_RECOLECCION: string = this.API_BASE + '/capacidad/';
 
   constructor(
@@ -184,7 +185,7 @@ export class RecoleccionesService {
 
     return this.http
       .get<GetRecoleccionByIdResponse>(
-        `${this.API_BASE}/view/${idRecoleccion}`,
+        `${this.API_GET_RECOLECCION_BY_ID}${idRecoleccion}`,
         { headers },
       )
       .pipe(

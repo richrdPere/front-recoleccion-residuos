@@ -28,7 +28,7 @@ export class ProgramacionesService {
   private readonly API_UPDATE_PROGRAMACION: string = this.API_BASE + '/update/';
   private readonly API_CANCEL_PROGRAMACION: string = this.API_BASE + '/cancelar/';
   private readonly API_GET_PROGRAMACION_BY_ID: string = this.API_BASE + '/view/';
-  private readonly API_DELETE_PROGRAMACION: string = this.API_BASE + '/delete/';
+  // private readonly API_DELETE_PROGRAMACION: string = this.API_BASE + '/delete/';
 
   constructor(
     private readonly http: HttpClient,

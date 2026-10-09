@@ -1,0 +1,224 @@
+@if (mostrarModal) {
+<div class="modal modal-open">
+  <section class="modal-box w-11/12 max-w-4xl" role="dialog" aria-modal="true"
+    aria-labelledby="ruta-version-form-titulo" [attr.aria-busy]="guardando()" (keydown.escape)="cerrarModal()">
+    <!-- ENCABEZADO -->
+    <header class="flex items-start justify-between gap-4
+               border-b border-base-300 pb-4">
+      <div>
+        <h2 id="ruta-version-form-titulo" class="text-xl font-bold">
+          <i class="fa-solid fa-code-branch mr-2 text-primary" aria-hidden="true"></i>
+          Nueva versión de ruta
+        </h2>
+
+        <p class="mt-1 text-sm text-base-content/60">
+          Registra el trazado y la vigencia de la versión.
+        </p>
+
+        <span class="badge badge-outline mt-2">
+          Ruta #{{ ruta_id }}
+        </span>
+      </div>
+
+      <button type="button" class="btn btn-sm btn-circle btn-ghost" aria-label="Cerrar formulario"
+        [disabled]="guardando()" (click)="cerrarModal()">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="guardar()" class="mt-5">
+      @if (error(); as mensaje) {
+      <div class="alert alert-error mb-5" role="alert">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+        <span>{{ mensaje }}</span>
+      </div>
+      }
+
+      <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+        <!-- GEOMETRÍA -->
+        <div class="md:col-span-2">
+          <label for="version-geometria" class="mb-2 block text-sm font-semibold">
+            Geometría de la ruta
+            <span class="text-error">*</span>
+          </label>
+
+          <textarea id="version-geometria" formControlName="geometria_geojson"
+            class="textarea textarea-bordered w-full font-mono text-sm" rows="8" spellcheck="false"
+            [placeholder]="ejemploGeometria" [class.textarea-error]="
+                campoInvalido('geometria_geojson')
+              " [attr.aria-invalid]="
+                campoInvalido('geometria_geojson')
+              " aria-describedby="version-geometria-ayuda"></textarea>
+
+          <p id="version-geometria-ayuda" class="mt-1 text-xs text-base-content/60">
+            Ingresa un GeoJSON LineString con al menos dos
+            ubicaciones distintas. Cada coordenada debe tener
+            el formato [longitud, latitud].
+          </p>
+
+          @if (campoInvalido('geometria_geojson')) {
+          <p class="mt-1 text-xs text-error">
+            @if (
+            form.controls.geometria_geojson.hasError('required')
+            ) {
+            La geometría es obligatoria.
+            } @else {
+            Ingresa un LineString válido con coordenadas
+            dentro de los rangos geográficos permitidos.
+            }
+          </p>
+          }
+        </div>
+
+        <!-- DISTANCIA -->
+        <div>
+          <label for="version-distancia" class="mb-2 block text-sm font-semibold">
+            Distancia estimada (km)
+            <span class="text-error">*</span>
+          </label>
+
+          <input id="version-distancia" type="number" formControlName="distancia_estimada_km"
+            class="input input-bordered w-full" min="0" step="any" placeholder="Ej. 8.5" [class.input-error]="
+                campoInvalido('distancia_estimada_km')
+              " />
+
+          @if (campoInvalido('distancia_estimada_km')) {
+          <p class="mt-1 text-xs text-error">
+            Ingresa una distancia mayor que cero.
+          </p>
+          }
+        </div>
+
+        <!-- DURACIÓN -->
+        <div>
+          <label for="version-duracion" class="mb-2 block text-sm font-semibold">
+            Duración estimada (min)
+            <span class="text-error">*</span>
+          </label>
+
+          <input id="version-duracion" type="number" formControlName="duracion_estimada_min"
+            class="input input-bordered w-full" min="0" step="any" placeholder="Ej. 90" [class.input-error]="
+                campoInvalido('duracion_estimada_min')
+              " />
+
+          @if (campoInvalido('duracion_estimada_min')) {
+          <p class="mt-1 text-xs text-error">
+            Ingresa una duración mayor que cero.
+          </p>
+          }
+        </div>
+
+        <!-- FECHA DESDE -->
+        <div>
+          <label for="version-fecha-desde" class="mb-2 block text-sm font-semibold">
+            Vigencia desde
+            <span class="text-error">*</span>
+          </label>
+
+          <input id="version-fecha-desde" type="date" formControlName="fecha_vigencia_desde"
+            class="input input-bordered w-full" [class.input-error]="
+                campoInvalido('fecha_vigencia_desde')
+              " />
+
+          @if (campoInvalido('fecha_vigencia_desde')) {
+          <p class="mt-1 text-xs text-error">
+            Ingresa una fecha de inicio válida.
+          </p>
+          }
+        </div>
+
+        <!-- FECHA HASTA -->
+        <div>
+          <label for="version-fecha-hasta" class="mb-2 block text-sm font-semibold">
+            Vigencia hasta
+          </label>
+
+          <input id="version-fecha-hasta" type="date" formControlName="fecha_vigencia_hasta"
+            class="input input-bordered w-full" [attr.min]="
+                form.controls.fecha_vigencia_desde.value || null
+              " [class.input-error]="
+                campoInvalido('fecha_vigencia_hasta') ||
+                (
+                  form.hasError('rangoFechasInvalido') &&
+                  form.controls.fecha_vigencia_hasta.touched
+                )
+              " />
+
+          <p class="mt-1 text-xs text-base-content/60">
+            Déjalo vacío si no hay fecha de finalización.
+          </p>
+
+          @if (campoInvalido('fecha_vigencia_hasta')) {
+          <p class="mt-1 text-xs text-error">
+            Ingresa una fecha de finalización válida.
+          </p>
+          }
+
+          @if (
+          form.hasError('rangoFechasInvalido') &&
+          form.controls.fecha_vigencia_hasta.touched
+          ) {
+          <p class="mt-1 text-xs text-error">
+            La fecha final no puede ser anterior a la inicial.
+          </p>
+          }
+        </div>
+
+        <!-- OBSERVACIÓN -->
+        <div class="md:col-span-2">
+          <label for="version-observacion" class="mb-2 block text-sm font-semibold">
+            Observación
+          </label>
+
+          <textarea id="version-observacion" formControlName="observacion" class="textarea textarea-bordered w-full"
+            rows="3" placeholder="Observaciones de esta versión..."></textarea>
+        </div>
+
+        <!-- VIGENTE -->
+        <div class="rounded-xl border border-base-300
+                   bg-base-200/50 p-4 md:col-span-2">
+          <label for="version-vigente" class="flex cursor-pointer items-start gap-3">
+            <input id="version-vigente" type="checkbox" formControlName="vigente"
+              class="checkbox checkbox-primary mt-1" />
+
+            <span>
+              <span class="block text-sm font-semibold">
+                Registrar como versión vigente
+              </span>
+
+              <span class="mt-1 block text-xs text-base-content/60">
+                Solicita establecer esta versión como vigente
+                al registrarla.
+              </span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- BOTONES -->
+      <footer class="mt-6 flex justify-end gap-3
+                 border-t border-base-300 pt-4">
+        <button type="button" class="btn" [disabled]="guardando()" (click)="cerrarModal()">
+          Cancelar
+        </button>
+
+        <button type="submit" class="btn btn-primary" [disabled]="guardando()">
+          @if (guardando()) {
+          <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+          Guardando...
+          } @else {
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+          Guardar versión
+          }
+        </button>
+      </footer>
+    </form>
+  </section>
+
+  <div class="modal-backdrop" aria-hidden="true">
+    <button type="button" tabindex="-1" aria-label="Cerrar" [disabled]="guardando()" (click)="cerrarModal()">
+      Cerrar
+    </button>
+  </div>
+</div>
+}

@@ -1,0 +1,11 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.mapa {
+  width: 100%;
+  height: clamp(400px, 65vh, 750px);
+  border-radius: 12px;
+  overflow: hidden;
+}

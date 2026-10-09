@@ -1,6 +1,4 @@
-import {
-  PuntoRecorridoRecoleccion,
-} from './get-puntos-recorrido.interface';
+import { PuntoRecorridoRecoleccion } from './get-puntos-recorrido.interface';
 
 // *********************************************************
 // REQUEST

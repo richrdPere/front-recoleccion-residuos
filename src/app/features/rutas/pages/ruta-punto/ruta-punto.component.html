@@ -1,0 +1,241 @@
+<section class="space-y-5">
+  <!-- ENCABEZADO -->
+  <header class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h3 class="text-lg font-bold">
+        <i class="fa-solid fa-location-dot mr-2 text-primary" aria-hidden="true"></i>
+        Puntos de la versión
+      </h3>
+
+      @if (idRutaVersion !== null) {
+      <p class="mt-1 text-sm text-base-content/60">
+        ID de versión: {{ idRutaVersion }}
+        · {{ puntos.length }} puntos registrados
+      </p>
+      }
+    </div>
+
+    <button type="button" class="btn btn-primary btn-sm" [disabled]="idRutaVersion === null || isSaving"
+      (click)="abrirNuevoPunto()">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      Nuevo punto
+    </button>
+  </header>
+
+  @if (version) {
+  <!-- FILTROS -->
+  <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+    <div class="md:col-span-2">
+      <label for="puntos-busqueda" class="mb-1 block text-sm">
+        Buscar punto
+      </label>
+
+      <input id="puntos-busqueda" type="text" class="input input-bordered w-full"
+        placeholder="Código, nombre o descripción" [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()"
+        appUppercase />
+    </div>
+
+    <div>
+      <label for="puntos-tipo" class="mb-1 block text-sm">
+        Tipo de punto
+      </label>
+
+      <select id="puntos-tipo" class="select select-bordered w-full" [(ngModel)]="filtroTipo"
+        (ngModelChange)="onFiltroChange()">
+        <option value="">Todos</option>
+
+        @for (tipo of tiposPunto; track tipo) {
+        <option [value]="tipo">{{ tipo }}</option>
+        }
+      </select>
+    </div>
+
+    <div>
+      <label for="puntos-estado" class="mb-1 block text-sm">
+        Estado
+      </label>
+
+      <select id="puntos-estado" class="select select-bordered w-full" [(ngModel)]="filtroEstado"
+        (ngModelChange)="onFiltroChange()">
+        <option [ngValue]="null">Todos</option>
+        <option [ngValue]="true">Activos</option>
+        <option [ngValue]="false">Inactivos</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <label for="puntos-limite" class="text-sm">
+        Mostrar
+      </label>
+
+      <select id="puntos-limite" class="select select-bordered select-sm" [(ngModel)]="limit"
+        (ngModelChange)="cambiarLimite()">
+        @for (cantidad of pageSizeOptions; track cantidad) {
+        <option [ngValue]="cantidad">{{ cantidad }}</option>
+        }
+      </select>
+    </div>
+
+    <button type="button" class="btn btn-ghost btn-sm" (click)="limpiarFiltros()">
+      <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i>
+      Limpiar filtros
+    </button>
+  </div>
+
+  @if (tieneFiltrosActivos()) {
+  <p class="text-xs text-base-content/60">
+    Limpia los filtros para cambiar el orden del recorrido.
+  </p>
+  }
+
+  <!-- TABLA -->
+  <div class="overflow-x-auto rounded-xl border border-base-300">
+    <table class="table table-sm">
+      <caption class="sr-only">
+        Listado de puntos de la versión
+      </caption>
+
+      <thead class="bg-base-200">
+        <tr>
+          <th scope="col">Orden</th>
+          <th scope="col">Punto</th>
+          <th scope="col">Tipo</th>
+          <th scope="col">Ubicación</th>
+          <th scope="col">Atención</th>
+          <th scope="col">Condición</th>
+          <th scope="col" class="text-right">Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (punto of puntosPaginados; track punto.id_ruta_punto) {
+        <tr class="hover">
+          <td>
+            <div class="flex items-center gap-2">
+              <span class="badge badge-outline">
+                {{ punto.orden }}
+              </span>
+
+              <div class="flex flex-col">
+                <button type="button" class="btn btn-xs btn-ghost" title="Subir punto" aria-label="Subir punto"
+                  [disabled]="!puedeMover(punto, -1)" (click)="moverPunto(punto, -1)">
+                  <i class="fa-solid fa-chevron-up" aria-hidden="true"></i>
+                </button>
+
+                <button type="button" class="btn btn-xs btn-ghost" title="Bajar punto" aria-label="Bajar punto"
+                  [disabled]="!puedeMover(punto, 1)" (click)="moverPunto(punto, 1)">
+                  <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+          </td>
+
+          <td class="min-w-44">
+            <div class="font-semibold">{{ punto.nombre }}</div>
+
+            <div class="text-xs text-base-content/60">
+              {{ punto.codigo }}
+            </div>
+
+            @if (punto.descripcion) {
+            <p class="mt-1 text-xs text-base-content/60">
+              {{ punto.descripcion }}
+            </p>
+            }
+          </td>
+
+          <td>
+            <span class="badge badge-sm badge-outline">
+              {{ punto.tipo_punto }}
+            </span>
+          </td>
+
+          <td class="whitespace-nowrap text-xs">
+            <div>Lat: {{ punto.latitud }}</div>
+            <div>Lng: {{ punto.longitud }}</div>
+          </td>
+
+          <td class="whitespace-nowrap text-xs">
+            <div>Radio: {{ punto.radio_atencion_metros }} m</div>
+            <div>Tiempo: {{ punto.tiempo_estimado_min }} min</div>
+          </td>
+
+          <td>
+            <span class="badge badge-sm" [ngClass]="punto.estado ? 'badge-success' : 'badge-ghost'">
+              {{ punto.estado ? 'Activo' : 'Inactivo' }}
+            </span>
+
+            <p class="mt-1 text-xs text-base-content/60">
+              {{ punto.obligatorio ? 'Obligatorio' : 'Opcional' }}
+            </p>
+          </td>
+
+          <td>
+            <div class="flex justify-end gap-1">
+              <button type="button" class="btn btn-sm btn-ghost text-primary" title="Editar punto"
+                aria-label="Editar punto" [disabled]="isSaving" (click)="abrirEditarPunto(punto)">
+                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+              </button>
+
+              <button type="button" class="btn btn-sm btn-ghost text-error" title="Eliminar punto"
+                aria-label="Eliminar punto" [disabled]="isSaving" (click)="eliminarPunto(punto)">
+                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="7" class="py-10 text-center">
+            {{
+            puntos.length === 0
+            ? 'Esta versión no tiene puntos registrados.'
+            : 'No se encontraron puntos con los filtros aplicados.'
+            }}
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PAGINACIÓN -->
+  <footer class="flex flex-wrap items-center justify-between gap-3">
+    <p class="text-sm text-base-content/60">
+      {{ totalItems }} puntos encontrados
+      @if (totalPages > 0) {
+      · Página {{ currentPage }} de {{ totalPages }}
+      }
+    </p>
+
+    <div class="join">
+      <button type="button" class="btn btn-sm join-item" [disabled]="page <= 1 || isSaving"
+        (click)="cambiarPagina(page - 1)">
+        Anterior
+      </button>
+
+      <button type="button" class="btn btn-sm join-item" [disabled]="page >= totalPages || isSaving"
+        (click)="cambiarPagina(page + 1)">
+        Siguiente
+      </button>
+    </div>
+  </footer>
+  } @else {
+  <div class="rounded-xl border border-dashed border-base-300 p-8 text-center">
+    Selecciona una versión para consultar sus puntos.
+  </div>
+  }
+</section>
+
+
+<ruta-punto-form
+  [mostrarModal]="mostrarModal"
+  [modoEdicion]="modoEdicion"
+  [idRutaVersion]="idRutaVersion"
+  [puntoSeleccionado]="puntoSeleccionado"
+  [ordenSugerido]="ordenSugerido"
+  (modalCerrado)="cerrarModal()"
+  (puntoGuardado)="onPuntoGuardado()"
+></ruta-punto-form>

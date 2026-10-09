@@ -1,0 +1,202 @@
+<section class="space-y-5 rounded-xl border border-base-300
+         bg-base-100 p-5" aria-labelledby="recoleccion-progreso-titulo" [attr.aria-busy]="isLoading">
+  <!-- ENCABEZADO -->
+  <header class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h2 id="recoleccion-progreso-titulo" class="text-lg font-bold">
+        <i class="fa-solid fa-route mr-2 text-primary" aria-hidden="true"></i>
+        Progreso del recorrido
+      </h2>
+
+      <p class="mt-1 text-sm text-base-content/60">
+        Atención de puntos y avance de la ruta.
+      </p>
+    </div>
+
+    <button type="button" class="btn btn-sm btn-outline" [disabled]="idRecorrido === null || isLoading"
+      (click)="getRecorridoProgreso()">
+      <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+      Actualizar
+    </button>
+  </header>
+
+  @if (isLoading) {
+  <!-- LOADING -->
+  <div role="status">
+    <p class="sr-only">Cargando progreso del recorrido...</p>
+
+    <div class="skeleton mb-4 h-5 w-1/3"></div>
+    <div class="skeleton mb-5 h-8 w-full"></div>
+
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      @for (item of [1, 2, 3]; track item) {
+      <div class="skeleton h-24 w-full"></div>
+      }
+    </div>
+  </div>
+  } @else if (errorCarga) {
+  <!-- ERROR -->
+  <div class="alert alert-error" role="alert">
+    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+
+    <span>{{ errorCarga }}</span>
+
+    <button type="button" class="btn btn-sm" (click)="getRecorridoProgreso()">
+      Reintentar
+    </button>
+  </div>
+  } @else if (progreso; as datos) {
+  <!-- ESTADO DE LA RUTA -->
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <span class="text-sm text-base-content/60">
+      Recorrido #{{ datos.id_recorrido }}
+    </span>
+
+    <span class="badge badge-outline h-auto py-2" [ngClass]="
+          datos.ruta_completada
+            ? 'badge-success'
+            : 'badge-warning'
+        ">
+      {{
+      datos.ruta_completada
+      ? 'Ruta completada'
+      : 'Ruta pendiente de completar'
+      }}
+    </span>
+  </div>
+
+  <!-- AVANCE GENERAL -->
+  <div class="rounded-xl border border-base-300 p-4">
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <h3 class="text-sm font-semibold">Avance general</h3>
+
+      <span class="text-xl font-bold text-primary">
+        {{ datos.porcentaje_progreso | number:'1.0-2' }}%
+      </span>
+    </div>
+
+    <progress class="progress progress-primary w-full" [value]="porcentajeVisual" max="100"
+      aria-label="Porcentaje de progreso del recorrido"></progress>
+
+    <p class="mt-2 text-xs text-base-content/60">
+      {{ datos.puntos_atendidos | number:'1.0-0' }}
+      de
+      {{ datos.total_puntos | number:'1.0-0' }}
+      puntos atendidos
+    </p>
+  </div>
+
+  <!-- PUNTOS GENERALES -->
+  <dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div class="rounded-xl border border-base-300 bg-base-200/40 p-4">
+      <dt class="text-sm text-base-content/60">
+        Total de puntos
+      </dt>
+
+      <dd class="mt-2 text-2xl font-bold">
+        {{ datos.total_puntos | number:'1.0-0' }}
+      </dd>
+    </div>
+
+    <div class="rounded-xl border border-base-300 bg-base-200/40 p-4">
+      <dt class="text-sm text-base-content/60">
+        Atendidos
+      </dt>
+
+      <dd class="mt-2 text-2xl font-bold text-success">
+        {{ datos.puntos_atendidos | number:'1.0-0' }}
+      </dd>
+    </div>
+
+    <div class="rounded-xl border border-base-300 bg-base-200/40 p-4">
+      <dt class="text-sm text-base-content/60">
+        Pendientes
+      </dt>
+
+      <dd class="mt-2 text-2xl font-bold text-warning">
+        {{ datos.puntos_pendientes | number:'1.0-0' }}
+      </dd>
+    </div>
+  </dl>
+
+  <!-- PUNTOS OBLIGATORIOS -->
+  <div class="border-t border-base-300 pt-4">
+    <h3 class="mb-3 text-sm font-semibold">
+      <i class="fa-solid fa-list-check mr-2" aria-hidden="true"></i>
+      Puntos obligatorios
+    </h3>
+
+    <dl class="grid grid-cols-3 gap-3">
+      <div>
+        <dt class="text-xs text-base-content/60">Total</dt>
+
+        <dd class="mt-1 text-xl font-semibold">
+          {{ datos.puntos_obligatorios | number:'1.0-0' }}
+        </dd>
+      </div>
+
+      <div>
+        <dt class="text-xs text-base-content/60">Atendidos</dt>
+
+        <dd class="mt-1 text-xl font-semibold text-success">
+          {{ datos.obligatorios_atendidos | number:'1.0-0' }}
+        </dd>
+      </div>
+
+      <div>
+        <dt class="text-xs text-base-content/60">Pendientes</dt>
+
+        <dd class="mt-1 text-xl font-semibold text-warning">
+          {{ datos.obligatorios_pendientes | number:'1.0-0' }}
+        </dd>
+      </div>
+    </dl>
+  </div>
+
+  <!-- CANTIDADES POR UNIDAD -->
+  <div class="border-t border-base-300 pt-4">
+    <h3 class="mb-3 text-sm font-semibold">
+      <i class="fa-solid fa-scale-balanced mr-2" aria-hidden="true"></i>
+      Cantidades recolectadas por unidad
+    </h3>
+
+    <div class="overflow-x-auto rounded-xl border border-base-300">
+      <table class="table table-sm">
+        <caption class="sr-only">
+          Cantidades recolectadas durante el recorrido
+        </caption>
+
+        <thead class="bg-base-200">
+          <tr>
+            <th scope="col">Unidad</th>
+            <th scope="col" class="text-right">Cantidad</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (cantidad of cantidadesPorUnidad; track cantidad.unidad) {
+          <tr class="hover">
+            <td>{{ cantidad.unidad }}</td>
+
+            <td class="text-right font-semibold">
+              {{ cantidad.cantidad | number:'1.0-2' }}
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="2" class="py-6 text-center text-base-content/60">
+              Sin cantidades registradas.
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  } @else {
+  <div class="rounded-xl border border-dashed border-base-300
+             p-8 text-center text-sm text-base-content/60">
+    Selecciona un recorrido para consultar su progreso.
+  </div>
+  }
+</section>

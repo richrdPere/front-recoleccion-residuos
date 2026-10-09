@@ -40,7 +40,6 @@ export class CiudadanosService {
   private readonly API_DELETE_DIRECCION: string = this.API_BASE + '/domicilios/';
   private readonly API_GET_DIRECCION_CRONOGRAMA: string = this.API_BASE + '/domicilios/';
 
-
   constructor(
     private readonly http: HttpClient,
     private readonly authStorage: AuthStorageService

@@ -179,7 +179,7 @@ export class ZonasServices {
   }
 
   // *********************************************************
-  // 7. ELIMINAR VEHÍCULO
+  // 7. ELIMINAR ZONA
   // *********************************************************
   deleteZona(
     idZona: number,

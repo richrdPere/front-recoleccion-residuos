@@ -1,1 +1,75 @@
-<p>dashboard-page works!</p>
+<main class="space-y-6 p-4 md:p-6">
+  <!-- ENCABEZADO -->
+  <header class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold md:text-3xl">
+        <i class="fa-solid fa-chart-line mr-2 text-primary" aria-hidden="true"></i>
+        Dashboard
+      </h1>
+
+      <p class="mt-2 text-sm text-base-content/60">
+        Indicadores del sistema de recolección de residuos.
+      </p>
+    </div>
+
+    <button type="button" class="btn btn-primary" (click)="actualizarDashboard()">
+      <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+      Actualizar dashboard
+    </button>
+  </header>
+
+  <!-- FILTROS APLICADOS -->
+  <section class="rounded-xl border border-base-300 bg-base-100 p-4" aria-labelledby="dashboard-filtros-titulo">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2 id="dashboard-filtros-titulo" class="text-sm font-semibold">
+        <i class="fa-solid fa-filter mr-2 text-primary" aria-hidden="true"></i>
+        Filtros aplicados
+      </h2>
+
+      @if (filtrosVisibles.length > 0) {
+      <button type="button" class="btn btn-sm btn-ghost" (click)="limpiarFiltros()">
+        <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i>
+        Limpiar filtros
+      </button>
+      }
+    </div>
+
+    <div class="mt-3 flex flex-wrap gap-2">
+      @for (filtro of filtrosVisibles; track filtro.clave) {
+      <span class="badge badge-outline h-auto py-2">
+        {{ filtro.etiqueta }}: {{ filtro.valor }}
+      </span>
+      } @empty {
+      <p class="text-sm text-base-content/60">
+        Se utilizan los filtros predeterminados del sistema.
+      </p>
+      }
+    </div>
+  </section>
+
+  <!-- RESUMEN GENERAL -->
+  <dashboard-resumen [filtros]="filtrosResumen" [actualizacion]="actualizacionDashboard"></dashboard-resumen>
+
+  <!-- TENDENCIAS -->
+  <dashboard-tendencias [filtros]="filtrosTendencias" [actualizacion]="actualizacionDashboard"></dashboard-tendencias>
+
+  <!-- PROGRAMACIONES / RECOLECCIONES -->
+  <div class="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
+    <div class="min-w-0">
+      <dashboard-programaciones [filtros]="filtrosProgramaciones"
+        [actualizacion]="actualizacionDashboard"></dashboard-programaciones>
+    </div>
+
+    <div class="min-w-0">
+      <dashboard-recolecciones [filtros]="filtrosRecolecciones"
+        [actualizacion]="actualizacionDashboard"></dashboard-recolecciones>
+    </div>
+  </div>
+
+  <!-- VEHÍCULOS -->
+  <dashboard-vehiculos [filtros]="filtrosVehiculos" [actualizacion]="actualizacionDashboard"></dashboard-vehiculos>
+
+  <!-- RENDIMIENTO DE RUTAS -->
+  <dashboard-rendimiento-rutas [filtros]="filtrosRendimientoRutas"
+    [actualizacion]="actualizacionDashboard"></dashboard-rendimiento-rutas>
+</main>

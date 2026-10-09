@@ -119,7 +119,7 @@ export class RutaHorarioService {
 
     return this.http
       .patch<ChangeRutaHorarioEstadoResponse>(
-        `${this.API_CHANGE_RUTA_HORARIO_ESTADO}/${idRuta}/horarios/${idRutaHorario}/estado`,
+        `${this.API_CHANGE_RUTA_HORARIO_ESTADO}${idRuta}/horarios/${idRutaHorario}/estado`,
         request,
         { headers },
       )

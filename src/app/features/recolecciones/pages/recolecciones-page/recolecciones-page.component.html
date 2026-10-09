@@ -1,1 +1,123 @@
-<p>recolecciones-page works!</p>
+<main class="space-y-6 p-4 md:p-6">
+  <!-- ENCABEZADO -->
+  <header class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold md:text-3xl">
+        <i class="fa-solid fa-recycle mr-2 text-primary" aria-hidden="true"></i>
+        Recolecciones
+      </h1>
+
+      <p class="mt-2 text-sm text-base-content/60">
+        Consulta los puntos, registros y evidencias de cada recorrido.
+      </p>
+    </div>
+
+    <button type="button" class="btn btn-primary" [disabled]="recorrido_id === null"
+      (click)="actualizarRecolecciones()">
+      <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+      Actualizar
+    </button>
+  </header>
+
+  <!-- SELECCIÓN DEL RECORRIDO -->
+  <section class="rounded-xl border border-base-300 bg-base-100 p-5" aria-labelledby="recolecciones-seleccion-titulo">
+    <h2 id="recolecciones-seleccion-titulo" class="mb-4 font-semibold">
+      Seleccionar recorrido
+    </h2>
+
+    <form class="flex flex-wrap items-end gap-3" (ngSubmit)="seleccionarRecorrido()">
+      <div class="w-full sm:w-64">
+        <label for="recolecciones-recorrido" class="mb-2 block text-sm">
+          ID del recorrido
+        </label>
+
+        <input id="recolecciones-recorrido" name="recorridoBusqueda" type="number" min="1" step="1"
+          class="input input-bordered w-full" placeholder="Ingresa el ID del recorrido" [(ngModel)]="recorridoBusqueda"
+          [class.input-error]="errorSeleccion !== null" [attr.aria-invalid]="errorSeleccion !== null"
+          aria-describedby="recolecciones-error-seleccion" />
+      </div>
+
+      <button type="submit" class="btn btn-primary">
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        Consultar
+      </button>
+
+      <button type="button" class="btn btn-ghost" (click)="limpiarRecorrido()">
+        Limpiar
+      </button>
+    </form>
+
+    <p id="recolecciones-error-seleccion" class="mt-2 text-sm text-error" role="status">
+      {{ errorSeleccion }}
+    </p>
+
+    @if (recorrido_id !== null) {
+    <div class="mt-3">
+      <span class="badge badge-outline h-auto py-2">
+        Recorrido seleccionado: #{{ recorrido_id }}
+      </span>
+    </div>
+    }
+  </section>
+
+  @if (recorrido_id !== null) {
+  <!-- PROGRESO / CAPACIDAD -->
+  <div class="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
+    <div class="min-w-0">
+      <recoleccion-progreso [idRecorrido]="recorrido_id"
+        [actualizacion]="actualizacionRecolecciones"></recoleccion-progreso>
+    </div>
+
+    <div class="min-w-0">
+      <recoleccion-capacidad [idRecorrido]="recorrido_id"
+        [actualizacion]="actualizacionRecolecciones"></recoleccion-capacidad>
+    </div>
+  </div>
+
+  <!-- PUNTOS DEL RECORRIDO -->
+  <recoleccion-puntos [idRecorrido]="recorrido_id" [actualizacion]="actualizacionRecolecciones"
+    (verRecoleccion)="abrirDetalleRecoleccion($event)" (verEvidencias)="abrirEvidenciasRecoleccion($event)"
+    (anularRecoleccion)="abrirModalAnular($event)"></recoleccion-puntos>
+
+  <!-- EVIDENCIAS DE LA RECOLECCIÓN SELECCIONADA -->
+  @if (recoleccion_id !== null) {
+  <section class="space-y-3">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2 class="text-sm font-semibold">
+        Recolección seleccionada: #{{ recoleccion_id }}
+      </h2>
+
+      <button type="button" class="btn btn-sm btn-ghost" (click)="cerrarEvidencias()">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        Cerrar evidencias
+      </button>
+    </div>
+
+    <recoleccion-evidencia [idRecoleccion]="recoleccion_id" [actualizacion]="actualizacionEvidencias"
+      (evidenciasActualizadas)="onEvidenciasActualizadas($event)"></recoleccion-evidencia>
+  </section>
+  }
+  } @else {
+  <!-- SIN RECORRIDO SELECCIONADO -->
+  <section class="rounded-xl border border-dashed border-base-300
+             bg-base-100 px-6 py-12 text-center">
+    <i class="fa-solid fa-route mb-4 text-4xl text-base-content/30" aria-hidden="true"></i>
+
+    <h2 class="font-semibold">Selecciona un recorrido</h2>
+
+    <p class="mt-2 text-sm text-base-content/60">
+      Ingresa su identificador para consultar el progreso,
+      la capacidad y los puntos de recolección.
+    </p>
+  </section>
+  }
+
+  <!-- MODAL DE DETALLE -->
+  <recoleccion-view [mostrarModal]="mostrarModalView" [idRecoleccion]="recoleccionViewId"
+    [actualizacion]="actualizacionDetalle" (modalCerrado)="cerrarModalView()"
+    (verEvidencias)="abrirEvidenciasRecoleccion($event)"></recoleccion-view>
+
+  <!-- MODAL DE ANULACIÓN -->
+  <app-recoleccion-anular [mostrarModal]="mostrarModalAnular" [idRecoleccion]="recoleccionAnularId"
+    (modalCerrado)="cerrarModalAnular()" (recoleccionAnulada)="onRecoleccionAnulada($event)"></app-recoleccion-anular>
+</main>

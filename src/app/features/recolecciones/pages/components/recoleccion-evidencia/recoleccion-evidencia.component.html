@@ -1,0 +1,303 @@
+<section class="space-y-5 rounded-xl border border-base-300
+         bg-base-100 p-5" aria-labelledby="recoleccion-evidencia-titulo" [attr.aria-busy]="isLoading">
+  <!-- ENCABEZADO -->
+  <header class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h2 id="recoleccion-evidencia-titulo" class="text-lg font-bold">
+        <i class="fa-solid fa-paperclip mr-2 text-primary" aria-hidden="true"></i>
+        Evidencias de recolección
+      </h2>
+
+      @if (idRecoleccion !== null) {
+      <p class="mt-1 text-sm text-base-content/60">
+        Recolección #{{ idRecoleccion }}
+      </p>
+      }
+    </div>
+
+    <button type="button" class="btn btn-sm btn-outline" [disabled]="
+        idRecoleccion === null ||
+        isLoading ||
+        evidenciasEnOperacion.size > 0
+      " (click)="getRecoleccionEvidencias()">
+      <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+      Actualizar
+    </button>
+  </header>
+
+  @if (idRecoleccion === null) {
+  <div class="rounded-xl border border-dashed border-base-300
+             p-8 text-center text-sm text-base-content/60">
+    Selecciona una recolección para consultar sus evidencias.
+  </div>
+  } @else {
+  <!-- FILTROS -->
+  <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+    <div class="md:col-span-2">
+      <label for="evidencias-busqueda" class="mb-1 block text-sm">
+        Buscar
+      </label>
+
+      <input id="evidencias-busqueda" type="text" class="input input-bordered w-full"
+        placeholder="Archivo, descripción o usuario" [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()"
+        [disabled]="isLoading" />
+    </div>
+
+    <div>
+      <label for="evidencias-tipo" class="mb-1 block text-sm">
+        Tipo
+      </label>
+
+      <select id="evidencias-tipo" class="select select-bordered w-full" [(ngModel)]="filtroTipo"
+        (ngModelChange)="onFiltroChange()" [disabled]="isLoading">
+        <option value="">Todos</option>
+        <option value="IMAGEN">Imagen</option>
+        <option value="DOCUMENTO">Documento</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="evidencias-estado" class="mb-1 block text-sm">
+        Estado
+      </label>
+
+      <select id="evidencias-estado" class="select select-bordered w-full" [(ngModel)]="filtroEstado"
+        (ngModelChange)="onFiltroChange()" [disabled]="isLoading">
+        <option value="">Todos</option>
+        <option value="ACTIVA">Activas</option>
+        <option value="ANULADA">Anuladas</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <label for="evidencias-limite" class="text-sm">
+        Mostrar
+      </label>
+
+      <select id="evidencias-limite" class="select select-bordered select-sm" [(ngModel)]="limit"
+        (ngModelChange)="cambiarLimite()" [disabled]="isLoading">
+        @for (cantidad of pageSizeOptions; track cantidad) {
+        <option [ngValue]="cantidad">{{ cantidad }}</option>
+        }
+      </select>
+    </div>
+
+    <button type="button" class="btn btn-sm btn-ghost" [disabled]="isLoading" (click)="limpiarFiltros()">
+      <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i>
+      Limpiar filtros
+    </button>
+  </div>
+
+  @if (isLoading) {
+  <div class="flex min-h-48 flex-col items-center justify-center gap-3" role="status">
+    <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
+
+    <p class="text-sm text-base-content/60">
+      Cargando evidencias...
+    </p>
+  </div>
+  } @else if (errorCarga) {
+  <div class="alert alert-error" role="alert">
+    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+
+    <span>{{ errorCarga }}</span>
+
+    <button type="button" class="btn btn-sm" (click)="getRecoleccionEvidencias()">
+      Reintentar
+    </button>
+  </div>
+  } @else {
+  <!-- TABLA -->
+  <div class="overflow-x-auto rounded-xl border border-base-300">
+    <table class="table table-sm">
+      <caption class="sr-only">
+        Evidencias registradas para la recolección
+      </caption>
+
+      <thead class="bg-base-200">
+        <tr>
+          <th scope="col">Vista previa</th>
+          <th scope="col">Archivo</th>
+          <th scope="col">Registrado por</th>
+          <th scope="col">Fechas</th>
+          <th scope="col">Estado</th>
+          <th scope="col" class="text-right">Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (
+        evidencia of evidenciasPaginadas;
+        track evidencia.id_evidencia
+        ) {
+        <tr class="hover">
+          <td>
+            @if (
+            evidencia.tipo_evidencia === 'IMAGEN' &&
+            evidencia.urlVisualizacion &&
+            !imagenesConError.has(evidencia.id_evidencia)
+            ) {
+            <a [href]="evidencia.urlVisualizacion" target="_blank" rel="noopener noreferrer" [attr.aria-label]="
+                        'Abrir imagen ' + evidencia.nombre_original
+                      ">
+              <img [src]="evidencia.urlVisualizacion" [alt]="
+                          evidencia.descripcion ||
+                          evidencia.nombre_original
+                        " class="h-16 w-20 rounded-lg border
+                               border-base-300 object-cover" loading="lazy"
+                (error)="registrarErrorImagen(evidencia.id_evidencia)" />
+            </a>
+            } @else {
+            <div class="flex h-16 w-20 items-center justify-center
+                             rounded-lg bg-base-200">
+              <i class="fa-solid text-2xl text-base-content/40" [ngClass]="
+                          evidencia.tipo_evidencia === 'IMAGEN'
+                            ? 'fa-image'
+                            : 'fa-file'
+                        " aria-hidden="true"></i>
+            </div>
+            }
+          </td>
+
+          <td class="min-w-52">
+            <p class="break-all font-semibold">
+              {{ evidencia.nombre_original }}
+            </p>
+
+            <p class="mt-1 text-xs text-base-content/60">
+              {{ evidencia.tipo_evidencia }}
+              · {{ formatearTamano(evidencia.tamano_bytes) }}
+            </p>
+
+            @if (evidencia.descripcion) {
+            <p class="mt-1 text-xs text-base-content/60">
+              {{ evidencia.descripcion }}
+            </p>
+            }
+          </td>
+
+          <td>
+            <p class="text-sm">
+              {{
+              evidencia.usuario_registro?.username ||
+              'No disponible'
+              }}
+            </p>
+
+            <p class="text-xs text-base-content/60">
+              Usuario #{{ evidencia.id_usuario }}
+            </p>
+          </td>
+
+          <td class="whitespace-nowrap text-xs">
+            <div>
+              Registro:
+              {{ evidencia.created_at | date:'dd/MM/yyyy HH:mm' }}
+            </div>
+
+            @if (evidencia.fecha_captura) {
+            <div class="mt-1 text-base-content/60">
+              Captura:
+              {{ evidencia.fecha_captura | date:'dd/MM/yyyy HH:mm' }}
+            </div>
+            }
+          </td>
+
+          <td class="min-w-44">
+            <span class="badge badge-sm" [ngClass]="
+                      evidencia.estado_evidencia === 'ACTIVA'
+                        ? 'badge-success'
+                        : 'badge-error'
+                    ">
+              {{ evidencia.estado_evidencia }}
+            </span>
+
+            @if (evidencia.estado_evidencia === 'ANULADA') {
+            <p class="mt-2 text-xs text-base-content/70">
+              {{
+              evidencia.motivo_anulacion ||
+              'Sin motivo registrado'
+              }}
+            </p>
+
+            @if (evidencia.fecha_anulacion) {
+            <p class="mt-1 text-xs text-base-content/60">
+              {{
+              evidencia.fecha_anulacion
+              | date:'dd/MM/yyyy HH:mm'
+              }}
+            </p>
+            }
+            }
+          </td>
+
+          <td>
+            <div class="flex justify-end gap-1">
+              @if (evidencia.urlVisualizacion) {
+              <a [href]="evidencia.urlVisualizacion" target="_blank" rel="noopener noreferrer"
+                class="btn btn-sm btn-ghost text-primary" title="Abrir archivo" aria-label="Abrir archivo">
+                <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+              </a>
+              } @else {
+              <span class="text-xs text-base-content/60">
+                Sin enlace
+              </span>
+              }
+
+              @if (evidencia.estado_evidencia === 'ACTIVA') {
+              <button type="button" class="btn btn-sm btn-ghost text-error" title="Anular evidencia"
+                aria-label="Anular evidencia" [disabled]="evidenciasEnOperacion.size > 0"
+                (click)="anularEvidencia(evidencia)">
+                @if (
+                evidenciasEnOperacion.has(evidencia.id_evidencia)
+                ) {
+                <span class="loading loading-spinner loading-xs" aria-label="Anulando evidencia"></span>
+                } @else {
+                <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                }
+              </button>
+              }
+            </div>
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="6" class="py-10 text-center text-base-content/60">
+            {{
+            evidencias.length === 0
+            ? 'Esta recolección no tiene evidencias registradas.'
+            : 'No se encontraron evidencias con estos filtros.'
+            }}
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PAGINACIÓN -->
+  <footer class="flex flex-wrap items-center justify-between gap-3">
+    <p class="text-sm text-base-content/60">
+      {{ totalItems }} evidencias encontradas
+
+      @if (totalPages > 0) {
+      · Página {{ currentPage }} de {{ totalPages }}
+      }
+    </p>
+
+    <div class="join">
+      <button type="button" class="btn btn-sm join-item" [disabled]="page <= 1" (click)="cambiarPagina(page - 1)">
+        Anterior
+      </button>
+
+      <button type="button" class="btn btn-sm join-item" [disabled]="page >= totalPages"
+        (click)="cambiarPagina(page + 1)">
+        Siguiente
+      </button>
+    </div>
+  </footer>
+  }
+  }
+</section>

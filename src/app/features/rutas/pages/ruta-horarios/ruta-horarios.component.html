@@ -1,0 +1,308 @@
+@if (mostrarModal) {
+<div class="modal modal-open">
+  <section class="modal-box w-11/12 max-w-6xl" role="dialog" aria-modal="true" aria-labelledby="ruta-horario-titulo"
+    [attr.aria-busy]="isLoading" (keydown.escape)="cerrarModal()">
+    <!-- ENCABEZADO -->
+    <header class="flex items-start justify-between gap-4
+               border-b border-base-300 pb-4">
+      <div>
+        <h2 id="ruta-horario-titulo" class="text-xl font-bold">
+          <i class="fa-solid fa-clock mr-2 text-primary" aria-hidden="true"></i>
+          Horarios de ruta
+        </h2>
+
+        <p class="mt-1 text-sm text-base-content/60">
+          Gestiona los días, horas y vigencia de los horarios.
+        </p>
+
+        <span class="badge badge-outline mt-2">
+          Ruta #{{ ruta_id }}
+        </span>
+      </div>
+
+      <button type="button" class="btn btn-sm btn-circle btn-ghost" aria-label="Cerrar horarios"
+        [disabled]="horariosEnOperacion.size > 0" (click)="cerrarModal()">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <div class="space-y-4 py-5">
+      <!-- ACCIONES -->
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <span class="text-sm text-base-content/60">
+          {{ horarios.length }} horarios registrados
+        </span>
+
+        <div class="flex gap-2">
+          <button type="button" class="btn btn-sm btn-outline" [disabled]="isLoading || horariosEnOperacion.size > 0"
+            (click)="getHorariosByRuta()">
+            <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+            Actualizar
+          </button>
+
+          <button type="button" class="btn btn-sm btn-primary" [disabled]="
+                ruta_id === null ||
+                errorCarga !== null ||
+                isLoading ||
+                horariosEnOperacion.size > 0
+              " (click)="abrirNuevoHorario()">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            Nuevo horario
+          </button>
+        </div>
+      </div>
+
+      <!-- FILTROS -->
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <div>
+          <label for="horarios-busqueda" class="mb-1 block text-sm">
+            Buscar
+          </label>
+
+          <input id="horarios-busqueda" type="text" class="input input-bordered w-full"
+            placeholder="Día, hora u observación" [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()"
+            [disabled]="isLoading" />
+        </div>
+
+        <div>
+          <label for="horarios-dia" class="mb-1 block text-sm">
+            Día
+          </label>
+
+          <select id="horarios-dia" class="select select-bordered w-full" [(ngModel)]="filtroDia"
+            (ngModelChange)="onFiltroChange()" [disabled]="isLoading">
+            <option value="">Todos</option>
+
+            @for (dia of diasDisponibles; track dia) {
+            <option [value]="dia">{{ dia }}</option>
+            }
+          </select>
+        </div>
+
+        <div>
+          <label for="horarios-frecuencia" class="mb-1 block text-sm">
+            Frecuencia
+          </label>
+
+          <select id="horarios-frecuencia" class="select select-bordered w-full" [(ngModel)]="filtroFrecuencia"
+            (ngModelChange)="onFiltroChange()" [disabled]="isLoading">
+            <option value="">Todas</option>
+
+            @for (frecuencia of frecuenciasDisponibles; track frecuencia) {
+            <option [value]="frecuencia">{{ frecuencia }}</option>
+            }
+          </select>
+        </div>
+
+        <div>
+          <label for="horarios-estado" class="mb-1 block text-sm">
+            Estado
+          </label>
+
+          <select id="horarios-estado" class="select select-bordered w-full" [(ngModel)]="filtroEstado"
+            (ngModelChange)="onFiltroChange()" [disabled]="isLoading">
+            <option [ngValue]="null">Todos</option>
+            <option [ngValue]="true">Activos</option>
+            <option [ngValue]="false">Inactivos</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <label for="horarios-limite" class="text-sm">
+            Mostrar
+          </label>
+
+          <select id="horarios-limite" class="select select-bordered select-sm" [(ngModel)]="limit"
+            (ngModelChange)="cambiarLimite()" [disabled]="isLoading">
+            @for (cantidad of pageSizeOptions; track cantidad) {
+            <option [ngValue]="cantidad">{{ cantidad }}</option>
+            }
+          </select>
+        </div>
+
+        <button type="button" class="btn btn-ghost btn-sm" [disabled]="isLoading" (click)="limpiarFiltros()">
+          <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i>
+          Limpiar filtros
+        </button>
+      </div>
+
+      @if (isLoading) {
+      <div class="flex min-h-48 flex-col items-center
+                   justify-center gap-3" role="status">
+        <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
+
+        <p class="text-sm text-base-content/60">
+          Cargando horarios...
+        </p>
+      </div>
+      } @else if (errorCarga) {
+      <div class="alert alert-error" role="alert">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+
+        <span>{{ errorCarga }}</span>
+
+        <button type="button" class="btn btn-sm" (click)="getHorariosByRuta()">
+          Reintentar
+        </button>
+      </div>
+      } @else {
+      <!-- TABLA -->
+      <div class="overflow-x-auto rounded-xl border border-base-300">
+        <table class="table table-sm">
+          <caption class="sr-only">
+            Horarios registrados para la ruta
+          </caption>
+
+          <thead class="bg-base-200">
+            <tr>
+              <th scope="col">Día</th>
+              <th scope="col">Horario</th>
+              <th scope="col">Frecuencia</th>
+              <th scope="col">Vigencia</th>
+              <th scope="col">Observación</th>
+              <th scope="col">Estado</th>
+              <th scope="col" class="text-right">Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (
+            horario of horariosPaginados;
+            track horario.id_ruta_horario
+            ) {
+            <tr class="hover">
+              <td class="font-semibold">
+                {{ horario.dia_semana }}
+              </td>
+
+              <td class="whitespace-nowrap">
+                {{ horario.hora_inicio }} – {{ horario.hora_fin }}
+              </td>
+
+              <td>
+                <span class="badge badge-sm badge-outline">
+                  {{ horario.frecuencia }}
+                </span>
+              </td>
+
+              <td class="whitespace-nowrap text-xs">
+                <div>
+                  Desde:
+                  {{
+                  horario.fecha_vigencia_desde
+                  | date:'dd/MM/yyyy'
+                  }}
+                </div>
+
+                <div>
+                  Hasta:
+                  {{
+                  horario.fecha_vigencia_hasta
+                  ? (
+                  horario.fecha_vigencia_hasta
+                  | date:'dd/MM/yyyy'
+                  )
+                  : 'Sin fecha final'
+                  }}
+                </div>
+              </td>
+
+              <td class="min-w-40 text-xs text-base-content/70">
+                {{ horario.observacion || 'Sin observación' }}
+              </td>
+
+              <td>
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" class="toggle toggle-success toggle-sm" [checked]="horario.estado"
+                    [disabled]="isLoading || horariosEnOperacion.size > 0"
+                    [attr.aria-label]="horario.estado ? 'Desactivar horario' : 'Activar horario'"
+                    (change)="cambiarEstado(horario, $event)" />
+
+                  @if (estaEnOperacion(horario)) {
+                  <span class="loading loading-spinner loading-xs" role="status"
+                    aria-label="Actualizando estado"></span>
+                  } @else {
+                  <span class="text-xs">
+                    {{ horario.estado ? 'Activo' : 'Inactivo' }}
+                  </span>
+                  }
+                </div>
+              </td>
+              <td>
+                <div class="flex justify-end gap-1">
+                  <button type="button" class="btn btn-sm btn-ghost text-primary" title="Editar horario"
+                    aria-label="Editar horario" [disabled]="horariosEnOperacion.size > 0"
+                    (click)="abrirEditarHorario(horario)">
+                    <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                  </button>
+
+                  <button type="button" class="btn btn-sm btn-ghost text-error" title="Eliminar horario"
+                    aria-label="Eliminar horario" [disabled]="horariosEnOperacion.size > 0"
+                    (click)="eliminarHorario(horario)">
+                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            } @empty {
+            <tr>
+              <td colspan="7" class="py-10 text-center">
+                {{
+                horarios.length === 0
+                ? 'Esta ruta no tiene horarios registrados.'
+                : 'No se encontraron horarios con estos filtros.'
+                }}
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGINACIÓN -->
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p class="text-sm text-base-content/60">
+          {{ totalItems }} horarios encontrados
+
+          @if (totalPages > 0) {
+          · Página {{ currentPage }} de {{ totalPages }}
+          }
+        </p>
+
+        <div class="join">
+          <button type="button" class="btn btn-sm join-item" [disabled]="page <= 1" (click)="cambiarPagina(page - 1)">
+            Anterior
+          </button>
+
+          <button type="button" class="btn btn-sm join-item" [disabled]="page >= totalPages"
+            (click)="cambiarPagina(page + 1)">
+            Siguiente
+          </button>
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- PIE -->
+    <footer class="flex justify-end border-t border-base-300 pt-4">
+      <button type="button" class="btn" [disabled]="horariosEnOperacion.size > 0" (click)="cerrarModal()">
+        Cerrar
+      </button>
+    </footer>
+  </section>
+
+  <div class="modal-backdrop" aria-hidden="true">
+    <button type="button" tabindex="-1" aria-label="Cerrar" [disabled]="horariosEnOperacion.size > 0"
+      (click)="cerrarModal()">
+      Cerrar
+    </button>
+  </div>
+</div>
+}
+
+
+<ruta-horario-form [mostrarModal]="mostrarModal && mostrarModalForm" [modoEdicion]="modoEdicion" [ruta_id]="ruta_id"
+  [horarioSeleccionado]="horarioSeleccionado" (modalCerrado)="cerrarModalForm()"
+  (horarioGuardado)="onHorarioGuardado()"></ruta-horario-form>

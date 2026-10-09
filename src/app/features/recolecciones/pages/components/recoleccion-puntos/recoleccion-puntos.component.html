@@ -1,0 +1,329 @@
+<section class="space-y-5 rounded-xl border border-base-300
+         bg-base-100 p-5" aria-labelledby="recoleccion-puntos-titulo" [attr.aria-busy]="isLoading">
+  <!-- ENCABEZADO -->
+  <header class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h2 id="recoleccion-puntos-titulo" class="text-lg font-bold">
+        <i class="fa-solid fa-location-dot mr-2 text-primary" aria-hidden="true"></i>
+        Puntos del recorrido
+      </h2>
+
+      @if (idRecorrido !== null) {
+      <p class="mt-1 text-sm text-base-content/60">
+        Recorrido #{{ idRecorrido }}
+        · {{ puntos.length }} puntos registrados
+      </p>
+      }
+    </div>
+
+    <button type="button" class="btn btn-sm btn-outline" [disabled]="idRecorrido === null || isLoading"
+      (click)="getPuntosRecorrido()">
+      <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+      Actualizar
+    </button>
+  </header>
+
+  @if (idRecorrido === null) {
+  <div class="rounded-xl border border-dashed border-base-300
+             p-8 text-center text-sm text-base-content/60">
+    Selecciona un recorrido para consultar sus puntos.
+  </div>
+  } @else {
+  <!-- FILTROS -->
+  <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <div>
+      <label for="puntos-recorrido-busqueda" class="mb-1 block text-sm">
+        Buscar
+      </label>
+
+      <input id="puntos-recorrido-busqueda" type="text" class="input input-bordered w-full"
+        placeholder="Código, nombre o descripción" [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()"
+        [disabled]="isLoading" />
+    </div>
+
+    <div>
+      <label for="puntos-recorrido-tipo" class="mb-1 block text-sm">
+        Tipo de punto
+      </label>
+
+      <select id="puntos-recorrido-tipo" class="select select-bordered w-full" [(ngModel)]="filtroTipo"
+        (ngModelChange)="onFiltroChange()" [disabled]="isLoading">
+        <option value="">Todos</option>
+
+        @for (tipo of tiposPunto; track tipo) {
+        <option [value]="tipo">{{ tipo }}</option>
+        }
+      </select>
+    </div>
+
+    <div>
+      <label for="puntos-recorrido-atencion" class="mb-1 block text-sm">
+        Atención
+      </label>
+
+      <select id="puntos-recorrido-atencion" class="select select-bordered w-full" [(ngModel)]="filtroAtencion"
+        (ngModelChange)="onFiltroChange()" [disabled]="isLoading">
+        <option value="">Todos</option>
+        <option value="ATENDIDO">Atendidos</option>
+        <option value="PENDIENTE">Pendientes</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="puntos-recorrido-obligatorio" class="mb-1 block text-sm">
+        Obligatoriedad
+      </label>
+
+      <select id="puntos-recorrido-obligatorio" class="select select-bordered w-full" [(ngModel)]="filtroObligatorio"
+        (ngModelChange)="onFiltroChange()" [disabled]="isLoading">
+        <option [ngValue]="null">Todos</option>
+        <option [ngValue]="true">Obligatorios</option>
+        <option [ngValue]="false">Opcionales</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <label for="puntos-recorrido-limite" class="text-sm">
+        Mostrar
+      </label>
+
+      <select id="puntos-recorrido-limite" class="select select-bordered select-sm" [(ngModel)]="limit"
+        (ngModelChange)="cambiarLimite()" [disabled]="isLoading">
+        @for (cantidad of pageSizeOptions; track cantidad) {
+        <option [ngValue]="cantidad">{{ cantidad }}</option>
+        }
+      </select>
+    </div>
+
+    <button type="button" class="btn btn-sm btn-ghost" [disabled]="isLoading" (click)="limpiarFiltros()">
+      <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i>
+      Limpiar filtros
+    </button>
+  </div>
+
+  @if (isLoading) {
+  <!-- LOADING -->
+  <div class="flex min-h-48 flex-col items-center justify-center gap-3" role="status">
+    <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
+
+    <p class="text-sm text-base-content/60">
+      Cargando puntos del recorrido...
+    </p>
+  </div>
+  } @else if (errorCarga) {
+  <!-- ERROR -->
+  <div class="alert alert-error" role="alert">
+    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+
+    <span>{{ errorCarga }}</span>
+
+    <button type="button" class="btn btn-sm" (click)="getPuntosRecorrido()">
+      Reintentar
+    </button>
+  </div>
+  } @else {
+  <!-- TABLA -->
+  <div class="overflow-x-auto rounded-xl border border-base-300">
+    <table class="table table-sm">
+      <caption class="sr-only">
+        Puntos y recolecciones del recorrido seleccionado
+      </caption>
+
+      <thead class="bg-base-200">
+        <tr>
+          <th scope="col">Orden</th>
+          <th scope="col">Punto</th>
+          <th scope="col">Tipo / condición</th>
+          <th scope="col">Ubicación / atención</th>
+          <th scope="col">Estado de atención</th>
+          <th scope="col">Recolección</th>
+          <th scope="col" class="text-right">Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (punto of puntosPaginados; track punto.id_ruta_punto) {
+        <tr class="hover">
+          <td>
+            <span class="badge badge-outline">
+              {{ punto.orden }}
+            </span>
+          </td>
+
+          <td class="min-w-44">
+            <p class="font-semibold">{{ punto.nombre }}</p>
+
+            <p class="mt-1 text-xs text-base-content/60">
+              {{ punto.codigo ?? 'Sin código' }}
+            </p>
+
+            @if (punto.descripcion) {
+            <p class="mt-1 text-xs text-base-content/60">
+              {{ punto.descripcion }}
+            </p>
+            }
+
+            @if (!punto.estado) {
+            <span class="badge badge-sm badge-ghost mt-2">
+              Punto inactivo
+            </span>
+            }
+          </td>
+
+          <td class="min-w-32">
+            <span class="badge badge-sm badge-outline">
+              {{ punto.tipo_punto }}
+            </span>
+
+            <p class="mt-2 text-xs text-base-content/60">
+              {{ punto.obligatorio ? 'Obligatorio' : 'Opcional' }}
+            </p>
+          </td>
+
+          <td class="whitespace-nowrap text-xs">
+            <div>Lat: {{ punto.latitud }}</div>
+            <div>Lng: {{ punto.longitud }}</div>
+
+            <div class="mt-2 text-base-content/60">
+              Radio:
+              @if (punto.radio_atencion_metros !== null) {
+              {{ punto.radio_atencion_metros }} m
+              } @else {
+              No registrado
+              }
+            </div>
+
+            <div class="text-base-content/60">
+              Tiempo:
+              @if (punto.tiempo_estimado_min !== null) {
+              {{ punto.tiempo_estimado_min }} min
+              } @else {
+              No registrado
+              }
+            </div>
+          </td>
+
+          <td>
+            <span class="badge badge-sm" [ngClass]="
+                      punto.estado_atencion === 'ATENDIDO'
+                        ? 'badge-success'
+                        : 'badge-warning'
+                    ">
+              {{ punto.estado_atencion }}
+            </span>
+          </td>
+
+          <td class="min-w-44">
+            @if (punto.recoleccion; as recoleccion) {
+            <p class="text-sm font-semibold">
+              #{{ recoleccion.id_recoleccion }}
+            </p>
+
+            <p class="mt-1 text-xs text-base-content/60">
+              {{ recoleccion.estado_recoleccion }}
+            </p>
+
+            <p class="mt-1 text-xs">
+              {{
+              recoleccion.fecha_recepcion
+              | date:'dd/MM/yyyy HH:mm'
+              }}
+            </p>
+
+            @if (recoleccion.cantidad_recolectada !== null) {
+            <p class="mt-1 text-xs">
+              {{ recoleccion.cantidad_recolectada }}
+              {{ recoleccion.unidad_medida ?? '' }}
+            </p>
+            }
+
+            @if (recoleccion.fecha_anulacion) {
+            <p class="mt-2 text-xs text-error">
+              Anulada:
+              {{
+              recoleccion.fecha_anulacion
+              | date:'dd/MM/yyyy HH:mm'
+              }}
+            </p>
+
+            @if (recoleccion.motivo_anulacion) {
+            <p class="mt-1 text-xs text-base-content/60">
+              {{ recoleccion.motivo_anulacion }}
+            </p>
+            }
+            }
+            } @else {
+            <span class="text-xs text-base-content/60">
+              Sin recolección asociada
+            </span>
+            }
+          </td>
+
+          <td>
+            @if (punto.recoleccion; as recoleccion) {
+            <div class="flex justify-end gap-1">
+              <button type="button" class="btn btn-sm btn-ghost text-primary" title="Ver recolección"
+                aria-label="Ver recolección" (click)="abrirDetalle(punto)">
+                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+              </button>
+
+              <button type="button" class="btn btn-sm btn-ghost text-info" title="Ver evidencias"
+                aria-label="Ver evidencias" (click)="abrirEvidencias(punto)">
+                <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
+              </button>
+
+              @if (recoleccion.fecha_anulacion === null) {
+              <button type="button" class="btn btn-sm btn-ghost text-error" title="Anular recolección"
+                aria-label="Anular recolección" (click)="abrirAnulacion(punto)">
+                <i class="fa-solid fa-ban" aria-hidden="true"></i>
+              </button>
+              }
+            </div>
+            } @else {
+            <span class="block text-right text-xs text-base-content/40">
+              —
+            </span>
+            }
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="7" class="py-10 text-center text-base-content/60">
+            {{
+            puntos.length === 0
+            ? 'Este recorrido no tiene puntos disponibles.'
+            : 'No se encontraron puntos con estos filtros.'
+            }}
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PAGINACIÓN -->
+  <footer class="flex flex-wrap items-center justify-between gap-3">
+    <p class="text-sm text-base-content/60">
+      {{ totalItems }} puntos encontrados
+
+      @if (totalPages > 0) {
+      · Página {{ currentPage }} de {{ totalPages }}
+      }
+    </p>
+
+    <div class="join">
+      <button type="button" class="btn btn-sm join-item" [disabled]="page <= 1" (click)="cambiarPagina(page - 1)">
+        Anterior
+      </button>
+
+      <button type="button" class="btn btn-sm join-item" [disabled]="page >= totalPages"
+        (click)="cambiarPagina(page + 1)">
+        Siguiente
+      </button>
+    </div>
+  </footer>
+  }
+  }
+</section>

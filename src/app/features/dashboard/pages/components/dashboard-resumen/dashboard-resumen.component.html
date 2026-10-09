@@ -1,0 +1,334 @@
+<section class="space-y-5" aria-labelledby="dashboard-resumen-titulo" [attr.aria-busy]="isLoading">
+  <!-- ENCABEZADO -->
+  <header class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h2 id="dashboard-resumen-titulo" class="text-xl font-bold">
+        <i class="fa-solid fa-chart-pie mr-2 text-primary" aria-hidden="true"></i>
+        Resumen general
+      </h2>
+
+      @if (resumen; as datos) {
+      <p class="mt-1 text-xs text-base-content/60">
+        Generado:
+        {{ datos.generado_en | date:'dd/MM/yyyy HH:mm:ss' }}
+      </p>
+      }
+    </div>
+
+    <button type="button" class="btn btn-sm btn-outline" [disabled]="isLoading" (click)="getDashboardResumen()">
+      <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+      Actualizar resumen
+    </button>
+  </header>
+
+  @if (isLoading) {
+  <!-- LOADING -->
+  <div role="status">
+    <p class="sr-only">Cargando resumen del dashboard...</p>
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      @for (item of [1, 2, 3, 4]; track item) {
+      <div class="rounded-xl border border-base-300 p-5">
+        <div class="skeleton mb-4 h-4 w-2/3"></div>
+        <div class="skeleton h-9 w-1/2"></div>
+      </div>
+      }
+    </div>
+
+    <div class="skeleton mt-5 h-56 w-full"></div>
+  </div>
+  } @else if (errorCarga) {
+  <!-- ERROR -->
+  <div class="alert alert-error" role="alert">
+    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+
+    <span>{{ errorCarga }}</span>
+
+    <button type="button" class="btn btn-sm" (click)="getDashboardResumen()">
+      Reintentar
+    </button>
+  </div>
+  } @else if (resumen; as datos) {
+  <!-- PERÍODO -->
+  @if (camposPeriodo.length > 0) {
+  <div class="flex flex-wrap gap-2">
+    @for (campo of camposPeriodo; track campo.clave) {
+    <span class="badge badge-outline h-auto py-2">
+      {{ campo.etiqueta }}: {{ campo.valor }}
+    </span>
+    }
+  </div>
+  }
+
+  <!-- INDICADORES PRINCIPALES -->
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <article class="rounded-xl border border-base-300 bg-base-100 p-5">
+      <p class="text-sm text-base-content/60">Puntos atendidos</p>
+
+      <p class="mt-2 text-3xl font-bold text-primary">
+        {{ datos.recolecciones.puntos_atendidos | number:'1.0-0' }}
+      </p>
+
+      <p class="mt-2 text-xs text-base-content/60">
+        De
+        {{ datos.recolecciones.puntos_programados | number:'1.0-0' }}
+        puntos programados
+      </p>
+    </article>
+
+    <article class="rounded-xl border border-base-300 bg-base-100 p-5">
+      <p class="text-sm text-base-content/60">Avance de recolección</p>
+
+      <p class="mt-2 text-3xl font-bold text-success">
+        {{ datos.recolecciones.avance_porcentaje | number:'1.0-2' }}%
+      </p>
+
+      <p class="mt-2 text-xs text-base-content/60">
+        {{ datos.recolecciones.puntos_pendientes | number:'1.0-0' }}
+        puntos pendientes
+      </p>
+    </article>
+
+    <article class="rounded-xl border border-base-300 bg-base-100 p-5">
+      <p class="text-sm text-base-content/60">Vehículos disponibles</p>
+
+      <p class="mt-2 text-3xl font-bold text-info">
+        {{ datos.vehiculos.disponibles | number:'1.0-0' }}
+      </p>
+
+      <p class="mt-2 text-xs text-base-content/60">
+        {{ datos.vehiculos.en_recorrido | number:'1.0-0' }}
+        en recorrido
+      </p>
+    </article>
+
+    <article class="rounded-xl border border-base-300 bg-base-100 p-5">
+      <p class="text-sm text-base-content/60">Incidencias abiertas</p>
+
+      @if (datos.incidencias.disponible) {
+      <p class="mt-2 text-3xl font-bold text-warning">
+        {{ datos.incidencias.abiertas | number:'1.0-0' }}
+      </p>
+
+      <p class="mt-2 text-xs text-base-content/60">
+        {{ datos.incidencias.criticas | number:'1.0-0' }}
+        críticas ·
+        {{ datos.incidencias.total | number:'1.0-0' }}
+        en total
+      </p>
+      } @else {
+      <p class="mt-3 text-sm text-base-content/60">
+        Información no disponible
+      </p>
+      }
+    </article>
+  </div>
+
+  <!-- PROGRAMACIONES / RECORRIDOS -->
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+    <article class="rounded-xl border border-base-300 p-5">
+      <h3 class="mb-4 font-semibold">
+        <i class="fa-solid fa-calendar-days mr-2" aria-hidden="true"></i>
+        Programaciones
+      </h3>
+
+      <dl class="grid grid-cols-2 gap-4">
+        @for (indicador of indicadoresProgramaciones; track indicador.clave) {
+        <div>
+          <dt class="text-xs text-base-content/60">
+            {{ indicador.etiqueta }}
+          </dt>
+
+          <dd class="mt-1 text-xl font-semibold">
+            {{ indicador.valor | number:'1.0-2' }}
+            @if (esPorcentaje(indicador.clave)) {
+            <span>%</span>
+            }
+          </dd>
+        </div>
+        }
+      </dl>
+
+      @if (estadosProgramaciones.length > 0) {
+      <div class="mt-4 flex flex-wrap gap-2 border-t border-base-300 pt-4">
+        @for (estado of estadosProgramaciones; track estado.clave) {
+        <span class="badge badge-outline h-auto py-2">
+          {{ estado.etiqueta }}:
+          {{ estado.valor | number:'1.0-0' }}
+        </span>
+        }
+      </div>
+      }
+    </article>
+
+    <article class="rounded-xl border border-base-300 p-5">
+      <h3 class="mb-4 font-semibold">
+        <i class="fa-solid fa-route mr-2" aria-hidden="true"></i>
+        Recorridos
+      </h3>
+
+      <dl class="grid grid-cols-2 gap-4">
+        @for (indicador of indicadoresRecorridos; track indicador.clave) {
+        <div>
+          <dt class="text-xs text-base-content/60">
+            {{ indicador.etiqueta }}
+          </dt>
+
+          <dd class="mt-1 text-xl font-semibold">
+            {{ indicador.valor | number:'1.0-2' }}
+            @if (esPorcentaje(indicador.clave)) {
+            <span>%</span>
+            }
+          </dd>
+        </div>
+        }
+      </dl>
+
+      @if (estadosRecorridos.length > 0) {
+      <div class="mt-4 flex flex-wrap gap-2 border-t border-base-300 pt-4">
+        @for (estado of estadosRecorridos; track estado.clave) {
+        <span class="badge badge-outline h-auto py-2">
+          {{ estado.etiqueta }}:
+          {{ estado.valor | number:'1.0-0' }}
+        </span>
+        }
+      </div>
+      }
+    </article>
+  </div>
+
+  <!-- RECOLECCIONES / VEHÍCULOS -->
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+    <article class="rounded-xl border border-base-300 p-5">
+      <h3 class="mb-4 font-semibold">
+        <i class="fa-solid fa-recycle mr-2" aria-hidden="true"></i>
+        Recolecciones
+      </h3>
+
+      <div class="mb-5">
+        <div class="mb-2 flex justify-between gap-3 text-sm">
+          <span>Avance de atención</span>
+          <span class="font-semibold">
+            {{ datos.recolecciones.avance_porcentaje | number:'1.0-2' }}%
+          </span>
+        </div>
+
+        <progress class="progress progress-success w-full" [value]="avanceVisual" max="100"
+          aria-label="Avance de atención de puntos"></progress>
+      </div>
+
+      <dl class="grid grid-cols-2 gap-4">
+        <div>
+          <dt class="text-xs text-base-content/60">Registros válidos</dt>
+          <dd class="mt-1 text-xl font-semibold">
+            {{ datos.recolecciones.registros_validos | number:'1.0-0' }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-xs text-base-content/60">Registros anulados</dt>
+          <dd class="mt-1 text-xl font-semibold">
+            {{ datos.recolecciones.registros_anulados | number:'1.0-0' }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-xs text-base-content/60">Con evidencia</dt>
+          <dd class="mt-1 text-xl font-semibold">
+            {{ datos.recolecciones.registros_con_evidencia | number:'1.0-0' }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-xs text-base-content/60">Sin evidencia</dt>
+          <dd class="mt-1 text-xl font-semibold">
+            {{ datos.recolecciones.registros_sin_evidencia | number:'1.0-0' }}
+          </dd>
+        </div>
+      </dl>
+
+      <div class="mt-5 border-t border-base-300 pt-4">
+        <h4 class="mb-3 text-sm font-semibold">
+          Cantidades por unidad
+        </h4>
+
+        <dl class="space-y-2">
+          @for (cantidad of cantidadesPorUnidad; track cantidad.clave) {
+          <div class="flex items-center justify-between gap-3">
+            <dt class="text-sm">{{ cantidad.etiqueta }}</dt>
+            <dd class="font-semibold">
+              {{ cantidad.valor | number:'1.0-2' }}
+            </dd>
+          </div>
+          } @empty {
+          <p class="text-sm text-base-content/60">
+            Sin cantidades registradas.
+          </p>
+          }
+        </dl>
+      </div>
+    </article>
+
+    <article class="rounded-xl border border-base-300 p-5">
+      <h3 class="mb-4 font-semibold">
+        <i class="fa-solid fa-truck mr-2" aria-hidden="true"></i>
+        Vehículos
+      </h3>
+
+      <dl class="grid grid-cols-2 gap-4">
+        <div>
+          <dt class="text-xs text-base-content/60">Total</dt>
+          <dd class="mt-1 text-xl font-semibold">
+            {{ datos.vehiculos.total | number:'1.0-0' }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-xs text-base-content/60">Operativos</dt>
+          <dd class="mt-1 text-xl font-semibold text-success">
+            {{ datos.vehiculos.operativos | number:'1.0-0' }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-xs text-base-content/60">Fuera de servicio</dt>
+          <dd class="mt-1 text-xl font-semibold text-error">
+            {{ datos.vehiculos.fuera_servicio | number:'1.0-0' }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-xs text-base-content/60">Cerca de su capacidad</dt>
+          <dd class="mt-1 text-xl font-semibold text-warning">
+            {{ datos.vehiculos.cerca_capacidad | number:'1.0-0' }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-xs text-base-content/60">Capacidad completa</dt>
+          <dd class="mt-1 text-xl font-semibold">
+            {{ datos.vehiculos.capacidad_completa | number:'1.0-0' }}
+          </dd>
+        </div>
+      </dl>
+
+      @if (estadosVehiculos.length > 0) {
+      <div class="mt-5 border-t border-base-300 pt-4">
+        <h4 class="mb-3 text-sm font-semibold">
+          Distribución por estado
+        </h4>
+
+        <div class="flex flex-wrap gap-2">
+          @for (estado of estadosVehiculos; track estado.clave) {
+          <span class="badge badge-outline h-auto py-2">
+            {{ estado.etiqueta }}:
+            {{ estado.valor | number:'1.0-0' }}
+          </span>
+          }
+        </div>
+      </div>
+      }
+    </article>
+  </div>
+  }
+</section>

@@ -11,11 +11,13 @@ import { RutasServices } from '../../services/rutas.service';
 
 // Interfaces
 import { RutaPaginadaItem, RutaZonaData, RutasPaginadasFilters } from '../../interfaces/rutas/get-rutas-paginated.interface';
-import { RutaData } from '../../interfaces/rutas';
+import { RutaData, RutaVersionConPuntosData } from '../../interfaces/rutas';
 
 // Componentes
-import { RutasFormComponent } from './rutas-form/rutas-form.component';
-import { RutasViewComponent } from './rutas-view/rutas-view.component';
+import { RutasFormComponent } from '../ruta-form/ruta-form.component';
+import { RutasViewComponent } from '../ruta-view/ruta-view.component';
+import { RutaVersionesComponent } from '../ruta-versiones/ruta-versiones.component';
+import { RutaHorarioComponent } from '../ruta-horarios/ruta-horarios.component';
 
 type EstadoRuta = 'BORRADOR' | 'ACTIVA' | 'INACTIVA';
 
@@ -26,37 +28,27 @@ type EstadoRuta = 'BORRADOR' | 'ACTIVA' | 'INACTIVA';
     CommonModule,
     FormsModule,
     RutasFormComponent,
-    RutasViewComponent
-  ],
+    RutasViewComponent,
+    RutaVersionesComponent,
+    RutaHorarioComponent
+],
   templateUrl: './rutas-page.component.html',
   styles: ``,
 })
 export class RutasPageComponent implements OnInit, OnDestroy {
-  private readonly destroyRef = inject(DestroyRef);
 
-  // ============================================================
-  // SELECTOR DE ZONAS
-  // Recibe la lista completa desde tu servicio de zonas.
-  // ============================================================
 
-  @Input() zonas: Pick<RutaZonaData, 'id_zona' | 'nombre'>[] = [];
 
-  // ============================================================
-  // EVENTOS PARA CONECTAR FORMULARIO / DETALLE
-  // ============================================================
-
-  @Output() nuevaRuta = new EventEmitter<void>();
-  @Output() editarRuta = new EventEmitter<RutaPaginadaItem>();
-  @Output() verRuta = new EventEmitter<number>();
-
-  // ============================================================
-  // ESTADO
-  // ============================================================
-
+  // Rutas
   rutas: RutaPaginadaItem[] = [];
+  ruta_id: number | null = null;
 
   isLoading = false;
   errorCarga: string | null = null;
+
+  mostrarModalVersiones = false;
+  rutaVersionesId: number | null = null;
+  versionParaPuntos: RutaVersionConPuntosData | null = null;
 
   // Bloquea acciones repetidas sobre un mismo registro.
   readonly registrosProcesando = new Set<number>();
@@ -70,12 +62,13 @@ export class RutasPageComponent implements OnInit, OnDestroy {
   rutaSeleccionada: RutaData | null = null;
 
   mostrarModalView = false;
-  ruta_id: number | null = null;
 
-  // ============================================================
-  // FILTROS
-  // ============================================================
+  mostrarModalHorarios = false;
+  rutaHorariosId: number | null = null;
 
+  private readonly destroyRef = inject(DestroyRef);
+
+  // Search
   searchBusqueda = '';
   zonaBusqueda: number | null = null;
   estadoRutaBusqueda: EstadoRuta | '' = '';
@@ -89,6 +82,7 @@ export class RutasPageComponent implements OnInit, OnDestroy {
   limit = 5;
   totalItems = 0;
   totalPages = 0;
+  currentPage = 1;
 
   readonly pageSizeOptions = [5, 10, 20, 50];
 
@@ -310,7 +304,6 @@ export class RutasPageComponent implements OnInit, OnDestroy {
   // ============================================================
   // CAMBIAR ESTADO OPERATIVO
   // ============================================================
-
   async cambiarEstadoOperativo(
     ruta: RutaPaginadaItem,
   ): Promise<void> {
@@ -400,9 +393,32 @@ export class RutasPageComponent implements OnInit, OnDestroy {
   }
 
   // ============================================================
+  // VERSION RUTAS
+  // ============================================================
+  // abrirVersionesRuta(ruta: RutaPaginadaItem) {
+  //   this.rutaVersionesId = ruta.id_ruta;
+
+
+  // }
+
+  // ============================================================
+  // HORARIOS RUTAS
+  // ============================================================
+  abrirHorarios(idRuta: number): void {
+    this.rutaHorariosId = idRuta;
+    this.mostrarModalHorarios = true;
+  }
+
+  cerrarHorarios(): void {
+    this.mostrarModalHorarios = false;
+    this.rutaHorariosId = null;
+  }
+
+
+
+  // ============================================================
   // FILTROS / PAGINACIÓN
   // ============================================================
-
   onSearchChange(): void {
     this.cancelarBusquedaPendiente();
 
@@ -502,6 +518,27 @@ export class RutasPageComponent implements OnInit, OnDestroy {
     this.mostrarModal = false;
     this.modoEdicion = false;
     this.rutaSeleccionada = null;
+  }
+
+  // ============================================================
+  // RUTA VERSIONES
+  // ============================================================
+  abrirVersiones(idRuta: number): void {
+    this.rutaVersionesId = idRuta;
+    this.mostrarModalVersiones = true;
+  }
+
+  cerrarVersiones(): void {
+    this.mostrarModalVersiones = false;
+    this.rutaVersionesId = null;
+  }
+
+  gestionarPuntosVersion(
+    version: RutaVersionConPuntosData,
+  ): void {
+    this.versionParaPuntos = version;
+
+    // Aquí conectarás la apertura de RutaPuntosComponent.
   }
   // ============================================================
   // HELPERS

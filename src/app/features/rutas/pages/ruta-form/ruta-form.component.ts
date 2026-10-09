@@ -9,8 +9,8 @@ import Swal from 'sweetalert2';
 import { RutasServices } from 'src/app/features/rutas/services/rutas.service';
 
 // Interfaces
-import { CreateRutaRequest, RutaData } from '../../../interfaces/rutas/create-ruta.interface';
-import { UpdateRutaRequest } from '../../../interfaces/rutas/update-ruta.interface';
+import { CreateRutaRequest, RutaData } from '../../interfaces/rutas/create-ruta.interface';
+import { UpdateRutaRequest } from '../../interfaces/rutas/update-ruta.interface';
 
 // ============================================================
 // OPCIONES DEL SELECTOR DE ZONAS
@@ -60,7 +60,7 @@ const idValido: ValidatorFn = (
     CommonModule,
     ReactiveFormsModule,
   ],
-  templateUrl: './rutas-form.component.html',
+  templateUrl: './ruta-form.component.html',
   styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

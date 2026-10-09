@@ -1,0 +1,202 @@
+<section class="space-y-5 rounded-xl border border-base-300
+         bg-base-100 p-5" aria-labelledby="recoleccion-capacidad-titulo" [attr.aria-busy]="isLoading">
+  <!-- ENCABEZADO -->
+  <header class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h2 id="recoleccion-capacidad-titulo" class="text-lg font-bold">
+        <i class="fa-solid fa-truck mr-2 text-primary" aria-hidden="true"></i>
+        Capacidad del vehículo
+      </h2>
+
+      <p class="mt-1 text-sm text-base-content/60">
+        Ocupación y cantidades acumuladas durante el recorrido.
+      </p>
+    </div>
+
+    <button type="button" class="btn btn-sm btn-outline" [disabled]="idRecorrido === null || isLoading"
+      (click)="getCapacidadRecorrido()">
+      <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+      Actualizar
+    </button>
+  </header>
+
+  @if (isLoading) {
+  <!-- LOADING -->
+  <div role="status">
+    <p class="sr-only">Cargando capacidad del vehículo...</p>
+
+    <div class="skeleton mb-4 h-5 w-1/3"></div>
+    <div class="skeleton mb-5 h-8 w-full"></div>
+
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      @for (item of [1, 2, 3]; track item) {
+      <div class="skeleton h-24 w-full"></div>
+      }
+    </div>
+  </div>
+  } @else if (errorCarga) {
+  <!-- ERROR -->
+  <div class="alert alert-error" role="alert">
+    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+
+    <span>{{ errorCarga }}</span>
+
+    <button type="button" class="btn btn-sm" (click)="getCapacidadRecorrido()">
+      Reintentar
+    </button>
+  </div>
+  } @else if (capacidadRecorrido; as datos) {
+  <!-- VEHÍCULO / RECORRIDO -->
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <p class="font-semibold">
+        Placa: {{ datos.vehiculo.placa }}
+      </p>
+
+      <p class="mt-1 text-xs text-base-content/60">
+        Recorrido #{{ datos.id_recorrido }}
+        · {{ datos.estado_recorrido }}
+      </p>
+    </div>
+
+    <span class="badge badge-outline h-auto py-2" [ngClass]="{
+          'badge-success': nivelCapacidad === 'normal',
+          'badge-warning': nivelCapacidad === 'advertencia',
+          'badge-error': nivelCapacidad === 'critico'
+        }">
+      {{ datos.capacidad.estado }}
+    </span>
+  </div>
+
+  <!-- OCUPACIÓN -->
+  <div class="rounded-xl border border-base-300 p-4">
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <h3 class="text-sm font-semibold">Ocupación</h3>
+
+      <span class="text-xl font-bold" [ngClass]="{
+            'text-success': nivelCapacidad === 'normal',
+            'text-warning': nivelCapacidad === 'advertencia',
+            'text-error': nivelCapacidad === 'critico'
+          }">
+        {{ datos.capacidad.porcentaje | number:'1.0-2' }}%
+      </span>
+    </div>
+
+    <progress class="progress w-full" [ngClass]="{
+          'progress-success': nivelCapacidad === 'normal',
+          'progress-warning': nivelCapacidad === 'advertencia',
+          'progress-error': nivelCapacidad === 'critico'
+        }" [value]="porcentajeVisual" max="100" aria-label="Ocupación de la capacidad del vehículo"></progress>
+
+    <p class="mt-2 text-xs text-base-content/60">
+      Umbral de advertencia:
+      {{ datos.capacidad.umbral_advertencia | number:'1.0-2' }}%
+    </p>
+  </div>
+
+  <!-- AVISOS -->
+  @if (datos.capacidad.existe_sobrecarga) {
+  <div class="alert alert-error" role="status">
+    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+
+    <span>
+      Capacidad excedida en
+      {{ datos.capacidad.cantidad_excedida | number:'1.0-2' }}
+      {{ datos.vehiculo.unidad_capacidad }}.
+    </span>
+  </div>
+  } @else if (datos.capacidad.capacidad_completa) {
+  <div class="alert alert-warning" role="status">
+    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+
+    <span>El vehículo alcanzó su capacidad completa.</span>
+  </div>
+  } @else if (nivelCapacidad === 'advertencia') {
+  <div class="alert alert-warning" role="status">
+    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+
+    <span>La ocupación alcanzó el umbral de advertencia.</span>
+  </div>
+  }
+
+  <!-- CANTIDADES -->
+  <dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div class="rounded-xl border border-base-300 bg-base-200/40 p-4">
+      <dt class="text-sm text-base-content/60">
+        Capacidad máxima
+      </dt>
+
+      <dd class="mt-2 text-2xl font-bold">
+        {{ datos.vehiculo.capacidad_maxima | number:'1.0-2' }}
+      </dd>
+
+      <p class="mt-1 text-xs text-base-content/60">
+        {{ datos.vehiculo.unidad_capacidad }}
+      </p>
+    </div>
+
+    <div class="rounded-xl border border-base-300 bg-base-200/40 p-4">
+      <dt class="text-sm text-base-content/60">
+        Cantidad acumulada
+      </dt>
+
+      <dd class="mt-2 text-2xl font-bold text-primary">
+        {{ datos.capacidad.cantidad_acumulada | number:'1.0-2' }}
+      </dd>
+
+      <p class="mt-1 text-xs text-base-content/60">
+        {{ datos.vehiculo.unidad_capacidad }}
+      </p>
+    </div>
+
+    <div class="rounded-xl border border-base-300 bg-base-200/40 p-4">
+      <dt class="text-sm text-base-content/60">
+        Capacidad restante
+      </dt>
+
+      <dd class="mt-2 text-2xl font-bold">
+        {{ datos.capacidad.capacidad_restante | number:'1.0-2' }}
+      </dd>
+
+      <p class="mt-1 text-xs text-base-content/60">
+        {{ datos.vehiculo.unidad_capacidad }}
+      </p>
+    </div>
+  </dl>
+
+  <!-- REGISTROS -->
+  <div class="border-t border-base-300 pt-4">
+    <h3 class="mb-3 text-sm font-semibold">
+      Registros de recolección
+    </h3>
+
+    <dl class="grid grid-cols-3 gap-3">
+      <div>
+        <dt class="text-xs text-base-content/60">Total</dt>
+        <dd class="mt-1 text-xl font-semibold">
+          {{ datos.recolecciones.total | number:'1.0-0' }}
+        </dd>
+      </div>
+
+      <div>
+        <dt class="text-xs text-base-content/60">Con cantidad</dt>
+        <dd class="mt-1 text-xl font-semibold">
+          {{ datos.recolecciones.con_cantidad | number:'1.0-0' }}
+        </dd>
+      </div>
+
+      <div>
+        <dt class="text-xs text-base-content/60">Sin cantidad</dt>
+        <dd class="mt-1 text-xl font-semibold">
+          {{ datos.recolecciones.sin_cantidad | number:'1.0-0' }}
+        </dd>
+      </div>
+    </dl>
+  </div>
+  } @else {
+  <div class="rounded-xl border border-dashed border-base-300
+             p-8 text-center text-sm text-base-content/60">
+    Selecciona un recorrido para consultar la capacidad del vehículo.
+  </div>
+  }
+</section>

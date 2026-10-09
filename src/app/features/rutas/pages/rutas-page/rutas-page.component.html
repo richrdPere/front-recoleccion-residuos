@@ -54,11 +54,11 @@
               (ngModelChange)="onFiltroChange()">
               <option [ngValue]="null">Todas las zonas</option>
 
-              @for (zona of zonas; track zona.id_zona) {
+              <!-- @for (zona of zonas; track zona.id_zona) {
               <option [ngValue]="zona.id_zona">
                 {{ zona.nombre }}
               </option>
-              }
+              } -->
             </select>
           </label>
 
@@ -125,6 +125,14 @@
   <!-- Modal de detalle de ruta -->
   <rutas-view [mostrarModal]="mostrarModalView" [ruta_id]="ruta_id" (modalCerrado)="cerrarModalInfo()">
   </rutas-view>
+
+  <!-- Modal de versiones de ruta -->
+  <ruta-versiones [mostrarModal]="mostrarModalVersiones" [ruta_id]="rutaVersionesId" (modalCerrado)="cerrarVersiones()"
+    (gestionarPuntos)="gestionarPuntosVersion($event)"></ruta-versiones>
+
+  <!-- Modal de horarios de una ruta -->
+  <ruta-horario [mostrarModal]="mostrarModalHorarios" [ruta_id]="rutaHorariosId"
+    (modalCerrado)="cerrarHorarios()"></ruta-horario>
 
   <!-- TABLA -->
   <section class="overflow-hidden rounded-2xl
@@ -291,6 +299,18 @@
             <!-- Acciones -->
             <td>
               <div class="flex items-center justify-center gap-1">
+
+                <button type="button" class="btn btn-ghost btn-circle btn-sm" title="Horarios de la ruta"
+                  aria-label="Ver versiones de la ruta" (click)="abrirHorarios(ruta.id_ruta)">
+                  <i class="fa-regular fa-clock"></i>
+                </button>
+
+                <button type="button" class="btn btn-ghost btn-circle btn-sm" title="Versiones de la ruta"
+                  aria-label="Ver versiones de la ruta" (click)="abrirVersiones(ruta.id_ruta)">
+                  <i class="fa-solid fa-code-branch " aria-hidden="true"></i>
+                </button>
+
+
                 <button type="button" class="btn btn-ghost btn-circle btn-sm" title="Ver ruta"
                   aria-label="Ver detalle de la ruta" (click)="abrirDetalle(ruta)">
                   <i class="fa-regular fa-eye" aria-hidden="true"></i>

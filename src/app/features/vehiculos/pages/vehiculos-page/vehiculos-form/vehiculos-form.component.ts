@@ -109,7 +109,7 @@ function opcionPermitida(
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VehiculosFormComponent implements OnChanges {
-  private readonly destroyRef = inject(DestroyRef);
+
 
   // ============================================================
   // INPUTS / OUTPUTS
@@ -125,8 +125,8 @@ export class VehiculosFormComponent implements OnChanges {
   // ============================================================
   // ESTADO
   // ============================================================
-
   readonly formVehiculo: FormGroup;
+  private readonly destroyRef = inject(DestroyRef);
 
   isLoading = false;
   modalWidthClass = 'max-w-4xl';
