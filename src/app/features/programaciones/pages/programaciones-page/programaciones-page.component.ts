@@ -10,8 +10,8 @@ import { ProgramacionesService } from '../../services/programaciones.service';
 
 // Interfaces
 import { EstadoProgramacion, ProgramacionPaginadaItem, ProgramacionPaginadaPersonalAsignado, ProgramacionPaginadaRuta, ProgramacionPaginadaVehiculo, ProgramacionesPaginadasFilters } from '../../interfaces/programaciones';
-import { ProgramacionesFormComponent } from './programaciones-form/programaciones-form.component';
-import { ProgramacionesViewComponent } from './programaciones-view/programaciones-view.component';
+import { ProgramacionesFormComponent } from '../components/programaciones-form/programaciones-form.component';
+import { ProgramacionesViewComponent } from '../components/programaciones-view/programaciones-view.component';
 
 @Component({
   selector: 'app-programaciones-page',

@@ -14,8 +14,8 @@ import { ZonasServices } from '../../services/zonas.service';
 import { ZonaData, ZonasPaginadasFilters } from '../../interfaces';
 
 // Componentes
-import { ZonaFormComponent } from '../zona-form/zona-form.component';
-import { ZonaViewComponent } from '../zona-view/zona-view.component';
+import { ZonaFormComponent } from '../components/zona-form/zona-form.component';
+import { ZonaViewComponent } from '../components/zona-view/zona-view.component';
 
 @Component({
   selector: 'app-zonas-page',

@@ -6,9 +6,7 @@
   <!-- ================================================= -->
   <!-- ENCABEZADO -->
   <!-- ================================================= -->
-  <header class="mb-5 flex flex-col gap-4
-             sm:flex-row sm:items-center
-             sm:justify-between">
+  <header class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
     <div class="flex min-w-0 items-center gap-3">
 
@@ -17,7 +15,7 @@
                  rounded-2xl bg-primary/10
                  text-primary" aria-hidden="true">
 
-        <i class="fa-solid fa-car-side text-2xl"></i>
+        <i class="fa-solid fa-truck-moving text-2xl"></i>
       </div>
 
       <div class="min-w-0">
@@ -43,8 +41,7 @@
   <!-- ================================================= -->
   <section class="mb-6 overflow-hidden rounded-2xl
          border border-base-300 bg-base-100 shadow-sm">
-    <div class="grid grid-cols-1
-           lg:grid-cols-[minmax(0,1fr)_170px]">
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_170px]">
 
       <!-- ================================================= -->
       <!-- CAMPOS DE FILTRO -->
@@ -66,7 +63,8 @@
                      w-full min-w-0 rounded-xl bg-base-100
                      pl-11 pr-4 focus:outline-none
                      focus:ring-2 focus:ring-primary/30" placeholder="Buscar por placa" autocomplete="off"
-                [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()" appUppercase />
+                [ngClass]="searchBusqueda.trim() ? 'border-primary' : 'border-base-300'" [(ngModel)]="searchBusqueda"
+                (ngModelChange)="onSearchChange()" appUppercase />
 
               <span class="pointer-events-none absolute inset-y-0 left-0 z-10
                      flex w-11 items-center justify-center
@@ -86,7 +84,8 @@
             <select id="filtro-tipo" class="select select-bordered h-11 min-h-11
                    w-full min-w-0 rounded-xl bg-base-100
                    focus:outline-none focus:ring-2
-                   focus:ring-primary/30" [(ngModel)]="tipoVehiculoBusqueda" (ngModelChange)="onSearchChange()">
+                   focus:ring-primary/30" [ngClass]="tipoVehiculoBusqueda ? 'border-primary' : 'border-base-300'"
+              [(ngModel)]="tipoVehiculoBusqueda" (ngModelChange)="onSearchChange()">
               <option value="">Todos los tipos</option>
 
               @for (opcion of tiposVehiculo; track opcion.value) {
@@ -107,7 +106,8 @@
             <select id="filtro-estado" class="select select-bordered h-11 min-h-11
                    w-full min-w-0 rounded-xl bg-base-100
                    focus:outline-none focus:ring-2
-                   focus:ring-primary/30" [(ngModel)]="estadoOperativoBusqueda" (ngModelChange)="onSearchChange()">
+                   focus:ring-primary/30" [ngClass]="estadoOperativoBusqueda ? 'border-primary' : 'border-base-300'"
+              [(ngModel)]="estadoOperativoBusqueda" (ngModelChange)="onSearchChange()">
               <option value="">Todos los estados</option>
 
               @for (estado of estadosOperativos; track estado.value) {
@@ -180,12 +180,12 @@
                  justify-between gap-3
                  text-sm text-base-content/70
                  sm:w-auto sm:justify-start">
-        <label for="incidentes-page-size" class="whitespace-nowrap">
+        <label for="vehiculos-page-size" class="whitespace-nowrap">
           Mostrar
         </label>
 
-        <select id="incidentes-page-size" class="select select-bordered
-                   select-sm w-auto" [(ngModel)]="limit" (change)="cambiarLimite()">
+        <select id="vehiculos-page-size" class="select select-bordered select-sm
+         w-16 min-w-16 shrink-0 pl-3 pr-8" [(ngModel)]="limit" (change)="cambiarLimite()">
 
           @for ( size of pageSizeOptions; track size ) {
           <option [ngValue]="size">
@@ -334,32 +334,29 @@
             <td>
               <div class="flex items-center gap-3">
 
-                <!-- Foto o icono -->
+                <!-- Foto o ícono según el tipo de vehículo -->
                 <div class="flex h-10 w-10 shrink-0
-                     items-center justify-center
-                     overflow-hidden rounded-xl
-                     bg-primary/10 text-primary">
+                items-center justify-center
+                overflow-hidden rounded-xl
+                bg-primary/10 text-primary">
                   @if (vehiculo.foto_url) {
                   <img [src]="vehiculo.foto_url" [alt]="'Vehículo ' + vehiculo.placa"
                     class="h-full w-full object-cover" />
                   } @else {
-                  <i class="fa-solid fa-truck
-                         text-base"></i>
+                  <i class="fa-solid text-base" [ngClass]="getTipoVehiculo(vehiculo.tipo_vehiculo).icon"
+                    aria-hidden="true"></i>
                   }
                 </div>
 
                 <!-- Código y placa -->
                 <div class="min-w-0">
-                  <p class="truncate text-sm
-                       font-semibold" [title]="vehiculo.codigo">
-                    {{ vehiculo.codigo }}
+                  <p class="truncate text-sm font-semibold" [title]="vehiculo.placa">
+                    {{ vehiculo.placa }}
                   </p>
 
-                  <p class="mt-0.5 truncate
-                       text-xs font-medium
-                       uppercase tracking-wide
-                       text-base-content/50" [title]="vehiculo.placa">
-                    {{ vehiculo.placa }}
+                  <p class="mt-0.5 truncate text-xs font-medium uppercase tracking-wide text-base-content/50"
+                    [title]="vehiculo.codigo">
+                    {{ vehiculo.codigo }}
                   </p>
                 </div>
               </div>
@@ -376,8 +373,7 @@
                   {{ vehiculo.marca }}
                 </p>
 
-                <p class="mt-0.5 truncate
-                     text-xs text-base-content/50" [title]="vehiculo.modelo">
+                <p class="mt-0.5 truncate text-xs text-base-content/50" [title]="vehiculo.modelo">
                   {{ vehiculo.modelo }}
 
                   @if (vehiculo.anio) {
@@ -388,45 +384,38 @@
                 </p>
 
                 @if (vehiculo.color) {
-                <p class="mt-0.5 truncate
-                       text-xs text-base-content/40">
+                <p class="mt-0.5 truncate text-xs text-base-content/40">
                   {{ vehiculo.color }}
                 </p>
                 }
               </div>
             </td>
 
+
             <!-- ============================================= -->
             <!-- TIPO DE VEHÍCULO -->
             <!-- ============================================= -->
-
             <td>
-              <span class="badge badge-outline
-                   gap-1.5 whitespace-nowrap">
-                <i class="fa-solid" [ngClass]="getTipoIcon(vehiculo.tipo_vehiculo)"></i>
+              <ng-container *ngIf="getTipoVehiculo(vehiculo.tipo_vehiculo) as tipo">
+                <span class="badge badge-outline gap-1.5 whitespace-nowrap font-semibold" [ngClass]="tipo.class">
+                  <i class="fa-solid" [ngClass]="tipo.icon" aria-hidden="true"></i>
 
-                {{ vehiculo.tipo_vehiculo }}
-              </span>
+                  {{ tipo.label }}
+                </span>
+              </ng-container>
             </td>
 
             <!-- ============================================= -->
             <!-- CAPACIDAD -->
             <!-- ============================================= -->
-
             <td>
               <div class="whitespace-nowrap">
                 <p class="text-sm font-semibold">
-                  {{
-                  vehiculo.capacidad_maxima
-                  | number:'1.0-2'
-                  }}
+                  {{ vehiculo.capacidad_maxima | number:'1.0-2' }}
                 </p>
 
-                <p class="text-xs
-                     text-base-content/50">
-                  {{
-                  vehiculo.unidad_capacidad
-                  }}
+                <p class="text-xs text-base-content/50">
+                  {{ vehiculo.unidad_capacidad }}
                 </p>
               </div>
             </td>
@@ -655,26 +644,27 @@
              items-center justify-center
              rounded-full bg-base-200
              text-base-content/35">
-      <i class="fa-regular fa-folder-open text-3xl"></i>
+      <i class="fa-solid fa-truck text-3xl" aria-hidden="true"></i>
     </div>
 
     <h2 class="mt-5 text-lg font-bold">
-      No se encontraron incidencias
+      No se encontraron vehículos
     </h2>
 
-    <p class="mx-auto mt-2 max-w-md
-             text-sm text-base-content/55">
-      El sereno no tiene incidencias registradas o no existen
-      resultados para los filtros seleccionados.
+    <p class="mx-auto mt-2 max-w-md text-sm text-base-content/55">
+      @if ( searchBusqueda || estadoOperativoBusqueda || tipoVehiculoBusqueda
+      ) {
+      No hay vehículos que coincidan con los filtros seleccionados.
+      Prueba con otros criterios de búsqueda.
+      } @else {
+      Aún no hay vehículos registrados en el sistema.
+      }
     </p>
 
-    @if (
-    searchBusqueda ||
-    estadoOperativoBusqueda ||
-    tipoVehiculoBusqueda
-    ) {
-    <button type="button" class="btn btn-primary btn-sm mt-5" (click)="limpiarFiltros()">
-      <i class="fa-solid fa-filter-circle-xmark"></i>
+    @if ( searchBusqueda || estadoOperativoBusqueda || tipoVehiculoBusqueda ) {
+    <button type="button" class="btn btn-secondary btn-sm mt-5" (click)="limpiarFiltros()">
+      <!-- <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i> -->
+      <i class="fa-solid fa-eraser" aria-hidden="true"></i>
       Limpiar filtros
     </button>
     }

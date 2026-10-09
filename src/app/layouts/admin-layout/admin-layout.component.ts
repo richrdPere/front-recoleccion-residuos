@@ -283,7 +283,7 @@ export class AdminLayoutComponent {
             label: 'Vehículos',
             description: 'Unidades recolectoras',
             route: '/admin/vehiculos',
-            icon: 'fa-solid fa-truck',
+            icon: 'fa-solid fa-truck-moving',
             roles: [
               'SUPER_ADMIN',
               'ADMIN',

@@ -16,8 +16,8 @@ import { EstadoLaboralPersonal, PersonalOperativoData, PersonalPaginadoFilters, 
 import { UsuarioSelectorItem } from 'src/app/features/usuarios/interfaces';
 
 // Componentes
-import { PersonalFormComponent } from '../personal-form/personal-form.component';
-import { PersonalViewComponent } from '../personal-view/personal-view.component';
+import { PersonalFormComponent } from '../components/personal-form/personal-form.component';
+import { PersonalViewComponent } from '../components/personal-view/personal-view.component';
 
 
 @Component({

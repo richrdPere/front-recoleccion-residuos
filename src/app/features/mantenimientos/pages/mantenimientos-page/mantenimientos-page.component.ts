@@ -16,11 +16,11 @@ import { EstadoMantenimiento, MantenimientoDetalleData, MantenimientoPaginadoIte
 import { VehiculoSelectorItem } from 'src/app/features/vehiculos/models';
 
 // Componentes
-import { MantenimientoFormComponent } from '../mantenimiento-form/mantenimiento-form.component';
-import { MantenimientoViewComponent } from '../mantenimiento-view/mantenimiento-view.component';
-import { IniciarMantenimientoComponent } from '../iniciar-mantenimiento/iniciar-mantenimiento.component';
-import { FinalizarMantenimientoComponent } from '../finalizar-mantenimiento/finalizar-mantenimiento.component';
-import { CancelarMantenimientoComponent } from '../cancelar-mantenimiento/cancelar-mantenimiento.component';
+import { MantenimientoFormComponent } from '../components/mantenimiento-form/mantenimiento-form.component';
+import { MantenimientoViewComponent } from '../components/mantenimiento-view/mantenimiento-view.component';
+import { IniciarMantenimientoComponent } from '../components/iniciar-mantenimiento/iniciar-mantenimiento.component';
+import { FinalizarMantenimientoComponent } from '../components/finalizar-mantenimiento/finalizar-mantenimiento.component';
+import { CancelarMantenimientoComponent } from '../components/cancelar-mantenimiento/cancelar-mantenimiento.component';
 
 @Component({
   selector: 'app-mantenimientos-page',

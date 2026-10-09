@@ -8,7 +8,6 @@ export interface ChangeVehiculoEstadoRequest {
 
 export interface ChangeVehiculoEstadoOperativoRequest {
   estado_operativo: EstadoOperativoVehiculo;
-
   observacion?: string | null;
 }
 

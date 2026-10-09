@@ -162,8 +162,7 @@ export class VehiculosService {
     idVehiculo: number,
     request: boolean,
   ): Observable<ChangeVehiculoEstadoResponse> {
-    const headers =
-      this.getJsonHeaders();
+    const headers = this.getJsonHeaders();
 
     return this.http
       .patch<ChangeVehiculoEstadoResponse>(

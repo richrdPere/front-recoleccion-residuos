@@ -6,3 +6,19 @@
 @plugin "daisyui" {
   themes: light --default, dark --prefersdark;
 }
+
+html {
+  font-size: 13px;
+}
+
+/* Ajuste para pantallas de laptop */
+/* @media (min-width: 1024px) and (max-width: 1440px) {
+
+  body {
+    zoom: 0.9;
+  }
+} */
+
+/* body {
+  zoom: 0.9;
+} */

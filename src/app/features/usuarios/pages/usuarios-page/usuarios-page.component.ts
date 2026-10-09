@@ -14,9 +14,9 @@ import { UsuarioService } from '../../services/usuario.service';
 import { UsuarioIdentificador, UsuarioPaginadoItem, UsuarioRolAsignado, UsuarioRolCatalogo, UsuarioRolNombre, UsuariosPaginadosFilters } from '../../interfaces';
 
 // Componentes
-import { UsuarioViewComponent } from '../usuario-view/usuario-view.component';
-import { UsuarioFormComponent } from '../usuario-form/usuario-form.component';
-import { UsuarioRolesComponent } from '../usuario-roles/usuario-roles.component';
+import { UsuarioViewComponent } from '../components/usuario-view/usuario-view.component';
+import { UsuarioFormComponent } from '../components/usuario-form/usuario-form.component';
+import { UsuarioRolesComponent } from '../components/usuario-roles/usuario-roles.component';
 
 @Component({
   selector: 'app-usuarios-page',

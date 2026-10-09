@@ -11,11 +11,11 @@ import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directiv
 import { VehiculosService } from '../../services/vehiculos.service';
 
 // Interface
-import { EstadoOperativoVehiculo, TipoVehiculo,  VehiculoData, VehiculosPaginadosFilters } from '../../models';
+import { EstadoOperativoVehiculo, TipoVehiculo, VehiculoData, VehiculosPaginadosFilters } from '../../models';
 
 // Componentes
-import { VehiculosFormComponent } from './vehiculos-form/vehiculos-form.component';
-import { VehiculosViewComponent } from './vehiculos-view/vehiculos-view.component';
+import { VehiculosFormComponent } from '../components/vehiculos-form/vehiculos-form.component';
+import { VehiculosViewComponent } from '../components/vehiculos-view/vehiculos-view.component';
 
 @Component({
   selector: 'app-vehiculos-page',
@@ -67,23 +67,23 @@ export class VehiculosPageComponent implements OnInit {
   }[] = [
       {
         value: 'CAMION_COMPACTADOR',
-        label: 'Camión compactador',
+        label: 'CAMIÓN COMPACTADOR',
       },
       {
         value: 'CAMION_BARANDA',
-        label: 'Camión baranda',
+        label: 'CAMIÓN BARANDA',
       },
       {
         value: 'CAMION_VOLQUETE',
-        label: 'Camión volquete',
+        label: 'CAMIÓN VOLQUETE',
       },
       {
         value: 'MOTOFURGON',
-        label: 'Motofurgón',
+        label: 'MOTOFURGÓN',
       },
       {
         value: 'OTRO',
-        label: 'Otro',
+        label: 'OTRO',
       },
     ];
 
@@ -93,19 +93,19 @@ export class VehiculosPageComponent implements OnInit {
   }[] = [
       {
         value: 'DISPONIBLE',
-        label: 'Disponible',
+        label: 'DISPONIBLE',
       },
       {
         value: 'EN_RUTA',
-        label: 'En ruta',
+        label: 'EN RUTA',
       },
       {
         value: 'EN_MANTENIMIENTO',
-        label: 'En mantenimiento',
+        label: 'EN MANENIMIENTO',
       },
       {
         value: 'FUERA_DE_SERVICIO',
-        label: 'Fuera de servicio',
+        label: 'FUERA DE SERVICIO',
       },
     ];
 
@@ -292,32 +292,48 @@ export class VehiculosPageComponent implements OnInit {
     this.getVehiculosPaginated();
   }
 
-
-  getTipoIcon(
-    tipo: TipoVehiculo,
-  ): string {
-    const icons:
-      Record<TipoVehiculo, string> = {
-      CAMION_COMPACTADOR:
-        'fa-truck',
-
-      CAMION_BARANDA:
-        'fa-truck-pickup',
-
-      CAMION_VOLQUETE:
-        'fa-truck-moving',
-
-      MOTOFURGON:
-        'fa-motorcycle',
-
-      OTRO:
-        'fa-car-side',
+  getTipoVehiculo(tipo: TipoVehiculo): {
+    icon: string;
+    label: string;
+    class: string;
+  } {
+    const tipos: Record<
+      TipoVehiculo,
+      { icon: string; label: string; class: string }
+    > = {
+      CAMION_COMPACTADOR: {
+        icon: 'fa-truck',
+        label: 'COMPACTADOR',
+        class: 'badge-info',
+      },
+      CAMION_BARANDA: {
+        icon: 'fa-truck-pickup',
+        label: 'BARANDA',
+        class: 'badge-primary',
+      },
+      CAMION_VOLQUETE: {
+        icon: 'fa-truck-moving',
+        label: 'VOLQUETE',
+        class: 'badge-success',
+      },
+      MOTOFURGON: {
+        icon: 'fa-motorcycle',
+        label: 'MOTOFURGÓN',
+        class: 'badge-accent',
+      },
+      OTRO: {
+        icon: 'fa-car-side',
+        label: 'OTRO',
+        class: 'badge-error',
+      },
     };
 
-    return icons[tipo] ??
-      'fa-truck';
+    return tipos[tipo] ?? {
+      icon: 'fa-truck',
+      label: 'NO ESPECIFICADO',
+      class: 'badge-neutral',
+    };
   }
-
 
   getEstadoOperativoClass(estado: string): {
     label: string;
@@ -341,7 +357,7 @@ export class VehiculosPageComponent implements OnInit {
       },
       EN_MANTENIMIENTO: {
         label: 'MANTENIMIENTO',
-        class: 'badge-accent'
+        class: 'badge-secondary'
       },
       FUERA_DE_SERVICIO: {
         label: 'FUERA_DE_SERVICIO',

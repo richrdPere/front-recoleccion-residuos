@@ -1,0 +1,466 @@
+@if (mostrarModal) {
+
+<div class="modal modal-open">
+  <!-- ===================================================== -->
+  <!-- MODAL: FORM - VEHICULOS -->
+  <!-- ===================================================== -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center
+           bg-black/30 p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="vehiculo-form-title">
+
+
+    <section class="relative flex max-h-[92vh] w-full flex-col
+             overflow-hidden rounded-2xl border border-base-300
+             bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+      <!-- ================================================= -->
+      <!-- HEADER MODAL -->
+      <!-- ================================================= -->
+      <header class="flex shrink-0 items-center justify-between gap-4
+         border-b border-base-300
+         px-5 py-4 sm:px-6">
+
+        <!-- Ícono e información -->
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-12 w-12 shrink-0 items-center
+                  justify-center rounded-2xl
+                  bg-primary/10 text-primary">
+            <i class="fa-solid text-lg" [ngClass]="modoEdicion ? 'fa-pen-to-square' : 'fa-truck'"
+              aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="patrullaje-form-title" class="truncate text-lg font-bold sm:text-xl">
+              {{ modoEdicion ? 'Editar vehículo - ' : 'Nuevo vehículo - ' }}
+
+              <!-- Badge código -->
+              @if (formVehiculo.get('codigo')?.value) {
+              <span class="badge badge-primary badge-outline px-3 font-mono text-sm">
+                {{ formVehiculo.get('codigo')?.value }}
+              </span>
+              }
+            </h2>
+
+            <p class="mt-0.5 text-sm text-base-content/55">
+              {{
+              modoEdicion
+              ? 'Actualice los datos del vehículo.'
+              : 'Agrege un nuevo vehículo.'
+              }}
+
+
+            </p>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-circle btn-ghost btn-sm shrink-0" aria-label="Cerrar formulario"
+          [disabled]="isLoading" (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </header>
+
+      <!-- ================================================= -->
+      <!-- FORMULARIO -->
+      <!-- ================================================= -->
+      <form [formGroup]="formVehiculo" (ngSubmit)="crearOEditarVehiculo()" class="flex min-h-0 flex-1 flex-col">
+
+        <!-- =============================================== -->
+        <!-- CONTENIDO CON SCROLL -->
+        <!-- =============================================== -->
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
+
+          <fieldset class="min-w-0 space-y-6" [disabled]="isLoading">
+
+            <!-- INFORMACIÓN INICIAL -->
+            <div class="space-y-3">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-truck text-primary" aria-hidden="true"></i>
+
+                Información inicial del vehículo
+              </h3>
+
+              <!-- Placa, Marca y Modelo -->
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+                <!-- Placa -->
+                <div class="form-control">
+                  <label class="label" for="vehiculo-placa">
+                    <span class="label-text flex items-center gap-1">
+                      Placa
+                      @if (esRequerido('placa')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <input id="vehiculo-placa" type="text" formControlName="placa"
+                    placeholder="Ingrese la placa (Ej. ABC-123)"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+                    [class.input-success]="campoCompleto('placa')" [class.input-error]="campoInvalido('placa')"
+                    [attr.aria-invalid]="campoInvalido('placa')"
+                    [attr.aria-describedby]="campoInvalido('placa') ? 'vehiculo-placa-error' : null"
+                    (blur)="normalizarCampo('placa', true)" appUppercase />
+
+                  @if (campoInvalido('placa')) {
+                  <p id="vehiculo-placa-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('placa') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Marca -->
+                <div class="form-control">
+                  <label class="label" for="vehiculo-marca">
+                    <span class="label-text flex items-center gap-1">
+                      Marca
+                      @if (esRequerido('marca')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <input id="vehiculo-marca" type="text" formControlName="marca"
+                    placeholder="Ingrese la marca (Ej. HINO)"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+                    [class.input-success]="campoCompleto('marca')" [class.input-error]="campoInvalido('marca')"
+                    [attr.aria-invalid]="campoInvalido('marca')"
+                    [attr.aria-describedby]="campoInvalido('marca') ? 'vehiculo-marca-error' : null"
+                    (blur)="normalizarCampo('marca', true)" appUppercase />
+
+                  @if (campoInvalido('marca')) {
+                  <p id="vehiculo-marca-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('marca') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Modelo -->
+                <div class="form-control">
+                  <label class="label" for="vehiculo-modelo">
+                    <span class="label-text flex items-center gap-1">
+                      Modelo
+                      @if (esRequerido('modelo')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <input id="vehiculo-modelo" type="text" formControlName="modelo"
+                    placeholder="Ingrese el modelo (Ej. SERIE 500)"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+                    [class.input-success]="campoCompleto('modelo')" [class.input-error]="campoInvalido('modelo')"
+                    [attr.aria-invalid]="campoInvalido('modelo')"
+                    [attr.aria-describedby]="campoInvalido('modelo') ? 'vehiculo-modelo-error' : null" appUppercase />
+
+                  @if (campoInvalido('modelo')) {
+                  <p id="vehiculo-modelo-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('modelo') }}
+                  </p>
+                  }
+                </div>
+              </div>
+
+              <!-- Año y Color -->
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+                <!-- Año -->
+                <div class="form-control">
+                  <label class="label" for="vehiculo-anio">
+                    <span class="label-text flex items-center gap-1">
+                      Año
+                      @if (esRequerido('anio')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <input id="vehiculo-anio" type="number" formControlName="anio" placeholder="Ingrese el año (Ej. 2020)"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+                    [class.input-success]="campoCompleto('anio')" [class.input-error]="campoInvalido('anio')"
+                    [attr.aria-invalid]="campoInvalido('anio')"
+                    [attr.aria-describedby]="campoInvalido('anio') ? 'vehiculo-anio-error' : null" [min]="anioMinimo"
+                    [max]="anioMaximo" step="1" />
+
+                  @if (campoInvalido('anio')) {
+                  <p id="vehiculo-anio-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('anio') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Color -->
+                <div class="form-control">
+                  <label class="label" for="vehiculo-color">
+                    <span class="label-text flex items-center gap-1">
+                      Color
+                      @if (esRequerido('color')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <input id="vehiculo-color" type="text" formControlName="color"
+                    placeholder="Ingrese el color (Ej. BLANCO)"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+                    [class.input-success]="campoCompleto('color')" [class.input-error]="campoInvalido('color')"
+                    [attr.aria-invalid]="campoInvalido('color')"
+                    [attr.aria-describedby]="campoInvalido('color') ? 'vehiculo-color-error' : null"
+                    (blur)="normalizarCampo('color', true)" appUppercase />
+
+                  @if (campoInvalido('color')) {
+                  <p id="vehiculo-color-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('color') }}
+                  </p>
+                  }
+                </div>
+
+              </div>
+            </div>
+
+            <!-- DATOS OPERATIVOS -->
+            <div class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-gears text-primary" aria-hidden="true"></i>
+                Datos operativos del vehículo
+              </h3>
+
+              <!-- Tipo + Estado operativo + Kilometraje -->
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+                <!-- Tipo de vehículo -->
+                <div class="form-control">
+                  <label class="label" for="vehiculo-tipo">
+                    <span class="label-text flex items-center gap-1">
+                      Tipo de vehículo
+                      @if (esRequerido('tipo_vehiculo')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <select id="vehiculo-tipo" formControlName="tipo_vehiculo"
+                    class="select select-bordered border-2 w-full rounded-lg transition-colors duration-200"
+                    [class.select-success]="campoCompleto('tipo_vehiculo')"
+                    [class.select-error]="campoInvalido('tipo_vehiculo')"
+                    [attr.aria-invalid]="campoInvalido('tipo_vehiculo')"
+                    [attr.aria-describedby]="campoInvalido('tipo_vehiculo') ? 'vehiculo-tipo-error' : null">
+
+                    <option [ngValue]="null" disabled>
+                      Seleccionar tipo de vehículo
+                    </option>
+
+                    @for (opcion of tiposVehiculo; track opcion.value) {
+                    <option [value]="opcion.value">
+                      {{ opcion.label }}
+                    </option>
+                    }
+                  </select>
+
+                  @if (campoInvalido('tipo_vehiculo')) {
+                  <p id="vehiculo-tipo-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('tipo_vehiculo') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Estado operativo -->
+                <div class="form-control">
+                  <label class="label" for="vehiculo-estado-operativo">
+                    <span class="label-text flex items-center gap-1">
+                      Estado operativo
+                      @if (esRequerido('estado_operativo')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <select id="vehiculo-estado-operativo" formControlName="estado_operativo"
+                    class="select select-bordered border-2 w-full rounded-lg transition-colors duration-200"
+                    [class.select-success]="campoCompleto('estado_operativo')"
+                    [class.select-error]="campoInvalido('estado_operativo')"
+                    [attr.aria-invalid]="campoInvalido('estado_operativo')"
+                    [attr.aria-describedby]="campoInvalido('estado_operativo') ? 'vehiculo-estado-operativo-error' : null">
+
+                    <option [ngValue]="null" disabled>
+                      Seleccionar estado operativo
+                    </option>
+
+                    @for (opcion of estadosOperativos; track opcion.value) {
+                    <option [value]="opcion.value">
+                      {{ opcion.label }}
+                    </option>
+                    }
+                  </select>
+
+                  @if (campoInvalido('estado_operativo')) {
+                  <p id="vehiculo-estado-operativo-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('estado_operativo') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Kilometraje -->
+                <div class="form-control">
+                  <label class="label" for="vehiculo-kilometraje">
+                    <span class="label-text flex items-center gap-1">
+                      Kilometraje (km)
+                      @if (esRequerido('kilometraje')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <input id="vehiculo-kilometraje" type="number" formControlName="kilometraje"
+                    placeholder="Ingrese el kilometraje (Ej. 25000)"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+                    [class.input-success]="campoCompleto('kilometraje')"
+                    [class.input-error]="campoInvalido('kilometraje')"
+                    [attr.aria-invalid]="campoInvalido('kilometraje')"
+                    [attr.aria-describedby]="campoInvalido('kilometraje') ? 'vehiculo-kilometraje-error' : null" min="0"
+                    step="any" />
+
+                  @if (campoInvalido('kilometraje')) {
+                  <p id="vehiculo-kilometraje-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('kilometraje') }}
+                  </p>
+                  }
+                </div>
+              </div>
+
+              <!-- Capacidad + Unidad -->
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+                <!-- Capacidad máxima -->
+                <div class="form-control">
+                  <label class="label" for="vehiculo-capacidad">
+                    <span class="label-text flex items-center gap-1">
+                      Capacidad máxima
+                      @if (simboloCapacidad) {
+                      <span class="text-base-content/60">
+                        ({{ simboloCapacidad }})
+                      </span>
+                      }
+                      @if (esRequerido('capacidad_maxima')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <input id="vehiculo-capacidad" type="number" formControlName="capacidad_maxima"
+                    placeholder="Ingrese la capacidad (Ej. 12.5)"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+                    [class.input-success]="campoCompleto('capacidad_maxima')"
+                    [class.input-error]="campoInvalido('capacidad_maxima')"
+                    [attr.aria-invalid]="campoInvalido('capacidad_maxima')"
+                    [attr.aria-describedby]="campoInvalido('capacidad_maxima') ? 'vehiculo-capacidad-error' : null"
+                    min="0" step="any" />
+
+                  @if (campoInvalido('capacidad_maxima')) {
+                  <p id="vehiculo-capacidad-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('capacidad_maxima') }}
+                  </p>
+                  }
+                </div>
+
+                <!-- Unidad de capacidad -->
+                <div class="form-control">
+                  <label class="label" for="vehiculo-unidad">
+                    <span class="label-text flex items-center gap-1">
+                      Unidad de capacidad
+                      @if (esRequerido('unidad_capacidad')) {
+                      <span class="font-bold text-red-500">*</span>
+                      }
+                    </span>
+                  </label>
+
+                  <select id="vehiculo-unidad" formControlName="unidad_capacidad"
+                    class="select select-bordered border-2 w-full rounded-lg transition-colors duration-200"
+                    [class.select-success]="campoCompleto('unidad_capacidad')"
+                    [class.select-error]="campoInvalido('unidad_capacidad')"
+                    [attr.aria-invalid]="campoInvalido('unidad_capacidad')"
+                    [attr.aria-describedby]="campoInvalido('unidad_capacidad') ? 'vehiculo-unidad-error' : null">
+
+                    <option [ngValue]="null" disabled>
+                      Seleccionar unidad de capacidad
+                    </option>
+
+                    @for (opcion of unidadesCapacidad; track opcion.value) {
+                    <option [value]="opcion.value">
+                      {{ opcion.label }}
+                    </option>
+                    }
+                  </select>
+
+                  @if (campoInvalido('unidad_capacidad')) {
+                  <p id="vehiculo-unidad-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('unidad_capacidad') }}
+                  </p>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- OBSERVACIONES -->
+            <div class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <i class="fa-solid fa-clipboard text-primary" aria-hidden="true"></i>
+                Observaciones
+              </h3>
+
+              <div class="form-control">
+                <label class="label" for="vehiculo-observacion">
+                  <span class="label-text">Información adicional</span>
+
+                  <span class="label-text-alt text-base-content/55">
+                    Opcional
+                  </span>
+                </label>
+
+                <textarea id="vehiculo-observacion" formControlName="observacion" rows="3"
+                  placeholder="Ingrese observaciones sobre el vehículo."
+                  class="textarea textarea-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+                  [class.textarea-success]="campoCompleto('observacion')"
+                  [class.textarea-error]="campoInvalido('observacion')"
+                  [attr.aria-invalid]="campoInvalido('observacion')"
+                  [attr.aria-describedby]="campoInvalido('observacion') ? 'vehiculo-observacion-error' : null"
+                  appUppercase></textarea>
+
+                @if (campoInvalido('observacion')) {
+                <p id="vehiculo-observacion-error" class="mt-1 text-sm text-red-500">
+                  {{ obtenerError('observacion') }}
+                </p>
+                }
+              </div>
+            </div>
+
+          </fieldset>
+        </div>
+
+        <!-- =============================================== -->
+        <!-- FOOTER -->
+        <!-- =============================================== -->
+        <footer class="flex shrink-0 flex-col-reverse gap-3
+               border-t border-base-300 bg-base-100
+               px-5 py-4 sm:flex-row sm:items-center
+               sm:justify-center sm:px-6">
+
+          <div class="flex flex-col-reverse gap-5
+                 sm:flex-row sm:justify-end">
+            <button type="button" class="btn btn-error" [disabled]="isLoading" (click)="cerrarModal()">
+              Cancelar
+            </button>
+
+            <button type="submit" class="btn btn-primary" [disabled]="formVehiculo.invalid">
+              @if (isLoading) {
+              <span class="loading loading-spinner loading-sm"></span>
+              {{ modoEdicion ? 'Actualizando...' : 'Guardando...' }}
+              } @else {
+              {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+              }
+            </button>
+          </div>
+        </footer>
+      </form>
+    </section>
+  </div>
+</div>
+}

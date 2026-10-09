@@ -14,8 +14,8 @@ import { RutaPaginadaItem, RutaZonaData, RutasPaginadasFilters } from '../../int
 import { RutaData, RutaVersionConPuntosData } from '../../interfaces/rutas';
 
 // Componentes
-import { RutasFormComponent } from '../ruta-form/ruta-form.component';
-import { RutasViewComponent } from '../ruta-view/ruta-view.component';
+import { RutasFormComponent } from '../components/ruta-form/ruta-form.component';
+import { RutasViewComponent } from '../components/ruta-view/ruta-view.component';
 import { RutaVersionesComponent } from '../ruta-versiones/ruta-versiones.component';
 import { RutaHorarioComponent } from '../ruta-horarios/ruta-horarios.component';
 
