@@ -8,3 +8,4 @@ export * from './finalizar-mantenimiento.interface';
 export * from './cancelar-mantenimiento.interface';
 export * from './get-historial-vehiculo.interface';
 export * from './update-mantenimiento.interface';
+export * from './get-vehiculos-expedientes-paginados.interface';

@@ -12,7 +12,7 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
 // Interfaces
-import { ChangeVehiculoEstadoOperativoRequest, ChangeVehiculoEstadoResponse, CreateVehiculoRequest, CreateVehiculoResponse, DeleteVehiculoResponse, GetVehiculoByIdResponse, GetVehiculoSelectorResponse, GetVehiculosPaginatedResponse, UltimoCodigoResponse, UpdateVehiculoRequest, UpdateVehiculoResponse, VehiculoSelectorFilters, VehiculosPaginadosFilters } from '../models';
+import { ChangeVehiculoEstadoOperativoRequest, ChangeVehiculoEstadoRequest, ChangeVehiculoEstadoResponse, CreateVehiculoRequest, CreateVehiculoResponse, DeleteVehiculoResponse, GetVehiculoByIdResponse, GetVehiculoSelectorResponse, GetVehiculosPaginatedResponse, UltimoCodigoResponse, UpdateVehiculoRequest, UpdateVehiculoResponse, VehiculoSelectorFilters, VehiculosPaginadosFilters } from '../models';
 
 @Injectable({
   providedIn: 'root'
@@ -29,6 +29,7 @@ export class VehiculosService {
   private readonly API_GET_VEHICULO_BY_ID: string = this.API_BASE + '/view/';
   private readonly API_UPDATE_VEHICULO: string = this.API_BASE + '/update/';
   private readonly API_PATCH_ESTADO_VEHICULO: string = this.API_BASE + '/estado/';
+  private readonly API_PATCH_ESTADO_OPERATIVO_VEHICULO: string = this.API_BASE + '/';
   private readonly API_DELETE_VEHICULO: string = this.API_BASE + '/delete/';
   private readonly API_GET_ULTIMO_CODIGO: string = this.API_BASE + '/codigo';
   private readonly API_GET_VEHICULO_SELECTOR = this.API_BASE + '/selector';
@@ -141,7 +142,7 @@ export class VehiculosService {
 
     return this.http
       .patch<ChangeVehiculoEstadoResponse>(
-        `${this.API_BASE}/${idVehiculo}/estado-operativo`,
+        `${this.API_PATCH_ESTADO_OPERATIVO_VEHICULO}${idVehiculo}/estado-operativo`,
         request,
         { headers },
       )
@@ -160,7 +161,7 @@ export class VehiculosService {
   // *********************************************************
   changeEstado(
     idVehiculo: number,
-    request: boolean,
+    request: ChangeVehiculoEstadoRequest,
   ): Observable<ChangeVehiculoEstadoResponse> {
     const headers = this.getJsonHeaders();
 

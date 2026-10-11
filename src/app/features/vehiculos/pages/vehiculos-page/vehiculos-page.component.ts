@@ -1,7 +1,7 @@
 import { CommonModule, DatePipe, } from '@angular/common';
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { finalize, firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 
 // Directives
@@ -16,6 +16,7 @@ import { EstadoOperativoVehiculo, TipoVehiculo, VehiculoData, VehiculosPaginados
 // Componentes
 import { VehiculosFormComponent } from '../components/vehiculos-form/vehiculos-form.component';
 import { VehiculosViewComponent } from '../components/vehiculos-view/vehiculos-view.component';
+import { VehiculosEstadoOperativoComponent } from '../components/vehiculos-estado-operativo/vehiculos-estado-operativo.component';
 
 @Component({
   selector: 'app-vehiculos-page',
@@ -25,7 +26,8 @@ import { VehiculosViewComponent } from '../components/vehiculos-view/vehiculos-v
     CommonModule,
     UppercaseDirective,
     VehiculosFormComponent,
-    VehiculosViewComponent
+    VehiculosViewComponent,
+    VehiculosEstadoOperativoComponent
   ],
   templateUrl: './vehiculos-page.component.html',
   styles: ``,
@@ -43,6 +45,9 @@ export class VehiculosPageComponent implements OnInit {
   modoEdicion = false;
   vehiculoSeleccionado: any = null;
 
+  mostrarModalEstadoOperativo = false;
+  vehiculoEstadoSeleccionado: VehiculoData | null = null;
+
   searchTimeout: any;
 
   // Search
@@ -59,6 +64,8 @@ export class VehiculosPageComponent implements OnInit {
 
   pageSizeOptions = [5, 10, 20, 50];
 
+  // Estado switch
+  readonly vehiculoCambiandoEstado = new Set<string>();
 
   // Selectores
   readonly tiposVehiculo: {
@@ -225,26 +232,143 @@ export class VehiculosPageComponent implements OnInit {
     this.mostrarModalView = true;
   }
 
-  // CAMBIAR ESTADO
-  cambiarEstado(vehiculo: VehiculoData) {
 
-    this.vehiculosService.changeEstado(vehiculo.id_vehiculo, !vehiculo.estado)
-      .subscribe({
-        next: (res) => {
+  // *********************************************************
+  // - CAMBIAR ESTADO OPERATIVO
+  // *********************************************************
+  abrirModalEstadoOperativo(vehiculo: VehiculoData): void {
+    this.vehiculoEstadoSeleccionado = vehiculo;
+    this.mostrarModalEstadoOperativo = true;
+  }
 
-          vehiculo.estado = res.data.estado;
+  cerrarModalEstadoOperativo(): void {
+    this.mostrarModalEstadoOperativo = false;
+    this.vehiculoEstadoSeleccionado = null;
+  }
 
-          Swal.fire({
-            icon: 'success',
-            title: res.message,
-            timer: 1500,
-            showConfirmButton: false
-          });
+  onEstadoOperativoActualizado(vehiculoActualizado: VehiculoData): void {
+    this.vehiculos = this.vehiculos.map((vehiculo) =>
+      vehiculo.id_vehiculo === vehiculoActualizado.id_vehiculo
+        ? vehiculoActualizado
+        : vehiculo,
+    );
+  }
+
+  // - CAMBIAR ESTADO
+  async cambiarEstado(
+    vehiculo: VehiculoData,
+    event: Event,
+  ): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const vehiculoId = String(vehiculo.id_vehiculo);
+
+    // El navegador ya cambió el checkbox; restauramos su estado.
+    input.checked = vehiculo.estado;
+
+    if (this.vehiculoCambiandoEstado.has(vehiculoId)) {
+      return;
+    }
+
+    const nuevoEstado = !vehiculo.estado;
+
+    this.vehiculoCambiandoEstado.add(vehiculoId);
+    this.cdr.markForCheck();
+
+    try {
+      const resultado = await Swal.fire({
+        icon: 'warning',
+        title: nuevoEstado
+          ? '¿Activar vehiculo?'
+          : '¿Desactivar vehiculo?',
+
+        text: nuevoEstado
+          ? `Se habilitará el vehiculo con código: ${vehiculo.codigo}.`
+          : `Se deshabilitará el vehiculo con código: ${vehiculo.codigo}.`,
+
+        showCancelButton: true,
+        confirmButtonText: nuevoEstado
+          ? 'Sí, activar'
+          : 'Sí, desactivar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: nuevoEstado ? '#16a34a' : '#dc2626',
+
+        reverseButtons: true,
+        focusCancel: true,
+        showLoaderOnConfirm: true,
+
+        allowOutsideClick: () => !Swal.isLoading(),
+        allowEscapeKey: () => !Swal.isLoading(),
+
+        preConfirm: async () => {
+          try {
+            const response = await firstValueFrom(
+              this.vehiculosService.changeEstado(
+                vehiculo.id_vehiculo,
+                { estado: nuevoEstado },
+              ),
+            );
+
+            if (!response.success) {
+              Swal.showValidationMessage(
+                response.message || 'No se pudo actualizar el estado.',
+              );
+              return false;
+            }
+
+            return response;
+          } catch (error: unknown) {
+            const err = error as {
+              error?: { message?: unknown } | string;
+              message?: unknown;
+            } | null;
+
+            const mensajeBackend = typeof err?.error === 'string'
+              ? err.error
+              : err?.error?.message;
+
+            const mensaje = mensajeBackend ?? err?.message;
+
+            Swal.showValidationMessage(
+              typeof mensaje === 'string' && mensaje.trim()
+                ? mensaje
+                : 'Ocurrió un error al actualizar el estado del vehiculo.',
+            );
+
+            return false;
+          }
         },
-        error: (err) => console.error(err)
       });
 
+      if (!resultado.isConfirmed || !resultado.value) {
+        return;
+      }
+
+      // Usa el estado confirmado por el backend.
+      vehiculo.estado = resultado.value.data.estado;
+      vehiculo.updated_at = resultado.value.data.updated_at;
+
+      input.checked = vehiculo.estado;
+      this.cdr.markForCheck();
+
+      void Swal.fire({
+        icon: 'success',
+        title: vehiculo.estado
+          ? 'Vehiculo activado'
+          : 'Vehiculo desactivado',
+        text: resultado.value.message,
+        timer: 1800,
+        showConfirmButton: false,
+      });
+    } finally {
+      this.vehiculoCambiandoEstado.delete(vehiculoId);
+      this.cdr.markForCheck();
+    }
   }
+
+  estaCambiandoEstado(vehiculo: VehiculoData): boolean {
+    return this.vehiculoCambiandoEstado.has(String(vehiculo.id_vehiculo));
+  }
+
   // ================================
   // Helpers methods
   // ================================

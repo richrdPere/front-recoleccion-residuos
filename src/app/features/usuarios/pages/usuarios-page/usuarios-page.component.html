@@ -40,8 +40,7 @@
   <!-- ================================================= -->
   <section class="mb-6 overflow-hidden rounded-2xl
          border border-base-300 bg-base-100 shadow-sm">
-    <div class="grid grid-cols-1
-           lg:grid-cols-[minmax(0,1fr)_170px]">
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_170px]">
 
       <!-- ================================================= -->
       <!-- CAMPOS DE FILTRO -->
@@ -51,19 +50,21 @@
                sm:grid-cols-2
                xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
 
-          <!-- Buscar por nombre o dni -->
+          <!-- Buscar por usuario -->
           <div class="min-w-0">
-            <label for="filtro-placa" class="mb-1.5 block text-xs font-semibold
+            <label for="filtro-usuario" class="mb-1.5 block text-xs font-semibold
                    uppercase tracking-wide text-base-content/60">
-              Busqueda
+              Usuario
             </label>
 
             <div class="relative">
-              <input id="filtro-placa" type="text" class="input input-bordered h-11 min-h-11
-                     w-full min-w-0 rounded-xl bg-base-100
-                     pl-11 pr-4 focus:outline-none
-                     focus:ring-2 focus:ring-primary/30" placeholder="Buscar por nombres o dni" autocomplete="off"
-                [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()" appUppercase />
+              <input id="filtro-usuario" type="text" class="input input-bordered h-11 min-h-11
+                      w-full min-w-0 rounded-xl bg-base-200
+                     pl-11 pr-4 transition-colors
+                     focus:border-primary focus:outline-none
+                     focus:ring-2 focus:ring-primary/30" placeholder="Buscar por nombres o DNI" autocomplete="off"
+                [ngClass]="searchBusqueda.trim() ? 'border-primary' : 'border-base-500'" [(ngModel)]="searchBusqueda"
+                (ngModelChange)="onSearchChange()" appUppercase />
 
               <span class="pointer-events-none absolute inset-y-0 left-0 z-10
                      flex w-11 items-center justify-center
@@ -81,9 +82,11 @@
             </label>
 
             <select id="filtro-tipo" class="select select-bordered h-11 min-h-11
-                   w-full min-w-0 rounded-xl bg-base-100
-                   focus:outline-none focus:ring-2
-                   focus:ring-primary/30" [(ngModel)]="rolBusqueda" (ngModelChange)="onSearchChange()">
+                  w-full min-w-0 rounded-xl bg-base-200
+                  pl-4 pr-10 transition-colors
+                  focus:border-primary focus:outline-none
+                  focus:ring-2 focus:ring-primary/30" [ngClass]="rolBusqueda ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="rolBusqueda" (ngModelChange)="onSearchChange()">
               <option value="">Todos los roles</option>
 
               @for (opcion of rolesDisponibles; track opcion.id_rol) {
@@ -176,12 +179,12 @@
                  justify-between gap-3
                  text-sm text-base-content/70
                  sm:w-auto sm:justify-start">
-        <label for="incidentes-page-size" class="whitespace-nowrap">
+        <label for="usuarios-page-size" class="whitespace-nowrap">
           Mostrar
         </label>
 
-        <select id="incidentes-page-size" class="select select-bordered
-                   select-sm w-auto" [(ngModel)]="limit" (change)="cambiarLimite()">
+        <select id="usuarios-page-size" class="select select-bordered select-sm
+         w-16 min-w-16 shrink-0 pl-3 pr-8" [(ngModel)]="limit" (change)="cambiarLimite()">
 
           @for ( size of pageSizeOptions; track size ) {
           <option [ngValue]="size">
@@ -219,8 +222,8 @@
           <tr class="text-xs uppercase tracking-wide text-base-content/60">
             <th scope="col" class="w-14 text-center">N.°</th>
             <th scope="col" class="min-w-60">Usuario</th>
-            <th scope="col" class="min-w-36">Documento</th>
-            <th scope="col" class="min-w-52">Contacto</th>
+            <th scope="col" class="min-w-34">Documento</th>
+            <th scope="col" class="min-w-48">Contacto</th>
             <th scope="col" class="min-w-44">Roles</th>
             <th scope="col" class="min-w-28 text-center">Estado</th>
             <th scope="col" class="min-w-40">Último acceso</th>
@@ -563,10 +566,13 @@
   <!-- VACÍO -->
   <!-- ===================================================== -->
   @if (!isLoading && usuarios.length === 0) {
-  <section class="rounded-2xl border border-dashed border-base-300
-         bg-base-100 px-6 py-16 text-center shadow-sm" aria-label="Sin usuarios disponibles">
-    <div class="mx-auto flex h-20 w-20 items-center justify-center
-           rounded-full bg-base-200 text-base-content/35">
+  <section class="rounded-2xl border border-dashed
+           border-base-300 bg-base-100
+           px-6 py-16 text-center shadow-sm" aria-label="Sin usuarios disponibles">
+    <div class="mx-auto flex h-20 w-20
+             items-center justify-center
+             rounded-full bg-base-200
+             text-base-content/35">
       <i class="fa-solid fa-users text-3xl" aria-hidden="true"></i>
     </div>
 
@@ -575,14 +581,21 @@
     </h2>
 
     <p class="mx-auto mt-2 max-w-md text-sm text-base-content/55">
-      No hay usuarios disponibles para la página y los filtros seleccionados.
+      @if ( searchBusqueda || rolBusqueda ) {
+      No hay usuarios disponibles que coincidan con los filtros seleccionados.
+      Prueba con otros criterios de búsqueda.
+      } @else {
+      Aún no hay usuarios registrados en el sistema.
+      }
     </p>
 
-    <button type="button" class="btn btn-primary btn-sm mt-5" (click)="limpiarFiltros()">
-      <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i>
-
+    @if ( searchBusqueda || rolBusqueda ) {
+    <button type="button" class="btn btn-secondary btn-sm mt-5" (click)="limpiarFiltros()">
+      <!-- <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i> -->
+      <i class="fa-solid fa-eraser" aria-hidden="true"></i>
       Limpiar filtros
     </button>
+    }
   </section>
   }
 

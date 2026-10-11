@@ -19,16 +19,11 @@
       </div>
 
       <div class="min-w-0">
-        <h1 class="text-2xl font-bold
-                   leading-tight text-base-content">
-
+        <h1 class="text-2xl font-bold leading-tight text-base-content">
           Vehiculos
         </h1>
 
-        <p class="mt-1 max-w-2xl
-                   text-sm leading-relaxed
-                   text-base-content/60">
-
+        <p class="mt-1 max-w-2xl text-sm leading-relaxed text-base-content/60">
           Registre y administre las unidades disponibles
           para las operaciones de patrullaje.
         </p>
@@ -51,19 +46,20 @@
                sm:grid-cols-2
                xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
 
-          <!-- Buscar por placa -->
+          <!-- Buscar por vehiculo -->
           <div class="min-w-0">
             <label for="filtro-placa" class="mb-1.5 block text-xs font-semibold
                    uppercase tracking-wide text-base-content/60">
-              Placa
+              Vehículo
             </label>
 
             <div class="relative">
               <input id="filtro-placa" type="text" class="input input-bordered h-11 min-h-11
-                     w-full min-w-0 rounded-xl bg-base-100
-                     pl-11 pr-4 focus:outline-none
-                     focus:ring-2 focus:ring-primary/30" placeholder="Buscar por placa" autocomplete="off"
-                [ngClass]="searchBusqueda.trim() ? 'border-primary' : 'border-base-300'" [(ngModel)]="searchBusqueda"
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pl-11 pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30" placeholder="Buscar por código o placa" autocomplete="off"
+                [ngClass]="searchBusqueda.trim() ? 'border-primary' : 'border-base-500'" [(ngModel)]="searchBusqueda"
                 (ngModelChange)="onSearchChange()" appUppercase />
 
               <span class="pointer-events-none absolute inset-y-0 left-0 z-10
@@ -82,10 +78,12 @@
             </label>
 
             <select id="filtro-tipo" class="select select-bordered h-11 min-h-11
-                   w-full min-w-0 rounded-xl bg-base-100
-                   focus:outline-none focus:ring-2
-                   focus:ring-primary/30" [ngClass]="tipoVehiculoBusqueda ? 'border-primary' : 'border-base-300'"
-              [(ngModel)]="tipoVehiculoBusqueda" (ngModelChange)="onSearchChange()">
+                w-full min-w-0 rounded-xl bg-base-200
+                pl-4 pr-10 transition-colors
+                focus:border-primary focus:outline-none
+                focus:ring-2 focus:ring-primary/30"
+              [ngClass]="tipoVehiculoBusqueda ? 'border-primary' : 'border-base-500'" [(ngModel)]="tipoVehiculoBusqueda"
+              (ngModelChange)="onSearchChange()">
               <option value="">Todos los tipos</option>
 
               @for (opcion of tiposVehiculo; track opcion.value) {
@@ -104,9 +102,9 @@
             </label>
 
             <select id="filtro-estado" class="select select-bordered h-11 min-h-11
-                   w-full min-w-0 rounded-xl bg-base-100
+                   w-full min-w-0 rounded-xl bg-base-200
                    focus:outline-none focus:ring-2
-                   focus:ring-primary/30" [ngClass]="estadoOperativoBusqueda ? 'border-primary' : 'border-base-300'"
+                   focus:ring-primary/30" [ngClass]="estadoOperativoBusqueda ? 'border-primary' : 'border-base-500'"
               [(ngModel)]="estadoOperativoBusqueda" (ngModelChange)="onSearchChange()">
               <option value="">Todos los estados</option>
 
@@ -156,6 +154,11 @@
   <!-- Modal para ver detalle delvehiculo -->
   <vehiculos-view [mostrarModal]="mostrarModalView" [vehiculo_id]="vehiculo_id"
     (modalCerrado)="cerrarModalInfo()"></vehiculos-view>
+
+  <!-- Modal para cambiar estado operativo -->
+  <vehiculos-estado-operativo [mostrarModal]="mostrarModalEstadoOperativo" [vehiculo]="vehiculoEstadoSeleccionado"
+    (modalCerrado)="cerrarModalEstadoOperativo()"
+    (estadoActualizado)="onEstadoOperativoActualizado($event)"></vehiculos-estado-operativo>
 
   <!-- ================================================= -->
   <!-- TABLA DE VEHICULOS -->
@@ -453,20 +456,14 @@
             <td class="text-center">
               <div class="inline-flex items-center justify-center gap-2">
 
-                <input type="checkbox" class="toggle toggle-sm
-                               border-error
-                               bg-error/70
-                               checked:border-success
-                               checked:bg-success" [checked]="vehiculo.estado" (change)="cambiarEstado(vehiculo)"
-                  [attr.aria-label]="
-                          vehiculo.estado
-                            ? 'Desactivar vehiculo'
-                            : 'Activar vehiculo'
-                        " />
+                <input type="checkbox"
+                  class="toggle toggle-sm border-error bg-error/70 checked:border-success checked:bg-success"
+                  [checked]="vehiculo.estado" [disabled]="estaCambiandoEstado(vehiculo)"
+                  (change)="cambiarEstado(vehiculo, $event)" [attr.aria-busy]="estaCambiandoEstado(vehiculo)"
+                  [attr.aria-label]="vehiculo.estado ? 'Desactivar vehiculo' : 'Activar vehiculo'" />
 
                 <span class="min-w-14 text-left text-xs font-medium" [class.text-success]="vehiculo.estado"
                   [class.text-error]="!vehiculo.estado">
-
                   {{ vehiculo.estado ? 'Activo' : 'Inactivo' }}
                 </span>
               </div>
@@ -482,8 +479,15 @@
             <!-- ACCIONES -->
             <!-- ============================================= -->
             <td>
-              <div class="flex items-center
-                   justify-center gap-1">
+              <div class="flex items-center justify-center gap-1">
+
+                <!-- Estado operativo -->
+                <!-- <div class="tooltip tooltip-left" data-tip="Cambiar estado operativo">
+                  <button type="button" class="btn btn-ghost btn-sm btn-square" title="Cambiar estado operativo"
+                    aria-label="Cambiar estado operativo" (click)="abrirModalEstadoOperativo(vehiculo)">
+                    <i class="fa-solid fa-gears" aria-hidden="true"></i>
+                  </button>
+                </div> -->
 
                 <!-- Ver -->
                 <div class="tooltip tooltip-left" data-tip="Ver vehículo">

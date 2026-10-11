@@ -19,12 +19,18 @@
         <div class="flex min-w-0 items-center gap-3">
           <div class="flex h-11 w-11 shrink-0 items-center justify-center
                      rounded-xl bg-primary/10 text-primary">
-            <i class="fa-solid fa-truck text-lg" aria-hidden="true"></i>
+            <!-- <i class="fa-solid fa-truck text-lg" aria-hidden="true"></i> -->
+            <i class="fa-solid fa-truck-moving text-lg" aria-hidden="true"></i>
           </div>
 
           <div class="min-w-0">
             <h2 id="vehiculo-info-title" class="truncate text-lg font-bold text-base-content sm:text-xl">
-              Información del vehículo
+              Información del vehículo -
+
+              <!-- Badge código -->
+              <span class="badge badge-primary badge-outline px-3 font-mono text-sm">
+                {{ getCodigo() }}
+              </span>
             </h2>
 
             <p class="mt-0.5 text-sm text-base-content/60">
@@ -107,147 +113,169 @@
         } @else if (vehiculo; as detalle) {
         <div class="space-y-5">
 
-          <!-- INFORMACIÓN GENERAL -->
-          <div>
-            <h4 class="mb-3 flex items-center gap-2 text-lg font-semibold">
-              <i class="fa-solid fa-truck text-primary" aria-hidden="true"></i>
-              Información general
-            </h4>
+          <!-- ================================================= -->
+          <!-- RESUMEN DEL VEHÍCULO -->
+          <!-- ================================================= -->
+          <section class="rounded-2xl border border-base-300 bg-base-100 p-4">
+            <div class="flex flex-wrap items-center gap-4">
 
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div class="rounded-lg bg-base-200 p-3">
-                <p class="text-xs text-base-content/60">Código</p>
-                <p class="wrap-break-word font-medium">
-                  {{ detalle.codigo || 'No registrado' }}
+              <!-- Fotografía o ícono -->
+              <div class="flex h-16 w-16 shrink-0 items-center justify-center
+               overflow-hidden rounded-2xl bg-primary/10 text-primary">
+                @if (detalle.foto_url) {
+                <img [src]="detalle.foto_url" [alt]="'Vehículo ' + detalle.placa" class="h-full w-full object-cover" />
+                } @else {
+                <!-- <i class="fa-solid fa-truck " aria-hidden="true"></i> -->
+                <i class="fa-solid text-2xl" [ngClass]="getTipoVehiculo(detalle.tipo_vehiculo).icon"
+                  aria-hidden="true"></i>
+                }
+              </div>
+
+              <!-- Identificación -->
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-semibold uppercase tracking-wide
+                  text-base-content/50">
+                  Vehículo
+                </p>
+
+                <h4 class="mt-1 wrap-break-word text-lg font-bold uppercase">
+                  {{obtenerTipoVehiculo(detalle.tipo_vehiculo)}}
+
+                </h4>
+
+                <p class="mt-1 wrap-break-word text-sm text-base-content/60">
+                  <span class="font-semibold">
+                    {{ detalle.placa || 'Sin placa registrada' }}
+                  </span>
+                  · {{ detalle.marca || 'No registrada' }}
                 </p>
               </div>
 
-              <div class="rounded-lg bg-base-200 p-3">
-                <p class="text-xs text-base-content/60">Placa</p>
-                <p class="wrap-break-word font-medium">
-                  {{ detalle.placa || 'No registrada' }}
-                </p>
-              </div>
-
-              <div class="rounded-lg bg-base-200 p-3">
-                <p class="text-xs text-base-content/60">Tipo de vehículo</p>
-                <p class="font-medium">
-                  {{ obtenerTipoVehiculo(detalle.tipo_vehiculo) }}
-                </p>
-              </div>
-
-              <div class="rounded-lg bg-base-200 p-3">
-                <p class="text-xs text-base-content/60">Marca</p>
-                <p class="wrap-break-word font-medium">
-                  {{ detalle.marca || 'No registrada' }}
-                </p>
-              </div>
-
-              <div class="rounded-lg bg-base-200 p-3">
-                <p class="text-xs text-base-content/60">Modelo</p>
-                <p class="wrap-break-word font-medium">
-                  {{ detalle.modelo || 'No registrado' }}
-                </p>
-              </div>
-
-              <div class="rounded-lg bg-base-200 p-3">
-                <p class="text-xs text-base-content/60">Año</p>
-                <p class="font-medium">
-                  {{ detalle.anio ?? 'No registrado' }}
-                </p>
-              </div>
-
-              <div class="rounded-lg bg-base-200 p-3">
-                <p class="text-xs text-base-content/60">Color</p>
-                <p class="wrap-break-word font-medium">
-                  {{ detalle.color || 'No registrado' }}
-                </p>
-              </div>
+              <!-- Estado operativo -->
+              <span class="badge badge-soft h-auto shrink-0
+               whitespace-normal px-3 py-1.5 text-center font-semibold bg-base-55"
+                [ngClass]="obtenerClaseEstadoOperativo(detalle.estado_operativo)">
+                {{ obtenerEstadoOperativo(detalle.estado_operativo) }}
+              </span>
             </div>
-          </div>
+          </section>
 
-          <!-- DATOS OPERATIVOS -->
-          <div>
-            <h4 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+          <!-- ================================================= -->
+          <!-- INFORMACIÓN GENERAL -->
+          <!-- ================================================= -->
+          <section>
+            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
+              <!-- <i class="fa-solid fa-circle-info text-primary" aria-hidden="true"></i> -->
               <i class="fa-solid fa-gears text-primary" aria-hidden="true"></i>
               Datos operativos
             </h4>
 
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div class="rounded-lg bg-base-200 p-3">
-                <p class="text-xs text-base-content/60">Capacidad máxima</p>
-                <p class="font-medium">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+
+              <!-- Capacidad -->
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <p class="text-xs text-base-content/55">Capacidad máxima</p>
+                <p class="mt-1.5 wrap-break-word text-sm font-semibold">
                   {{ detalle.capacidad_maxima | number:'1.0-2' }}
                   {{ obtenerUnidadCapacidad(detalle.unidad_capacidad) }}
                 </p>
               </div>
 
-              <div class="rounded-lg bg-base-200 p-3">
-                <p class="text-xs text-base-content/60">Kilometraje</p>
-                <p class="font-medium">
+              <!-- Unidad -->
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <p class="text-xs text-base-content/55">Unidad</p>
+                <p class="mt-1.5 wrap-break-word text-sm font-semibold">
+                  {{ detalle.unidad_capacidad }}
+                </p>
+              </div>
+
+              <!-- Kilometraje -->
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <p class="text-xs text-base-content/55">Kilometraje</p>
+                <p class="mt-1.5 text-sm font-semibold">
                   {{ detalle.kilometraje | number:'1.0-2' }} km
                 </p>
               </div>
 
-              <div class="rounded-lg bg-base-200 p-3">
-                <p class="text-xs text-base-content/60">Estado operativo</p>
+              <!-- Modelo -->
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <p class="text-xs text-base-content/55">Modelo</p>
+                <p class="mt-1.5 wrap-break-word text-sm font-semibold">
+                  {{ detalle.modelo || 'No registrado' }}
+                </p>
+              </div>
 
-                <div class="mt-1">
-                  <span class="badge h-auto min-h-6 py-1" [ngClass]="
-                          obtenerClaseEstadoOperativo(detalle.estado_operativo)
-                        ">
-                    {{ obtenerEstadoOperativo(detalle.estado_operativo) }}
-                  </span>
-                </div>
+              <!-- Año -->
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <p class="text-xs text-base-content/55">Año</p>
+                <p class="mt-1.5 text-sm font-semibold">
+                  {{ detalle.anio ?? 'No registrado' }}
+                </p>
+              </div>
+
+              <!-- Color -->
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <p class="text-xs text-base-content/55">Color</p>
+                <p class="mt-1.5 wrap-break-word text-sm font-semibold">
+                  {{ detalle.color || 'No registrado' }}
+                </p>
               </div>
             </div>
-          </div>
+          </section>
 
-          <!-- FOTOGRAFÍA -->
+
+          <!-- ================================================= -->
+          <!-- FOTOGRAFÍA COMPLETA -->
+          <!-- ================================================= -->
           @if (detalle.foto_url) {
-          <div>
-            <h4 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+          <section>
+            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
               <i class="fa-solid fa-image text-primary" aria-hidden="true"></i>
               Fotografía del vehículo
             </h4>
 
-            <div class="overflow-hidden rounded-lg border border-base-300
-                           bg-base-200 p-3">
+            <div class="overflow-hidden rounded-xl border border-base-300 bg-base-100 p-3">
               <img [src]="detalle.foto_url" [alt]="'Fotografía del vehículo ' + detalle.placa"
                 class="mx-auto max-h-64 max-w-full rounded-lg object-contain" loading="lazy" />
             </div>
-          </div>
+          </section>
           }
 
+          <!-- ================================================= -->
           <!-- OBSERVACIONES -->
-          <div>
-            <h4 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+          <!-- ================================================= -->
+          <section>
+
+            <h4 class="flex items-center gap-2 text-sm font-semibold">
               <i class="fa-solid fa-clipboard text-primary" aria-hidden="true"></i>
               Observaciones
             </h4>
 
-            <div class="rounded-lg bg-base-200 p-3">
-              <p class="whitespace-pre-wrap wrap-break-word text-sm font-medium">
-                {{ detalle.observacion || 'Sin observaciones registradas.' }}
-              </p>
+            <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+              <p class="whitespace-pre-wrap wrap-break-word
+              text-sm leading-relaxed text-base-content/70">{{ detalle.observacion || 'Sin observaciones registradas.'
+                }}</p>
             </div>
-          </div>
 
+          </section>
+
+          <!-- ================================================= -->
           <!-- INFORMACIÓN DEL SISTEMA -->
-          <div>
-            <h4 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+          <!-- ================================================= -->
+          <section>
+            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
               <i class="fa-solid fa-clock text-primary" aria-hidden="true"></i>
               Información del sistema
             </h4>
 
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div class="rounded-lg bg-base-200 p-3">
-                <p class="text-xs text-base-content/60">ID del vehículo</p>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+              <!-- <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <p class="text-xs text-base-content/55">ID del vehículo</p>
                 <p class="font-medium">{{ detalle.id_vehiculo }}</p>
-              </div>
+              </div> -->
 
-              <div class="rounded-lg bg-base-200 p-3">
-                <p class="text-xs text-base-content/60">Estado del registro</p>
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <p class="text-xs text-base-content/55">Estado del registro</p>
 
                 <div class="mt-1">
                   <span class="badge gap-1" [ngClass]="detalle.estado ? 'badge-success' : 'badge-error'">
@@ -258,36 +286,30 @@
                 </div>
               </div>
 
-              <div class="rounded-lg bg-base-200 p-3">
-                <p class="text-xs text-base-content/60">Creado el</p>
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <p class="text-xs text-base-content/55">Creado el</p>
                 <p class="text-sm font-medium">
-                  {{
-                  (detalle.created_at | date:'dd/MM/yyyy hh:mm a')
-                  || 'No registrado'
-                  }}
+                  {{ (detalle.created_at | date:'dd/MM/yyyy hh:mm a') || 'No registrado' }}
                 </p>
               </div>
 
-              <div class="rounded-lg bg-base-200 p-3">
-                <p class="text-xs text-base-content/60">Actualizado el</p>
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <p class="text-xs text-base-content/55">Actualizado el</p>
                 <p class="text-sm font-medium">
-                  {{
-                  (detalle.updated_at | date:'dd/MM/yyyy hh:mm a')
-                  || 'No registrado'
-                  }}
+                  {{ (detalle.updated_at | date:'dd/MM/yyyy hh:mm a') || 'No registrado' }}
                 </p>
               </div>
 
               @if (detalle.deleted_at) {
-              <div class="rounded-lg bg-base-200 p-3">
-                <p class="text-xs text-base-content/60">Eliminado el</p>
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <p class="text-xs text-base-content/55">Eliminado el</p>
                 <p class="text-sm font-medium text-error">
                   {{ detalle.deleted_at | date:'dd/MM/yyyy hh:mm a' }}
                 </p>
               </div>
               }
             </div>
-          </div>
+          </section>
 
         </div>
 

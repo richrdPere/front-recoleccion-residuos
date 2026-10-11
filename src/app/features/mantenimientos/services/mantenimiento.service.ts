@@ -12,7 +12,7 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
 // Interface
-import { CancelarMantenimientoRequest, CancelarMantenimientoResponse, CreateMantenimientoRequest, CreateMantenimientoResponse, FinalizarMantenimientoRequest, FinalizarMantenimientoResponse, GetMantenimientoByIdResponse, GetMantenimientosByVehiculoResponse, GetMantenimientosPaginadosResponse, GetMantenimientosProximosResponse, IniciarMantenimientoRequest, IniciarMantenimientoResponse, MantenimientoIdentificador, MantenimientosByVehiculoFilters, MantenimientosPaginadosFilters, MantenimientosProximosFilters, UpdateMantenimientoRequest, UpdateMantenimientoResponse } from '../interfaces';
+import { CancelarMantenimientoRequest, CancelarMantenimientoResponse, CreateMantenimientoRequest, CreateMantenimientoResponse, FinalizarMantenimientoRequest, FinalizarMantenimientoResponse, GetMantenimientoByIdResponse, GetMantenimientosByVehiculoResponse, GetMantenimientosPaginadosResponse, GetMantenimientosProximosResponse, GetVehiculosExpedientesPaginadosResponse, IniciarMantenimientoRequest, IniciarMantenimientoResponse, MantenimientoIdentificador, MantenimientosByVehiculoFilters, MantenimientosPaginadosFilters, MantenimientosProximosFilters, UpdateMantenimientoRequest, UpdateMantenimientoResponse, VehiculosExpedientesPaginadosFilters } from '../interfaces';
 
 @Injectable({
   providedIn: 'root'
@@ -34,6 +34,7 @@ export class MantenimientoService {
   private readonly API_INICIAR_MANTENIMIENTO: string = this.API_BASE + '/';
   private readonly API_FINALIZAR_MANTENIMIENTO: string = this.API_BASE + '/';
   private readonly API_CANCELAR_MANTENIMIENTO: string = this.API_BASE + '/';
+  private readonly API_GET_VEHICULOS_EXPEDIENTES_PAGINADOS = `${this.API_BASE}/expedientes`;
 
   constructor(
     private readonly http: HttpClient,
@@ -255,6 +256,30 @@ export class MantenimientoService {
           HttpServiceHelper.handleError(
             error,
             'No se pudo obtener el historial de mantenimientos del vehículo.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 10. OBTENER EXPEDIENTES DE VEHÍCULOS PAGINADOS
+  // *********************************************************
+  getVehiculosExpedientesPaginated(
+    filters: VehiculosExpedientesPaginadosFilters = {},
+  ): Observable<GetVehiculosExpedientesPaginadosResponse> {
+    const headers = this.getJsonHeaders();
+    const params = HttpServiceHelper.buildParams(filters);
+
+    return this.http
+      .get<GetVehiculosExpedientesPaginadosResponse>(
+        this.API_GET_VEHICULOS_EXPEDIENTES_PAGINADOS,
+        { headers, params },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudieron obtener los expedientes de los vehículos.',
           ),
         ),
       );

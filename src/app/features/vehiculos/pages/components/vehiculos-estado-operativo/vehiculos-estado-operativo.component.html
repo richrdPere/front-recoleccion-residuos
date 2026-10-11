@@ -1,0 +1,166 @@
+@if (mostrarModal && vehiculo) {
+<div class="modal modal-open" (keydown.escape)="cerrar()">
+
+  <!-- ===================================================== -->
+  <!-- MODAL: FORM - VEHICULOS -->
+  <!-- ===================================================== -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center
+         bg-black/30 p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="estado-operativo-titulo"
+    [attr.aria-busy]="isSaving">
+
+
+    <section class="relative flex max-h-[92vh] w-full flex-col
+             overflow-hidden rounded-2xl border border-base-300
+             bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+      <!-- ================================================= -->
+      <!-- HEADER MODAL -->
+      <!-- ================================================= -->
+      <header class="flex shrink-0 items-center justify-between gap-4
+         border-b border-base-300
+         px-5 py-4 sm:px-6">
+
+        <!-- Ícono e información -->
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-11 w-11 shrink-0 items-center
+                   justify-center rounded-xl bg-primary/10 text-primary">
+            <i class="fa-solid fa-gears text-lg" aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h3 id="estado-operativo-titulo" class="text-lg font-bold">
+              Cambiar estado operativo
+            </h3>
+
+            <p class="mt-1 text-sm text-base-content/60">
+              Actualiza la condición operativa del vehículo.
+            </p>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-ghost btn-sm btn-circle shrink-0" aria-label="Cerrar modal"
+          [disabled]="isSaving" (click)="cerrar()">
+          <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <!-- ================================================= -->
+      <!-- FORMULARIO -->
+      <!-- ================================================= -->
+      <form [formGroup]="formEstadoOperativo" (ngSubmit)="guardar()" class="flex min-h-0 flex-1 flex-col">
+
+        <div class="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
+
+          <!-- IDENTIFICACIÓN -->
+          <section class="rounded-xl border border-base-300 bg-base-200/40 p-4">
+            <p class="text-xs font-semibold uppercase
+                      tracking-wide text-base-content/50">
+              Vehículo seleccionado
+            </p>
+
+            <p class="mt-1 wrap-break-word font-bold">
+              {{ vehiculo.codigo }} · {{ vehiculo.placa }}
+            </p>
+
+            <p class="mt-1 wrap-break-word text-sm text-base-content/60">
+              {{ vehiculo.marca }} {{ vehiculo.modelo }}
+            </p>
+          </section>
+
+          <!-- ERROR -->
+          @if (errorMensaje) {
+          <div class="alert alert-error text-sm" role="alert">
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            <span>{{ errorMensaje }}</span>
+          </div>
+          }
+
+          <!-- ESTADO OPERATIVO -->
+          <div>
+            <label for="vehiculo-nuevo-estado" class="mb-1.5 block text-sm font-semibold">
+              Estado operativo
+              @if (esRequerido('estado_operativo')) {
+              <span class="font-bold text-red-500">*</span>
+              }
+              <!-- <span class="text-error">*</span> -->
+            </label>
+
+            <select id="vehiculo-nuevo-estado" formControlName="estado_operativo"
+              class="select select-bordered border-2 w-full rounded-lg transition-colors duration-200"
+              [class.select-success]="campoCompleto('estado_operativo')"
+              [class.select-error]="campoInvalido('estado_operativo')"
+              [attr.aria-invalid]="campoInvalido('estado_operativo')"
+              [attr.aria-describedby]="campoInvalido('estado_operativo') ? 'estado-operativo-error' : null">
+
+              <option value="" disabled>Selecciona un estado</option>
+
+              @for (opcion of estadosOperativos; track opcion.value) {
+              <option [value]="opcion.value">
+                {{ opcion.label }}
+              </option>
+              }
+            </select>
+
+            <!-- @if (campoInvalido('estado_operativo')) {
+            <p id="estado-operativo-error" class="mt-1 text-sm text-red-500">
+              {{ obtenerError('estado_operativo') }}
+            </p>
+            } -->
+            <p id="estado-operativo-error" class="mt-1.5 text-xs">
+              @if ( campoInvalido('estado_operativo') ) {
+              <span class="text-error">
+                Selecciona un estado operativo válido.
+              </span>
+              } @else {
+              <span class="text-base-content/50">
+                Selecciona la condición actual del vehículo.
+              </span>
+              }
+            </p>
+          </div>
+
+          <!-- OBSERVACIÓN -->
+          <div>
+            <label for="vehiculo-estado-observacion" class="mb-1.5 block text-sm font-semibold">
+              Observación
+              <span class="font-normal text-base-content/50">
+                (opcional)
+              </span>
+            </label>
+
+            <textarea id="vehiculo-estado-observacion" class="textarea textarea-bordered min-h-28
+                     w-full rounded-xl" formControlName="observacion"
+              placeholder="Describe el motivo del cambio de estado." rows="4"></textarea>
+          </div>
+        </div>
+
+        <!-- =============================================== -->
+        <!-- FOOTER -->
+        <!-- =============================================== -->
+        <footer class="flex shrink-0 flex-col-reverse gap-3
+               border-t border-base-300 bg-base-100
+               px-5 py-4 sm:flex-row sm:items-center
+               sm:justify-center sm:px-6">
+
+          <div class="flex flex-col-reverse gap-5 sm:flex-row sm:justify-end">
+            <button type="button" class="btn btn-error" [disabled]="isSaving" (click)="cerrar()">
+              Cancelar
+            </button>
+
+            <button type="submit" class="btn btn-primary" [disabled]="isSaving || formEstadoOperativo.invalid">
+              @if (isSaving) {
+              <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+              Guardando...
+              } @else {
+              <!-- <i class="fa-solid fa-check" aria-hidden="true"></i> -->
+              Guardar
+              }
+            </button>
+          </div>
+        </footer>
+
+      </form>
+    </section>
+  </div>
+</div>
+}

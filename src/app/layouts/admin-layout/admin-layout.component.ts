@@ -294,7 +294,7 @@ export class AdminLayoutComponent {
             label: 'Mantenimientos',
             description: 'Control preventivo y correctivo',
             route: '/admin/mantenimientos',
-            icon: 'fa-solid fa-screwdriver-wrench',
+            icon: 'fa-solid fa-gas-pump',  // fa-screwdriver-wrench
             roles: [
               'SUPER_ADMIN',
               'ADMIN',

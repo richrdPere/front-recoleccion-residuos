@@ -7,7 +7,7 @@ import Swal from 'sweetalert2';
 import { VehiculosService } from 'src/app/features/vehiculos/services/vehiculos.service';
 
 // Interfaces
-import { VehiculoData } from '../../../models';
+import { TipoVehiculo, VehiculoData } from '../../../models';
 
 @Component({
   selector: 'vehiculos-view',
@@ -155,9 +155,54 @@ export class VehiculosViewComponent implements OnChanges, OnDestroy {
   // ============================================================
   // ETIQUETAS PARA LA VISTA
   // ============================================================
-  obtenerTipoVehiculo(
-    tipo: VehiculoData['tipo_vehiculo'],
-  ): string {
+  getCodigo() {
+    return this.vehiculo?.codigo
+  }
+
+  getTipoVehiculo(tipo: TipoVehiculo): {
+    icon: string;
+    label: string;
+    class: string;
+  } {
+    const tipos: Record<
+      TipoVehiculo,
+      { icon: string; label: string; class: string }
+    > = {
+      CAMION_COMPACTADOR: {
+        icon: 'fa-truck',
+        label: 'COMPACTADOR',
+        class: 'badge-info',
+      },
+      CAMION_BARANDA: {
+        icon: 'fa-truck-pickup',
+        label: 'BARANDA',
+        class: 'badge-primary',
+      },
+      CAMION_VOLQUETE: {
+        icon: 'fa-truck-moving',
+        label: 'VOLQUETE',
+        class: 'badge-success',
+      },
+      MOTOFURGON: {
+        icon: 'fa-motorcycle',
+        label: 'MOTOFURGÓN',
+        class: 'badge-accent',
+      },
+      OTRO: {
+        icon: 'fa-car-side',
+        label: 'OTRO',
+        class: 'badge-error',
+      },
+    };
+
+    return tipos[tipo] ?? {
+      icon: 'fa-truck',
+      label: 'NO ESPECIFICADO',
+      class: 'badge-neutral',
+    };
+  }
+
+  obtenerTipoVehiculo(tipo: VehiculoData['tipo_vehiculo']): string {
     const etiquetas: Record<VehiculoData['tipo_vehiculo'], string> = {
       CAMION_COMPACTADOR: 'Camión compactador',
       CAMION_BARANDA: 'Camión baranda',
@@ -173,10 +218,10 @@ export class VehiculosViewComponent implements OnChanges, OnDestroy {
     estado: VehiculoData['estado_operativo'],
   ): string {
     const etiquetas: Record<VehiculoData['estado_operativo'], string> = {
-      DISPONIBLE: 'Disponible',
-      EN_RUTA: 'En ruta',
-      EN_MANTENIMIENTO: 'En mantenimiento',
-      FUERA_DE_SERVICIO: 'Fuera de servicio',
+      DISPONIBLE: 'DISPONIBLE',
+      EN_RUTA: 'EN RUTA',
+      EN_MANTENIMIENTO: 'EN MANTENIMIENTO',
+      FUERA_DE_SERVICIO: 'FUERA DE SERVICIO',
     };
 
     return etiquetas[estado] ?? 'No registrado';
@@ -198,13 +243,49 @@ export class VehiculosViewComponent implements OnChanges, OnDestroy {
     estado: VehiculoData['estado_operativo'],
   ): string {
     const clases: Record<VehiculoData['estado_operativo'], string> = {
-      DISPONIBLE: 'badge-success',
-      EN_RUTA: 'badge-info',
-      EN_MANTENIMIENTO: 'badge-warning',
+      DISPONIBLE: 'badge-info',
+      EN_RUTA: 'badge-success',
+      EN_MANTENIMIENTO: 'badge-secondary',
       FUERA_DE_SERVICIO: 'badge-error',
     };
 
     return clases[estado] ?? 'badge-neutral';
+  }
+
+  getEstadoOperativoClass(estado: string): {
+    label: string;
+    class: string;
+  } {
+    const map: Record<string, {
+      label: string;
+      class: string;
+    }> = {
+      DISPONIBLE: {
+        label: 'DISPONIBLE',
+        class: 'badge-info'
+      },
+      ASIGNADO: {
+        label: 'ASIGNADO',
+        class: 'badge-primary'
+      },
+      EN_RUTA: {
+        label: 'EN RUTA',
+        class: 'badge-success'
+      },
+      EN_MANTENIMIENTO: {
+        label: 'MANTENIMIENTO',
+        class: 'badge-secondary'
+      },
+      FUERA_DE_SERVICIO: {
+        label: 'FUERA_DE_SERVICIO',
+        class: 'badge-error'
+      }
+    };
+
+    return map[estado] || {
+      label: estado,
+      class: 'badge-neutral'
+    };
   }
 
   // ============================================================
