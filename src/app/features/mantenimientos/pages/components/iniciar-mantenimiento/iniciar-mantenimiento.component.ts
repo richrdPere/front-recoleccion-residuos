@@ -144,16 +144,6 @@ export class IniciarMantenimientoComponent implements OnChanges {
   ) {
     this.formInicio = this.initFormulario();
   }
-  // readonly formInicio = this.fb.group({
-  //   kilometraje_ingreso: this.fb.control<number | string | null>(
-  //     null,
-  //     [kilometrajeValido],
-  //   ),
-  //   fecha_fin_programada: this.fb.nonNullable.control(
-  //     '',
-  //     [fechaLocalOpcionalValida],
-  //   ),
-  // });
 
   // ============================================================
   // CICLO DE VIDA
@@ -168,6 +158,7 @@ export class IniciarMantenimientoComponent implements OnChanges {
       }
 
       this.resetFormulario();
+      this.setModalWidth('md');
 
       this.errorFormulario = null;
     }
@@ -204,10 +195,8 @@ export class IniciarMantenimientoComponent implements OnChanges {
   // *********************************************************
   // VALIDACIÓN PARA LA VISTA
   // *********************************************************
-
   get puedeIniciar(): boolean {
-    return this.mantenimientoSeleccionado?.estado_mantenimiento ===
-      'PROGRAMADO';
+    return this.mantenimientoSeleccionado?.estado_mantenimiento === 'PROGRAMADO';
   }
 
   campoInvalido(

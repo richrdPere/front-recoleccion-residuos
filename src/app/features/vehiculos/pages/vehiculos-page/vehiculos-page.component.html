@@ -168,19 +168,14 @@
            border border-base-300
            bg-base-100 shadow-sm" aria-label="Vehiculos registrados">
 
-    <!-- Cabecera de tabla -->
-    <div class="flex flex-col gap-4
-               border-b border-base-300
-               px-4 py-4
-               sm:flex-row
-               sm:items-center
-               sm:justify-between
-               sm:px-5">
+    <!-- ===================================================== -->
+    <!-- CABECERA -->
+    <!-- ===================================================== -->
+    <div class="flex flex-col gap-4 border-b border-base-300 px-4 py-4
+             sm:flex-row sm:items-center sm:justify-between sm:px-5">
 
-
-      <!-- Total -->
-      <div class="flex w-full items-center
-                 justify-between gap-3
+      <!-- Cantidad por página -->
+      <div class="flex w-full items-center justify-between gap-3
                  text-sm text-base-content/70
                  sm:w-auto sm:justify-start">
         <label for="vehiculos-page-size" class="whitespace-nowrap">
@@ -220,7 +215,9 @@
 
     </div>
 
-    <!-- Tabla con scroll horizontal -->
+    <!-- ===================================================== -->
+    <!-- TABLA DE VEHPICULOS -->
+    <!-- ===================================================== -->
     <div class="overflow-x-auto">
       <table class="table min-w-275">
         <thead class="bg-base-300/90">
@@ -637,42 +634,71 @@
   </section>
   }
 
-  <!-- ===================================================== -->
-  <!-- VACÍO -->
-  <!-- ===================================================== -->
+  <!-- ======================================================= -->
+  <!-- ESTADO VACÍO GENERAL -->
+  <!-- ======================================================= -->
   @if (!isLoading && vehiculos.length === 0) {
-  <section class="rounded-2xl border border-dashed
-           border-base-300 bg-base-100
-           px-6 py-16 text-center shadow-sm">
-    <div class="mx-auto flex h-20 w-20
-             items-center justify-center
-             rounded-full bg-base-200
-             text-base-content/35">
-      <i class="fa-solid fa-truck text-3xl" aria-hidden="true"></i>
+  <section class="rounded-2xl border border-dashed border-base-300
+           bg-base-100 px-6 py-16 text-center shadow-sm">
+    <div class="mx-auto flex h-20 w-20 items-center justify-center
+             rounded-full transition-colors" [ngClass]="
+        searchBusqueda.trim() ||
+        estadoOperativoBusqueda ||
+        tipoVehiculoBusqueda
+          ? 'bg-secondary/10 text-secondary'
+          : 'bg-primary/10 text-primary'
+      ">
+      <!-- <i class="fa-solid fa-truck text-3xl" aria-hidden="true"></i> -->
+
+      <i class="fa-solid fa-truck-moving text-3xl" aria-hidden="true"></i>
     </div>
 
     <h2 class="mt-5 text-lg font-bold">
+      @if (
+      searchBusqueda.trim() ||
+      estadoOperativoBusqueda ||
+      tipoVehiculoBusqueda
+      ) {
       No se encontraron vehículos
+      } @else {
+      Aún no tienes vehículos registrados
+      }
     </h2>
 
-    <p class="mx-auto mt-2 max-w-md text-sm text-base-content/55">
-      @if ( searchBusqueda || estadoOperativoBusqueda || tipoVehiculoBusqueda
+    <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-base-content/55">
+      @if (
+      searchBusqueda.trim() ||
+      estadoOperativoBusqueda ||
+      tipoVehiculoBusqueda
       ) {
-      No hay vehículos que coincidan con los filtros seleccionados.
+      No hay vehículos disponibles que coincidan con los filtros seleccionados.
       Prueba con otros criterios de búsqueda.
       } @else {
-      Aún no hay vehículos registrados en el sistema.
+      Registra el primer vehículo de la flota para gestionar
+      su información, estado operativo y asignación
+      a los servicios de recolección.
       }
     </p>
 
-    @if ( searchBusqueda || estadoOperativoBusqueda || tipoVehiculoBusqueda ) {
-    <button type="button" class="btn btn-secondary btn-sm mt-5" (click)="limpiarFiltros()">
-      <!-- <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i> -->
-      <i class="fa-solid fa-eraser" aria-hidden="true"></i>
-      Limpiar filtros
-    </button>
-    }
+    <!-- Acciones -->
+    <div class="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+      @if (
+      searchBusqueda.trim() ||
+      estadoOperativoBusqueda ||
+      tipoVehiculoBusqueda
+      ) {
+      <button type="button" class="btn btn-secondary btn-sm w-full gap-2 rounded-xl sm:w-auto"
+        (click)="limpiarFiltros()">
+        <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+        Limpiar filtros
+      </button>
+      } @else {
+      <button type="button" class="btn btn-primary btn-sm w-full gap-2 rounded-xl sm:w-auto" (click)="abrirModal()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        Nuevo vehículo
+      </button>
+      }
+    </div>
   </section>
   }
-
 </div>

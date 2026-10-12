@@ -25,24 +25,25 @@ import { IniciarMantenimientoComponent } from '../components/iniciar-mantenimien
 import { FinalizarMantenimientoComponent } from '../components/finalizar-mantenimiento/finalizar-mantenimiento.component';
 import { CancelarMantenimientoComponent } from '../components/cancelar-mantenimiento/cancelar-mantenimiento.component';
 import { MantenimientoListadoComponent } from '../components/mantenimiento-listado/mantenimiento-listado.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-mantenimientos-page',
   standalone: true,
   imports: [
     CurrencyPipe,
-    DatePipe,
-    DecimalPipe,
+    // DatePipe,
+    // DecimalPipe,
     FormsModule,
     CommonModule,
     UppercaseDirective,
-    MantenimientoFormComponent,
-    MantenimientoViewComponent,
-    IniciarMantenimientoComponent,
-    FinalizarMantenimientoComponent,
-    CancelarMantenimientoComponent,
-    MantenimientoListadoComponent
-],
+    // MantenimientoFormComponent,
+    // MantenimientoViewComponent,
+    // IniciarMantenimientoComponent,
+    // FinalizarMantenimientoComponent,
+    // CancelarMantenimientoComponent,
+    // MantenimientoListadoComponent
+  ],
   templateUrl: './mantenimientos-page.component.html',
 })
 export class MantenimientosPageComponent implements OnInit, OnDestroy {
@@ -160,6 +161,7 @@ export class MantenimientosPageComponent implements OnInit, OnDestroy {
   private searchTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(
+    private readonly router: Router,
     private readonly mantenimientoService: MantenimientoService,
     private readonly vehiculosService: VehiculosService,
     private readonly cdr: ChangeDetectorRef,
@@ -415,7 +417,25 @@ export class MantenimientosPageComponent implements OnInit, OnDestroy {
   }
 
   abrirExpediente(vehiculo: VehiculoExpedienteData): void {
-    this.vehiculoExpedienteSeleccionado = vehiculo;
+    // this.vehiculoExpedienteSeleccionado = vehiculo;
+
+    if (vehiculo.id_vehiculo === null ||
+      vehiculo.id_vehiculo === undefined) {
+      return;
+    }
+
+    void this.router.navigate(
+      [
+        '/admin',
+        'mantenimientos',
+        vehiculo.id_vehiculo,
+      ],
+      {
+        state: {
+          vehiculo: vehiculo,
+        },
+      },
+    );
   }
 
   cerrarExpediente(): void {

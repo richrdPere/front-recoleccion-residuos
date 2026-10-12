@@ -5,6 +5,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import Swal from 'sweetalert2';
 
+// Directives
+import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directive';
+
 // Service
 import { MantenimientoService } from '../../../services/mantenimiento.service';
 
@@ -75,6 +78,7 @@ const booleanoRequerido: ValidatorFn = (
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    UppercaseDirective
   ],
   templateUrl: './finalizar-mantenimiento.component.html',
   styles: ``,

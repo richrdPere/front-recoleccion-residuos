@@ -46,43 +46,93 @@
       <!-- =============================================== -->
       <!-- CAMPOS DE FILTRO -->
       <!-- =============================================== -->
-      <div class="p-4 sm:p-5">
+      <div class="min-w-0 p-4 sm:p-5">
 
-        <div class="grid grid-cols-1 gap-4
+        <div class="grid grid-cols-1 items-end gap-4
                sm:grid-cols-2
-               xl:grid-cols-[minmax(240px,1.4fr)_minmax(180px,1fr)_minmax(190px,1fr)_auto]">
+               xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
 
-
-          <!-- Buscar  -->
-          <label class="form-control w-full">
-            <span class="mb-1.5 text-xs font-semibold
-                   uppercase tracking-wide
-                   text-base-content/60">
-              Nombres y Apellidos
-            </span>
+          <!-- Búsqueda  -->
+          <div class="min-w-0">
+            <label for="filtro-usuario" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Usuario
+            </label>
 
             <div class="relative">
-              <i class="fa-solid fa-magnifying-glass
-                     pointer-events-none absolute
-                     left-3.5 top-1/2
-                     -translate-y-1/2
-                     text-base-content/35">
-              </i>
+              <input id="filtro-usuario" type="text" class="input input-bordered h-11 min-h-11
+                      w-full min-w-0 rounded-xl bg-base-200
+                     pl-11 pr-4 transition-colors
+                     focus:border-primary focus:outline-none
+                     focus:ring-2 focus:ring-primary/30" placeholder="Buscar por nombres o DNI" autocomplete="off"
+                [ngClass]="searchBusqueda.trim() ? 'border-primary' : 'border-base-500'" [(ngModel)]="searchBusqueda"
+                (ngModelChange)="onSearchChange()" appUppercase />
 
-              <input type="text" class="input input-bordered
-                     h-11 w-full rounded-xl
-                     bg-base-100 pl-10 pr-4
-                     focus:outline-none
-                     focus:ring-2
-                     focus:ring-primary/30" placeholder="Buscar por placa" autocomplete="off"
-                [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()" appUppercase />
+              <span class="pointer-events-none absolute inset-y-0 left-0 z-10
+                     flex w-11 items-center justify-center
+                     text-base-content/50" aria-hidden="true">
+                <i class="fa-solid fa-magnifying-glass text-base"></i>
+              </span>
             </div>
-          </label>
+          </div>
 
-          <!-- Buscar por estado operativo -->
+          <!-- Buscar por tipo contrato -->
+          <div class="min-w-0">
+            <label for="tipo-contrato" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Tipo contrato
+            </label>
+
+            <select id="tipo-contrato" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [ngClass]="tipoContratoBusqueda ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="tipoContratoBusqueda" (ngModelChange)="onSearchChange()">
+              <option value="">Todos los tipos</option>
+
+              @for (tipo of tiposContrato; track tipo.value) {
+              <option [value]="tipo.value">
+                {{ tipo.label }}
+              </option>
+              }
+            </select>
+          </div>
+
+          <!-- Buscar por estado laboral -->
+          <div class="min-w-0">
+            <label for="filtro-estado" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Estado laboral
+            </label>
+
+            <select id="filtro-estado" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [ngClass]="estadoLaboralBusqueda ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="estadoLaboralBusqueda" (ngModelChange)="onSearchChange()">
+              <option value="">Todos los estados</option>
+
+              @for (estado of estadosLaborales; track estado.value) {
+              <option [value]="estado.value">
+                {{ estado.label }}
+              </option>
+              }
+            </select>
+          </div>
 
 
-          <!-- Buscar por tipo vehiculo -->
+
+          <!-- Limpiar -->
+          <div class="min-w-0">
+            <button type="button" class="btn btn-secondary h-11 min-h-11
+                   w-full gap-2 rounded-xl
+                   xl:w-auto xl:min-w-28" [disabled]="
+              !searchBusqueda && !tipoContratoBusqueda && !estadoLaboralBusqueda
+            " (click)="limpiarFiltros()">
+              <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+              Limpiar
+            </button>
+          </div>
 
         </div>
       </div>
@@ -90,13 +140,16 @@
       <!-- =============================================== -->
       <!-- ILUSTRACIÓN DE BÚSQUEDA -->
       <!-- =============================================== -->
-      <div class="hidden items-center justify-center border-base-300 px-5 lg:flex">
+      <div class="hidden items-center justify-center px-5 lg:flex">
+        <span class="imagen-lupa block h-32 w-32 text-base-content opacity-90" aria-hidden="true"></span>
+      </div>
+      <!-- <div class="hidden items-center justify-center border-base-300 px-5 lg:flex">
 
         <img src="assets/img/search.png" alt="" aria-hidden="true" class="h-32 w-32
                select-none object-contain
                opacity-90
                drop-shadow-sm" draggable="false" />
-      </div>
+      </div> -->
     </div>
   </section>
 
@@ -120,10 +173,10 @@
   @if (isLoading || personal.length > 0) {
   <section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm"
     aria-label="Personal operativo registrado">
+
     <!-- ===================================================== -->
     <!-- CABECERA -->
     <!-- ===================================================== -->
-
     <div class="flex flex-col gap-4 border-b border-base-300 px-4 py-4
              sm:flex-row sm:items-center sm:justify-between sm:px-5">
       <!-- Cantidad por página -->
@@ -134,8 +187,8 @@
           Mostrar
         </label>
 
-        <select id="personal-page-size" class="select select-bordered select-sm w-auto" [(ngModel)]="limit"
-          (change)="cambiarLimite()">
+        <select id="personal-page-size" class="select select-bordered select-sm
+         w-16 min-w-16 shrink-0 pl-3 pr-8" [(ngModel)]="limit" (change)="cambiarLimite()">
           @for (size of pageSizeOptions; track size) {
           <option [ngValue]="size">
             {{ size }}
@@ -153,7 +206,7 @@
         <button type="button" class="btn btn-primary min-h-10 w-full gap-2 rounded-xl
                  border-none bg-info hover:bg-primary hover:text-white
                  sm:w-auto sm:min-w-40" (click)="abrirModal()">
-          <i class="fa-solid fa-user-plus"></i>
+          <i class="fa-solid fa-plus"></i>
 
           Personal
         </button>

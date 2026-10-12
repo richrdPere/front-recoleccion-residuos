@@ -83,7 +83,7 @@
               <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 
                 <!-- Vehículo -->
-                <div class="form-control">
+                <!-- <div class="form-control">
                   <label class="label" for="mantenimiento-vehiculo">
                     <span class="label-text flex items-center gap-1">
                       Vehículo
@@ -125,7 +125,7 @@
                     {{ obtenerError('id_vehiculo') }}
                   </p>
                   }
-                </div>
+                </div> -->
 
                 <!-- Tipo -->
                 <div class="form-control">
@@ -177,11 +177,9 @@
                   placeholder="Describe el motivo de la intervención" class="textarea textarea-bordered border-2 w-full
                    placeholder-gray-400 transition-colors duration-200"
                   [class.textarea-success]="campoCompleto('motivo')" [class.textarea-error]="campoInvalido('motivo')"
-                  [attr.aria-invalid]="campoInvalido('motivo')" [attr.aria-describedby]="
-              campoInvalido('motivo')
-                ? 'mantenimiento-motivo-error'
-                : null
-            " (blur)="normalizarCampo('motivo')"></textarea>
+                  [attr.aria-invalid]="campoInvalido('motivo')"
+                  [attr.aria-describedby]="campoInvalido('motivo') ? 'mantenimiento-motivo-error' : null"
+                  (blur)="normalizarCampo('motivo')" appUppercase></textarea>
 
                 @if (campoInvalido('motivo')) {
                 <p id="mantenimiento-motivo-error" class="mt-1 text-sm text-red-500">
@@ -249,7 +247,8 @@
                      transition-colors duration-200" [class.input-success]="campoCompleto('fecha_fin_programada')"
                     [class.input-error]="campoInvalido('fecha_fin_programada')"
                     [attr.aria-invalid]="campoInvalido('fecha_fin_programada')"
-                    [attr.aria-describedby]="campoInvalido('fecha_fin_programada')                    ? 'mantenimiento-intervalo-error' : null" />
+                    [attr.aria-describedby]="campoInvalido('fecha_fin_programada') ? 'mantenimiento-intervalo-error' : null"
+                    appUppercase />
 
                   @if (campoInvalido('fecha_fin_programada')) {
                   <p id="mantenimiento-fin-error" class="mt-1 text-sm text-red-500">
@@ -276,20 +275,16 @@
                 <div class="form-control">
                   <label class="label" for="mantenimiento-taller">
                     <span class="label-text">Taller</span>
-                    <span class="label-text-alt text-base-content/55">
-                      Opcional
-                    </span>
+
                   </label>
 
                   <input id="mantenimiento-taller" type="text" formControlName="taller" maxlength="150"
                     placeholder="Ej. Taller municipal" class="input input-bordered border-2 w-full
                      placeholder-gray-400 transition-colors duration-200"
                     [class.input-success]="campoCompleto('taller')" [class.input-error]="campoInvalido('taller')"
-                    [attr.aria-invalid]="campoInvalido('taller')" [attr.aria-describedby]="
-                campoInvalido('taller')
-                  ? 'mantenimiento-taller-error'
-                  : null
-              " (blur)="normalizarCampo('taller')" />
+                    [attr.aria-invalid]="campoInvalido('taller')"
+                    [attr.aria-describedby]="campoInvalido('taller') ? 'mantenimiento-taller-error' : null"
+                    (blur)="normalizarCampo('taller')" appUppercase />
 
                   @if (campoInvalido('taller')) {
                   <p id="mantenimiento-taller-error" class="mt-1 text-sm text-red-500">
@@ -302,24 +297,17 @@
                 <div class="form-control">
                   <label class="label" for="mantenimiento-responsable">
                     <span class="label-text">Responsable técnico</span>
-                    <span class="label-text-alt text-base-content/55">
-                      Opcional
-                    </span>
+
                   </label>
 
                   <input id="mantenimiento-responsable" type="text" formControlName="responsable_tecnico"
                     maxlength="150" placeholder="Nombre del técnico encargado" class="input input-bordered border-2 w-full
-                     placeholder-gray-400 transition-colors duration-200" [class.input-success]="
-                campoCompleto('responsable_tecnico')
-              " [class.input-error]="
-                campoInvalido('responsable_tecnico')
-              " [attr.aria-invalid]="
-                campoInvalido('responsable_tecnico')
-              " [attr.aria-describedby]="
-                campoInvalido('responsable_tecnico')
-                  ? 'mantenimiento-responsable-error'
-                  : null
-              " (blur)="normalizarCampo('responsable_tecnico')" />
+                     placeholder-gray-400 transition-colors duration-200"
+                    [class.input-success]="campoCompleto('responsable_tecnico')"
+                    [class.input-error]="campoInvalido('responsable_tecnico')"
+                    [attr.aria-invalid]="campoInvalido('responsable_tecnico')"
+                    [attr.aria-describedby]="campoInvalido('responsable_tecnico') ? 'mantenimiento-responsable-error' : null"
+                    (blur)="normalizarCampo('responsable_tecnico')" appUppercase />
 
                   @if (campoInvalido('responsable_tecnico')) {
                   <p id="mantenimiento-responsable-error" class="mt-1 text-sm text-red-500">
@@ -334,9 +322,7 @@
               <div class="form-control">
                 <label class="label" for="mantenimiento-diagnostico">
                   <span class="label-text">Diagnóstico</span>
-                  <span class="label-text-alt text-base-content/55">
-                    Opcional
-                  </span>
+
                 </label>
 
                 <textarea id="mantenimiento-diagnostico" formControlName="diagnostico" rows="3"
@@ -344,11 +330,9 @@
                      placeholder-gray-400 transition-colors duration-200"
                   [class.textarea-success]="campoCompleto('diagnostico')"
                   [class.textarea-error]="campoInvalido('diagnostico')"
-                  [attr.aria-invalid]="campoInvalido('diagnostico')" [attr.aria-describedby]="
-                campoInvalido('diagnostico')
-                  ? 'mantenimiento-diagnostico-error'
-                  : null
-              " (blur)="normalizarCampo('diagnostico')"></textarea>
+                  [attr.aria-invalid]="campoInvalido('diagnostico')"
+                  [attr.aria-describedby]="campoInvalido('diagnostico') ? 'mantenimiento-diagnostico-error' : null"
+                  (blur)="normalizarCampo('diagnostico')" appUppercase></textarea>
 
                 @if (campoInvalido('diagnostico')) {
                 <p id="mantenimiento-diagnostico-error" class="mt-1 text-sm text-red-500">
@@ -362,20 +346,16 @@
             <!-- ================================================= -->
             <!-- OBSERVACIONES -->
             <!-- ================================================= -->
-
             <div class="space-y-3 border-t border-base-300 pt-5">
               <h3 class="flex items-center gap-2 text-lg font-semibold">
                 <i class="fa-regular fa-file-lines text-primary" aria-hidden="true"></i>
-
                 Información adicional
               </h3>
 
               <div class="form-control">
                 <label class="label" for="mantenimiento-observacion">
                   <span class="label-text">Observaciones</span>
-                  <span class="label-text-alt text-base-content/55">
-                    Opcional
-                  </span>
+
                 </label>
 
                 <textarea id="mantenimiento-observacion" formControlName="observacion" rows="3"
@@ -383,11 +363,9 @@
                    placeholder-gray-400 transition-colors duration-200"
                   [class.textarea-success]="campoCompleto('observacion')"
                   [class.textarea-error]="campoInvalido('observacion')"
-                  [attr.aria-invalid]="campoInvalido('observacion')" [attr.aria-describedby]="
-              campoInvalido('observacion')
-                ? 'mantenimiento-observacion-error'
-                : null
-            " (blur)="normalizarCampo('observacion')"></textarea>
+                  [attr.aria-invalid]="campoInvalido('observacion')"
+                  [attr.aria-describedby]="campoInvalido('observacion') ? 'mantenimiento-observacion-error' : null"
+                  (blur)="normalizarCampo('observacion')" appUppercase></textarea>
 
                 @if (campoInvalido('observacion')) {
                 <p id="mantenimiento-observacion-error" class="mt-1 text-sm text-red-500">
@@ -408,8 +386,7 @@
            px-5 py-4 sm:flex-row sm:items-center
            sm:justify-center sm:px-6">
 
-          <div class="flex flex-col-reverse gap-5
-             sm:flex-row sm:justify-end">
+          <div class="flex flex-col-reverse gap-5 sm:flex-row sm:justify-end">
             <button type="button" class="btn btn-error" [disabled]="isLoading" (click)="cerrarModal()">
               Cerrar
             </button>

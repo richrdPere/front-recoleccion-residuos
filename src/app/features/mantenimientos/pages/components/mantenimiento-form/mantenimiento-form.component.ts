@@ -6,6 +6,9 @@ import { Subscription, finalize } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Swal from 'sweetalert2';
 
+// Directives
+import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directive';
+
 // Services
 import { MantenimientoService } from '../../../services/mantenimiento.service';
 
@@ -183,21 +186,22 @@ const intervaloValido: ValidatorFn = (
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    UppercaseDirective,
   ],
   templateUrl: './mantenimiento-form.component.html',
 })
 export class MantenimientoFormComponent implements OnChanges {
-
 
   // ============================================================
   // INPUTS / OUTPUTS
   // ============================================================
   @Input() mostrarModal = false;
   @Input() modoEdicion = false;
+  @Input() vehiculo_id: MantenimientoIdentificador | null = null;
   @Input() mantenimientoSeleccionado: MantenimientoPaginadoItem | null = null;
 
   // Selectores
-  @Input() vehiculosDisponibles: MantenimientoVehiculoOpcion[] = [];
+  // @Input() vehiculosDisponibles: MantenimientoVehiculoOpcion[] = [];
 
   @Output() mantenimientoCreado = new EventEmitter<void>();
   @Output() modalCerrado = new EventEmitter<void>();
@@ -220,8 +224,8 @@ export class MantenimientoFormComponent implements OnChanges {
     value: TipoMantenimiento;
     label: string;
   }[] = [
-      { value: 'PREVENTIVO', label: 'Preventivo' },
-      { value: 'CORRECTIVO', label: 'Correctivo' },
+      { value: 'PREVENTIVO', label: 'PREVENTIVO' },
+      { value: 'CORRECTIVO', label: 'CORRECTIVO' },
     ];
 
 
@@ -250,18 +254,20 @@ export class MantenimientoFormComponent implements OnChanges {
   // CICLO DE VIDA
   // ============================================================
   ngOnChanges(changes: SimpleChanges): void {
-    if (!this.mostrarModal) {
-      if (changes['mostrarModal']) {
-        this.resetFormulario();
-      }
-      return;
-    }
+    // if (!this.mostrarModal) {
+    //   if (changes['mostrarModal']) {
+    //     this.resetFormulario();
+    //   }
+    //   return;
+    // }
 
-    const debeSincronizar = !!changes['mostrarModal'] ||
+    const debeSincronizar =
+      !!changes['mostrarModal'] ||
       !!changes['modoEdicion'] ||
+      !!changes['vehiculo_id'] ||
       !!changes['mantenimientoSeleccionado'];
 
-    if (!debeSincronizar) {
+    if (!debeSincronizar || !this.mostrarModal || this.isLoading) {
       return;
     }
 
@@ -273,6 +279,7 @@ export class MantenimientoFormComponent implements OnChanges {
     this.resetFormulario();
     this.setModalWidth('lg');
 
+    this.cdr.markForCheck();
     this.cargaSubscription?.unsubscribe();
   }
 
@@ -283,22 +290,22 @@ export class MantenimientoFormComponent implements OnChanges {
   private initFormulario(): FormGroup {
     return this.fb.group({
       id_mantenimiento: [null],
-      id_vehiculo: [null, [Validators.required, idValido]],
+      id_vehiculo: [null],
       tipo_mantenimiento: ['PREVENTIVO', [Validators.required]],
       fecha_inicio_programada: ['', [Validators.required, fechaLocalValida]],
       fecha_fin_programada: ['', [Validators.required, fechaLocalValida]],
       motivo: ['', [Validators.required, textoNoVacio]],
       diagnostico: [''],
-      taller: ['', [Validators.required, textoNoVacio]],
-      responsable_tecnico: ['', [Validators.required, textoNoVacio]],
-      observacion: ['', [Validators.required, textoNoVacio]],
+      taller: [''],
+      responsable_tecnico: [''],
+      observacion: [''],
     });
   }
 
   private resetFormulario(): void {
     this.formMantenimiento.reset({
       id_mantenimiento: null,
-      id_vehiculo: null,
+      id_vehiculo: this.vehiculo_id,
       tipo_mantenimiento: 'PREVENTIVO',
       fecha_inicio_programada: '',
       fecha_fin_programada: '',
@@ -311,8 +318,6 @@ export class MantenimientoFormComponent implements OnChanges {
   }
 
   private cargarMantenimiento(mant: MantenimientoPaginadoItem): void {
-
-    console.log("MANT FORM: ", mant);
 
     this.formMantenimiento.reset({
       id_mantenimiento: mant.id_mantenimiento,
@@ -467,8 +472,8 @@ export class MantenimientoFormComponent implements OnChanges {
     }
 
     return this.modoEdicion
-      ? 'Actualizar usuario'
-      : 'Registrar usuario';
+      ? 'Actualizar'
+      : 'Guardar';
   }
 
   // - CERRAR MODAL

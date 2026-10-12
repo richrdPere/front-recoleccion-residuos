@@ -87,6 +87,17 @@ export const adminFeatureRoutes: Routes = [
           ),
       },
 
+      {
+        path: 'mantenimientos/:vehiculoId',
+          canActivate: [roleGuard],
+        loadComponent: () =>
+          import('./mantenimientos/pages/components/mantenimiento-listado/mantenimiento-listado.component')
+            .then(m => m.MantenimientoListadoComponent),
+        data: {
+          roles: ['ADMIN', 'OPERADOR', 'GERENTE_SERENAZGO', 'SUPERVISOR_SERENAZGO']
+        }
+      },
+
       // Monitoreo
       {
         path: 'monitoreo',

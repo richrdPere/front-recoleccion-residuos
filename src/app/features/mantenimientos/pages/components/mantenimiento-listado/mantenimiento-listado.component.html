@@ -17,19 +17,36 @@
                  rounded-2xl bg-primary/10
                  text-primary" aria-hidden="true">
 
-        <i class="fa-solid fa-gas-pump text-2xl"></i>
-      </div>
+        <i class="fa-solid fa-folder-open text-2xl" aria-hidden="true"></i>
 
+      </div>
+      <!-- <button type="button" class="btn btn-accent shrink-0" aria-label="Volver a las cards de serenos"
+        (click)="volverAlListado()">
+        <i class="fa-solid fa-arrow-left"></i>
+
+      </button> -->
+
+      @if (vehiculo; as seleccionado) {
       <div class="min-w-0">
         <h1 class="text-2xl font-bold leading-tight text-base-content">
-          Mantenimientos
+          Mantenimientos - {{ seleccionado.placa }}
         </h1>
 
         <p class="mt-1 max-w-2xl text-sm leading-relaxed text-base-content/60">
-          Supervice y administre el mantenimiento a los vehiculos recolectores.
+          {{ seleccionado.codigo }}
+          · {{ seleccionado.marca }} {{ seleccionado.modelo }}
         </p>
       </div>
+      }
+
     </div>
+
+    <button type="button" class="btn btn-accent shrink-0" aria-label="Volver a las cards de serenos"
+      (click)="volverAlListado()">
+      <i class="fa-solid fa-arrow-left"></i>
+      Volver
+    </button>
+
   </header>
 
   <!-- ================================================= -->
@@ -47,8 +64,8 @@
                sm:grid-cols-2
                xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
 
-          <!-- Buscar  -->
-          <label class="form-control w-full">
+          <!-- Buscar por descripción -->
+          <!-- <label class="form-control w-full">
             <span class="mb-1.5 text-xs font-semibold
                    uppercase tracking-wide
                    text-base-content/60">
@@ -71,7 +88,29 @@
                      focus:ring-primary/30" placeholder="Buscar por placa" autocomplete="off"
                 [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()" appUppercase />
             </div>
-          </label>
+          </label> -->
+          <div class="min-w-0">
+            <label for="filtro-descripcion" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Descripción
+            </label>
+
+            <div class="relative">
+              <input id="filtro-descripcion" type="text" class="input input-bordered h-11 min-h-11
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pl-11 pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30" placeholder="Buscar por motivo o descripción"
+                autocomplete="off" [ngClass]="searchBusqueda.trim() ? 'border-primary' : 'border-base-500'"
+                [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()" appUppercase />
+
+              <span class="pointer-events-none absolute inset-y-0 left-0 z-10
+                     flex w-11 items-center justify-center
+                     text-base-content/50" aria-hidden="true">
+                <i class="fa-solid fa-magnifying-glass text-base"></i>
+              </span>
+            </div>
+          </div>
 
           <!-- Buscar por tipo de mantenimiento -->
           <div class="min-w-0">
@@ -81,9 +120,12 @@
             </label>
 
             <select id="filtro-estado" class="select select-bordered h-11 min-h-11
-                   w-full min-w-0 rounded-xl bg-base-100
-                   focus:outline-none focus:ring-2
-                   focus:ring-primary/30" [(ngModel)]="tipoMantenimientoBusqueda" (ngModelChange)="onSearchChange()">
+                w-full min-w-0 rounded-xl bg-base-200
+                pl-4 pr-10 transition-colors
+                focus:border-primary focus:outline-none
+                focus:ring-2 focus:ring-primary/30"
+              [ngClass]="tipoMantenimientoBusqueda ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="tipoMantenimientoBusqueda" (ngModelChange)="onSearchChange()">
               <option value="">Todos los estados</option>
 
               @for (estado of tipoMantenimiento; track estado.value) {
@@ -102,9 +144,12 @@
             </label>
 
             <select id="filtro-estado" class="select select-bordered h-11 min-h-11
-                   w-full min-w-0 rounded-xl bg-base-100
-                   focus:outline-none focus:ring-2
-                   focus:ring-primary/30" [(ngModel)]="estadoMantenimientoBusqueda" (ngModelChange)="onSearchChange()">
+                w-full min-w-0 rounded-xl bg-base-200
+                pl-4 pr-10 transition-colors
+                focus:border-primary focus:outline-none
+                focus:ring-2 focus:ring-primary/30"
+              [ngClass]="estadoMantenimientoBusqueda ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="estadoMantenimientoBusqueda" (ngModelChange)="onSearchChange()">
               <option value="">Todos los estados</option>
 
               @for (estado of estadoMantenimiento; track estado.value) {
@@ -135,13 +180,16 @@
       <!-- =============================================== -->
       <!-- ILUSTRACIÓN DE BÚSQUEDA -->
       <!-- =============================================== -->
-      <div class="hidden items-center justify-center border-base-300 px-5 lg:flex">
+      <div class="hidden items-center justify-center px-5 lg:flex">
+        <span class="imagen-lupa block h-32 w-32 text-base-content opacity-90" aria-hidden="true"></span>
+      </div>
+      <!-- <div class="hidden items-center justify-center border-base-300 px-5 lg:flex">
 
         <img src="assets/img/search.png" alt="" aria-hidden="true" class="h-32 w-32
                select-none object-contain
                opacity-90
                drop-shadow-sm" draggable="false" />
-      </div>
+      </div> -->
     </div>
   </section>
 
@@ -151,8 +199,8 @@
 
   <!-- Formulario modal -->
   <mantenimiento-form [mostrarModal]="mostrarModal" [modoEdicion]="modoEdicion"
-    [mantenimientoSeleccionado]="mantenimientoSeleccionado" [vehiculosDisponibles]="vehiculosDisponibles"
-    (modalCerrado)="cerrarModal()" (mantenimientoCreado)="getMantenimientoPaginated()"></mantenimiento-form>
+    [mantenimientoSeleccionado]="mantenimientoSeleccionado" [vehiculo_id]="vehiculo_id" (modalCerrado)="cerrarModal()"
+    (mantenimientoCreado)="getMantenimientoPaginated()"></mantenimiento-form>
 
   <!-- Modal para ver detalle de un mantenimiento -->
   <mantenimiento-view [mostrarModal]="mostrarModalView" [mantenimiento_id]="mantenimiento_id"
@@ -185,20 +233,21 @@
     <!-- ===================================================== -->
     <!-- CABECERA -->
     <!-- ===================================================== -->
-
     <div class="flex flex-col gap-4 border-b border-base-300 px-4 py-4
              sm:flex-row sm:items-center sm:justify-between sm:px-5">
       <!-- Cantidad por página -->
-      <div class="flex w-full items-center justify-between gap-3
-               text-sm text-base-content/70
-               sm:w-auto sm:justify-start">
-        <label for="personal-page-size" class="whitespace-nowrap">
+      <div class="flex w-full items-center
+                 justify-between gap-3
+                 text-sm text-base-content/70
+                 sm:w-auto sm:justify-start">
+        <label for="vehiculos-page-size" class="whitespace-nowrap">
           Mostrar
         </label>
 
-        <select id="personal-page-size" class="select select-bordered select-sm w-auto" [(ngModel)]="limit"
-          (change)="cambiarLimite()">
-          @for (size of pageSizeOptions; track size) {
+        <select id="vehiculos-page-size" class="select select-bordered select-sm
+         w-16 min-w-16 shrink-0 pl-3 pr-8" [(ngModel)]="limit" (change)="cambiarLimite()">
+
+          @for ( size of pageSizeOptions; track size ) {
           <option [ngValue]="size">
             {{ size }}
           </option>
@@ -210,13 +259,12 @@
         </span>
       </div>
 
-      <!-- Registrar personal -->
+      <!-- Registrar mantenimiento -->
       <div class="flex w-full justify-end sm:w-auto">
         <button type="button" class="btn btn-primary min-h-10 w-full gap-2 rounded-xl
                  border-none bg-info hover:bg-primary hover:text-white
                  sm:w-auto sm:min-w-40" (click)="abrirModal()">
-          <i class="fa-solid fa-user-plus"></i>
-
+          <i class="fa-solid fa-plus"></i>
           Mantenimiento
         </button>
       </div>
@@ -225,7 +273,6 @@
     <!-- ===================================================== -->
     <!-- TABLA DE MANTENIMIENTOS -->
     <!-- ===================================================== -->
-
     <div class="overflow-x-auto">
       <table class="table min-w-375">
         <thead class="bg-base-300/90">
@@ -235,8 +282,8 @@
             <th class="min-w-40">Tipo</th>
             <th class="min-w-64">Motivo</th>
             <th class="min-w-48">Programación</th>
-            <th class="min-w-52">Ejecución y kilometraje</th>
-            <th class="min-w-48">Taller y responsable</th>
+            <!-- <th class="min-w-52">Ejecución y kilometraje</th> -->
+            <!-- <th class="min-w-48">Taller y responsable</th> -->
             <th class="min-w-32 text-right">Costo</th>
             <th class="min-w-40 text-center">Estado</th>
             <th class="min-w-40">Actualización</th>
@@ -252,10 +299,12 @@
           @if (isLoading) {
           @for (item of [1, 2, 3, 4, 5, 6]; track item) {
           <tr>
+            <!-- N ° -->
             <td>
               <div class="skeleton mx-auto h-4 w-8"></div>
             </td>
 
+            <!-- Vehículo -->
             <td>
               <div class="flex items-center gap-3">
                 <div class="skeleton h-11 w-11 rounded-xl"></div>
@@ -267,10 +316,12 @@
               </div>
             </td>
 
+            <!-- Tipo -->
             <td>
               <div class="skeleton h-6 w-28"></div>
             </td>
 
+            <!-- Motivo -->
             <td>
               <div class="space-y-2">
                 <div class="skeleton h-4 w-48"></div>
@@ -278,6 +329,7 @@
               </div>
             </td>
 
+            <!-- Programación -->
             <td>
               <div class="space-y-2">
                 <div class="skeleton h-4 w-36"></div>
@@ -285,6 +337,7 @@
               </div>
             </td>
 
+            <!-- Ejecución y kilometraje -->
             <td>
               <div class="space-y-2">
                 <div class="skeleton h-4 w-36"></div>
@@ -293,21 +346,25 @@
               </div>
             </td>
 
-            <td>
+            <!-- Taller y responsable -->
+            <!-- <td>
               <div class="space-y-2">
                 <div class="skeleton h-4 w-32"></div>
                 <div class="skeleton h-3 w-36"></div>
               </div>
-            </td>
+            </td> -->
 
+            <!-- Costo -->
             <td>
               <div class="skeleton ml-auto h-4 w-20"></div>
             </td>
 
+            <!-- Estado -->
             <td>
               <div class="skeleton mx-auto h-6 w-28"></div>
             </td>
 
+            <!-- Actualización -->
             <td>
               <div class="space-y-2">
                 <div class="skeleton h-4 w-24"></div>
@@ -315,6 +372,7 @@
               </div>
             </td>
 
+            <!-- Acciones -->
             <td>
               <div class="flex justify-center gap-1">
                 <div class="skeleton h-8 w-8 rounded-full"></div>
@@ -329,11 +387,7 @@
           <!-- FILAS DE MANTENIMIENTOS -->
           <!-- =============================================== -->
 
-          @for (
-          mant of mantenimientos;
-          track mant.id_mantenimiento;
-          let i = $index
-          ) {
+          @for ( mant of mantenimientos; track mant.id_mantenimiento; let i = $index ) {
           <tr class="transition-colors hover:bg-base-200/40">
             <!-- Numeración paginada -->
             <td class="text-center text-base-content/60">
@@ -360,20 +414,18 @@
                     {{ mant.vehiculo.codigo }}
                   </p>
 
-                  <p class="mt-1 text-xs text-base-content/50">
+                  <!-- <p class="mt-1 text-xs text-base-content/50">
                     Orden #{{ mant.id_mantenimiento }}
-                  </p>
+                  </p> -->
                 </div>
               </div>
             </td>
 
             <!-- Tipo -->
             <td>
-              <span class="badge badge-soft whitespace-nowrap" [class.badge-info]="
-                  mant.tipo_mantenimiento === 'PREVENTIVO'
-                " [class.badge-warning]="
-                  mant.tipo_mantenimiento === 'CORRECTIVO'
-                ">
+              <span class="badge badge-soft whitespace-nowrap"
+                [class.badge-info]="mant.tipo_mantenimiento === 'PREVENTIVO'"
+                [class.badge-secondary]="mant.tipo_mantenimiento === 'CORRECTIVO'">
                 <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>
 
                 {{
@@ -391,7 +443,7 @@
                   {{ mant.motivo }}
                 </p>
 
-                @if (mant.observacion) {
+                <!-- @if (mant.observacion) {
                 <p class="truncate text-xs text-base-content/50" [title]="mant.observacion">
                   {{ mant.observacion }}
                 </p>
@@ -401,7 +453,7 @@
                 <p class="line-clamp-2 text-xs text-error" [title]="mant.motivo_cancelacion">
                   Cancelación: {{ mant.motivo_cancelacion }}
                 </p>
-                }
+                } -->
               </div>
             </td>
 
@@ -427,7 +479,7 @@
             </td>
 
             <!-- Ejecución y kilometraje -->
-            <td>
+            <!-- <td>
               <div class="space-y-1.5">
                 @if (mant.fecha_inicio_real) {
                 <p class="whitespace-nowrap text-xs">
@@ -475,10 +527,10 @@
                 </p>
                 }
               </div>
-            </td>
+            </td> -->
 
             <!-- Taller y responsable técnico -->
-            <td>
+            <!-- <td>
               <div class="max-w-48 space-y-1">
                 <p class="truncate text-sm font-medium" [title]="mant.taller ?? 'Taller no registrado'">
                   {{ mant.taller ?? 'Taller no registrado' }}
@@ -489,7 +541,7 @@
                   {{ mant.responsable_tecnico ?? 'Responsable no registrado' }}
                 </p>
               </div>
-            </td>
+            </td> -->
 
             <!-- Costo: distingue cero de ausencia de registro -->
             <td class="whitespace-nowrap text-right">
@@ -560,29 +612,6 @@
             <!-- Acciones -->
             <td>
               <div class="flex items-center justify-center gap-1">
-                <!-- Ver: disponible para cualquier estado -->
-                <div class="tooltip tooltip-left" data-tip="Ver mantenimiento">
-                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="verMantenimiento(mant)"
-                    aria-label="Ver detalle del mantenimiento">
-                    <i class="fa-regular fa-eye" aria-hidden="true"></i>
-                  </button>
-                </div>
-
-                <!-- Editar: programado o en proceso -->
-                <!-- @if ( mant.estado_mantenimiento === 'PROGRAMADO' || mant.estado_mantenimiento === 'EN_PROCESO' ) {
-                <div class="tooltip tooltip-left" data-tip="Editar mantenimiento">
-                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="editarMantenimiento(mant)"
-                    aria-label="Editar mantenimiento">
-                    <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
-                  </button>
-                </div>
-                } -->
-                <div class="tooltip tooltip-left" data-tip="Editar mantenimiento">
-                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="editarMantenimiento(mant)"
-                    aria-label="Editar mantenimiento">
-                    <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
-                  </button>
-                </div>
 
                 <!-- Iniciar y cancelar: solo programado -->
                 @if (mant.estado_mantenimiento === 'PROGRAMADO') {
@@ -613,6 +642,33 @@
                   </button>
                 </div>
                 }
+
+
+                <!-- Ver: disponible para cualquier estado -->
+                <div class="tooltip tooltip-left" data-tip="Ver mantenimiento">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="verMantenimiento(mant)"
+                    aria-label="Ver detalle del mantenimiento">
+                    <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                  </button>
+                </div>
+
+                <!-- Editar: programado o en proceso -->
+                @if ( mant.estado_mantenimiento === 'PROGRAMADO' || mant.estado_mantenimiento === 'EN_PROCESO' ) {
+                <div class="tooltip tooltip-left" data-tip="Editar mantenimiento">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="editarMantenimiento(mant)"
+                    aria-label="Editar mantenimiento">
+                    <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                  </button>
+                </div>
+                }
+                <!-- <div class="tooltip tooltip-left" data-tip="Editar mantenimiento">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="editarMantenimiento(mant)"
+                    aria-label="Editar mantenimiento">
+                    <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                  </button>
+                </div> -->
+
+
               </div>
             </td>
           </tr>
@@ -723,35 +779,55 @@
   <!-- ======================================================= -->
   <!-- ESTADO VACÍO GENERAL -->
   <!-- ======================================================= -->
-
-  @if (!isLoading && mantenimientos.length === 0) {
+  @if (!isLoading && !errorMensaje && mantenimientos.length === 0) {
   <section class="rounded-2xl border border-dashed border-base-300
            bg-base-100 px-6 py-16 text-center shadow-sm">
     <div class="mx-auto flex h-20 w-20 items-center justify-center
-             rounded-full bg-base-200 text-base-content/35">
-      <i class="fa-solid fa-users text-3xl"></i>
+         rounded-full transition-colors" [ngClass]="searchBusqueda.trim() ||
+      tipoMantenimientoBusqueda ||
+      estadoMantenimientoBusqueda
+      ? 'bg-secondary/10 text-secondary'
+      : 'bg-primary/10 text-primary'">
+      <i class="fa-solid fa-screwdriver-wrench text-3xl" aria-hidden="true"></i>
     </div>
 
     <h2 class="mt-5 text-lg font-bold">
-      No se encontró mantenimientos disponibles </h2>
+      @if ( searchBusqueda.trim() || tipoMantenimientoBusqueda || estadoMantenimientoBusqueda ) {
+      No se encontraron mantenimientos
+      } @else {
+      Este vehículo aún no tiene mantenimientos
+      }
+    </h2>
 
-    <p class="mx-auto mt-2 max-w-md
-             text-sm text-base-content/55">
-      No existe mantenimientos registrado o no se encontraron resultados
-      para los filtros seleccionados.
+    <p class="mx-auto mt-2 max-w-md text-sm text-base-content/55">
+      @if ( searchBusqueda.trim() || tipoMantenimientoBusqueda || estadoMantenimientoBusqueda ) {
+      No hay registros que coincidan con los filtros seleccionados.
+      Prueba con otros criterios de búsqueda.
+      } @else {
+      Registra el primer mantenimiento para comenzar el historial
+      de intervenciones de este vehículo.
+      }
     </p>
 
-    @if (
-    searchBusqueda ||
-    tipoMantenimientoBusqueda ||
-    estadoMantenimientoBusqueda
-    ) {
-    <button type="button" class="btn btn-primary btn-sm mt-5" (click)="limpiarFiltros()">
-      <i class="fa-solid fa-filter-circle-xmark"></i>
+    <!-- Acciones -->
+    <div class="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+      @if ( searchBusqueda.trim() || tipoMantenimientoBusqueda || estadoMantenimientoBusqueda ) {
+      <button type="button" class="btn btn-secondary btn-sm w-full gap-2
+                 rounded-xl sm:w-auto" (click)="limpiarFiltros()">
+        <!-- <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i> -->
+        <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+        Limpiar filtros
+      </button>
+      } @else {
+      <button type="button" class="btn btn-primary btn-sm w-full gap-2
+               rounded-xl sm:w-auto" (click)="abrirModal()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        Nuevo mantenimiento
+      </button>
+      }
 
-      Limpiar filtros
-    </button>
-    }
+
+    </div>
   </section>
   }
 </div>

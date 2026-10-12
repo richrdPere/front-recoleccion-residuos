@@ -61,11 +61,11 @@ export class PersonalPageComponent implements OnInit {
   }[] = [
       {
         value: 'NOMBRADO',
-        label: 'Nombrado',
+        label: 'NOMBRADO',
       },
       {
         value: 'CONTRATADO',
-        label: 'Contratado',
+        label: 'CONTRATADO',
       },
       {
         value: 'CAS',
@@ -73,15 +73,15 @@ export class PersonalPageComponent implements OnInit {
       },
       {
         value: 'LOCADOR',
-        label: 'Locador',
+        label: 'LOCADOR',
       },
       {
         value: 'TERCERO',
-        label: 'Tercero',
+        label: 'TERCERO',
       },
       {
         value: 'OTRO',
-        label: 'Otro',
+        label: 'OTRO',
       },
     ];
 
@@ -91,19 +91,19 @@ export class PersonalPageComponent implements OnInit {
   }[] = [
       {
         value: 'MANANA',
-        label: 'Mañana',
+        label: 'MAÑANA',
       },
       {
         value: 'TARDE',
-        label: 'Tarde',
+        label: 'TARDE',
       },
       {
         value: 'NOCHE',
-        label: 'Noche',
+        label: 'NOCHE',
       },
       {
         value: 'ROTATIVO',
-        label: 'Rotativo',
+        label: 'ROTATIVO',
       },
     ];
 
@@ -113,23 +113,23 @@ export class PersonalPageComponent implements OnInit {
   }[] = [
       {
         value: 'ACTIVO',
-        label: 'Activo',
+        label: 'ACTIVO',
       },
       {
         value: 'VACACIONES',
-        label: 'Vacaciones',
+        label: 'VACACIONES',
       },
       {
         value: 'DESCANSO_MEDICO',
-        label: 'Descanso medico',
+        label: 'DESCANSO MEDICO',
       },
       {
         value: 'SUSPENDIDO',
-        label: 'Suspendido',
+        label: 'SUSPENDIDO',
       },
       {
         value: 'CESADO',
-        label: 'Cesado',
+        label: 'CESADO',
       },
     ];
 
