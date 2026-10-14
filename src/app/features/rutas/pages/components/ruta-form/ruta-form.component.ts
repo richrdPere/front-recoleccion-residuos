@@ -5,6 +5,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import Swal from 'sweetalert2';
 
+// Directives
+import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directive';
+
 // Services
 import { RutasServices } from 'src/app/features/rutas/services/rutas.service';
 
@@ -59,6 +62,7 @@ const idValido: ValidatorFn = (
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    UppercaseDirective,
   ],
   templateUrl: './ruta-form.component.html',
   styles: ``,
@@ -74,6 +78,7 @@ export class RutasFormComponent implements OnChanges {
   @Input() mostrarModal = false;
   @Input() modoEdicion = false;
   @Input() rutaSeleccionada: RutaData | null = null;
+  @Input() zona_id: number | null = null;
 
   @Input() zonas: RutaZonaOption[] = [];
 
@@ -104,19 +109,18 @@ export class RutasFormComponent implements OnChanges {
   // ============================================================
   // CICLO DE VIDA
   // ============================================================
-
   ngOnChanges(changes: SimpleChanges): void {
     if (!this.mostrarModal) {
       if (changes['mostrarModal']) {
         this.resetearFormulario();
       }
-
       return;
     }
 
     const debeSincronizar =
       !!changes['mostrarModal'] ||
       !!changes['modoEdicion'] ||
+       !!changes['zona_id'] ||
       !!changes['rutaSeleccionada'];
 
     // Actualizar la lista de zonas no borra los datos del formulario.
@@ -124,17 +128,14 @@ export class RutasFormComponent implements OnChanges {
       return;
     }
 
-    if (this.modoEdicion) {
-      if (this.rutaSeleccionada) {
-        this.cargarRuta(this.rutaSeleccionada);
-      } else {
-        this.resetearFormulario();
-      }
-
+    if (this.modoEdicion && this.rutaSeleccionada) {
+      this.cargarRuta(this.rutaSeleccionada);
       return;
     }
 
     this.resetearFormulario();
+    this.getCodigo();
+    this.setModalWidth('md');
   }
 
   // ============================================================
@@ -144,26 +145,10 @@ export class RutasFormComponent implements OnChanges {
   private crearFormulario(): FormGroup {
     return this.fb.group({
       id_ruta: [null],
-
-      id_zona: [
-        null,
-        [Validators.required, idValido],
-      ],
-
-      codigo: [
-        '',
-        [Validators.required, textoNoVacio],
-      ],
-
-      nombre: [
-        '',
-        [Validators.required, textoNoVacio],
-      ],
-
-      descripcion: [
-        '',
-        [Validators.required, textoNoVacio],
-      ],
+      id_zona: [null],
+      codigo: [''],
+      nombre: ['', [Validators.required, textoNoVacio]],
+      descripcion: ['', [Validators.required, textoNoVacio]],
 
       // El selector de color utiliza el formato #RRGGBB.
       color: [
@@ -183,7 +168,7 @@ export class RutasFormComponent implements OnChanges {
 
     this.formRuta.reset({
       id_ruta: null,
-      id_zona: null,
+      id_zona: this.zona_id,
       codigo: '',
       nombre: '',
       descripcion: '',
@@ -239,19 +224,6 @@ export class RutasFormComponent implements OnChanges {
       return;
     }
 
-    if (
-      !esEdicion &&
-      !this.zonas.some(
-        (zona) => zona.id_zona === Number(form.id_zona),
-      )
-    ) {
-      this.mostrarError(
-        false,
-        'Selecciona una zona válida de la lista.',
-      );
-      return;
-    }
-
     const payloadCrear: CreateRutaRequest = {
       id_zona: Number(form.id_zona),
       codigo: form.codigo,
@@ -259,6 +231,8 @@ export class RutasFormComponent implements OnChanges {
       descripcion: form.descripcion,
       color: form.color,
     };
+
+    console.log("CREAR RUTA: ", payloadCrear);
 
     // Solo los campos permitidos para actualizar.
     const payloadActualizar: UpdateRutaRequest = {
@@ -365,6 +339,33 @@ export class RutasFormComponent implements OnChanges {
   // ============================================================
   // VALIDACIONES PARA HTML
   // ============================================================
+  getCodigo(): void {
+    this.rutasService
+      .getLastCodigoRuta()
+      .subscribe({
+        next: (resp) => {
+          // Evita aplicar la respuesta si se cerró el modal
+          // o se cambió a modo edición mientras cargaba.
+          if (!this.mostrarModal || this.modoEdicion) {
+            return;
+          }
+
+          if (!resp.success || !resp.data?.codigo) {
+            return;
+          }
+
+          this.formRuta.patchValue({
+            codigo: resp.data.codigo,
+          });
+
+          this.cdr.markForCheck();
+        },
+
+        error: (error) => {
+          console.error('Error al obtener el código de la ruta:', error);
+        },
+      });
+  }
 
   campoInvalido(campo: string): boolean {
     const control = this.formRuta.get(campo);
@@ -422,6 +423,20 @@ export class RutasFormComponent implements OnChanges {
       /^#[0-9A-Fa-f]{6}$/.test(color)
       ? color
       : this.colorPredeterminado;
+  }
+
+  setModalWidth(
+    size: 'sm' | 'md' | 'lg' | 'xl' | 'full',
+  ): void {
+    const clases = {
+      sm: 'max-w-md',
+      md: 'max-w-xl',
+      lg: 'max-w-4xl',
+      xl: 'max-w-6xl',
+      full: 'max-w-full w-[95vw]',
+    };
+
+    this.modalWidthClass = clases[size];
   }
 
   cerrarModal(): void {

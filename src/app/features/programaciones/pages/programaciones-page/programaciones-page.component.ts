@@ -2,16 +2,24 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, DestroyRef, EventEmitter, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize, of, Subscription, switchMap } from 'rxjs';
+import { finalize, forkJoin, of, Subscription, switchMap } from 'rxjs';
 import Swal from 'sweetalert2';
 
-// Service
+// Directives
+import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directive';
+
+// Services
 import { ProgramacionesService } from '../../services/programaciones.service';
+import { DisponibilidadService } from '../../services/disponibilidad.service';
 
 // Interfaces
 import { EstadoProgramacion, ProgramacionPaginadaItem, ProgramacionPaginadaPersonalAsignado, ProgramacionPaginadaRuta, ProgramacionPaginadaVehiculo, ProgramacionesPaginadasFilters } from '../../interfaces/programaciones';
+import { DisponibilidadFilters, GetVehiculosDisponiblesResponse, GetConductoresDisponiblesResponse, GetRecolectoresDisponiblesResponse } from '../../interfaces/disponibilidad';
+
+// Componentes
 import { ProgramacionesFormComponent } from '../components/programaciones-form/programaciones-form.component';
 import { ProgramacionesViewComponent } from '../components/programaciones-view/programaciones-view.component';
+import { ProgramacionesPersonalComponent } from '../components/programaciones-personal/programaciones-personal.component';
 
 @Component({
   selector: 'app-programaciones-page',
@@ -20,8 +28,9 @@ import { ProgramacionesViewComponent } from '../components/programaciones-view/p
     CommonModule,
     FormsModule,
     ProgramacionesFormComponent,
-    ProgramacionesViewComponent
-],
+    ProgramacionesViewComponent,
+    ProgramacionesPersonalComponent
+  ],
   templateUrl: './programaciones-page.component.html',
   styles: ``,
 })
@@ -44,10 +53,7 @@ export class ProgramacionesPageComponent implements OnInit, OnDestroy {
   // ============================================================
 
   @Output() nuevaProgramacion = new EventEmitter<void>();
-
-  @Output() editarProgramacion =
-    new EventEmitter<ProgramacionPaginadaItem>();
-
+  @Output() editarProgramacion = new EventEmitter<ProgramacionPaginadaItem>();
   @Output() verProgramacion = new EventEmitter<number>();
 
   // ============================================================
@@ -69,6 +75,23 @@ export class ProgramacionesPageComponent implements OnInit, OnDestroy {
   mostrarModal = false;
   modoEdicion = false;
   programacionSeleccionada: ProgramacionPaginadaItem | null = null;
+
+  mostrarModalPersonal = false;
+  programacionPersonalId: number | null = null;
+
+  // ============================================================
+  // DISPONIBILIDAD PARA EL FORMULARIO
+  // ============================================================
+  vehiculosDisponibles: GetVehiculosDisponiblesResponse['data'] | null = null;
+
+  conductoresDisponibles: GetConductoresDisponiblesResponse['data'] | null = null;
+
+  recolectoresDisponibles: GetRecolectoresDisponiblesResponse['data'] | null = null;
+
+  cargandoDisponibilidad = false;
+  errorDisponibilidad: string | null = null;
+
+  private disponibilidadSubscription?: Subscription;
 
   // ============================================================
   // FILTROS
@@ -115,6 +138,7 @@ export class ProgramacionesPageComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly programacionesService: ProgramacionesService,
+    private readonly disponibilidadService: DisponibilidadService,
     private readonly cdr: ChangeDetectorRef,
   ) { }
 
@@ -126,12 +150,13 @@ export class ProgramacionesPageComponent implements OnInit, OnDestroy {
     this.destruido = true;
     this.cancelarBusquedaPendiente();
     this.listadoSubscription?.unsubscribe();
+    this.cancelarDisponibilidad();
+
   }
 
   // ============================================================
   // LISTADO
   // ============================================================
-
   getProgramacionesPaginated(): void {
     this.cancelarBusquedaPendiente();
     this.listadoSubscription?.unsubscribe();
@@ -232,6 +257,130 @@ export class ProgramacionesPageComponent implements OnInit, OnDestroy {
     this.programaciones = [];
     this.totalItems = 0;
     this.totalPages = 0;
+  }
+
+
+  // ============================================================
+  // CONSULTAR DISPONIBILIDAD
+  // ============================================================
+  getDisponibilidad(
+    filters: DisponibilidadFilters = {},
+  ): void {
+    if (this.destruido || !this.mostrarModal) {
+      return;
+    }
+
+    // Cancela la consulta del horario anterior.
+    this.disponibilidadSubscription?.unsubscribe();
+    this.disponibilidadSubscription = undefined;
+
+    this.limpiarDisponibilidad();
+
+    const params: DisponibilidadFilters = {
+      fecha_programada: filters.fecha_programada,
+      hora_inicio_programada: filters.hora_inicio_programada,
+      hora_fin_programada: filters.hora_fin_programada,
+
+      // Al crear se omite; al editar se excluye el registro actual.
+      exclude_programacion_id: this.modoEdicion
+        ? this.programacionSeleccionada?.id_programacion
+        : undefined,
+    };
+
+    this.cargandoDisponibilidad = true;
+    this.cdr.markForCheck();
+
+    this.disponibilidadSubscription = forkJoin({
+      vehiculos: this.disponibilidadService.getVehiculosDisponibles(params),
+      conductores: this.disponibilidadService.getConductoresDisponibles(params),
+      recolectores: this.disponibilidadService.getRecolectoresDisponibles(params),
+    })
+      .pipe(
+        finalize(() => {
+          this.cargandoDisponibilidad = false;
+
+          if (!this.destruido) {
+            this.cdr.markForCheck();
+          }
+        }),
+      )
+      .subscribe({
+        next: ({ vehiculos, conductores, recolectores }) => {
+          const mensajes: string[] = [];
+
+          if (!vehiculos.success || vehiculos.data == null) {
+            mensajes.push(
+              vehiculos.message ||
+              'No se pudieron obtener los vehículos disponibles.',
+            );
+          }
+
+          if (!conductores.success || conductores.data == null) {
+            mensajes.push(
+              conductores.message ||
+              'No se pudieron obtener los conductores disponibles.',
+            );
+          }
+
+          if (!recolectores.success || recolectores.data == null) {
+            mensajes.push(
+              recolectores.message ||
+              'No se pudieron obtener los recolectores disponibles.',
+            );
+          }
+
+          if (mensajes.length > 0) {
+            this.errorDisponibilidad = mensajes.join(' ');
+            this.cdr.markForCheck();
+            return;
+          }
+
+          // Publica las tres respuestas del mismo horario juntas.
+          this.vehiculosDisponibles = vehiculos.data;
+          this.conductoresDisponibles = conductores.data;
+          this.recolectoresDisponibles = recolectores.data;
+
+          this.errorDisponibilidad = null;
+          this.cdr.markForCheck();
+        },
+
+        error: (error: unknown) => {
+          this.errorDisponibilidad = this.obtenerMensajeError(
+            error,
+            'No se pudo consultar la disponibilidad de los recursos.',
+          );
+
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  private limpiarDisponibilidad(): void {
+    this.vehiculosDisponibles = null;
+    this.conductoresDisponibles = null;
+    this.recolectoresDisponibles = null;
+
+    this.errorDisponibilidad = null;
+    this.cargandoDisponibilidad = false;
+  }
+
+  private cancelarDisponibilidad(): void {
+    this.disponibilidadSubscription?.unsubscribe();
+    this.disponibilidadSubscription = undefined;
+  }
+
+  // ============================================================
+  // MODAL: PERSONAL DE LA PROGRAMACIÓN
+  // ============================================================
+
+  abrirPersonalProgramacion(idProgramacion: number): void {
+    this.programacionPersonalId = idProgramacion;
+    this.mostrarModalPersonal = true;
+  }
+
+  cerrarPersonalProgramacion(): void {
+    this.mostrarModalPersonal = false;
+    this.programacionPersonalId = null;
   }
 
   // ============================================================
@@ -414,18 +563,27 @@ export class ProgramacionesPageComponent implements OnInit, OnDestroy {
   // ============================================================
 
   abrirModal(): void {
+    this.cancelarDisponibilidad();
+    this.limpiarDisponibilidad();
+
     this.modoEdicion = false;
     this.programacionSeleccionada = null;
     this.mostrarModal = true;
   }
 
   abrirEdicion(programacion: ProgramacionPaginadaItem): void {
+    this.cancelarDisponibilidad();
+    this.limpiarDisponibilidad();
+
     this.modoEdicion = true;
     this.programacionSeleccionada = programacion;
     this.mostrarModal = true;
   }
 
   cerrarModal(): void {
+    this.cancelarDisponibilidad();
+    this.limpiarDisponibilidad();
+
     this.mostrarModal = false;
     this.modoEdicion = false;
     this.programacionSeleccionada = null;
@@ -444,6 +602,12 @@ export class ProgramacionesPageComponent implements OnInit, OnDestroy {
   // Invocar después de crear o actualizar correctamente.
   onProgramacionGuardada(): void {
     this.getProgramacionesPaginated();
+  }
+
+  invalidarDisponibilidadFormulario(): void {
+    this.cancelarDisponibilidad();
+    this.limpiarDisponibilidad();
+    this.cdr.markForCheck();
   }
 
   // ============================================================

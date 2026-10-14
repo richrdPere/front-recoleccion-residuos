@@ -12,7 +12,7 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
 // Interfaces
-import { GetConductoresDisponiblesResponse, GetRecolectoresDisponiblesResponse, GetVehiculosDisponiblesResponse } from '../interfaces/disponibilidad';
+import { DisponibilidadFilters, GetConductoresDisponiblesResponse, GetRecolectoresDisponiblesResponse, GetVehiculosDisponiblesResponse } from '../interfaces/disponibilidad';
 
 @Injectable({
   providedIn: 'root'
@@ -35,14 +35,17 @@ export class DisponibilidadService {
   // *********************************************************
   // 1. OBTENER VEHÍCULOS DISPONIBLES
   // *********************************************************
-  getVehiculosDisponibles():
+  getVehiculosDisponibles(
+    filters: DisponibilidadFilters = {},
+  ):
     Observable<GetVehiculosDisponiblesResponse> {
     const headers = this.getJsonHeaders();
+    const params = HttpServiceHelper.buildParams(filters);
 
     return this.http
       .get<GetVehiculosDisponiblesResponse>(
         this.API_GET_VEHICULOS_DISPONIBLES,
-        { headers },
+        { headers, params },
       )
       .pipe(
         catchError((error) =>
@@ -57,14 +60,17 @@ export class DisponibilidadService {
   // *********************************************************
   // 2. OBTENER CONDUCTORES DISPONIBLES
   // *********************************************************
-  getConductoresDisponibles():
+  getConductoresDisponibles(
+    filters: DisponibilidadFilters = {},
+  ):
     Observable<GetConductoresDisponiblesResponse> {
     const headers = this.getJsonHeaders();
+    const params = HttpServiceHelper.buildParams(filters);
 
     return this.http
       .get<GetConductoresDisponiblesResponse>(
         this.API_GET_CONDUCTORES_DISPONIBLES,
-        { headers },
+        { headers, params },
       )
       .pipe(
         catchError((error) =>
@@ -79,14 +85,17 @@ export class DisponibilidadService {
   // *********************************************************
   // 3. OBTENER RECOLECTORES DISPONIBLES
   // *********************************************************
-  getRecolectoresDisponibles():
+  getRecolectoresDisponibles(
+    filters: DisponibilidadFilters = {},
+  ):
     Observable<GetRecolectoresDisponiblesResponse> {
     const headers = this.getJsonHeaders();
+    const params = HttpServiceHelper.buildParams(filters);
 
     return this.http
       .get<GetRecolectoresDisponiblesResponse>(
         this.API_GET_RECOLECTORES_DISPONIBLES,
-        { headers },
+        { headers, params },
       )
       .pipe(
         catchError((error) =>

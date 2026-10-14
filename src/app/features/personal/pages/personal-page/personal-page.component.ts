@@ -18,7 +18,7 @@ import { UsuarioSelectorItem } from 'src/app/features/usuarios/interfaces';
 // Componentes
 import { PersonalFormComponent } from '../components/personal-form/personal-form.component';
 import { PersonalViewComponent } from '../components/personal-view/personal-view.component';
-
+import { PersonalConductorPerfilComponent } from '../components/personal-conductor-perfil/personal-conductor-perfil.component';
 
 @Component({
   selector: 'app-personal-page',
@@ -28,7 +28,8 @@ import { PersonalViewComponent } from '../components/personal-view/personal-view
     CommonModule,
     UppercaseDirective,
     PersonalFormComponent,
-    PersonalViewComponent
+    PersonalViewComponent,
+    PersonalConductorPerfilComponent
   ],
   templateUrl: './personal-page.component.html',
   styles: ``,
@@ -46,6 +47,9 @@ export class PersonalPageComponent implements OnInit {
   personalSeleccionado: any = null;
 
   searchTimeout: any;
+
+  mostrarModalConductor = false;
+personalConductorId: number | string | null = null;
 
   // Search
   searchBusqueda: string = '';
@@ -287,9 +291,17 @@ export class PersonalPageComponent implements OnInit {
   }
 
   // - Sabe conducir
-  conductorPersonal(_t107: PersonalOperativoData) {
-    throw new Error('Method not implemented.');
-  }
+  abrirPerfilConductor(idPersonal: number | string): void {
+  this.personalConductorId = idPersonal;
+  this.mostrarModalConductor = true;
+}
+
+cerrarPerfilConductor(): void {
+  this.mostrarModalConductor = false;
+  this.personalConductorId = null;
+}
+
+
 
   // - CAMBIAR ESTADO
   cambiarEstado(personal: PersonalOperativoData) {

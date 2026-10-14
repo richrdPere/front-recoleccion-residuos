@@ -12,7 +12,7 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
 // Interfaces
-import { ChangeRutaEstadoOperativoRequest, ChangeRutaEstadoOperativoResponse, ChangeRutaEstadoRequest, ChangeRutaEstadoResponse, CreateRutaRequest, CreateRutaResponse, DeleteRutaResponse, GetRutaByIdResponse, GetRutasActivasResponse, GetRutasPaginatedResponse, RutasPaginadasFilters, UpdateRutaRequest, UpdateRutaResponse } from '../interfaces/rutas';
+import { ChangeRutaEstadoOperativoRequest, ChangeRutaEstadoOperativoResponse, ChangeRutaEstadoRequest, ChangeRutaEstadoResponse, CreateRutaRequest, CreateRutaResponse, DeleteRutaResponse, GetRutaByIdResponse, GetRutasActivasResponse, GetRutasPaginatedResponse, GetZonasResumenRutasPaginadasResponse, RutasPaginadasFilters, UltimoCodigoResponse, UpdateRutaRequest, UpdateRutaResponse, ZonasResumenRutasPaginadasFilters } from '../interfaces/rutas';
 import { GetRutasByZonaResponse } from '../interfaces/rutas/get-ruta-by-zona-id.interface';
 
 @Injectable({
@@ -34,6 +34,8 @@ export class RutasServices {
   private readonly API_CHANGE_RUTA_ESTADO_OPERATIVO: string = this.API_BASE + '/estado-ruta/';
   private readonly API_CHANGE_RUTA_ESTADO: string = this.API_BASE + '/estado/';
   private readonly API_DELETE_RUTA: string = this.API_BASE + '/delete/';
+  private readonly API_GET_ULTIMO_CODIGO: string = this.API_BASE + '/codigo';
+  private readonly API_GET_ZONAS_RESUMEN_RUTAS_PAGINADAS: string = this.API_BASE + '/resumen-rutas/paginado';
 
   constructor(
     private readonly http: HttpClient,
@@ -247,6 +249,53 @@ export class RutasServices {
           HttpServiceHelper.handleError(
             error,
             'No se pudo eliminar el vehículo.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 10. OBTENER ULTIMO CODIGO VEHICULO
+  // *********************************************************
+  getLastCodigoRuta(
+  ): Observable<UltimoCodigoResponse> {
+    const headers = this.getJsonHeaders();
+
+    return this.http
+      .get<UltimoCodigoResponse>(
+        this.API_GET_ULTIMO_CODIGO,
+        { headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo obtener el último código de la ruta.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 11. OBTENER ZONAS CON RESUMEN DE RUTAS PAGINADAS
+  // *********************************************************
+
+  getZonasResumenRutasPaginated(
+    filters: ZonasResumenRutasPaginadasFilters = {},
+  ): Observable<GetZonasResumenRutasPaginadasResponse> {
+    const params = HttpServiceHelper.buildParams(filters);
+    const headers = this.getJsonHeaders();
+
+    return this.http
+      .get<GetZonasResumenRutasPaginadasResponse>(
+        this.API_GET_ZONAS_RESUMEN_RUTAS_PAGINADAS,
+        { params, headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudieron obtener las zonas con el resumen de rutas.',
           ),
         ),
       );

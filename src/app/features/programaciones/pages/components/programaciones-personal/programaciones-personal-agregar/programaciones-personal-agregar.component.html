@@ -1,0 +1,190 @@
+<form [formGroup]="formAgregar" (ngSubmit)="agregarPersonal()" class="space-y-5" novalidate>
+  <!-- ENCABEZADO DEL FORMULARIO -->
+  <div class="flex items-start gap-3">
+    <div class="flex h-11 w-11 shrink-0 items-center justify-center
+             rounded-xl bg-primary/10 text-primary">
+      <i class="fa-solid fa-user-plus text-lg" aria-hidden="true"></i>
+    </div>
+
+    <div>
+      <h3 class="text-lg font-semibold">Agregar personal</h3>
+
+      <p class="mt-1 text-sm text-base-content/60">
+        Seleccione la función y el personal que será asignado a la programación.
+      </p>
+    </div>
+  </div>
+
+  <!-- CARGANDO OPCIONES -->
+  @if (cargandoPersonal) {
+  <div class="flex items-center gap-3 rounded-xl
+             border border-base-300 bg-base-200/40 p-4" role="status" aria-live="polite">
+    <span class="loading loading-spinner loading-sm text-primary" aria-hidden="true"></span>
+    <p class="text-sm">Cargando personal disponible...</p>
+  </div>
+  }
+
+  <!-- ERROR DE DISPONIBILIDAD -->
+  @if (errorDisponibilidad) {
+  <div class="flex flex-col gap-3 rounded-xl border border-error/30
+             bg-error/10 p-4 sm:flex-row sm:items-center sm:justify-between" role="alert">
+    <p class="text-sm">
+      {{ errorDisponibilidad }}
+    </p>
+
+    <button type="button" class="btn btn-error btn-outline btn-sm" [disabled]="isLoading || cargandoPersonal"
+      (click)="reintentarDisponibilidad.emit()">
+      <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+      Reintentar
+    </button>
+  </div>
+  }
+
+  <!-- CAMPOS -->
+  <fieldset class="min-w-0 space-y-5" [disabled]="isLoading || cargandoPersonal || !!errorDisponibilidad">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+      <!-- FUNCIÓN -->
+      <div class="form-control">
+        <label class="label" for="agregar-personal-funcion">
+          <span class="label-text">
+            Función
+            <span class="font-bold text-red-500">*</span>
+          </span>
+        </label>
+
+        <select id="agregar-personal-funcion" formControlName="funcion" class="select select-bordered w-full"
+          [class.select-error]="campoInvalido('funcion')" [attr.aria-invalid]="campoInvalido('funcion')"
+          [attr.aria-describedby]="
+            campoInvalido('funcion') ? 'agregar-personal-funcion-error' : null
+          ">
+          <option value="" disabled>Seleccionar función</option>
+
+          @for (opcion of funcionesDisponibles; track opcion.value) {
+          <option [value]="opcion.value">
+            {{ opcion.label }}
+          </option>
+          }
+        </select>
+
+        @if (campoInvalido('funcion')) {
+        <p id="agregar-personal-funcion-error" class="mt-1 text-sm text-red-500">
+          {{ obtenerError('funcion') }}
+        </p>
+        }
+      </div>
+
+      <!-- PERSONAL -->
+      <div class="form-control">
+        <label class="label" for="agregar-personal-selector">
+          <span class="label-text">
+            Personal
+            <span class="font-bold text-red-500">*</span>
+          </span>
+        </label>
+
+        <select id="agregar-personal-selector" formControlName="id_personal" class="select select-bordered w-full"
+          [class.select-error]="campoInvalido('id_personal')" [attr.aria-invalid]="campoInvalido('id_personal')"
+          [attr.aria-describedby]="
+            campoInvalido('id_personal')
+              ? 'agregar-personal-selector-error'
+              : 'agregar-personal-selector-ayuda'
+          ">
+          <option [ngValue]="null" disabled>
+            {{
+            funcionSeleccionada
+            ? 'Seleccionar personal'
+            : 'Seleccione primero una función'
+            }}
+          </option>
+
+          @for (persona of personalFiltrado; track persona.id_personal) {
+          <option [ngValue]="persona.id_personal">
+            {{ persona.nombre }}
+            {{ persona.codigo_empleado ? ' · ' + persona.codigo_empleado : '' }}
+          </option>
+          }
+        </select>
+
+        @if (campoInvalido('id_personal')) {
+        <p id="agregar-personal-selector-error" class="mt-1 text-sm text-red-500">
+          {{ obtenerError('id_personal') }}
+        </p>
+        }
+
+        <p id="agregar-personal-selector-ayuda" class="mt-1 text-xs text-base-content/55">
+          Se muestran las personas disponibles para la función seleccionada.
+        </p>
+      </div>
+
+    </div>
+
+    @if (
+    funcionSeleccionada &&
+    !cargandoPersonal &&
+    !errorDisponibilidad &&
+    personalFiltrado.length === 0
+    ) {
+    <div class="flex items-start gap-3 rounded-xl
+               border border-warning/30 bg-warning/10 p-4" role="status">
+      <i class="fa-solid fa-circle-info mt-0.5 text-warning" aria-hidden="true"></i>
+      <p class="text-sm">
+        No hay personal disponible para la función seleccionada.
+      </p>
+    </div>
+    }
+
+    <!-- PRINCIPAL -->
+    <div class="flex flex-col gap-3 rounded-xl border border-base-300
+             bg-base-200/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <label class="cursor-pointer text-sm font-semibold" for="agregar-personal-principal">
+          Asignación principal
+        </label>
+
+        <p id="agregar-personal-principal-ayuda" class="mt-1 text-xs text-base-content/60">
+          Marque esta opción si corresponde asignar al personal como principal.
+        </p>
+      </div>
+
+      <input id="agregar-personal-principal" type="checkbox" role="switch" formControlName="es_principal"
+        class="toggle toggle-primary" aria-describedby="agregar-personal-principal-ayuda" />
+    </div>
+
+    <!-- OBSERVACIÓN -->
+    <div class="form-control">
+      <label class="label" for="agregar-personal-observacion">
+        <span class="label-text">Observaciones de la asignación</span>
+        <span class="label-text-alt">Opcional</span>
+      </label>
+
+      <textarea id="agregar-personal-observacion" formControlName="observacion" rows="3"
+        placeholder="Ingrese información adicional sobre la asignación."
+        class="textarea textarea-bordered w-full"></textarea>
+    </div>
+  </fieldset>
+
+  <!-- ACCIONES -->
+  <div class="flex flex-col-reverse gap-3 border-t border-base-300
+           pt-4 sm:flex-row sm:justify-end">
+    <button type="button" class="btn btn-ghost" [disabled]="isLoading" (click)="cancelar()">
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+      Volver al listado
+    </button>
+
+    <button type="submit" class="btn btn-primary" [disabled]="
+        isLoading ||
+        cargandoPersonal ||
+        !!errorDisponibilidad ||
+        personalFiltrado.length === 0
+      ">
+      @if (isLoading) {
+      <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+      Agregando...
+      } @else {
+      <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+      Agregar personal
+      }
+    </button>
+  </div>
+</form>

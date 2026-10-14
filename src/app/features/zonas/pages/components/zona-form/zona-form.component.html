@@ -104,7 +104,7 @@
 
                   <input id="zona-nombre" type="text" formControlName="nombre" class="input input-bordered w-full"
                     [class.input-error]="campoInvalido('nombre')" placeholder="Ejemplo: Sector centro"
-                    autocomplete="off" aria-describedby="zona-nombre-error" appUppercase/>
+                    autocomplete="off" aria-describedby="zona-nombre-error" appUppercase />
 
                   @if (campoInvalido('nombre')) {
                   <p id="zona-nombre-error" class="mt-1 text-xs text-error">
@@ -157,11 +157,8 @@
                   <span class="text-error">*</span>
                 </h3>
 
-                <span class="badge badge-soft" [class.badge-success]="
-            formZona.get('poligono_geojson')?.valid
-          " [class.badge-warning]="
-            !formZona.get('poligono_geojson')?.valid
-          ">
+                <span class="badge badge-soft" [class.badge-success]="formZona.get('poligono_geojson')?.valid"
+                  [class.badge-warning]="!formZona.get('poligono_geojson')?.valid">
                   {{
                   formZona.get('poligono_geojson')?.valid
                   ? 'Polígono definido'

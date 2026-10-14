@@ -125,29 +125,70 @@
                     <span class="label-text">
                       Vehículo <span class="text-red-500">*</span>
                     </span>
+
+                    @if (cargandoDisponibilidad) {
+                    <span class="loading loading-spinner loading-xs text-primary"
+                      aria-label="Cargando vehículos"></span>
+                    }
                   </label>
 
                   <select id="programacion-vehiculo" formControlName="id_vehiculo" class="select select-bordered w-full"
-                    [class.select-error]="campoInvalido('id_vehiculo')">
+                    [class.select-error]="campoInvalido('id_vehiculo')"
+                    [attr.aria-invalid]="campoInvalido('id_vehiculo')" aria-describedby="programacion-vehiculo-ayuda">
                     <option [ngValue]="null" disabled>
+                      @if (!horarioValido) {
+                      Complete la fecha y el horario
+                      } @else if (cargandoDisponibilidad || esperandoDisponibilidad) {
+                      Consultando disponibilidad...
+                      } @else if (errorDisponibilidad) {
+                      No se pudo consultar la disponibilidad
+                      } @else {
                       Seleccionar vehículo
+                      }
                     </option>
 
+                    @if (disponibilidadLista) {
                     @for (
-                    vehiculo of vehiculosDisponibles;
+                    vehiculo of vehiculosDisponibles ?? [];
                     track vehiculo.id_vehiculo
                     ) {
                     <option [ngValue]="vehiculo.id_vehiculo">
                       {{ vehiculo.codigo }} — {{ vehiculo.placa }}
                     </option>
                     }
+                    }
                   </select>
 
-                  @if (campoInvalido('id_vehiculo')) {
-                  <p class="mt-1 text-sm text-red-500">
-                    {{ obtenerError('id_vehiculo') }}
-                  </p>
-                  }
+                  <div id="programacion-vehiculo-ayuda" class="mt-1">
+                    @if (campoInvalido('id_vehiculo')) {
+                    <p class="text-sm text-red-500">
+                      {{ obtenerError('id_vehiculo') }}
+                    </p>
+                    }
+
+                    @if (errorDisponibilidad) {
+                    <p class="text-sm text-error" role="alert">
+                      {{ errorDisponibilidad }}
+                    </p>
+
+                    <button type="button" class="btn btn-ghost btn-xs mt-2" [disabled]="isLoading || !horarioValido"
+                      (click)="solicitarDisponibilidad()">
+                      <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                      Reintentar
+                    </button>
+                    } @else if (
+                    disponibilidadLista &&
+                    vehiculosDisponibles?.length === 0
+                    ) {
+                    <p class="text-sm text-warning">
+                      No hay vehículos disponibles para el horario seleccionado.
+                    </p>
+                    } @else {
+                    <p class="text-xs text-base-content/55">
+                      Seleccione un vehículo disponible para la fecha y el horario indicados.
+                    </p>
+                    }
+                  </div>
                 </div>
               </div>
             </div>
@@ -268,7 +309,7 @@
                     track personal.id_personal
                     ) {
                     <option [ngValue]="personal.id_personal">
-                      {{ personal.nombre }} — {{ personal.codigo_empleado }}
+                      {{ personal.conductor }} — {{ personal.codigo_empleado }}
                     </option>
                     }
                   </select>
@@ -329,7 +370,7 @@
 
                     <span class="min-w-0">
                       <span class="block text-sm font-medium">
-                        {{ personal.nombre }}
+                        {{ personal.usuario.persona.nombres }}
                       </span>
 
                       <span class="block text-xs text-base-content/55">

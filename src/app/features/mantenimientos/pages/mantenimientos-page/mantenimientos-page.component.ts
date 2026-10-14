@@ -2,6 +2,7 @@ import { CommonModule, DatePipe, CurrencyPipe, DecimalPipe } from '@angular/comm
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, Subscription, finalize, takeUntil } from 'rxjs';
+import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 
 // Directives
@@ -18,14 +19,6 @@ import {
   VehiculoSelectorItem,
 } from 'src/app/features/vehiculos/models';
 
-// Componentes
-import { MantenimientoFormComponent } from '../components/mantenimiento-form/mantenimiento-form.component';
-import { MantenimientoViewComponent } from '../components/mantenimiento-view/mantenimiento-view.component';
-import { IniciarMantenimientoComponent } from '../components/iniciar-mantenimiento/iniciar-mantenimiento.component';
-import { FinalizarMantenimientoComponent } from '../components/finalizar-mantenimiento/finalizar-mantenimiento.component';
-import { CancelarMantenimientoComponent } from '../components/cancelar-mantenimiento/cancelar-mantenimiento.component';
-import { MantenimientoListadoComponent } from '../components/mantenimiento-listado/mantenimiento-listado.component';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-mantenimientos-page',
@@ -187,13 +180,8 @@ export class MantenimientosPageComponent implements OnInit, OnDestroy {
       page: this.page,
       limit: this.limit,
       search: this.searchBusqueda.trim() || undefined,
-
-      estado_operativo:
-        this.estadoOperativoBusqueda || undefined,
-
-      tipo_vehiculo:
-        this.tipoVehiculoBusqueda || undefined,
-
+      estado_operativo: this.estadoOperativoBusqueda || undefined,
+      tipo_vehiculo: this.tipoVehiculoBusqueda || undefined,
       solo_con_mantenimientos: this.soloConMantenimientos,
 
       sort_by: 'id_vehiculo',

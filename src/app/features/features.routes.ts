@@ -89,7 +89,7 @@ export const adminFeatureRoutes: Routes = [
 
       {
         path: 'mantenimientos/:vehiculoId',
-          canActivate: [roleGuard],
+        canActivate: [roleGuard],
         loadComponent: () =>
           import('./mantenimientos/pages/components/mantenimiento-listado/mantenimiento-listado.component')
             .then(m => m.MantenimientoListadoComponent),
@@ -195,6 +195,17 @@ export const adminFeatureRoutes: Routes = [
           import('./rutas/pages/rutas-page/rutas-page.component').then(
             (m) => m.RutasPageComponent,
           ),
+      },
+
+      {
+        path: 'rutas/:zonaId',
+        canActivate: [roleGuard],
+        loadComponent: () =>
+          import('./rutas/pages/components/ruta-listado/ruta-listado.component')
+            .then(m => m.RutaListadoComponent),
+        data: {
+          roles: ['ADMIN', 'OPERADOR', 'GERENTE_SERENAZGO', 'SUPERVISOR_SERENAZGO']
+        }
       },
 
       // Usuarios

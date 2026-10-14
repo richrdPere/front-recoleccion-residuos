@@ -193,8 +193,7 @@ export class RutaVersionFormComponent
   // *********************************************************
   private readonly fb = inject(FormBuilder);
 
-  private readonly rutaVersionService =
-    inject(RutaVersionService);
+  private readonly rutaVersionService = inject(RutaVersionService);
 
   private consulta?: Subscription;
 

@@ -1,23 +1,21 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, DestroyRef, EventEmitter, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize, Subscription } from 'rxjs';
-
+import { finalize, Subject, Subscription, takeUntil } from 'rxjs';
+import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
+
+// Directives
+import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directive';
 
 // Services
 import { RutasServices } from '../../services/rutas.service';
 
 // Interfaces
 import { RutaPaginadaItem, RutaZonaData, RutasPaginadasFilters } from '../../interfaces/rutas/get-rutas-paginated.interface';
-import { RutaData, RutaVersionConPuntosData } from '../../interfaces/rutas';
+import { RutaData, RutaVersionConPuntosData, ZonaConResumenRutasData, ZonasResumenRutasPaginadasFilters } from '../../interfaces/rutas';
 
-// Componentes
-import { RutasFormComponent } from '../components/ruta-form/ruta-form.component';
-import { RutasViewComponent } from '../components/ruta-view/ruta-view.component';
-import { RutaVersionesComponent } from '../ruta-versiones/ruta-versiones.component';
-import { RutaHorarioComponent } from '../ruta-horarios/ruta-horarios.component';
 
 type EstadoRuta = 'BORRADOR' | 'ACTIVA' | 'INACTIVA';
 
@@ -27,52 +25,48 @@ type EstadoRuta = 'BORRADOR' | 'ACTIVA' | 'INACTIVA';
   imports: [
     CommonModule,
     FormsModule,
-    RutasFormComponent,
-    RutasViewComponent,
-    RutaVersionesComponent,
-    RutaHorarioComponent
-],
+    UppercaseDirective,
+
+  ],
   templateUrl: './rutas-page.component.html',
   styles: ``,
 })
 export class RutasPageComponent implements OnInit, OnDestroy {
 
-
-
-  // Rutas
-  rutas: RutaPaginadaItem[] = [];
-  ruta_id: number | null = null;
+  // *********************************************************
+  // EXPEDIENTES DE ZONAS
+  // *********************************************************
+  zonas: ZonaConResumenRutasData[] = [];
+  zona_id: number | null = null;
 
   isLoading = false;
-  errorCarga: string | null = null;
-
-  mostrarModalVersiones = false;
-  rutaVersionesId: number | null = null;
-  versionParaPuntos: RutaVersionConPuntosData | null = null;
+  errorMensaje = '';
 
   // Bloquea acciones repetidas sobre un mismo registro.
   readonly registrosProcesando = new Set<number>();
 
-  private listadoSubscription?: Subscription;
+  private readonly destroy$ = new Subject<void>();
+  private expedientesSubscription?: Subscription;
   private searchTimeout?: ReturnType<typeof setTimeout>;
   private destruido = false;
 
-  mostrarModal = false;
-  modoEdicion = false;
-  rutaSeleccionada: RutaData | null = null;
-
-  mostrarModalView = false;
-
-  mostrarModalHorarios = false;
-  rutaHorariosId: number | null = null;
-
-  private readonly destroyRef = inject(DestroyRef);
-
   // Search
   searchBusqueda = '';
-  zonaBusqueda: number | null = null;
-  estadoRutaBusqueda: EstadoRuta | '' = '';
   estadoBusqueda: boolean | null = null;
+  // zonaBusqueda: number | null = null;
+  // estadoRutaBusqueda: EstadoRuta | '' = '';
+
+
+  // ============================================================
+  // SELECTED
+  // ============================================================
+  readonly estados: {
+    value: boolean;
+    label: string;
+  }[] = [
+      { value: true, label: 'ACTIVOS' },
+      { value: false, label: 'INACTIVOS' },
+    ];
 
   // ============================================================
   // PAGINACIÓN
@@ -84,313 +78,334 @@ export class RutasPageComponent implements OnInit, OnDestroy {
   totalPages = 0;
   currentPage = 1;
 
+  hasNextPage = false;
+  hasPreviousPage = false;
+
   readonly pageSizeOptions = [5, 10, 20, 50];
 
-  // ============================================================
-  // SELECTORES
-  // ============================================================
-
-  readonly estadosRuta: {
-    value: EstadoRuta;
-    label: string;
-  }[] = [
-      { value: 'BORRADOR', label: 'Borrador' },
-      { value: 'ACTIVA', label: 'Activa' },
-      { value: 'INACTIVA', label: 'Inactiva' },
-    ];
-
   constructor(
+    private readonly router: Router,
     private readonly rutasService: RutasServices,
     private readonly cdr: ChangeDetectorRef,
   ) { }
 
+  // *********************************************************
+  // 1. INICIALIZAR
+  // *********************************************************
   ngOnInit(): void {
-    this.getRutasPaginated();
+    // this.getRutasPaginated();
+    this.getZonasResumenPaginated();
   }
 
   ngOnDestroy(): void {
     this.destruido = true;
     this.cancelarBusquedaPendiente();
-    this.listadoSubscription?.unsubscribe();
+    this.expedientesSubscription?.unsubscribe();
   }
 
   // ============================================================
   // LISTADO
   // ============================================================
+  getZonasResumenPaginated(): void {
+    this.expedientesSubscription?.unsubscribe();
 
-  getRutasPaginated(): void {
-    // Cancela la consulta anterior para evitar respuestas atrasadas.
-    this.listadoSubscription?.unsubscribe();
-
-    const params: RutasPaginadasFilters = {
+    const filters: ZonasResumenRutasPaginadasFilters = {
       page: this.page,
       limit: this.limit,
       search: this.searchBusqueda.trim() || undefined,
-      id_zona: this.zonaBusqueda ?? undefined,
-      estado_ruta: this.estadoRutaBusqueda || undefined,
-
-      // Conserva false para filtrar registros inactivos.
-      estado: this.estadoBusqueda ?? undefined,
+      sort_by: 'id_zona',
+      sort_order: 'DESC',
     };
 
     this.isLoading = true;
-    this.errorCarga = null;
+    this.errorMensaje = '';
+    this.cdr.markForCheck();
 
-    this.listadoSubscription = this.rutasService
-      .getRutasPaginated(params)
+    this.expedientesSubscription = this.rutasService
+      .getZonasResumenRutasPaginated(filters)
       .pipe(
+        takeUntil(this.destroy$),
         finalize(() => {
           this.isLoading = false;
-
-          if (!this.destruido) {
-            this.cdr.markForCheck();
-          }
+          this.cdr.markForCheck();
         }),
       )
       .subscribe({
         next: (response) => {
           if (!response.success || !response.data) {
             this.limpiarListado();
-            this.errorCarga =
-              response.message || 'No se pudieron obtener las rutas.';
+
+            this.errorMensaje =
+              response.message ||
+              'No se pudieron obtener los expedientes.';
+
+            this.cdr.markForCheck();
             return;
           }
 
-          const paginacion = response.data;
+          const { items, pagination } = response.data;
 
-          // Por ejemplo, después de eliminar el último registro
-          // de la última página.
-          const ultimaPagina = Math.max(1, paginacion.total_pages);
+          this.zonas = items;
 
-          if (this.page > ultimaPagina) {
-            this.page = ultimaPagina;
-            this.getRutasPaginated();
-            return;
-          }
+          this.totalItems = pagination.total;
+          this.totalPages = pagination.total_pages;
 
-          this.rutas = paginacion.items;
-          this.totalItems = paginacion.total;
-          this.page = paginacion.page;
-          this.limit = paginacion.limit;
-          this.totalPages = paginacion.total_pages;
+          this.page = pagination.page;
+          this.currentPage = pagination.page;
+          this.limit = pagination.limit;
+
+          this.hasNextPage = pagination.has_next_page;
+          this.hasPreviousPage = pagination.has_previous_page;
+
+          this.cdr.markForCheck();
         },
-
         error: (error) => {
           this.limpiarListado();
-          this.errorCarga = this.obtenerMensajeError(
-            error,
-            'No se pudieron obtener las rutas.',
-          );
+
+          this.errorMensaje =
+            error?.error?.message ||
+            error?.message ||
+            'No se pudieron obtener los expedientes.';
+
+          this.cdr.markForCheck();
+
+          void Swal.fire({
+            icon: 'error',
+            title: 'No se pudieron cargar los expedientes',
+            text: this.errorMensaje,
+          });
         },
       });
   }
 
   private limpiarListado(): void {
-    this.rutas = [];
+    this.zonas = [];
     this.totalItems = 0;
     this.totalPages = 0;
   }
 
   // ============================================================
-  // ELIMINAR
+  // ABRIR RUTAS DE LA ZONA
   // ============================================================
 
-  async eliminarRuta(ruta: RutaPaginadaItem): Promise<void> {
-    if (this.estaProcesando(ruta.id_ruta)) {
-      return;
-    }
+   abrirRutasZona(zona: ZonaConResumenRutasData): void {
+      // this.vehiculoExpedienteSeleccionado = vehiculo;
 
-    this.registrosProcesando.add(ruta.id_ruta);
-
-    try {
-      const resultado = await Swal.fire({
-        icon: 'warning',
-        title: '¿Eliminar ruta?',
-        text: `Se eliminará la ruta ${ruta.codigo}: ${ruta.nombre}.`,
-        showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#d33',
-      });
-
-      if (!resultado.isConfirmed || this.destruido) {
-        this.registrosProcesando.delete(ruta.id_ruta);
+      if (zona.id_zona === null ||
+        zona.id_zona === undefined) {
         return;
       }
 
-      // En tu servicio este método aún se llama deleteVehiculo.
-      this.rutasService.deleteRuta(ruta.id_ruta)
-        .pipe(
-          takeUntilDestroyed(this.destroyRef),
-          finalize(() => this.finalizarAccion(ruta.id_ruta)),
-        )
-        .subscribe({
-          next: (response) => {
-            if (!response.success) {
-              this.mostrarError(
-                response.message || 'No se pudo eliminar la ruta.',
-              );
-              return;
-            }
-
-            this.mostrarExito(
-              response.message || 'Ruta eliminada correctamente.',
-            );
-
-            this.getRutasPaginated();
+      void this.router.navigate(
+        [
+          '/admin',
+          'rutas',
+          zona.id_zona,
+        ],
+        {
+          state: {
+            zona: zona,
           },
-
-          error: (error) => {
-            this.mostrarError(
-              this.obtenerMensajeError(
-                error,
-                'No se pudo eliminar la ruta.',
-              ),
-            );
-          },
-        });
-    } catch {
-      this.finalizarAccion(ruta.id_ruta);
+        },
+      );
     }
-  }
+
+  // async eliminarRuta(ruta: RutaPaginadaItem): Promise<void> {
+  //   if (this.estaProcesando(ruta.id_ruta)) {
+  //     return;
+  //   }
+
+  //   this.registrosProcesando.add(ruta.id_ruta);
+
+  //   try {
+  //     const resultado = await Swal.fire({
+  //       icon: 'warning',
+  //       title: '¿Eliminar ruta?',
+  //       text: `Se eliminará la ruta ${ruta.codigo}: ${ruta.nombre}.`,
+  //       showCancelButton: true,
+  //       confirmButtonText: 'Sí, eliminar',
+  //       cancelButtonText: 'Cancelar',
+  //       confirmButtonColor: '#d33',
+  //     });
+
+  //     if (!resultado.isConfirmed || this.destruido) {
+  //       this.registrosProcesando.delete(ruta.id_ruta);
+  //       return;
+  //     }
+
+  //     // En tu servicio este método aún se llama deleteVehiculo.
+  //     this.rutasService.deleteRuta(ruta.id_ruta)
+  //       .pipe(
+  //         takeUntilDestroyed(this.destroyRef),
+  //         finalize(() => this.finalizarAccion(ruta.id_ruta)),
+  //       )
+  //       .subscribe({
+  //         next: (response) => {
+  //           if (!response.success) {
+  //             this.mostrarError(
+  //               response.message || 'No se pudo eliminar la ruta.',
+  //             );
+  //             return;
+  //           }
+
+  //           this.mostrarExito(
+  //             response.message || 'Ruta eliminada correctamente.',
+  //           );
+
+  //           this.getRutasPaginated();
+  //         },
+
+  //         error: (error) => {
+  //           this.mostrarError(
+  //             this.obtenerMensajeError(
+  //               error,
+  //               'No se pudo eliminar la ruta.',
+  //             ),
+  //           );
+  //         },
+  //       });
+  //   } catch {
+  //     this.finalizarAccion(ruta.id_ruta);
+  //   }
+  // }
 
   // ============================================================
   // CAMBIAR ESTADO DEL REGISTRO
   // ============================================================
 
-  cambiarEstado(ruta: RutaPaginadaItem): void {
-    if (this.estaProcesando(ruta.id_ruta)) {
-      return;
-    }
+  // cambiarEstado(ruta: RutaPaginadaItem): void {
+  //   if (this.estaProcesando(ruta.id_ruta)) {
+  //     return;
+  //   }
 
-    this.registrosProcesando.add(ruta.id_ruta);
+  //   this.registrosProcesando.add(ruta.id_ruta);
 
-    this.rutasService
-      .changeRutaEstado(ruta.id_ruta, {
-        estado: !ruta.estado,
-      })
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => this.finalizarAccion(ruta.id_ruta)),
-      )
-      .subscribe({
-        next: (response) => {
-          if (!response.success) {
-            this.mostrarError(
-              response.message || 'No se pudo cambiar el estado.',
-            );
-            return;
-          }
+  //   this.rutasService
+  //     .changeRutaEstado(ruta.id_ruta, {
+  //       estado: !ruta.estado,
+  //     })
+  //     .pipe(
+  //       takeUntilDestroyed(this.destroyRef),
+  //       finalize(() => this.finalizarAccion(ruta.id_ruta)),
+  //     )
+  //     .subscribe({
+  //       next: (response) => {
+  //         if (!response.success) {
+  //           this.mostrarError(
+  //             response.message || 'No se pudo cambiar el estado.',
+  //           );
+  //           return;
+  //         }
 
-          this.mostrarExito(
-            response.message || 'Estado actualizado correctamente.',
-          );
+  //         this.mostrarExito(
+  //           response.message || 'Estado actualizado correctamente.',
+  //         );
 
-          // Recarga para respetar los filtros activos.
-          this.getRutasPaginated();
-        },
+  //         // Recarga para respetar los filtros activos.
+  //         this.getRutasPaginated();
+  //       },
 
-        error: (error) => {
-          this.mostrarError(
-            this.obtenerMensajeError(
-              error,
-              'No se pudo cambiar el estado del registro.',
-            ),
-          );
-        },
-      });
-  }
+  //       error: (error) => {
+  //         this.mostrarError(
+  //           this.obtenerMensajeError(
+  //             error,
+  //             'No se pudo cambiar el estado del registro.',
+  //           ),
+  //         );
+  //       },
+  //     });
+  // }
 
   // ============================================================
   // CAMBIAR ESTADO OPERATIVO
   // ============================================================
-  async cambiarEstadoOperativo(
-    ruta: RutaPaginadaItem,
-  ): Promise<void> {
-    if (this.estaProcesando(ruta.id_ruta)) {
-      return;
-    }
+  // async cambiarEstadoOperativo(
+  //   ruta: RutaPaginadaItem,
+  // ): Promise<void> {
+  //   if (this.estaProcesando(ruta.id_ruta)) {
+  //     return;
+  //   }
 
-    this.registrosProcesando.add(ruta.id_ruta);
+  //   this.registrosProcesando.add(ruta.id_ruta);
 
-    try {
-      const resultado = await Swal.fire({
-        title: 'Cambiar estado de la ruta',
-        text: `${ruta.codigo} — ${ruta.nombre}`,
-        input: 'select',
-        inputOptions: {
-          BORRADOR: 'Borrador',
-          ACTIVA: 'Activa',
-          INACTIVA: 'Inactiva',
-        },
-        inputValue: ruta.estado_ruta,
-        showCancelButton: true,
-        confirmButtonText: 'Actualizar',
-        cancelButtonText: 'Cancelar',
-        inputValidator: (value) => {
-          return this.estadosRuta.some(
-            (opcion) => opcion.value === value,
-          )
-            ? undefined
-            : 'Selecciona un estado válido.';
-        },
-      });
+  //   try {
+  //     const resultado = await Swal.fire({
+  //       title: 'Cambiar estado de la ruta',
+  //       text: `${ruta.codigo} — ${ruta.nombre}`,
+  //       input: 'select',
+  //       inputOptions: {
+  //         BORRADOR: 'Borrador',
+  //         ACTIVA: 'Activa',
+  //         INACTIVA: 'Inactiva',
+  //       },
+  //       inputValue: ruta.estado_ruta,
+  //       showCancelButton: true,
+  //       confirmButtonText: 'Actualizar',
+  //       cancelButtonText: 'Cancelar',
+  //       inputValidator: (value) => {
+  //         return this.estadosRuta.some(
+  //           (opcion) => opcion.value === value,
+  //         )
+  //           ? undefined
+  //           : 'Selecciona un estado válido.';
+  //       },
+  //     });
 
-      if (
-        !resultado.isConfirmed ||
-        this.destruido ||
-        resultado.value === ruta.estado_ruta
-      ) {
-        this.registrosProcesando.delete(ruta.id_ruta);
-        return;
-      }
+  //     if (
+  //       !resultado.isConfirmed ||
+  //       this.destruido ||
+  //       resultado.value === ruta.estado_ruta
+  //     ) {
+  //       this.registrosProcesando.delete(ruta.id_ruta);
+  //       return;
+  //     }
 
-      const estado = this.estadosRuta.find(
-        (opcion) => opcion.value === resultado.value,
-      )?.value;
+  //     const estado = this.estadosRuta.find(
+  //       (opcion) => opcion.value === resultado.value,
+  //     )?.value;
 
-      if (!estado) {
-        this.finalizarAccion(ruta.id_ruta);
-        return;
-      }
+  //     if (!estado) {
+  //       this.finalizarAccion(ruta.id_ruta);
+  //       return;
+  //     }
 
-      this.rutasService
-        .changeRutaEstadoOperativo(ruta.id_ruta, {
-          estado_ruta: estado,
-        })
-        .pipe(
-          takeUntilDestroyed(this.destroyRef),
-          finalize(() => this.finalizarAccion(ruta.id_ruta)),
-        )
-        .subscribe({
-          next: (response) => {
-            if (!response.success) {
-              this.mostrarError(
-                response.message || 'No se pudo actualizar la ruta.',
-              );
-              return;
-            }
+  //     this.rutasService
+  //       .changeRutaEstadoOperativo(ruta.id_ruta, {
+  //         estado_ruta: estado,
+  //       })
+  //       .pipe(
+  //         takeUntilDestroyed(this.destroyRef),
+  //         finalize(() => this.finalizarAccion(ruta.id_ruta)),
+  //       )
+  //       .subscribe({
+  //         next: (response) => {
+  //           if (!response.success) {
+  //             this.mostrarError(
+  //               response.message || 'No se pudo actualizar la ruta.',
+  //             );
+  //             return;
+  //           }
 
-            this.mostrarExito(
-              response.message || 'Estado operativo actualizado.',
-            );
+  //           this.mostrarExito(
+  //             response.message || 'Estado operativo actualizado.',
+  //           );
 
-            this.getRutasPaginated();
-          },
+  //           this.getRutasPaginated();
+  //         },
 
-          error: (error) => {
-            this.mostrarError(
-              this.obtenerMensajeError(
-                error,
-                'No se pudo cambiar el estado operativo.',
-              ),
-            );
-          },
-        });
-    } catch {
-      this.finalizarAccion(ruta.id_ruta);
-    }
-  }
+  //         error: (error) => {
+  //           this.mostrarError(
+  //             this.obtenerMensajeError(
+  //               error,
+  //               'No se pudo cambiar el estado operativo.',
+  //             ),
+  //           );
+  //         },
+  //       });
+  //   } catch {
+  //     this.finalizarAccion(ruta.id_ruta);
+  //   }
+  // }
 
   // ============================================================
   // VERSION RUTAS
@@ -404,15 +419,15 @@ export class RutasPageComponent implements OnInit, OnDestroy {
   // ============================================================
   // HORARIOS RUTAS
   // ============================================================
-  abrirHorarios(idRuta: number): void {
-    this.rutaHorariosId = idRuta;
-    this.mostrarModalHorarios = true;
-  }
+  // abrirHorarios(idRuta: number): void {
+  //   this.rutaHorariosId = idRuta;
+  //   this.mostrarModalHorarios = true;
+  // }
 
-  cerrarHorarios(): void {
-    this.mostrarModalHorarios = false;
-    this.rutaHorariosId = null;
-  }
+  // cerrarHorarios(): void {
+  //   this.mostrarModalHorarios = false;
+  //   this.rutaHorariosId = null;
+  // }
 
 
 
@@ -425,21 +440,21 @@ export class RutasPageComponent implements OnInit, OnDestroy {
     this.searchTimeout = setTimeout(() => {
       this.searchTimeout = undefined;
       this.page = 1;
-      this.getRutasPaginated();
+      this.getZonasResumenPaginated();
     }, 300);
   }
 
   onFiltroChange(): void {
     this.cancelarBusquedaPendiente();
     this.page = 1;
-    this.getRutasPaginated();
+    this.getZonasResumenPaginated();
   }
 
   cambiarLimite(): void {
     this.cancelarBusquedaPendiente();
     this.limit = Number(this.limit);
     this.page = 1;
-    this.getRutasPaginated();
+    this.getZonasResumenPaginated();
   }
 
   cambiarPagina(nuevaPagina: number): void {
@@ -453,27 +468,21 @@ export class RutasPageComponent implements OnInit, OnDestroy {
 
     this.cancelarBusquedaPendiente();
     this.page = nuevaPagina;
-    this.getRutasPaginated();
+    this.getZonasResumenPaginated();
   }
 
   limpiarFiltros(): void {
     this.cancelarBusquedaPendiente();
 
     this.searchBusqueda = '';
-    this.zonaBusqueda = null;
-    this.estadoRutaBusqueda = '';
-    this.estadoBusqueda = null;
     this.page = 1;
 
-    this.getRutasPaginated();
+    this.getZonasResumenPaginated();
   }
 
   get hayFiltros(): boolean {
     return !!(
-      this.searchBusqueda.trim() ||
-      this.zonaBusqueda !== null ||
-      this.estadoRutaBusqueda ||
-      this.estadoBusqueda !== null
+      this.searchBusqueda.trim()
     );
   }
 
@@ -487,59 +496,59 @@ export class RutasPageComponent implements OnInit, OnDestroy {
   // ============================================================
   // FORMULARIO / DETALLE
   // ============================================================
-  abrirModal(): void {
-    this.modoEdicion = false;
-    this.rutaSeleccionada = null;
-    this.mostrarModal = true;
-  }
+  // abrirModal(): void {
+  //   this.modoEdicion = false;
+  //   this.rutaSeleccionada = null;
+  //   this.mostrarModal = true;
+  // }
 
-  abrirEdicion(ruta: RutaPaginadaItem): void {
-    this.modoEdicion = true;
-    this.rutaSeleccionada = { ...ruta };
-    this.mostrarModal = true;
-  }
+  // abrirEdicion(ruta: RutaPaginadaItem): void {
+  //   this.modoEdicion = true;
+  //   this.rutaSeleccionada = { ...ruta };
+  //   this.mostrarModal = true;
+  // }
 
-  abrirDetalle(ruta: RutaPaginadaItem): void {
-    this.ruta_id = ruta.id_ruta;
-    this.mostrarModalView = true;
-  }
+  // abrirDetalle(ruta: RutaPaginadaItem): void {
+  //   this.ruta_id = ruta.id_ruta;
+  //   this.mostrarModalView = true;
+  // }
 
-  cerrarModalInfo(): void {
-    this.mostrarModalView = false;
-    this.ruta_id = null;
-  }
+  // cerrarModalInfo(): void {
+  //   this.mostrarModalView = false;
+  //   this.ruta_id = null;
+  // }
 
-  // Llamar después de crear o editar correctamente.
-  onRutaGuardada(): void {
-    this.getRutasPaginated();
-  }
+  // // Llamar después de crear o editar correctamente.
+  // onRutaGuardada(): void {
+  //   this.getRutasPaginated();
+  // }
 
-  cerrarModal(): void {
-    this.mostrarModal = false;
-    this.modoEdicion = false;
-    this.rutaSeleccionada = null;
-  }
+  // cerrarModal(): void {
+  //   this.mostrarModal = false;
+  //   this.modoEdicion = false;
+  //   this.rutaSeleccionada = null;
+  // }
 
-  // ============================================================
-  // RUTA VERSIONES
-  // ============================================================
-  abrirVersiones(idRuta: number): void {
-    this.rutaVersionesId = idRuta;
-    this.mostrarModalVersiones = true;
-  }
+  // // ============================================================
+  // // RUTA VERSIONES
+  // // ============================================================
+  // abrirVersiones(idRuta: number): void {
+  //   this.rutaVersionesId = idRuta;
+  //   this.mostrarModalVersiones = true;
+  // }
 
-  cerrarVersiones(): void {
-    this.mostrarModalVersiones = false;
-    this.rutaVersionesId = null;
-  }
+  // cerrarVersiones(): void {
+  //   this.mostrarModalVersiones = false;
+  //   this.rutaVersionesId = null;
+  // }
 
-  gestionarPuntosVersion(
-    version: RutaVersionConPuntosData,
-  ): void {
-    this.versionParaPuntos = version;
+  // gestionarPuntosVersion(
+  //   version: RutaVersionConPuntosData,
+  // ): void {
+  //   this.versionParaPuntos = version;
 
-    // Aquí conectarás la apertura de RutaPuntosComponent.
-  }
+  //   // Aquí conectarás la apertura de RutaPuntosComponent.
+  // }
   // ============================================================
   // HELPERS
   // ============================================================

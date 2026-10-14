@@ -1,0 +1,443 @@
+@if (mostrarModal) {
+<div class="modal modal-open">
+
+  <!-- MODAL -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" role="dialog" aria-modal="true"
+    aria-labelledby="conductor-perfil-title" [attr.aria-busy]="loading || cambiandoEstado" (click)="cerrarModal()"
+    (keydown.escape)="cerrarModal()">
+    <section class="relative flex max-h-[92vh] w-full flex-col
+               overflow-hidden rounded-2xl border border-base-300
+               bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+      <!-- HEADER -->
+      <header class="flex shrink-0 items-start justify-between gap-4
+                 border-b border-base-300 bg-base-200/50
+                 px-5 py-4 sm:px-6">
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center
+                     rounded-xl bg-primary/10 text-primary">
+            <i class="fa-solid fa-id-card text-lg" aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="conductor-perfil-title" class="flex flex-wrap items-center gap-2
+                       text-lg font-bold text-base-content sm:text-xl">
+              Perfil del conductor
+
+              @if (getCodigo()) {
+              <span class="badge badge-primary badge-outline
+                           px-3 font-mono text-sm">
+                {{ getCodigo() }}
+              </span>
+              }
+            </h2>
+
+            <p class="mt-0.5 text-sm text-base-content/60">
+              Información personal, licencia y datos laborales.
+            </p>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-ghost btn-circle btn-sm shrink-0" aria-label="Cerrar modal" title="Cerrar"
+          [disabled]="cambiandoEstado" (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <!-- CONTENIDO CON SCROLL -->
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain
+                 px-5 py-5 sm:px-6 sm:py-6">
+
+        <!-- CARGANDO -->
+        @if (loading) {
+        <div class="space-y-5" role="status" aria-live="polite">
+          <span class="sr-only">
+            Cargando perfil del conductor.
+          </span>
+
+          <div class="flex flex-col gap-4 rounded-2xl border
+                       border-base-300 bg-base-200/40 p-5
+                       sm:flex-row sm:items-center" aria-hidden="true">
+            <div class="skeleton h-16 w-16 rounded-2xl"></div>
+
+            <div class="flex-1 space-y-3">
+              <div class="skeleton h-6 w-48 max-w-full"></div>
+              <div class="skeleton h-4 w-64 max-w-full"></div>
+            </div>
+
+            <div class="skeleton h-7 w-24 rounded-full"></div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+            @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+            <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+              <div class="skeleton mb-3 h-3 w-24"></div>
+              <div class="skeleton h-5 w-36 max-w-full"></div>
+            </div>
+            }
+          </div>
+
+          <div class="rounded-xl border border-base-300 p-4" aria-hidden="true">
+            <div class="skeleton mb-3 h-3 w-28"></div>
+            <div class="skeleton h-4 w-full"></div>
+            <div class="skeleton mt-2 h-4 w-3/4"></div>
+          </div>
+        </div>
+
+        <!-- ERROR -->
+        } @else if (errorCarga) {
+        <div class="flex min-h-64 flex-col items-center justify-center text-center" role="alert">
+          <div class="mb-4 flex h-16 w-16 items-center justify-center
+                       rounded-full bg-error/10 text-error">
+            <i class="fa-solid fa-triangle-exclamation text-2xl" aria-hidden="true"></i>
+          </div>
+
+          <h3 class="font-semibold text-base-content">
+            No se pudo cargar el perfil del conductor
+          </h3>
+
+          <p class="mt-1 max-w-sm text-sm text-base-content/60">
+            {{ errorCarga }}
+          </p>
+
+          <button type="button" class="btn btn-primary btn-sm mt-4" (click)="cargarPerfilConductor()">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            Reintentar
+          </button>
+        </div>
+
+        <!-- INFORMACIÓN -->
+        } @else if (conductor; as detalle) {
+        <div class="space-y-5">
+
+          <!-- RESUMEN -->
+          <section class="rounded-2xl border border-base-300 bg-base-100 p-4">
+            <div class="flex flex-wrap items-center gap-4">
+
+              <div class="flex h-16 w-16 shrink-0 items-center justify-center
+                           overflow-hidden rounded-2xl bg-primary/10 text-primary">
+                @if (fotoUrl; as foto) {
+                <img [src]="foto" [alt]="'Fotografía de ' + nombreCompleto" class="h-full w-full object-cover" />
+                } @else {
+                <i class="fa-solid fa-user-tie text-2xl" aria-hidden="true"></i>
+                }
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-semibold uppercase tracking-wide
+                             text-base-content/50">
+                  Conductor
+                </p>
+
+                <h3 class="mt-1 wrap-break-word text-lg font-bold">
+                  {{ nombreCompleto }}
+                </h3>
+
+                <p class="mt-1 wrap-break-word text-sm text-base-content/60">
+                  Documento: {{ numeroDocumento }}
+                </p>
+              </div>
+
+              <span class="badge h-auto gap-1 px-3 py-1.5" [ngClass]="obtenerEstadoRegistro(detalle.estado).class">
+                <i class="fa-solid" [ngClass]="obtenerEstadoRegistro(detalle.estado).icon" aria-hidden="true"></i>
+                {{ obtenerEstadoRegistro(detalle.estado).label }}
+              </span>
+            </div>
+          </section>
+
+          <!-- ESTADO DEL PERFIL -->
+          <section class="flex flex-col gap-4 rounded-xl border border-base-300
+                       bg-base-200/40 p-4 sm:flex-row sm:items-center
+                       sm:justify-between">
+            <div class="space-y-1">
+              <h4 class="flex items-center gap-2 text-sm font-semibold">
+                <i class="fa-solid fa-toggle-on text-primary" aria-hidden="true"></i>
+                Estado del perfil
+              </h4>
+
+              <p id="conductor-estado-ayuda" class="text-sm text-base-content/60">
+                Active o desactive el perfil del conductor.
+              </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              @if (cambiandoEstado) {
+              <span class="loading loading-spinner loading-sm text-primary" role="status"
+                aria-label="Actualizando estado del perfil"></span>
+              }
+
+              <label class="flex cursor-pointer items-center gap-3" for="conductor-estado-switch">
+                <span class="text-sm font-medium">
+                  {{ detalle.estado ? 'Activo' : 'Inactivo' }}
+                </span>
+
+                <input id="conductor-estado-switch" type="checkbox" role="switch" class="toggle toggle-primary"
+                  aria-label="Activar perfil del conductor" aria-describedby="conductor-estado-ayuda"
+                  [checked]="detalle.estado" [disabled]="cambiandoEstado" (change)="
+                        $any($event.target).checked = detalle.estado;
+                        cambiarEstadoConductor(!detalle.estado)
+                      " />
+              </label>
+            </div>
+          </section>
+
+          <!-- LICENCIA -->
+          <section>
+            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
+              <i class="fa-solid fa-id-card text-primary" aria-hidden="true"></i>
+              Licencia de conducir
+            </h4>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+
+              <div class="min-w-0 rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">Número de licencia</p>
+                <p class="mt-1.5 wrap-break-word font-mono text-sm font-semibold">
+                  {{ detalle.numero_licencia || 'No registrado' }}
+                </p>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">Categoría</p>
+                <p class="mt-1.5 wrap-break-word text-sm font-semibold">
+                  {{ detalle.categoria_licencia || 'No registrada' }}
+                </p>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">Estado de licencia</p>
+                <span class="badge badge-neutral mt-1.5 h-auto
+                             whitespace-normal py-1">
+                  {{ obtenerEtiqueta(detalle.estado_licencia) }}
+                </span>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">Fecha de emisión</p>
+                <p class="mt-1.5 text-sm font-semibold">
+                  {{
+                  (detalle.fecha_emision_licencia | date:'dd/MM/yyyy':'UTC')
+                  || 'No registrada'
+                  }}
+                </p>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">Fecha de vencimiento</p>
+                <p class="mt-1.5 text-sm font-semibold">
+                  {{
+                  (detalle.fecha_vencimiento_licencia | date:'dd/MM/yyyy':'UTC')
+                  || 'No registrada'
+                  }}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- RESTRICCIONES Y OBSERVACIONES DEL CONDUCTOR -->
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <section class="min-w-0">
+              <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
+                <i class="fa-solid fa-triangle-exclamation text-primary" aria-hidden="true"></i>
+                Restricciones
+              </h4>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <p class="whitespace-pre-wrap wrap-break-word text-sm leading-relaxed text-base-content/70">{{
+                  detalle.restricciones || 'Sin restricciones registradas.' }}</p>
+              </div>
+            </section>
+
+            <section class="min-w-0">
+              <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
+                <i class="fa-solid fa-clipboard text-primary" aria-hidden="true"></i>
+                Observaciones del conductor
+              </h4>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <p class="whitespace-pre-wrap wrap-break-word text-sm leading-relaxed text-base-content/70">{{
+                  detalle.observacion || 'Sin observaciones registradas.' }}</p>
+              </div>
+            </section>
+          </div>
+
+          <!-- PERSONAL OPERATIVO -->
+          <section>
+            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
+              <i class="fa-solid fa-briefcase text-primary" aria-hidden="true"></i>
+              Información laboral
+            </h4>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              @for (
+              campo of [
+              { label: 'Código de empleado', valor: detalle.personal.codigo_empleado },
+              { label: 'Tipo de contrato', valor: obtenerEtiqueta(detalle.personal.tipo_contrato) },
+              { label: 'Turno preferente', valor: detalle.personal.turno_preferente ?
+              obtenerEtiqueta(detalle.personal.turno_preferente) : 'Sin preferencia' },
+              { label: 'Estado laboral', valor: obtenerEtiqueta(detalle.personal.estado_laboral) }
+              ];
+              track campo.label
+              ) {
+              <div class="min-w-0 rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">{{ campo.label }}</p>
+                <p class="mt-1.5 wrap-break-word text-sm font-semibold">
+                  {{ campo.valor || 'No registrado' }}
+                </p>
+              </div>
+              }
+
+              <div class="min-w-0 rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">Fecha de ingreso</p>
+                <p class="mt-1.5 text-sm font-semibold">
+                  {{
+                  (detalle.personal.fecha_ingreso | date:'dd/MM/yyyy':'UTC')
+                  || 'No registrada'
+                  }}
+                </p>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">Fecha de salida</p>
+                <p class="mt-1.5 text-sm font-semibold">
+                  {{
+                  (detalle.personal.fecha_salida | date:'dd/MM/yyyy':'UTC')
+                  || 'No registrada'
+                  }}
+                </p>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">Registro del personal</p>
+                <span class="badge mt-1.5" [ngClass]="obtenerEstadoRegistro(detalle.personal.estado).class">
+                  {{ obtenerEstadoRegistro(detalle.personal.estado).label }}
+                </span>
+              </div>
+            </div>
+
+            <div class="mt-3 rounded-xl border border-base-300 p-4">
+              <p class="mb-1.5 text-xs text-base-content/55">
+                Observaciones del personal
+              </p>
+              <p class="whitespace-pre-wrap wrap-break-word text-sm leading-relaxed text-base-content/70">{{
+                detalle.personal.observacion || 'Sin observaciones registradas.' }}</p>
+            </div>
+          </section>
+
+          <!-- CONTACTO Y CUENTA -->
+          <section>
+            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
+              <i class="fa-solid fa-user text-primary" aria-hidden="true"></i>
+              Contacto y cuenta de usuario
+            </h4>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              @for (
+              campo of [
+              { label: 'Documento', valor: numeroDocumento },
+              { label: 'Celular', valor: celular },
+              { label: 'Usuario', valor: username },
+              { label: 'Correo de acceso', valor: emailAcceso }
+              ];
+              track campo.label
+              ) {
+              <div class="min-w-0 rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">{{ campo.label }}</p>
+                <p class="mt-1.5 wrap-break-word text-sm font-semibold">
+                  {{ campo.valor }}
+                </p>
+              </div>
+              }
+
+              <div class="min-w-0 rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">Estado de la cuenta</p>
+                <span class="badge mt-1.5" [ngClass]="obtenerEstadoRegistro(detalle.personal.usuario.estado).class">
+                  {{ obtenerEstadoRegistro(detalle.personal.usuario.estado).label }}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- INFORMACIÓN DEL SISTEMA -->
+          <section>
+            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
+              <i class="fa-solid fa-clock text-primary" aria-hidden="true"></i>
+              Información del sistema
+            </h4>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div class="min-w-0 rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">Perfil creado el</p>
+                <p class="mt-1.5 text-sm font-medium">
+                  {{
+                  (detalle.created_at | date:'dd/MM/yyyy hh:mm a')
+                  || 'No registrado'
+                  }}
+                </p>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">Perfil actualizado el</p>
+                <p class="mt-1.5 text-sm font-medium">
+                  {{
+                  (detalle.updated_at | date:'dd/MM/yyyy hh:mm a')
+                  || 'No registrado'
+                  }}
+                </p>
+              </div>
+
+              @if (detalle.deleted_at) {
+              <div class="min-w-0 rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">Perfil eliminado el</p>
+                <p class="mt-1.5 text-sm font-medium text-error">
+                  {{ detalle.deleted_at | date:'dd/MM/yyyy hh:mm a' }}
+                </p>
+              </div>
+              }
+            </div>
+          </section>
+
+        </div>
+
+        <!-- SIN DATOS -->
+        } @else {
+        <div class="flex min-h-64 flex-col items-center justify-center text-center">
+          <div class="mb-4 flex h-16 w-16 items-center justify-center
+                       rounded-full bg-base-200 text-base-content/40">
+            <i class="fa-solid fa-id-card text-2xl" aria-hidden="true"></i>
+          </div>
+
+          <h3 class="font-semibold text-base-content">
+            No hay información disponible
+          </h3>
+
+          <p class="mt-1 max-w-sm text-sm text-base-content/60">
+            No fue posible encontrar el perfil del conductor seleccionado.
+          </p>
+        </div>
+        }
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="flex shrink-0 flex-col-reverse gap-3
+                 border-t border-base-300 px-5 py-4
+                 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div class="flex items-center gap-2 text-xs text-base-content/50">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          <span>
+            {{ cambiandoEstado
+            ? 'Actualizando el estado del perfil...'
+            : 'Consulte la información completa del conductor.' }}
+          </span>
+        </div>
+
+        <button type="button" class="btn btn-accent min-w-28" [disabled]="cambiandoEstado" (click)="cerrarModal()">
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
+          Cerrar
+        </button>
+      </footer>
+
+    </section>
+  </div>
+</div>
+}

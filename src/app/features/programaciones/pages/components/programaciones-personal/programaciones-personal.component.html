@@ -1,0 +1,478 @@
+@if (mostrarModal) {
+<div class="modal modal-open">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" role="dialog" aria-modal="true"
+    aria-labelledby="programacion-personal-title" [attr.aria-busy]="loading || guardandoPersonal"
+    (click)="!guardandoPersonal && cerrarModal()" (keydown.escape)="!guardandoPersonal && cerrarModal()">
+    <section class="relative flex max-h-[92vh] w-full flex-col
+               overflow-hidden rounded-2xl border border-base-300
+               bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+      <!-- HEADER -->
+      <header class="flex shrink-0 items-start justify-between gap-4
+                 border-b border-base-300 bg-base-200/50
+                 px-5 py-4 sm:px-6">
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center
+                     rounded-xl bg-primary/10 text-primary">
+            <i class="fa-solid fa-users text-lg" aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="programacion-personal-title" class="flex flex-wrap items-center gap-2 text-lg font-bold sm:text-xl">
+              {{
+              vistaPersonal === 'agregar'
+              ? 'Agregar personal a la programación'
+              : vistaPersonal === 'retirar'
+              ? 'Retirar personal de la programación'
+              : 'Personal de la programación'
+              }}
+
+              @if (programacion_id !== null) {
+              <span class="badge badge-primary badge-outline font-mono">
+                #{{ programacion_id }}
+              </span>
+              }
+            </h2>
+
+            <p class="mt-0.5 text-sm text-base-content/60">
+              {{
+              vistaPersonal === 'agregar'
+              ? 'Seleccione el personal y su función dentro del equipo.'
+              : vistaPersonal === 'retirar'
+              ? 'Revise la asignación e indique el motivo del retiro.'
+              : 'Equipo asignado, funciones e información del personal.'
+              }}
+            </p>
+          </div>
+        </div>
+
+
+
+        <button type="button" class="btn btn-ghost btn-circle btn-sm shrink-0" aria-label="Cerrar modal" title="Cerrar"
+          [disabled]="guardandoPersonal" (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+
+
+      <!-- CONTENIDO CON SCROLL -->
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain
+                 px-5 py-5 sm:px-6 sm:py-6">
+
+
+        <!-- FORMULARIO PARA AGREGAR PERSONAL -->
+        @if (vistaPersonal === 'agregar') {
+        <programaciones-personal-agregar [programacion_id]="programacion_id" [personalDisponible]="personalDisponible"
+          [cargandoPersonal]="cargandoDisponibilidad" [errorDisponibilidad]="errorDisponibilidad"
+          (cancelado)="volverAlListado()" (guardandoChange)="guardandoPersonal = $event"
+          (personalAgregado)="onPersonalAgregado()" (reintentarDisponibilidad)="solicitarDisponibilidad.emit()" />
+        } @else if (vistaPersonal === 'retirar') {
+        <programaciones-personal-retirar [programacion_id]="programacion_id"
+          [asignacionSeleccionada]="asignacionParaRetirar" (cancelado)="volverAlListado()"
+          (guardandoChange)="guardandoPersonal = $event" (personalRetirado)="onPersonalRetirado()" />
+
+        }
+
+        @else {
+        <!-- ACCIONES DEL LISTADO -->
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h3 class="flex items-center gap-2 text-sm font-semibold">
+            <i class="fa-solid fa-users text-primary" aria-hidden="true"></i>
+            Equipo asignado
+          </h3>
+
+          <button type="button" class="btn btn-primary btn-sm" [disabled]="
+        loading ||
+        !!errorCarga ||
+        programacion_id === null
+      " (click)="abrirAgregarPersonal()">
+            <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+            Agregar personal
+          </button>
+        </div>
+
+        <!-- CARGANDO -->
+        @if (loading) {
+        <div class="space-y-5" role="status" aria-live="polite">
+          <span class="sr-only">
+            Cargando personal de la programación.
+          </span>
+
+          <div class="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-hidden="true">
+            @for (item of [1, 2, 3, 4]; track item) {
+            <div class="rounded-xl border border-base-300 p-4">
+              <div class="skeleton h-3 w-20"></div>
+              <div class="skeleton mt-3 h-7 w-12"></div>
+            </div>
+            }
+          </div>
+
+          @for (item of [1, 2, 3]; track item) {
+          <div class="flex gap-4 rounded-xl border border-base-300 p-4" aria-hidden="true">
+            <div class="skeleton h-12 w-12 shrink-0 rounded-xl"></div>
+            <div class="flex-1 space-y-3">
+              <div class="skeleton h-5 w-48 max-w-full"></div>
+              <div class="skeleton h-3 w-64 max-w-full"></div>
+            </div>
+          </div>
+          }
+        </div>
+
+        <!-- ERROR -->
+        } @else if (errorCarga) {
+        <div class="flex min-h-64 flex-col items-center justify-center text-center" role="alert">
+          <div class="mb-4 flex h-16 w-16 items-center justify-center
+                       rounded-full bg-error/10 text-error">
+            <i class="fa-solid fa-triangle-exclamation text-2xl" aria-hidden="true"></i>
+          </div>
+
+          <h3 class="font-semibold">No se pudo cargar el personal</h3>
+
+          <p class="mt-1 max-w-sm text-sm text-base-content/60">
+            {{ errorCarga }}
+          </p>
+
+          <button type="button" class="btn btn-primary btn-sm mt-4" (click)="cargarPersonal()">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            Reintentar
+          </button>
+        </div>
+
+        <!-- LISTADO -->
+        } @else if (personalAsignado.length > 0) {
+        <div class="space-y-5">
+
+          <!-- RESUMEN -->
+          <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            @for (
+            resumen of [
+            { label: 'Asignaciones', total: totalAsignaciones, icon: 'fa-users' },
+            { label: 'Conductores', total: totalConductores, icon: 'fa-truck' },
+            { label: 'Recolectores', total: totalRecolectores, icon: 'fa-recycle' },
+            { label: 'Supervisores', total: totalSupervisores, icon: 'fa-user-tie' }
+            ];
+            track resumen.label
+            ) {
+            <div class="rounded-xl border border-base-300 bg-base-200/40 p-4">
+              <p class="flex items-center gap-2 text-xs text-base-content/60">
+                <i class="fa-solid text-primary" [ngClass]="resumen.icon" aria-hidden="true"></i>
+                {{ resumen.label }}
+              </p>
+              <p class="mt-2 text-2xl font-bold">{{ resumen.total }}</p>
+            </div>
+            }
+          </div>
+
+          <p class="text-xs text-base-content/55">
+            El resumen incluye todas las asignaciones devueltas por la consulta.
+          </p>
+
+          <!-- TARJETAS DEL PERSONAL -->
+          <div class="space-y-3">
+            @for (
+            item of personalAsignado;
+            track item.id_programacion_personal
+            ) {
+            <article class="overflow-hidden rounded-xl border border-base-300 bg-base-100">
+
+              <!-- IDENTIFICACIÓN Y FUNCIÓN -->
+              <div class="flex flex-col gap-4 p-4
+                             sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex min-w-0 items-start gap-3">
+                  <div class="flex h-12 w-12 shrink-0 items-center justify-center
+                                 rounded-xl bg-primary/10 text-primary">
+                    <i class="fa-solid text-lg" [ngClass]="obtenerFuncion(item.funcion).icon" aria-hidden="true"></i>
+                  </div>
+
+                  <div class="min-w-0 space-y-1.5">
+                    <h3 class="wrap-break-word font-semibold">
+                      {{ obtenerNombreCompleto(item) }}
+                    </h3>
+
+                    <p class="wrap-break-word text-xs text-base-content/60">
+                      {{ item.personal.codigo_empleado || 'Sin código' }}
+                      · Documento:
+                      {{ item.personal.usuario.persona.numero_documento || 'No registrado' }}
+                    </p>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="badge h-auto gap-1 py-1" [ngClass]="obtenerFuncion(item.funcion).class">
+                        {{ obtenerFuncion(item.funcion).label }}
+                      </span>
+
+                      <span class="badge badge-neutral h-auto whitespace-normal py-1">
+                        {{ obtenerEtiqueta(item.estado_asignacion) }}
+                      </span>
+
+                      @if (item.es_principal) {
+                      <span class="badge badge-warning badge-outline gap-1">
+                        <i class="fa-solid fa-star" aria-hidden="true"></i>
+                        Principal
+                      </span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <button type="button" class="btn btn-error btn-outline btn-sm shrink-0"
+                  [disabled]="loading || guardandoPersonal" (click)="abrirRetirarPersonal(item)">
+                  <i class="fa-solid fa-user-minus" aria-hidden="true"></i>
+                  Retirar
+                </button>
+
+                <button type="button" class="btn btn-ghost btn-sm shrink-0" [attr.aria-expanded]="
+                          asignacionExpandidaId === item.id_programacion_personal
+                        " [attr.aria-controls]="'asignacion-detalle-' + item.id_programacion_personal"
+                  (click)="alternarDetalle(item.id_programacion_personal)">
+                  <i class="fa-solid" [ngClass]="
+                            asignacionExpandidaId === item.id_programacion_personal
+                              ? 'fa-chevron-up'
+                              : 'fa-chevron-down'
+                          " aria-hidden="true"></i>
+                  {{
+                  asignacionExpandidaId === item.id_programacion_personal
+                  ? 'Ocultar detalle'
+                  : 'Ver detalle'
+                  }}
+                </button>
+              </div>
+
+              <!-- DETALLE EXPANDIDO -->
+              @if (asignacionExpandidaId === item.id_programacion_personal) {
+              <div [id]="'asignacion-detalle-' + item.id_programacion_personal"
+                class="space-y-5 border-t border-base-300 bg-base-200/20 p-4">
+
+                <!-- CONTACTO Y DATOS LABORALES -->
+                <section>
+                  <h4 class="mb-3 text-sm font-semibold">
+                    Datos del personal
+                  </h4>
+
+                  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    @for (
+                    campo of [
+                    { label: 'Usuario', valor: item.personal.usuario.username },
+                    { label: 'Correo de acceso', valor: item.personal.usuario.email_acceso },
+                    { label: 'Celular', valor: item.personal.usuario.persona.celular },
+                    { label: 'Tipo de contrato', valor: obtenerEtiqueta(item.personal.tipo_contrato) },
+                    { label: 'Turno preferente', valor: item.personal.turno_preferente ?
+                    obtenerEtiqueta(item.personal.turno_preferente) : 'Sin preferencia' },
+                    { label: 'Estado laboral', valor: obtenerEtiqueta(item.personal.estado_laboral) }
+                    ];
+                    track campo.label
+                    ) {
+                    <div class="min-w-0 rounded-lg border border-base-300 bg-base-100 p-3">
+                      <p class="text-xs text-base-content/55">{{ campo.label }}</p>
+                      <p class="mt-1 wrap-break-word text-sm font-medium">
+                        {{ campo.valor || 'No registrado' }}
+                      </p>
+                    </div>
+                    }
+
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-3">
+                      <p class="text-xs text-base-content/55">Fecha de ingreso</p>
+                      <p class="mt-1 text-sm font-medium">
+                        {{
+                        (item.personal.fecha_ingreso | date:'dd/MM/yyyy':'UTC')
+                        || 'No registrada'
+                        }}
+                      </p>
+                    </div>
+
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-3">
+                      <p class="text-xs text-base-content/55">Fecha de salida</p>
+                      <p class="mt-1 text-sm font-medium">
+                        {{
+                        (item.personal.fecha_salida | date:'dd/MM/yyyy':'UTC')
+                        || 'No registrada'
+                        }}
+                      </p>
+                    </div>
+
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-3">
+                      <p class="text-xs text-base-content/55">Registro del personal</p>
+                      <span class="badge mt-1" [ngClass]="item.personal.estado ? 'badge-success' : 'badge-error'">
+                        {{ item.personal.estado ? 'Activo' : 'Inactivo' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="mt-3 rounded-lg border border-base-300 bg-base-100 p-3">
+                    <p class="mb-1 text-xs text-base-content/55">
+                      Observaciones del personal
+                    </p>
+                    <p class="whitespace-pre-wrap wrap-break-word text-sm">{{ item.personal.observacion || 'Sin
+                      observaciones registradas.' }}</p>
+                  </div>
+                </section>
+
+                <!-- PERFIL DEL CONDUCTOR -->
+                @if (item.personal.conductor; as conductor) {
+                <section>
+                  <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
+                    <i class="fa-solid fa-id-card text-primary" aria-hidden="true"></i>
+                    Licencia de conducir
+                  </h4>
+
+                  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    @for (
+                    campo of [
+                    { label: 'Número de licencia', valor: conductor.numero_licencia },
+                    { label: 'Categoría', valor: conductor.categoria_licencia },
+                    { label: 'Estado de licencia', valor: obtenerEtiqueta(conductor.estado_licencia) }
+                    ];
+                    track campo.label
+                    ) {
+                    <div class="min-w-0 rounded-lg border border-base-300 bg-base-100 p-3">
+                      <p class="text-xs text-base-content/55">{{ campo.label }}</p>
+                      <p class="mt-1 wrap-break-word text-sm font-medium">
+                        {{ campo.valor || 'No registrado' }}
+                      </p>
+                    </div>
+                    }
+
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-3">
+                      <p class="text-xs text-base-content/55">Fecha de emisión</p>
+                      <p class="mt-1 text-sm font-medium">
+                        {{
+                        (conductor.fecha_emision_licencia | date:'dd/MM/yyyy':'UTC')
+                        || 'No registrada'
+                        }}
+                      </p>
+                    </div>
+
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-3">
+                      <p class="text-xs text-base-content/55">Fecha de vencimiento</p>
+                      <p class="mt-1 text-sm font-medium">
+                        {{
+                        (conductor.fecha_vencimiento_licencia | date:'dd/MM/yyyy':'UTC')
+                        || 'No registrada'
+                        }}
+                      </p>
+                    </div>
+
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-3">
+                      <p class="text-xs text-base-content/55">Perfil del conductor</p>
+                      <span class="badge mt-1" [ngClass]="conductor.estado ? 'badge-success' : 'badge-error'">
+                        {{ conductor.estado ? 'Activo' : 'Inactivo' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div class="min-w-0 rounded-lg border border-base-300 bg-base-100 p-3">
+                      <p class="mb-1 text-xs text-base-content/55">Restricciones</p>
+                      <p class="whitespace-pre-wrap wrap-break-word text-sm">{{ conductor.restricciones || 'Sin
+                        restricciones registradas.' }}</p>
+                    </div>
+
+                    <div class="min-w-0 rounded-lg border border-base-300 bg-base-100 p-3">
+                      <p class="mb-1 text-xs text-base-content/55">Observaciones del conductor</p>
+                      <p class="whitespace-pre-wrap wrap-break-word text-sm">{{ conductor.observacion || 'Sin
+                        observaciones
+                        registradas.' }}</p>
+                    </div>
+                  </div>
+                </section>
+                }
+
+                <!-- DATOS DE LA ASIGNACIÓN -->
+                <section>
+                  <h4 class="mb-3 text-sm font-semibold">
+                    Información de la asignación
+                  </h4>
+
+                  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-3">
+                      <p class="text-xs text-base-content/55">Asignado el</p>
+                      <p class="mt-1 text-sm font-medium">
+                        {{ (item.created_at | date:'dd/MM/yyyy hh:mm a') || 'No registrado' }}
+                      </p>
+                    </div>
+
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-3">
+                      <p class="text-xs text-base-content/55">Actualizado el</p>
+                      <p class="mt-1 text-sm font-medium">
+                        {{ (item.updated_at | date:'dd/MM/yyyy hh:mm a') || 'No registrado' }}
+                      </p>
+                    </div>
+
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-3">
+                      <p class="text-xs text-base-content/55">Fecha de respuesta</p>
+                      <p class="mt-1 text-sm font-medium">
+                        {{ (item.fecha_respuesta | date:'dd/MM/yyyy hh:mm a') || 'Sin respuesta registrada' }}
+                      </p>
+                    </div>
+
+                    @if (item.deleted_at) {
+                    <div class="rounded-lg border border-base-300 bg-base-100 p-3">
+                      <p class="text-xs text-base-content/55">Registro eliminado el</p>
+                      <p class="mt-1 text-sm font-medium text-error">
+                        {{ item.deleted_at | date:'dd/MM/yyyy hh:mm a' }}
+                      </p>
+                    </div>
+                    }
+                  </div>
+
+                  <div class="mt-3 rounded-lg border border-base-300 bg-base-100 p-3">
+                    <p class="mb-1 text-xs text-base-content/55">
+                      Observaciones de la asignación
+                    </p>
+                    <p class="whitespace-pre-wrap wrap-break-word text-sm">{{ item.observacion || 'Sin observaciones
+                      registradas.' }}</p>
+                  </div>
+                </section>
+
+              </div>
+              }
+            </article>
+            }
+          </div>
+        </div>
+
+        <!-- SIN PERSONAL -->
+        } @else {
+        <div class="flex min-h-64 flex-col items-center justify-center text-center">
+          <div class="mb-4 flex h-16 w-16 items-center justify-center
+                       rounded-full bg-base-200 text-base-content/40">
+            <i class="fa-solid fa-users text-2xl" aria-hidden="true"></i>
+          </div>
+
+          <h3 class="font-semibold">Sin personal asignado</h3>
+          <p class="mt-1 max-w-sm text-sm text-base-content/60">
+            La consulta no devolvió asignaciones para esta programación.
+          </p>
+        </div>
+        }
+        }
+      </div>
+
+      <!-- FOOTER -->
+      @if (vistaPersonal != 'agregar') {
+      <footer class="flex shrink-0 flex-col-reverse gap-3 border-t border-base-300
+                 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <p class="flex items-center gap-2 text-xs text-base-content/50">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          Consulte el equipo asignado a la programación.
+        </p>
+
+        <div class="flex items-center justify-end gap-2">
+          <button type="button" class="btn btn-ghost" [disabled]="loading" (click)="cargarPersonal()">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            Actualizar
+          </button>
+
+          <button type="button" class="btn btn-accent min-w-28" (click)="cerrarModal()">
+            <i class="fa-solid fa-check" aria-hidden="true"></i>
+            Cerrar
+          </button>
+        </div>
+      </footer>
+      }
+
+
+    </section>
+  </div>
+</div>
+}

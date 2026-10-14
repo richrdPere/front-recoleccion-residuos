@@ -65,6 +65,15 @@ export interface RutasPaginadasFilters {
 }
 
 // *********************************************************
+// ULTIMO CODIGO
+// *********************************************************
+export interface UltimoCodigoData {
+  codigo: string;
+}
+
+// *********************************************************
 // RESPUESTA
 // *********************************************************
 export type GetRutasPaginatedResponse = ApiResponse<RutasPaginadasData>;
+
+export type UltimoCodigoResponse = ApiResponse<UltimoCodigoData>;

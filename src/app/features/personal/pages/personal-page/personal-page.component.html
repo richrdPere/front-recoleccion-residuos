@@ -167,6 +167,10 @@
   <!-- Modal para ver detalle del personal -->
   <personal-view [mostrarModal]="mostrarModalView" [personal_id]="personal_id" (modalCerrado)="cerrarModalInfo()" />
 
+  <!-- Modal para ver perfil de conductor -->
+  <personal-conductor-perfil [mostrarModal]="mostrarModalConductor" [personal_id]="personalConductorId"
+    (modalCerrado)="cerrarPerfilConductor()" (conductorActualizado)="getPersonalPaginated()" />
+
   <!-- ================================================= -->
   <!-- TABLA DE PERSONAL REGISTRADO -->
   <!-- ================================================= -->
@@ -345,7 +349,8 @@
                             pers.usuario.persona.apellidos
                           " class="h-full w-full object-cover" />
                   } @else {
-                  <i class="fa-solid fa-user text-base"></i>
+                  <!-- <i class="fa-solid fa-user text-base"></i> -->
+                  <i class="fa-solid fa-user-tie text-base"></i>
                   }
                 </div>
 
@@ -619,8 +624,8 @@
 
                 <!-- Condutor -->
                 <div class="tooltip tooltip-left" data-tip="Datos de conductor">
-                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="conductorPersonal(pers)"
-                    aria-label="Ver detalle del personal">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm"
+                    (click)="abrirPerfilConductor(pers.id_personal)" aria-label="Ver detalle del personal">
 
                     <i class="fa-regular fa-id-card"></i>
                   </button>

@@ -1,0 +1,523 @@
+<!-- ================================================= -->
+<!-- CONTENEDOR DEL RUTAS -->
+<!-- ================================================= -->
+<div class="mx-auto w-full max-w-500">
+
+  <!-- ================================================= -->
+  <!-- ENCABEZADO -->
+  <!-- ================================================= -->
+  <header class="mb-5 flex flex-col gap-4
+             sm:flex-row sm:items-center
+             sm:justify-between">
+
+    <div class="flex min-w-0 items-center gap-3">
+
+      <div class="flex h-12 w-12 shrink-0
+                 items-center justify-center
+                 rounded-2xl bg-primary/10
+                 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-folder-open text-xl sm:text-2xl"></i>
+      </div>
+
+      @if (zona; as seleccionado) {
+      <div class="min-w-0">
+        <h1 class="text-2xl font-bold leading-tight text-base-content">
+          Rutas - {{ seleccionado.nombre }}
+        </h1>
+
+        <p class="mt-1 max-w-2xl text-sm leading-relaxed text-base-content/60">
+          {{ seleccionado.codigo }}
+          · {{ seleccionado.descripcion }} {{ seleccionado.estado }}
+        </p>
+      </div>
+      }
+    </div>
+
+    <button type="button" class="btn btn-accent shrink-0" aria-label="Volver a las cards de serenos"
+      (click)="volverAlListado()">
+      <i class="fa-solid fa-arrow-left"></i>
+      Volver
+    </button>
+  </header>
+
+  <!-- ================================================= -->
+  <!-- FILTROS -->
+  <!-- ================================================= -->
+  <section class="mb-6 overflow-hidden rounded-2xl
+           border border-base-300 bg-base-100 shadow-sm">
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_170px]">
+
+      <!-- ================================================= -->
+      <!-- CAMPOS DE FILTRO -->
+      <!-- ================================================= -->
+      <div class="min-w-0 p-4 sm:p-5">
+        <div class="grid grid-cols-1 items-end gap-4
+               sm:grid-cols-2
+               xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+
+          <!-- Búsqueda por ruta-->
+          <div class="min-w-0">
+            <label for="filtro-usuario" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Ruta
+            </label>
+
+            <div class="relative">
+              <input id="filtro-usuario" type="text" class="input input-bordered h-11 min-h-11
+                      w-full min-w-0 rounded-xl bg-base-200
+                     pl-11 pr-4 transition-colors
+                     focus:border-primary focus:outline-none
+                     focus:ring-2 focus:ring-primary/30" placeholder="Buscar por nombre de ruta" autocomplete="off"
+                [ngClass]="searchBusqueda.trim() ? 'border-primary' : 'border-base-500'" [(ngModel)]="searchBusqueda"
+                (ngModelChange)="onSearchChange()" appUppercase />
+
+              <span class="pointer-events-none absolute inset-y-0 left-0 z-10
+                     flex w-11 items-center justify-center
+                     text-base-content/50" aria-hidden="true">
+                <i class="fa-solid fa-magnifying-glass text-base"></i>
+              </span>
+            </div>
+          </div>
+
+          <!-- Estado operativo -->
+          <div class="min-w-0">
+            <label for="filtro-estado-operativo" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Estado de ruta
+            </label>
+
+            <select id="filtro-estado-operativo" class="select select-bordered h-11 min-h-11
+                  w-full min-w-0 rounded-xl bg-base-200
+                  pl-4 pr-10 transition-colors
+                  focus:border-primary focus:outline-none
+                  focus:ring-2 focus:ring-primary/30"
+              [ngClass]="estadoRutaBusqueda ? 'border-primary' : 'border-base-500'" [(ngModel)]="estadoRutaBusqueda"
+              (ngModelChange)="onFiltroChange()">
+              <option value="">Todos los estados</option>
+
+              @for (estado of estadosRuta; track estado.value) {
+              <option [value]="estado.value">
+                {{ estado.label }}
+              </option>
+              }
+            </select>
+          </div>
+
+          <!-- Estado del registro -->
+          <div class="min-w-0">
+
+            <label for="filtro-estado" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Estado del registro
+            </label>
+
+            <select id="filtro-estado" class="select select-bordered h-11 min-h-11
+                  w-full min-w-0 rounded-xl bg-base-200
+                  pl-4 pr-10 transition-colors
+                  focus:border-primary focus:outline-none
+                  focus:ring-2 focus:ring-primary/30" [ngClass]="estadoBusqueda ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="estadoBusqueda" (ngModelChange)="onFiltroChange()">
+              <option [ngValue]="null">Todos</option>
+              <option [ngValue]="true">ACTIVOS</option>
+              <option [ngValue]="false">INACTIVOS</option>
+            </select>
+          </div>
+
+          <!-- Limpiar -->
+          @if (hayFiltros) {
+          <div class="min-w-0">
+            <button type="button" class="btn btn-secondary h-11 min-h-11
+                   w-full gap-2 rounded-xl
+                   xl:w-auto xl:min-w-28" [disabled]="!searchBusqueda && !estadoRutaBusqueda && !estadoBusqueda"
+              (click)="limpiarFiltros()">
+              <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+              Limpiar
+            </button>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- ================================================= -->
+      <!-- ILUSTRACIÓN -->
+      <!-- ================================================= -->
+      <div class="hidden items-center justify-center px-5 lg:flex">
+        <span class="imagen-lupa block h-32 w-32 text-base-content opacity-90" aria-hidden="true"></span>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ================================================= -->
+  <!-- MODALES -->
+  <!-- ================================================= -->
+
+  <!-- Formulario modal de ruta -->
+  <rutas-form [mostrarModal]="mostrarModal" [modoEdicion]="modoEdicion" [rutaSeleccionada]="rutaSeleccionada"
+    [zona_id]="zona_id" (modalCerrado)="cerrarModal()" (rutaGuardada)="getRutasPaginated()">
+  </rutas-form>
+
+  <!-- Modal de detalle de ruta -->
+  <rutas-view [mostrarModal]="mostrarModalView" [ruta_id]="ruta_id" (modalCerrado)="cerrarModalInfo()">
+  </rutas-view>
+
+  <!-- Modal de versiones de ruta -->
+  <ruta-versiones [mostrarModal]="mostrarModalVersiones" [ruta_id]="rutaVersionesId" (modalCerrado)="cerrarVersiones()"
+    (gestionarPuntos)="gestionarPuntosVersion($event)"></ruta-versiones>
+
+  <!-- Modal de horarios de una ruta -->
+  <ruta-horario [mostrarModal]="mostrarModalHorarios" [ruta_id]="rutaHorariosId"
+    (modalCerrado)="cerrarHorarios()"></ruta-horario>
+
+  <!-- ================================================= -->
+  <!-- TABLA DE RUTAS -->
+  <!-- ================================================= -->
+  @if (isLoading || rutas.length > 0) {
+  <section class="overflow-hidden rounded-2xl
+           border border-base-300
+           bg-base-100 shadow-sm" aria-label="Rutas registradas">
+
+    <!-- ===================================================== -->
+    <!-- CABECERA -->
+    <!-- ===================================================== -->
+    <div class="flex flex-col gap-4 border-b border-base-300 px-4 py-4
+             sm:flex-row sm:items-center sm:justify-between sm:px-5">
+
+      <!-- Cantidad por página -->
+      <div class="flex w-full items-center justify-between gap-3
+                 text-sm text-base-content/70
+                 sm:w-auto sm:justify-start">
+        <label for="vehiculos-page-size" class="whitespace-nowrap">
+          Mostrar
+        </label>
+
+        <select id="vehiculos-page-size" class="select select-bordered select-sm
+         w-16 min-w-16 shrink-0 pl-3 pr-8" [(ngModel)]="limit" (change)="cambiarLimite()">
+
+          @for ( size of pageSizeOptions; track size ) {
+          <option [ngValue]="size">
+            {{ size }}
+          </option>
+          }
+        </select>
+
+        <span class="whitespace-nowrap">
+          ítems por página
+        </span>
+      </div>
+
+      <!-- Botón crear -->
+      <div class="flex w-full items-center
+                 justify-end sm:w-auto">
+        <button type="button" class="btn btn-primary
+                  min-h-10 w-full gap-2
+                  rounded-xl border-none
+                hover:text-white bg-info hover:bg-primary
+                  sm:w-auto sm:min-w-36" (click)="abrirModal()">
+
+          <i class="fa-solid fa-plus"></i>
+          Nueva ruta
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Error -->
+    @if (!isLoading && errorCarga) {
+    <div class="p-5">
+      <div class="alert alert-error" role="alert">
+        <span>{{ errorCarga }}</span>
+
+        <button type="button" class="btn btn-sm" (click)="getRutasPaginated()">
+          Reintentar
+        </button>
+      </div>
+    </div>
+    } @else {
+    <div class="overflow-x-auto">
+      <table class="table min-w-275">
+        <thead class="bg-base-300/90">
+          <tr class="text-xs uppercase tracking-wide text-base-content/60">
+            <th class="w-14 text-center">N.°</th>
+            <th>Ruta</th>
+            <th>Zona</th>
+            <th>Versión vigente</th>
+            <th>Distancia estimada</th>
+            <th>Duración estimada</th>
+            <th class="text-center">Estado de ruta</th>
+            <th class="text-center">Registro</th>
+            <th>Actualización</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @if (isLoading) {
+          @for (item of [1, 2, 3, 4, 5]; track item) {
+          <tr aria-hidden="true">
+            @for (columna of [1,2,3,4,5,6,7,8,9,10]; track columna) {
+            <td>
+              <div class="skeleton h-5 w-full min-w-10"></div>
+            </td>
+            }
+          </tr>
+          }
+          } @else {
+          @for (ruta of rutas; track ruta.id_ruta; let i = $index) {
+          <tr class="transition-colors hover:bg-base-200/40">
+
+            <!-- Numeración -->
+            <td class="text-center text-base-content/60">
+              {{ ((page - 1) * limit) + i + 1 }}
+            </td>
+
+            <!-- Ruta -->
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center
+                               rounded-xl bg-primary/10 text-primary">
+                  <i class="fa-solid fa-route" aria-hidden="true"></i>
+                </div>
+
+                <div class="min-w-0 max-w-64">
+                  <p class="truncate text-sm font-semibold" [title]="ruta.nombre">
+                    {{ ruta.nombre }}
+                  </p>
+
+                  <p class="mt-0.5 text-xs text-base-content/50">
+                    {{ ruta.codigo }}
+                  </p>
+                </div>
+              </div>
+            </td>
+
+            <!-- Zona -->
+            <td>
+              @if (ruta.zona; as zona) {
+              <p class="text-sm font-medium">{{ zona.nombre }}</p>
+              <p class="text-xs text-base-content/50">{{ zona.codigo }}</p>
+              } @else {
+              <span class="text-sm text-base-content/50">
+                Sin zona
+              </span>
+              }
+            </td>
+
+            <!-- Versión -->
+            <td>
+              @if (ruta.version_vigente; as version) {
+              <span class="badge badge-outline whitespace-nowrap">
+                Versión {{ version.numero_version }}
+              </span>
+              } @else {
+              <span class="text-sm text-base-content/50">
+                Sin versión vigente
+              </span>
+              }
+            </td>
+
+            <!-- Distancia: conserva cero -->
+            <td class="whitespace-nowrap">
+              @if (getDistancia(ruta) !== null) {
+              {{ getDistancia(ruta) | number:'1.0-2' }} km
+              } @else {
+              <span class="text-base-content/50">No registrada</span>
+              }
+            </td>
+
+            <!-- Duración -->
+            <td class="whitespace-nowrap">
+              @if (ruta.version_vigente; as version) {
+              {{ version.duracion_estimada_min | number:'1.0-0' }} min
+              } @else {
+              <span class="text-base-content/50">No registrada</span>
+              }
+            </td>
+
+            <!-- Estado operativo -->
+            <td class="text-center">
+              <span class="badge whitespace-nowrap" [ngClass]="getEstadoRutaClass(ruta.estado_ruta).class">
+                {{ getEstadoRutaClass(ruta.estado_ruta).label }}
+              </span>
+            </td>
+
+            <!-- Estado del registro -->
+            <td class="text-center">
+              <button type="button" class="btn btn-ghost btn-sm gap-2" [disabled]="estaProcesando(ruta.id_ruta)"
+                [attr.aria-label]="
+                        ruta.estado ? 'Desactivar ruta' : 'Activar ruta'
+                      " (click)="cambiarEstado(ruta)">
+                <span class="h-2 w-2 rounded-full" [ngClass]="ruta.estado ? 'bg-success' : 'bg-error'"></span>
+
+                {{ ruta.estado ? 'Activo' : 'Inactivo' }}
+              </button>
+            </td>
+
+            <!-- Actualización -->
+            <td class="whitespace-nowrap text-sm">
+              {{ ruta.updated_at | date:'dd/MM/yyyy, hh:mm a' }}
+            </td>
+
+            <!-- Acciones -->
+            <td>
+              <div class="flex items-center justify-center gap-1">
+
+                <button type="button" class="btn btn-ghost btn-circle btn-sm" title="Horarios de la ruta"
+                  aria-label="Ver versiones de la ruta" (click)="abrirHorarios(ruta.id_ruta)">
+                  <i class="fa-regular fa-clock"></i>
+                </button>
+
+                <button type="button" class="btn btn-ghost btn-circle btn-sm" title="Versiones de la ruta"
+                  aria-label="Ver versiones de la ruta" (click)="abrirVersiones(ruta.id_ruta)">
+                  <i class="fa-solid fa-code-branch " aria-hidden="true"></i>
+                </button>
+
+
+                <button type="button" class="btn btn-ghost btn-circle btn-sm" title="Ver ruta"
+                  aria-label="Ver detalle de la ruta" (click)="abrirDetalle(ruta)">
+                  <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                </button>
+
+                <button type="button" class="btn btn-ghost btn-circle btn-sm" title="Editar ruta"
+                  aria-label="Editar ruta" [disabled]="estaProcesando(ruta.id_ruta)" (click)="abrirEdicion(ruta)">
+                  <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                </button>
+
+                <button type="button" class="btn btn-ghost btn-circle btn-sm" title="Cambiar estado operativo"
+                  aria-label="Cambiar estado operativo de la ruta" [disabled]="estaProcesando(ruta.id_ruta)"
+                  (click)="cambiarEstadoOperativo(ruta)">
+                  <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+                </button>
+
+                <button type="button" class="btn btn-ghost btn-circle btn-sm text-error" title="Eliminar ruta"
+                  aria-label="Eliminar ruta" [disabled]="estaProcesando(ruta.id_ruta)" (click)="eliminarRuta(ruta)">
+                  <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="10" class="py-16 text-center">
+              <div class="mx-auto flex max-w-sm flex-col items-center">
+                <div class="flex h-16 w-16 items-center justify-center
+                               rounded-2xl bg-base-200 text-base-content/35">
+                  <i class="fa-solid fa-route text-2xl" aria-hidden="true"></i>
+                </div>
+
+                <h3 class="mt-4 font-semibold">
+                  No se encontraron rutas
+                </h3>
+
+                <p class="mt-1 text-sm text-base-content/60">
+                  Registre una ruta o cambie los filtros seleccionados.
+                </p>
+
+                @if (hayFiltros) {
+                <button type="button" class="btn btn-primary btn-sm mt-4" (click)="limpiarFiltros()">
+                  Limpiar filtros
+                </button>
+                }
+              </div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+
+    <!-- PAGINACIÓN -->
+    @if (!isLoading && !errorCarga && totalItems > 0) {
+    <footer class="flex flex-col gap-4 border-t border-base-300
+               bg-base-200/50 px-4 py-4 sm:px-5
+               lg:flex-row lg:items-center lg:justify-between">
+      <div>
+        <h2 class="font-semibold">Rutas registradas</h2>
+        <p class="mt-0.5 text-sm text-base-content/55">
+          {{ totalItems }}
+          {{ totalItems === 1 ? 'ruta encontrada' : 'rutas encontradas' }}
+        </p>
+      </div>
+
+      <div class="flex flex-col items-center gap-3 sm:flex-row">
+        <span class="whitespace-nowrap text-sm">
+          Página <strong>{{ page }}</strong>
+          de <strong>{{ totalPages }}</strong>
+        </span>
+
+        <div class="flex gap-2">
+          <button type="button" class="btn btn-sm" [disabled]="isLoading || page <= 1"
+            (click)="cambiarPagina(page - 1)">
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+            Anterior
+          </button>
+
+          <button type="button" class="btn btn-sm" [disabled]="isLoading || page >= totalPages"
+            (click)="cambiarPagina(page + 1)">
+            Siguiente
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </footer>
+    }
+  </section>
+  }
+
+  <!-- ======================================================= -->
+  <!-- ESTADO VACÍO GENERAL -->
+  <!-- ======================================================= -->
+  @if (!isLoading && !errorCarga && rutas.length === 0) {
+  <section class="rounded-2xl border border-dashed border-base-300
+           bg-base-100 px-6 py-16 text-center shadow-sm">
+    <div class="mx-auto flex h-20 w-20 items-center justify-center
+         rounded-full transition-colors" [ngClass]="searchBusqueda.trim() ||
+      estadoRutaBusqueda ||
+      estadoBusqueda
+      ? 'bg-secondary/10 text-secondary'
+      : 'bg-primary/10 text-primary'">
+      <i class="fa-solid fa-screwdriver-wrench text-3xl" aria-hidden="true"></i>
+    </div>
+
+    <h2 class="mt-5 text-lg font-bold">
+      @if ( searchBusqueda.trim() || estadoRutaBusqueda || estadoBusqueda ) {
+      No se encontraron rutas
+      } @else {
+      Esta zona aún no tiene rutas disponibles
+      }
+    </h2>
+
+    <p class="mx-auto mt-2 max-w-md text-sm text-base-content/55">
+      @if ( searchBusqueda.trim() || estadoRutaBusqueda || estadoBusqueda ) {
+      No hay registros que coincidan con los filtros seleccionados.
+      Prueba con otros criterios de búsqueda.
+      } @else {
+      Registra la primera ruta para comenzar con la asignación
+      de recolección en esta zona.
+      }
+    </p>
+
+    <!-- Acciones -->
+    <div class="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+      @if ( searchBusqueda.trim() || estadoRutaBusqueda || estadoBusqueda ) {
+      <button type="button" class="btn btn-secondary btn-sm w-full gap-2
+                 rounded-xl sm:w-auto" (click)="limpiarFiltros()">
+        <!-- <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i> -->
+        <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+        Limpiar filtros
+      </button>
+      } @else {
+      <button type="button" class="btn btn-primary btn-sm w-full gap-2
+               rounded-xl sm:w-auto" (click)="abrirModal()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        Nueva ruta
+      </button>
+      }
+
+
+    </div>
+  </section>
+  }
+</div>

@@ -1,8 +1,7 @@
-// *********************************************************
-// REQUEST PARA AGREGAR PERSONAL
-
 import { ApiResponse } from "src/app/core/models/api-response.model";
 
+// *********************************************************
+// REQUEST PARA AGREGAR PERSONAL
 // *********************************************************
 export interface AddPersonalProgramacionRequest {
   id_personal: number;

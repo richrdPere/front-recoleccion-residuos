@@ -60,25 +60,10 @@
       <!-- ================================================= -->
       <form [formGroup]="formPersonal" (ngSubmit)="crearOEditarPersonal()" class="flex min-h-0 flex-1 flex-col"
         novalidate>
-
-        <!-- =============================================== -->
         <!-- CONTENIDO CON SCROLL -->
-        <!-- =============================================== -->
         <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain
-                   px-5 py-5 sm:px-6">
+           px-5 py-5 sm:px-6">
           <fieldset class="min-w-0 space-y-6" [disabled]="isLoading">
-
-            <!-- IDENTIFICACIÓN -->
-            <!-- <div class="space-y-3">
-              <h3 class="flex items-center gap-2 text-lg font-semibold">
-                <i class="fa-solid fa-user text-primary" aria-hidden="true"></i>
-                Identificación del personal
-              </h3>
-
-              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-
-              </div>
-            </div> -->
 
             <!-- INFORMACIÓN LABORAL -->
             <div class="space-y-3">
@@ -101,7 +86,9 @@
                     class="select select-bordered w-full transition-colors duration-200"
                     [class.select-success]="campoCompleto('id_usuario')"
                     [class.select-error]="campoInvalido('id_usuario')" [attr.aria-invalid]="campoInvalido('id_usuario')"
-                    [attr.aria-describedby]="campoInvalido('id_usuario') ? 'vehiculo-tipo-error' : null">
+                    [attr.aria-describedby]="
+                campoInvalido('id_usuario') ? 'personal-usuario-error' : null
+              ">
                     <option [ngValue]="null" disabled>
                       Seleccionar usuario
                     </option>
@@ -109,7 +96,8 @@
                     @if (usuarioSeleccionadoFueraDeLista) {
                     <option [ngValue]="formPersonal.get('id_usuario')?.value">
                       {{
-                      nombreUsuarioSeleccionado || ('Usuario #' + formPersonal.get('id_usuario')?.value)
+                      nombreUsuarioSeleccionado ||
+                      ('Usuario #' + formPersonal.get('id_usuario')?.value)
                       }}
                     </option>
                     }
@@ -122,26 +110,46 @@
                   </select>
 
                   @if (campoInvalido('id_usuario')) {
-                  <p class="mt-1 text-sm text-red-500">
+                  <p id="personal-usuario-error" class="mt-1 text-sm text-red-500">
                     {{ obtenerError('id_usuario') }}
                   </p>
                   }
 
                   <p class="mt-1 text-xs text-base-content/55">
-                    Seleccione al conductor o recolector correspondiente.
+                    Seleccione al personal correspondiente.
                   </p>
+                </div>
+
+                <!-- Código de empleado -->
+                <div class="form-control">
+                  <label class="label" for="personal-codigo">
+                    <span class="label-text">
+                      Código de empleado
+                      <span class="font-bold text-red-500">*</span>
+                    </span>
+                  </label>
+
+                  <input id="personal-codigo" type="text" formControlName="codigo_empleado"
+                    class="input input-bordered w-full" [class.input-success]="campoCompleto('codigo_empleado')"
+                    [class.input-error]="campoInvalido('codigo_empleado')" appUppercase />
+
+                  @if (campoInvalido('codigo_empleado')) {
+                  <p class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('codigo_empleado') }}
+                  </p>
+                  }
                 </div>
 
                 <!-- Fecha de ingreso -->
                 <div class="form-control">
-                  <label class="label" for="personal-fecha">
+                  <label class="label" for="personal-fecha-ingreso">
                     <span class="label-text">
                       Fecha de ingreso
                       <span class="font-bold text-red-500">*</span>
                     </span>
                   </label>
 
-                  <input id="personal-fecha" type="date" formControlName="fecha_ingreso"
+                  <input id="personal-fecha-ingreso" type="date" formControlName="fecha_ingreso"
                     class="input input-bordered w-full" [class.input-error]="campoInvalido('fecha_ingreso')" />
 
                   @if (campoInvalido('fecha_ingreso')) {
@@ -151,16 +159,16 @@
                   }
                 </div>
 
-                <!-- Fecha salida -->
+                <!-- Fecha de salida -->
                 <div class="form-control">
-                  <label class="label" for="personal-fecha">
+                  <label class="label" for="personal-fecha-salida">
                     <span class="label-text">
                       Fecha de salida
                       <span class="font-bold text-red-500">*</span>
                     </span>
                   </label>
 
-                  <input id="personal-fecha" type="date" formControlName="fecha_salida"
+                  <input id="personal-fecha-salida" type="date" formControlName="fecha_salida"
                     class="input input-bordered w-full" [class.input-error]="campoInvalido('fecha_salida')" />
 
                   @if (campoInvalido('fecha_salida')) {
@@ -236,14 +244,214 @@
                     }
                   </select>
                 </div>
+
               </div>
             </div>
 
-            <!-- OBSERVACIONES -->
+            <!-- PERFIL DEL CONDUCTOR -->
+            <div class="space-y-4 border-t border-base-300 pt-5">
+
+              <!-- Switch -->
+              <div class="flex flex-col gap-4 rounded-xl border border-base-300
+                 bg-base-200/50 p-4 sm:flex-row sm:items-center
+                 sm:justify-between">
+                <div class="space-y-1">
+                  <h3 class="flex items-center gap-2 text-lg font-semibold">
+                    <i class="fa-solid fa-id-card text-primary" aria-hidden="true"></i>
+                    Perfil del conductor
+                  </h3>
+
+                  <p id="personal-conductor-ayuda" class="text-sm text-base-content/65">
+                    @if (tienePerfilConductor) {
+                    Active esta opción para actualizar los datos de la licencia.
+                    } @else {
+                    Active esta opción si el personal tendrá un perfil de conductor.
+                    }
+                  </p>
+                </div>
+
+                <label class="flex cursor-pointer items-center gap-3" for="personal-habilitar-conductor">
+                  <span class="text-sm font-medium">
+                    {{ conductorHabilitado ? 'Activado' : 'Desactivado' }}
+                  </span>
+
+                  <input id="personal-habilitar-conductor" type="checkbox" role="switch"
+                    formControlName="habilitar_conductor" class="toggle toggle-primary"
+                    aria-label="Guardar datos del conductor" aria-describedby="personal-conductor-ayuda"
+                    aria-controls="personal-conductor-campos" />
+                </label>
+              </div>
+
+              @if (tienePerfilConductor && !conductorHabilitado) {
+              <p class="text-sm text-base-content/65">
+                El perfil existente se conservará sin cambios.
+              </p>
+              }
+
+              @if (conductorHabilitado) {
+              <div id="personal-conductor-campos" formGroupName="conductor"
+                class="space-y-4 rounded-xl border border-base-300 p-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+                  <!-- Número de licencia -->
+                  <div class="form-control">
+                    <label class="label" for="conductor-numero-licencia">
+                      <span class="label-text">
+                        Número de licencia
+                        <span class="font-bold text-red-500">*</span>
+                      </span>
+                    </label>
+
+                    <input id="conductor-numero-licencia" type="text" formControlName="numero_licencia"
+                      placeholder="Ingrese el número de licencia" class="input input-bordered w-full"
+                      [class.input-error]="campoInvalido('conductor.numero_licencia')"
+                      [attr.aria-invalid]="campoInvalido('conductor.numero_licencia')" [attr.aria-describedby]="
+                    tienePerfilConductor
+                      ? 'conductor-numero-ayuda'
+                      : campoInvalido('conductor.numero_licencia')
+                        ? 'conductor-numero-error'
+                        : null
+                  " />
+
+                    @if (campoInvalido('conductor.numero_licencia')) {
+                    <p id="conductor-numero-error" class="mt-1 text-sm text-red-500">
+                      {{ obtenerError('conductor.numero_licencia') }}
+                    </p>
+                    }
+
+                    @if (tienePerfilConductor) {
+                    <p id="conductor-numero-ayuda" class="mt-1 text-xs text-base-content/55">
+                      El número de licencia no se modifica desde este formulario.
+                    </p>
+                    }
+                  </div>
+
+                  <!-- Categoría -->
+                  <div class="form-control">
+                    <label class="label" for="conductor-categoria">
+                      <span class="label-text">
+                        Categoría de licencia
+                        <span class="font-bold text-red-500">*</span>
+                      </span>
+                    </label>
+
+                    <input id="conductor-categoria" type="text" formControlName="categoria_licencia"
+                      placeholder="Ingrese la categoría de licencia" class="input input-bordered w-full"
+                      [class.input-error]="campoInvalido('conductor.categoria_licencia')" />
+
+                    @if (campoInvalido('conductor.categoria_licencia')) {
+                    <p class="mt-1 text-sm text-red-500">
+                      {{ obtenerError('conductor.categoria_licencia') }}
+                    </p>
+                    }
+                  </div>
+
+                  <!-- Fecha de emisión -->
+                  <div class="form-control">
+                    <label class="label" for="conductor-fecha-emision">
+                      <span class="label-text">
+                        Fecha de emisión
+                        <span class="font-bold text-red-500">*</span>
+                      </span>
+                    </label>
+
+                    <input id="conductor-fecha-emision" type="date" formControlName="fecha_emision_licencia"
+                      class="input input-bordered w-full" [class.input-error]="
+                    campoInvalido('conductor.fecha_emision_licencia') ||
+                    fechasLicenciaInvalidas
+                  " />
+
+                    @if (campoInvalido('conductor.fecha_emision_licencia')) {
+                    <p class="mt-1 text-sm text-red-500">
+                      {{ obtenerError('conductor.fecha_emision_licencia') }}
+                    </p>
+                    }
+                  </div>
+
+                  <!-- Fecha de vencimiento -->
+                  <div class="form-control">
+                    <label class="label" for="conductor-fecha-vencimiento">
+                      <span class="label-text">
+                        Fecha de vencimiento
+                        <span class="font-bold text-red-500">*</span>
+                      </span>
+                    </label>
+
+                    <input id="conductor-fecha-vencimiento" type="date" formControlName="fecha_vencimiento_licencia"
+                      class="input input-bordered w-full" [class.input-error]="
+                    campoInvalido('conductor.fecha_vencimiento_licencia') ||
+                    fechasLicenciaInvalidas
+                  " [attr.aria-describedby]="
+                    fechasLicenciaInvalidas ? 'conductor-fechas-error' : null
+                  " />
+
+                    @if (campoInvalido('conductor.fecha_vencimiento_licencia')) {
+                    <p class="mt-1 text-sm text-red-500">
+                      {{ obtenerError('conductor.fecha_vencimiento_licencia') }}
+                    </p>
+                    }
+                  </div>
+
+                  @if (fechasLicenciaInvalidas) {
+                  <p id="conductor-fechas-error" class="text-sm text-red-500 md:col-span-2" role="alert">
+                    La fecha de vencimiento no puede ser anterior a la fecha de emisión.
+                  </p>
+                  }
+
+                  <!-- Estado de licencia -->
+                  <div class="form-control">
+                    <label class="label" for="conductor-estado-licencia">
+                      <span class="label-text">
+                        Estado de licencia
+                        <span class="font-bold text-red-500">*</span>
+                      </span>
+                    </label>
+
+                    <input id="conductor-estado-licencia" type="text" formControlName="estado_licencia"
+                      placeholder="Ingrese el estado de la licencia" class="input input-bordered w-full"
+                      [class.input-error]="campoInvalido('conductor.estado_licencia')" />
+
+                    @if (campoInvalido('conductor.estado_licencia')) {
+                    <p class="mt-1 text-sm text-red-500">
+                      {{ obtenerError('conductor.estado_licencia') }}
+                    </p>
+                    }
+                  </div>
+
+                  <!-- Restricciones -->
+                  <div class="form-control md:col-span-2">
+                    <label class="label" for="conductor-restricciones">
+                      <span class="label-text">Restricciones</span>
+                      <span class="label-text-alt">Opcional</span>
+                    </label>
+
+                    <textarea id="conductor-restricciones" formControlName="restricciones" rows="2"
+                      placeholder="Ingrese las restricciones de la licencia, si corresponde."
+                      class="textarea textarea-bordered w-full" appUppercase></textarea>
+                  </div>
+
+                  <!-- Observación del conductor -->
+                  <div class="form-control md:col-span-2">
+                    <label class="label" for="conductor-observacion">
+                      <span class="label-text">Observaciones del conductor</span>
+                      <span class="label-text-alt">Opcional</span>
+                    </label>
+
+                    <textarea id="conductor-observacion" formControlName="observacion" rows="3"
+                      placeholder="Ingrese información adicional sobre el conductor."
+                      class="textarea textarea-bordered w-full" appUppercase></textarea>
+                  </div>
+
+                </div>
+              </div>
+              }
+            </div>
+
+            <!-- OBSERVACIONES DEL PERSONAL -->
             <div class="space-y-3 border-t border-base-300 pt-5">
               <h3 class="flex items-center gap-2 text-lg font-semibold">
                 <i class="fa-solid fa-clipboard text-primary" aria-hidden="true"></i>
-                Observaciones
+                Observaciones del personal
               </h3>
 
               <div class="form-control">
@@ -261,20 +469,18 @@
           </fieldset>
         </div>
 
-        <!-- =============================================== -->
         <!-- FOOTER -->
-        <!-- =============================================== -->
         <footer class="flex shrink-0 flex-col-reverse gap-3
-                   border-t border-base-300 bg-base-100 px-5 py-4
-                   sm:flex-row sm:items-center sm:justify-center sm:px-6">
+           border-t border-base-300 bg-base-100 px-5 py-4
+           sm:flex-row sm:items-center sm:justify-center sm:px-6">
           <div class="flex flex-col-reverse gap-5 sm:flex-row">
             <button type="button" class="btn btn-error" [disabled]="isLoading" (click)="cerrarModal()">
               Cancelar
             </button>
 
-            <button type="submit" class="btn btn-primary" [disabled]="formPersonal.invalid || isLoading">
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading">
               @if (isLoading) {
-              <span class="loading loading-spinner loading-sm"></span>
+              <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
               {{ modoEdicion ? 'Actualizando...' : 'Guardando...' }}
               } @else {
               <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
@@ -283,7 +489,6 @@
             </button>
           </div>
         </footer>
-
       </form>
     </section>
   </div>

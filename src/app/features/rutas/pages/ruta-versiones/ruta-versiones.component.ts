@@ -99,11 +99,7 @@ export class RutaVersionesComponent
 
     const idRuta = this.ruta_id;
 
-    if (
-      idRuta === null ||
-      !Number.isSafeInteger(idRuta) ||
-      idRuta <= 0
-    ) {
+    if (idRuta === null || !Number.isSafeInteger(idRuta) || idRuta <= 0) {
       this.cargando.set(false);
       this.error.set('El identificador de la ruta no es válido.');
       return;
@@ -127,6 +123,8 @@ export class RutaVersionesComponent
           }
 
           const versiones = response.data ?? [];
+
+          console.log("VERSIONES: ", versiones);
 
           this.versiones.set(versiones);
           this.indiceSeleccionado.set(

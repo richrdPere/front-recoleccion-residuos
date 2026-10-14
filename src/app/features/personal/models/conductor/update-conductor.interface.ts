@@ -1,7 +1,4 @@
-// Ajusta la ruta al archivo de interfaces del perfil.
-import {
-  PerfilConductorData,
-} from './get-perfil-conductor.interface';
+import { PerfilConductorData } from './get-perfil-conductor.interface';
 
 // *********************************************************
 // SOLICITUD

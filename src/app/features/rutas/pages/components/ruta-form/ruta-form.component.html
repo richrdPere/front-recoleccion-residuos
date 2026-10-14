@@ -1,27 +1,42 @@
 @if (mostrarModal) {
 <div class="modal modal-open">
-
+  <!-- ===================================================== -->
   <!-- MODAL: FORMULARIO DE RUTAS -->
+  <!-- ===================================================== -->
   <div class="fixed inset-0 z-50 flex items-center justify-center
              bg-black/30 p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="ruta-form-title"
     [attr.aria-busy]="isLoading">
+
     <section class="relative flex max-h-[92vh] w-full flex-col
                overflow-hidden rounded-2xl border border-base-300
                bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
 
+      <!-- ================================================= -->
       <!-- HEADER -->
+      <!-- ================================================= -->
       <header class="flex shrink-0 items-center justify-between gap-4
-                 border-b border-base-300 px-5 py-4 sm:px-6">
+          border-b border-base-300
+          px-5 py-4 sm:px-6">
+
+        <!-- Ícono e información -->
         <div class="flex min-w-0 items-center gap-3">
-          <div class="flex h-12 w-12 shrink-0 items-center justify-center
-                     rounded-2xl bg-primary/10 text-primary">
+          <div class="flex h-12 w-12 shrink-0 items-center
+              justify-center rounded-2xl
+              bg-primary/10 text-primary">
             <i class="fa-solid text-lg" [ngClass]="modoEdicion ? 'fa-pen-to-square' : 'fa-route'"
               aria-hidden="true"></i>
           </div>
 
           <div class="min-w-0">
             <h2 id="ruta-form-title" class="truncate text-lg font-bold sm:text-xl">
-              {{ modoEdicion ? 'Editar ruta' : 'Nueva ruta' }}
+              {{ modoEdicion ? 'Editar ruta - ' : 'Nueva ruta - ' }}
+
+              <!-- Badge código -->
+              @if (formRuta.get('codigo')?.value) {
+              <span class="badge badge-primary badge-outline px-3 font-mono text-sm">
+                {{ formRuta.get('codigo')?.value }}
+              </span>
+              }
             </h2>
 
             <p class="mt-0.5 text-sm text-base-content/55">
@@ -31,12 +46,6 @@
               : 'Registre una nueva ruta de recolección.'
               }}
             </p>
-
-            @if (formRuta.get('codigo')?.value) {
-            <span class="badge badge-primary badge-outline mt-2 font-mono">
-              {{ formRuta.get('codigo')?.value }}
-            </span>
-            }
           </div>
         </div>
 
@@ -46,11 +55,16 @@
         </button>
       </header>
 
+      <!-- ================================================= -->
+      <!-- FORMULARIO -->
+      <!-- ================================================= -->
       <form [formGroup]="formRuta" (ngSubmit)="crearOEditarRuta()" class="flex min-h-0 flex-1 flex-col" novalidate>
 
+        <!-- =============================================== -->
         <!-- CONTENIDO CON SCROLL -->
-        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain
-                   px-5 py-5 sm:px-6">
+        <!-- =============================================== -->
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
+
           <fieldset class="min-w-0 space-y-6" [disabled]="isLoading">
 
             <!-- INFORMACIÓN GENERAL -->
@@ -63,7 +77,7 @@
               <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 
                 <!-- Zona -->
-                <div class="form-control">
+                <!-- <div class="form-control">
                   <label class="label" for="ruta-zona">
                     <span class="label-text">
                       Zona
@@ -105,10 +119,10 @@
                     No hay zonas disponibles para seleccionar.
                   </p>
                   }
-                </div>
+                </div> -->
 
                 <!-- Código -->
-                <div class="form-control">
+                <!-- <div class="form-control">
                   <label class="label" for="ruta-codigo">
                     <span class="label-text">
                       Código
@@ -131,10 +145,10 @@
                     El código se conserva al editar.
                   </p>
                   }
-                </div>
+                </div> -->
 
                 <!-- Nombre -->
-                <div class="form-control md:col-span-2">
+                <div class="form-control">
                   <label class="label" for="ruta-nombre">
                     <span class="label-text">
                       Nombre de la ruta
@@ -145,7 +159,7 @@
                   <input id="ruta-nombre" type="text" formControlName="nombre"
                     placeholder="Ej. Recolección del sector centro"
                     class="input input-bordered w-full placeholder-gray-400"
-                    [class.input-error]="campoInvalido('nombre')" (blur)="normalizarCampo('nombre')" />
+                    [class.input-error]="campoInvalido('nombre')" (blur)="normalizarCampo('nombre')" appUppercase />
 
                   @if (campoInvalido('nombre')) {
                   <p class="mt-1 text-sm text-red-500">
@@ -165,7 +179,8 @@
 
                   <textarea id="ruta-descripcion" formControlName="descripcion" rows="4"
                     placeholder="Describa el recorrido y los sectores atendidos." class="textarea textarea-bordered w-full
-                             placeholder-gray-400" [class.textarea-error]="campoInvalido('descripcion')"></textarea>
+                             placeholder-gray-400" [class.textarea-error]="campoInvalido('descripcion')"
+                    appUppercase></textarea>
 
                   @if (campoInvalido('descripcion')) {
                   <p class="mt-1 text-sm text-red-500">
@@ -243,7 +258,9 @@
           </fieldset>
         </div>
 
+        <!-- =============================================== -->
         <!-- FOOTER -->
+        <!-- =============================================== -->
         <footer class="flex shrink-0 flex-col-reverse gap-3
                    border-t border-base-300 bg-base-100
                    px-5 py-4 sm:flex-row sm:items-center
@@ -255,9 +272,7 @@
 
             <button type="submit" class="btn btn-primary" [disabled]="
                   formRuta.invalid ||
-                  isLoading ||
-                  (modoEdicion && !rutaSeleccionada) ||
-                  (!modoEdicion && zonas.length === 0)
+                  isLoading
                 ">
               @if (isLoading) {
               <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize } from 'rxjs';
+import { Observable, debounceTime, finalize, merge, tap } from 'rxjs';
 
 import Swal from 'sweetalert2';
 
@@ -11,6 +11,7 @@ import { ProgramacionesService } from 'src/app/features/programaciones/services/
 
 // Interfaces
 import { CreateProgramacionRequest, UpdateProgramacionRequest, ProgramacionPaginadaItem } from '../../../interfaces/programaciones';
+import { DisponibilidadFilters, GetConductoresDisponiblesResponse, GetRecolectoresDisponiblesResponse, GetVehiculosDisponiblesResponse } from '../../../interfaces/disponibilidad';
 
 // ============================================================
 // OPCIONES DE LOS CATÁLOGOS
@@ -162,27 +163,31 @@ export class ProgramacionesFormComponent implements OnChanges {
   @Input() mostrarModal = false;
   @Input() modoEdicion = false;
 
-  @Input() programacionSeleccionada:
-    ProgramacionPaginadaItem | null = null;
+  @Input() programacionSeleccionada: ProgramacionPaginadaItem | null = null;
 
   @Input() rutas: ProgramacionRutaOption[] = [];
   @Input() versiones: ProgramacionVersionOption[] = [];
-  @Input() vehiculos: ProgramacionVehiculoOption[] = [];
-
-  @Input() conductores: ProgramacionPersonalOption[] = [];
-  @Input() recolectores: ProgramacionPersonalOption[] = [];
   @Input() supervisores: ProgramacionPersonalOption[] = [];
+
+  @Input() vehiculosDisponibles: GetVehiculosDisponiblesResponse['data'] | null = null;
+  @Input() conductoresDisponibles: GetConductoresDisponiblesResponse['data'] | null = null;
+  @Input() recolectoresDisponibles: GetRecolectoresDisponiblesResponse['data'] | null = null;
+
+  @Input() cargandoDisponibilidad = false;
+  @Input() errorDisponibilidad: string | null = null;
 
   // Usa los valores exactos admitidos por tu backend.
   @Input() turnos: ProgramacionTurnoOption[] = [];
 
   @Output() modalCerrado = new EventEmitter<void>();
   @Output() programacionGuardada = new EventEmitter<void>();
+  @Output() disponibilidadSolicitada = new EventEmitter<DisponibilidadFilters>();
+  @Output() disponibilidadInvalidada = new EventEmitter<void>();
 
   // ============================================================
   // ESTADO
   // ============================================================
-
+  esperandoDisponibilidad = false;
   readonly formProgramacion: FormGroup;
 
   isLoading = false;
@@ -201,6 +206,36 @@ export class ProgramacionesFormComponent implements OnChanges {
     private readonly cdr: ChangeDetectorRef,
   ) {
     this.formProgramacion = this.crearFormulario();
+
+    merge(
+      this.formProgramacion.get('fecha_programada')!.valueChanges,
+      this.formProgramacion.get('hora_inicio_programada')!.valueChanges,
+      this.formProgramacion.get('hora_fin_programada')!.valueChanges,
+    )
+      .pipe(
+        tap(() => {
+          if (!this.mostrarModal || this.isLoading) {
+            return;
+          }
+
+          this.invalidarDisponibilidad();
+
+          // Las selecciones pertenecían al horario anterior.
+          this.formProgramacion.patchValue(
+            {
+              id_vehiculo: null,
+              id_conductor: null,
+              recolectores: [],
+            },
+            { emitEvent: false },
+          );
+        }),
+        debounceTime(300),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.solicitarDisponibilidad();
+      });
   }
 
   // ============================================================
@@ -211,27 +246,50 @@ export class ProgramacionesFormComponent implements OnChanges {
     if (!this.mostrarModal) {
       if (changes['mostrarModal']) {
         this.resetearFormulario();
+        this.esperandoDisponibilidad = false;
       }
 
       return;
     }
 
-    const debeSincronizar =
-      !!changes['mostrarModal'] ||
-      !!changes['modoEdicion'] ||
-      !!changes['programacionSeleccionada'];
+    const debeSincronizar = !!changes['mostrarModal'] || !!changes['modoEdicion'] || !!changes['programacionSeleccionada'];
 
     // La llegada de catálogos no borra el formulario.
-    if (!debeSincronizar) {
+    if (debeSincronizar && !this.isLoading) {
+      this.invalidarDisponibilidad();
+
+      if (this.modoEdicion && this.programacionSeleccionada) {
+        this.cargarProgramacion(this.programacionSeleccionada);
+        this.solicitarDisponibilidad();
+      } else {
+        this.resetearFormulario();
+      }
+
       return;
     }
 
-    if (this.modoEdicion && this.programacionSeleccionada) {
-      this.cargarProgramacion(this.programacionSeleccionada);
-      return;
-    }
+    const cambioDisponibilidad = !!changes['vehiculosDisponibles'] || !!changes['conductoresDisponibles'] || !!changes['recolectoresDisponibles'] || !!changes['cargandoDisponibilidad'] || !!changes['errorDisponibilidad'];
 
-    this.resetearFormulario();
+    console.log("tieneResultados: ", cambioDisponibilidad);
+    console.log("no cargandoDisponibilidad: ", !this.cargandoDisponibilidad);
+
+    if (cambioDisponibilidad && !this.cargandoDisponibilidad) {
+      const tieneResultados =
+        this.vehiculosDisponibles != null &&
+        this.conductoresDisponibles != null &&
+        this.recolectoresDisponibles != null;
+
+      console.log("tieneResultados: ", tieneResultados);
+      console.log("vehiculosDisponibles: ", this.vehiculosDisponibles);
+      console.log("conductoresDisponibles: ", this.conductoresDisponibles);
+      console.log("recolectoresDisponibles: ", this.recolectoresDisponibles);
+
+      if (tieneResultados || this.errorDisponibilidad) {
+        this.esperandoDisponibilidad = false;
+      }
+
+      this.cdr.markForCheck();
+    }
   }
 
   // ============================================================
@@ -251,16 +309,8 @@ export class ProgramacionesFormComponent implements OnChanges {
       id_supervisor: [null, supervisorValido],
 
       fecha_programada: ['', [Validators.required, fechaValida]],
-
-      hora_inicio_programada: [
-        '',
-        [Validators.required, horaValida],
-      ],
-
-      hora_fin_programada: [
-        '',
-        [Validators.required, horaValida],
-      ],
+      hora_inicio_programada: ['', [Validators.required, horaValida]],
+      hora_fin_programada: ['', [Validators.required, horaValida]],
 
       turno: ['', Validators.required],
       observacion: [''],
@@ -321,11 +371,9 @@ export class ProgramacionesFormComponent implements OnChanges {
       };
     });
 
-    this.conductorOriginalId =
-      conductor?.personal.id_personal ?? null;
+    this.conductorOriginalId = conductor?.personal.id_personal ?? null;
 
-    this.supervisorOriginalId =
-      supervisor?.personal.id_personal ?? null;
+    this.supervisorOriginalId = supervisor?.personal.id_personal ?? null;
 
     this.recolectoresOriginalesIds = [...new Set(recolectores)];
 
@@ -345,7 +393,7 @@ export class ProgramacionesFormComponent implements OnChanges {
 
       turno: programacion.turno,
       observacion: programacion.observacion ?? '',
-    });
+    }, { emitEvent: false },);
   }
 
   // ============================================================
@@ -398,31 +446,7 @@ export class ProgramacionesFormComponent implements OnChanges {
     return opciones;
   }
 
-  get vehiculosDisponibles(): ProgramacionVehiculoOption[] {
-    const actual = this.modoEdicion
-      ? this.programacionSeleccionada
-      : null;
 
-    if (
-      actual &&
-      !this.vehiculos.some(
-        (vehiculo) => vehiculo.id_vehiculo === actual.id_vehiculo,
-      )
-    ) {
-      return [actual.vehiculo, ...this.vehiculos];
-    }
-
-    return this.vehiculos;
-  }
-
-  get conductoresDisponibles(): ProgramacionPersonalOption[] {
-    return this.incluirPersonalOriginal(
-      this.conductores,
-      this.conductorOriginalId === null
-        ? []
-        : [this.conductorOriginalId],
-    );
-  }
 
   get supervisoresDisponibles(): ProgramacionPersonalOption[] {
     return this.incluirPersonalOriginal(
@@ -433,12 +457,6 @@ export class ProgramacionesFormComponent implements OnChanges {
     );
   }
 
-  get recolectoresDisponibles(): ProgramacionPersonalOption[] {
-    return this.incluirPersonalOriginal(
-      this.recolectores,
-      this.recolectoresOriginalesIds,
-    );
-  }
 
   get turnosDisponibles(): ProgramacionTurnoOption[] {
     const turno = this.modoEdicion
@@ -505,7 +523,6 @@ export class ProgramacionesFormComponent implements OnChanges {
   // ============================================================
   // CREAR / ACTUALIZAR
   // ============================================================
-
   crearOEditarProgramacion(): void {
     if (this.isLoading) {
       return;
@@ -521,52 +538,52 @@ export class ProgramacionesFormComponent implements OnChanges {
     const esEdicion = this.modoEdicion;
     const idProgramacion = Number(form.id_programacion);
 
-    if (
-      esEdicion &&
-      (!Number.isInteger(idProgramacion) || idProgramacion <= 0)
-    ) {
-      this.mostrarError(
-        'Selecciona nuevamente la programación que deseas editar.',
-      );
-      return;
-    }
+    // if (
+    //   esEdicion &&
+    //   (!Number.isInteger(idProgramacion) || idProgramacion <= 0)
+    // ) {
+    //   this.mostrarError(
+    //     'Selecciona nuevamente la programación que deseas editar.',
+    //   );
+    //   return;
+    // }
 
-    const versionValida = this.versionesDisponibles.some(
-      (version) =>
-        version.id_ruta === form.id_ruta &&
-        version.id_ruta_version === form.id_ruta_version,
-    );
+    // const versionValida = this.versionesDisponibles.some(
+    //   (version) =>
+    //     version.id_ruta === form.id_ruta &&
+    //     version.id_ruta_version === form.id_ruta_version,
+    // );
 
-    const opcionesValidas =
-      this.rutasDisponibles.some(
-        (ruta) => ruta.id_ruta === form.id_ruta,
-      ) &&
-      versionValida &&
-      this.vehiculosDisponibles.some(
-        (vehiculo) => vehiculo.id_vehiculo === form.id_vehiculo,
-      ) &&
-      this.conductoresDisponibles.some(
-        (personal) => personal.id_personal === form.id_conductor,
-      ) &&
-      (form.id_supervisor === null ||
-        this.supervisoresDisponibles.some(
-          (personal) => personal.id_personal === form.id_supervisor,
-        )) &&
-      (form.recolectores as number[]).every(
-        (id) => this.recolectoresDisponibles.some(
-          (personal) => personal.id_personal === id,
-        ),
-      ) &&
-      this.turnosDisponibles.some(
-        (turno) => turno.value === form.turno,
-      );
+    // const opcionesValidas =
+    //   this.rutasDisponibles.some(
+    //     (ruta) => ruta.id_ruta === form.id_ruta,
+    //   ) &&
+    //   versionValida &&
+    //   this.vehiculosDisponibles.some(
+    //     (vehiculo) => vehiculo.id_vehiculo === form.id_vehiculo,
+    //   ) &&
+    //   this.conductoresDisponibles.some(
+    //     (personal) => personal.id_personal === form.id_conductor,
+    //   ) &&
+    //   (form.id_supervisor === null ||
+    //     this.supervisoresDisponibles.some(
+    //       (personal) => personal.id_personal === form.id_supervisor,
+    //     )) &&
+    //   (form.recolectores as number[]).every(
+    //     (id) => this.recolectoresDisponibles.some(
+    //       (personal) => personal.id_personal === id,
+    //     ),
+    //   ) &&
+    //   this.turnosDisponibles.some(
+    //     (turno) => turno.value === form.turno,
+    //   );
 
-    if (!opcionesValidas) {
-      this.mostrarError(
-        'Revisa la ruta, versión, vehículo, equipo y turno seleccionados.',
-      );
-      return;
-    }
+    // if (!opcionesValidas) {
+    //   this.mostrarError(
+    //     'Revisa la ruta, versión, vehículo, equipo y turno seleccionados.',
+    //   );
+    //   return;
+    // }
 
     if (form.hora_inicio_programada === form.hora_fin_programada) {
       this.mostrarError(
@@ -589,8 +606,8 @@ export class ProgramacionesFormComponent implements OnChanges {
           : Number(form.id_supervisor),
 
       fecha_programada: form.fecha_programada,
-      hora_inicio_programada: form.hora_inicio_programada,
-      hora_fin_programada: form.hora_fin_programada,
+      hora_inicio_programada: this.normalizarHora(form.hora_inicio_programada),
+      hora_fin_programada: this.normalizarHora(form.hora_fin_programada),
 
       turno: form.turno,
       observacion: String(form.observacion ?? '').trim() || null,
@@ -602,55 +619,146 @@ export class ProgramacionesFormComponent implements OnChanges {
       recolectores: [...payloadCrear.recolectores],
     };
 
-    const solicitud$ = esEdicion
-      ? this.programacionesService.updateProgramacion(
-        idProgramacion,
-        payloadActualizar,
-      )
-      : this.programacionesService.createProgramacion(payloadCrear);
+    const solicitud$: Observable<{
+      success: boolean;
+      message: string;
+    }> = esEdicion
+        ? this.programacionesService.updateProgramacion(
+          idProgramacion,
+          payloadActualizar,
+        )
+        : this.programacionesService.createProgramacion(payloadCrear);
 
     this.isLoading = true;
 
-    // solicitud$
-    //   .pipe(
-    //     takeUntilDestroyed(this.destroyRef),
-    //     finalize(() => {
-    //       this.isLoading = false;
-    //       this.cdr.markForCheck();
-    //     }),
-    //   )
-    //   .subscribe({
-    //     next: (response) => {
-    //       if (!response.success) {
-    //         this.mostrarError(
-    //           response.message || 'La operación no fue completada.',
-    //         );
-    //         return;
-    //       }
+    solicitud$
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => {
+          this.isLoading = false;
 
-    //       this.isLoading = false;
+          if (!this.destroyRef.destroyed) {
+            this.cdr.markForCheck();
+          }
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          if (!response.success) {
+            this.mostrarError(
+              response.message || 'La operación no fue completada.',
+            );
+            return;
+          }
 
-    //       void Swal.fire({
-    //         icon: 'success',
-    //         title: esEdicion
-    //           ? 'Programación actualizada correctamente'
-    //           : 'Programación creada correctamente',
-    //       });
+          this.isLoading = false;
 
-    //       this.programacionGuardada.emit();
-    //       this.cerrarModal();
-    //     },
+          void Swal.fire({
+            icon: 'success',
+            title: esEdicion
+              ? 'Programación actualizada correctamente'
+              : 'Programación creada correctamente',
+          });
 
-    //     error: (err) => {
-    //       const mensaje = err?.error?.message ?? err?.message;
+          this.cerrarModal();
+          this.programacionGuardada.emit();
+        },
 
-    //       this.mostrarError(
-    //         typeof mensaje === 'string' && mensaje.trim()
-    //           ? mensaje
-    //           : 'No se pudo guardar la programación.',
-    //       );
-    //     },
-    //   });
+        error: (error: unknown) => {
+          const detalle = error as {
+            message?: unknown;
+            error?: { message?: unknown };
+          } | null;
+
+          const mensaje =
+            detalle?.error?.message ??
+            detalle?.message;
+
+          this.mostrarError(
+            typeof mensaje === 'string' && mensaje.trim()
+              ? mensaje
+              : 'No se pudo guardar la programación.',
+          );
+        },
+      });
+  }
+
+  // ============================================================
+  // SOLICITAR DISPONIBILIDAD AL PADRE
+  // ============================================================
+
+  solicitarDisponibilidad(): void {
+    if (
+      !this.mostrarModal ||
+      this.isLoading ||
+      !this.horarioValido
+    ) {
+      return;
+    }
+
+    const form = this.formProgramacion.getRawValue();
+
+    const filters: DisponibilidadFilters = {
+      fecha_programada: form.fecha_programada,
+      hora_inicio_programada: this.normalizarHora(form.hora_inicio_programada),
+      hora_fin_programada: this.normalizarHora(form.hora_fin_programada),
+      ...(this.modoEdicion && this.programacionSeleccionada
+        ? {
+          exclude_programacion_id: this.programacionSeleccionada.id_programacion,
+        }
+        : {}),
+    };
+
+
+
+    this.esperandoDisponibilidad = true;
+    this.disponibilidadSolicitada.emit(filters);
+    this.cdr.markForCheck();
+  }
+
+  private invalidarDisponibilidad(): void {
+    this.esperandoDisponibilidad = true;
+    this.disponibilidadInvalidada.emit();
+    this.cdr.markForCheck();
+  }
+
+  // ============================================================
+  // ESTADO DEL HORARIO Y DISPONIBILIDAD
+  // ============================================================
+
+  get horarioValido(): boolean {
+    const fecha = this.formProgramacion.get('fecha_programada');
+    const inicio = this.formProgramacion.get('hora_inicio_programada');
+    const fin = this.formProgramacion.get('hora_fin_programada');
+
+    if (
+      !fecha?.value ||
+      !inicio?.value ||
+      !fin?.value ||
+      fecha.invalid ||
+      inicio.invalid ||
+      fin.invalid
+    ) {
+      return false;
+    }
+
+    return this.normalizarHora(inicio.value) !== this.normalizarHora(fin.value);
+  }
+
+  get disponibilidadLista(): boolean {
+    return (
+      this.horarioValido &&
+      !this.esperandoDisponibilidad &&
+      !this.cargandoDisponibilidad &&
+      !this.errorDisponibilidad &&
+      this.vehiculosDisponibles != null &&
+      this.conductoresDisponibles != null &&
+      this.recolectoresDisponibles != null
+    );
+  }
+
+  private normalizarHora(valor: string): string {
+    return valor.length === 5 ? `${valor}:00` : valor;
   }
 
   // ============================================================

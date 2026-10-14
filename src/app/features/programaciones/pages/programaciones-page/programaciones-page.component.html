@@ -1,12 +1,21 @@
+<!-- ================================================= -->
+<!-- CONTENEDOR DEL PROGRAMACION -->
+<!-- ================================================= -->
 <div class="mx-auto w-full max-w-500">
 
+  <!-- ================================================= -->
   <!-- ENCABEZADO -->
-  <header class="mb-5 flex flex-col gap-4
-           sm:flex-row sm:items-center sm:justify-between">
+  <!-- ================================================= -->
+  <header class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
     <div class="flex min-w-0 items-center gap-3">
-      <div class="flex h-12 w-12 shrink-0 items-center justify-center
-               rounded-2xl bg-primary/10 text-primary" aria-hidden="true">
-        <i class="fa-solid fa-calendar-days text-2xl"></i>
+
+      <div class="flex h-12 w-12 shrink-0
+                 items-center justify-center
+                 rounded-2xl bg-primary/10
+                 text-primary" aria-hidden="true">
+
+        <i class="fa-solid fa-calendar-check text-2xl"></i>
       </div>
 
       <div class="min-w-0">
@@ -22,62 +31,61 @@
     </div>
   </header>
 
+  <!-- ================================================= -->
   <!-- FILTROS -->
+  <!-- ================================================= -->
   <section class="mb-6 overflow-hidden rounded-2xl
            border border-base-300 bg-base-100 shadow-sm">
     <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_170px]">
-      <div class="p-4 sm:p-5">
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
 
-          <!-- Búsqueda -->
-          <label class="form-control w-full">
-            <span class="mb-1.5 text-xs font-semibold uppercase
-                     tracking-wide text-base-content/60">
-              Buscar
-            </span>
+      <!-- ================================================= -->
+      <!-- CAMPOS DE FILTRO -->
+      <!-- ================================================= -->
+      <div class="min-w-0 p-4 sm:p-5">
+        <div class="grid grid-cols-1 items-end gap-4
+               sm:grid-cols-2
+               xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
 
-            <div class="relative">
-              <i class="fa-solid fa-magnifying-glass pointer-events-none
-                       absolute left-3.5 top-1/2 -translate-y-1/2
-                       text-base-content/35" aria-hidden="true"></i>
+          <!-- Búsqueda por placa -->
+          <div class="min-w-0">
+            <label class="form-control w-full">
+              <label for="filtro-placa" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+                Vehículo
+              </label>
 
-              <input type="text" class="input input-bordered h-11 w-full rounded-xl pl-10"
-                placeholder="Buscar programación" autocomplete="off" [(ngModel)]="searchBusqueda"
-                (ngModelChange)="onSearchChange()" />
-            </div>
-          </label>
+              <div class="relative">
+                <input id="filtro-placa" type="text" class="input input-bordered h-11 min-h-11
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pl-11 pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30" placeholder="Buscar por código o placa" autocomplete="off"
+                  [ngClass]="searchBusqueda.trim() ? 'border-primary' : 'border-base-500'" [(ngModel)]="searchBusqueda"
+                  (ngModelChange)="onSearchChange()" appUppercase />
 
-          <!-- Desde -->
-          <label class="form-control w-full">
-            <span class="mb-1.5 text-xs font-semibold uppercase
-                     tracking-wide text-base-content/60">
-              Fecha desde
-            </span>
+                <span class="pointer-events-none absolute inset-y-0 left-0 z-10
+                     flex w-11 items-center justify-center
+                     text-base-content/50" aria-hidden="true">
+                  <i class="fa-solid fa-magnifying-glass text-base"></i>
+                </span>
+              </div>
+            </label>
+          </div>
 
-            <input type="date" class="input input-bordered h-11 w-full rounded-xl" [(ngModel)]="fechaDesdeBusqueda"
-              (ngModelChange)="onFiltroChange()" [class.input-error]="!!errorFiltros" />
-          </label>
-
-          <!-- Hasta -->
-          <label class="form-control w-full">
-            <span class="mb-1.5 text-xs font-semibold uppercase
-                     tracking-wide text-base-content/60">
-              Fecha hasta
-            </span>
-
-            <input type="date" class="input input-bordered h-11 w-full rounded-xl" [(ngModel)]="fechaHastaBusqueda"
-              (ngModelChange)="onFiltroChange()" [class.input-error]="!!errorFiltros" />
-          </label>
-
-          <!-- Estado -->
-          <label class="form-control w-full">
-            <span class="mb-1.5 text-xs font-semibold uppercase
-                     tracking-wide text-base-content/60">
+          <!-- Búsqueda por estado -->
+          <div class="min-w-0">
+            <label for="filtro-estado" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
               Estado de programación
-            </span>
+            </label>
 
-            <select class="select select-bordered h-11 min-h-11 w-full rounded-xl"
-              [(ngModel)]="estadoProgramacionBusqueda" (ngModelChange)="onFiltroChange()">
+            <select id="filtro-estado" class="select select-bordered h-11 min-h-11
+                w-full min-w-0 rounded-xl bg-base-200
+                pl-4 pr-10 transition-colors
+                focus:border-primary focus:outline-none
+                focus:ring-2 focus:ring-primary/30"
+              [ngClass]="estadoProgramacionBusqueda ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="estadoProgramacionBusqueda" (ngModelChange)="onSearchChange()">
               <option value="">Todos los estados</option>
 
               @for (opcion of estadosProgramacion; track opcion.value) {
@@ -86,10 +94,60 @@
               </option>
               }
             </select>
-          </label>
+          </div>
+
+
+          <!-- Fecha Desde -->
+          <div class="min-w-0">
+            <label for="filtro-fecha-desde" class="mb-1.5 text-xs font-semibold uppercase
+                     tracking-wide text-base-content/60">
+              Fecha desde
+            </label>
+
+            <input id="filtro-fecha-desde" type="date" class="input input-bordered h-11 min-h-11
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30f"
+              [ngClass]="fechaDesdeBusqueda.trim() ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="fechaDesdeBusqueda" (ngModelChange)="onFiltroChange()"
+              [class.input-error]="!!errorFiltros" />
+          </div>
+
+          <!-- Fecha Hasta -->
+          <!-- <div class="min-w-0">
+            <label for="filtro-fecha-hasta" class="mb-1.5 text-xs font-semibold uppercase
+                     tracking-wide text-base-content/60">
+              Fecha hasta
+            </label>
+
+            <input id="filtro-fecha-hasta" type="date" class="input input-bordered h-11 min-h-11
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30f"
+              [ngClass]="fechaHastaBusqueda.trim() ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="fechaHastaBusqueda" (ngModelChange)="onFiltroChange()"
+              [class.input-error]="!!errorFiltros" />
+          </div> -->
+
+          <!-- Limpiar -->
+          <div class="min-w-0">
+            <button type="button" class="btn btn-secondary h-11 min-h-11
+                   w-full gap-2 rounded-xl
+                   xl:w-auto xl:min-w-28" [disabled]="
+              !searchBusqueda &&
+              !estadoProgramacionBusqueda &&
+              !fechaDesdeBusqueda &&
+              !fechaHastaBusqueda
+            " (click)="limpiarFiltros()">
+              <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+              Limpiar
+            </button>
+          </div>
 
           <!-- Ruta -->
-          <label class="form-control w-full">
+          <!-- <label class="form-control w-full">
             <span class="mb-1.5 text-xs font-semibold uppercase
                      tracking-wide text-base-content/60">
               Ruta
@@ -105,10 +163,10 @@
               </option>
               }
             </select>
-          </label>
+          </label> -->
 
           <!-- Vehículo -->
-          <label class="form-control w-full">
+          <!-- <label class="form-control w-full">
             <span class="mb-1.5 text-xs font-semibold uppercase
                      tracking-wide text-base-content/60">
               Vehículo
@@ -118,16 +176,13 @@
               (ngModelChange)="onFiltroChange()">
               <option [ngValue]="null">Todos los vehículos</option>
 
-              @for (
-              vehiculo of vehiculosFiltro;
-              track vehiculo.id_vehiculo
-              ) {
+              @for ( vehiculo of vehiculosFiltro; track vehiculo.id_vehiculo ) {
               <option [ngValue]="vehiculo.id_vehiculo">
                 {{ vehiculo.codigo }} — {{ vehiculo.placa }}
               </option>
               }
             </select>
-          </label>
+          </label> -->
         </div>
 
         @if (errorFiltros) {
@@ -146,43 +201,65 @@
         }
       </div>
 
+      <!-- ================================================= -->
+      <!-- ILUSTRACIÓN -->
+      <!-- ================================================= -->
       <div class="hidden items-center justify-center px-5 lg:flex">
-        <img src="assets/img/search.png" alt="" aria-hidden="true"
-          class="h-32 w-32 select-none object-contain opacity-90" draggable="false" />
+        <span class="imagen-lupa block h-32 w-32 text-base-content opacity-90" aria-hidden="true"></span>
       </div>
     </div>
   </section>
 
-
+  <!-- ================================================= -->
   <!-- MODALES -->
+  <!-- ================================================= -->
 
   <!-- Formulario para programacion -->
   <programaciones-form [mostrarModal]="mostrarModal" [modoEdicion]="modoEdicion"
-    [programacionSeleccionada]="programacionSeleccionada" (modalCerrado)="cerrarModal()"
-    (programacionGuardada)="getProgramacionesPaginated()" />
+    [programacionSeleccionada]="programacionSeleccionada" [vehiculosDisponibles]="vehiculosDisponibles"
+    [conductoresDisponibles]="conductoresDisponibles" [recolectoresDisponibles]="recolectoresDisponibles"
+    [cargandoDisponibilidad]="cargandoDisponibilidad" [errorDisponibilidad]="errorDisponibilidad"
+    (disponibilidadSolicitada)="getDisponibilidad($event)" (modalCerrado)="cerrarModal()"
+    (programacionGuardada)="getProgramacionesPaginated()"
+    (disponibilidadInvalidada)="invalidarDisponibilidadFormulario()" />
 
   <!-- Modal para ver detalle de programacion -->
   <programaciones-view [mostrarModal]="mostrarModalView" [programacion_id]="programacion_id"
     (modalCerrado)="cerrarModalInfo()"></programaciones-view>
 
-  <!-- TABLA -->
-  <section class="overflow-hidden rounded-2xl
-           border border-base-300 bg-base-100 shadow-sm" aria-label="Programaciones registradas"
-    [attr.aria-busy]="isLoading">
+  <!-- Modal para ver al personal asignado -->
+  <programaciones-personal [mostrarModal]="mostrarModalPersonal" [programacion_id]="programacionPersonalId"
+    (modalCerrado)="cerrarPersonalProgramacion()" />
 
+  <!-- ================================================= -->
+  <!-- TABLA DE PROGRAMACIONES -->
+  <!-- ================================================= -->
+  @if(isLoading || programaciones.length > 0){
+  <section class="overflow-hidden rounded-2xl
+           border border-base-300
+           bg-base-100 shadow-sm" aria-label="Programaciones registradas" [attr.aria-busy]="isLoading">
+
+    <!-- ===================================================== -->
     <!-- CABECERA -->
+    <!-- ===================================================== -->
     <div class="flex flex-col gap-4 border-b border-base-300 px-4 py-4
              sm:flex-row sm:items-center sm:justify-between sm:px-5">
-      <div class="flex items-center justify-between gap-3
-               text-sm sm:justify-start">
-        <label for="programaciones-page-size">
+
+      <!-- Cantidad por página -->
+      <div class="flex w-full items-center justify-between gap-3
+                 text-sm text-base-content/70
+                 sm:w-auto sm:justify-start">
+        <label for="vehiculos-page-size" class="whitespace-nowrap">
           Mostrar
         </label>
 
-        <select id="programaciones-page-size" class="select select-bordered select-sm w-auto" [(ngModel)]="limit"
-          (change)="cambiarLimite()">
-          @for (size of pageSizeOptions; track size) {
-          <option [ngValue]="size">{{ size }}</option>
+        <select id="vehiculos-page-size" class="select select-bordered select-sm
+         w-16 min-w-16 shrink-0 pl-3 pr-8" [(ngModel)]="limit" (change)="cambiarLimite()">
+
+          @for ( size of pageSizeOptions; track size ) {
+          <option [ngValue]="size">
+            {{ size }}
+          </option>
           }
         </select>
 
@@ -191,10 +268,19 @@
         </span>
       </div>
 
-      <button type="button" class="btn btn-primary w-full gap-2 rounded-xl sm:w-auto" (click)="abrirModal()">
-        <i class="fa-solid fa-plus" aria-hidden="true"></i>
-        Nueva programación
-      </button>
+      <!-- Botón crear -->
+      <div class="flex w-full items-center
+                 justify-end sm:w-auto">
+        <button type="button" class="btn btn-primary
+                  min-h-10 w-full gap-2
+                  rounded-xl border-none
+                hover:text-white bg-info hover:bg-primary
+                  sm:w-auto sm:min-w-36" (click)="abrirModal()">
+          <i class="fa-solid fa-plus"></i>
+          Programación
+        </button>
+      </div>
+
     </div>
 
     <!-- ERROR -->
@@ -356,11 +442,7 @@
                           programacion.estado_programacion
                         ).class
                       ">
-                {{
-                getEstadoProgramacion(
-                programacion.estado_programacion
-                ).label
-                }}
+                {{ getEstadoProgramacion( programacion.estado_programacion ).label }}
               </span>
 
               @if (programacion.motivo_cancelacion) {
@@ -372,15 +454,19 @@
 
             <!-- Actualización -->
             <td class="whitespace-nowrap text-sm">
-              {{
-              programacion.updated_at
-              | date:'dd/MM/yyyy, hh:mm a'
-              }}
+              {{ programacion.updated_at | date:'dd/MM/yyyy, hh:mm a' }}
             </td>
 
             <!-- Acciones -->
             <td>
               <div class="flex items-center justify-center gap-1">
+
+                <button type="button" class="btn btn-ghost btn-circle btn-sm" title="Ver personal"
+                  aria-label="Ver personal" (click)="abrirPersonalProgramacion(programacion.id_programacion)">
+                  <!-- <i class="fa-solid fa-users-rectangle" aria-hidden="true"></i> -->
+                  <i class="fa-solid fa-users" aria-hidden="true"></i>
+                </button>
+
                 <button type="button" class="btn btn-ghost btn-circle btn-sm" title="Ver programación"
                   aria-label="Ver detalle de la programación" (click)="abrirDetalle(programacion)">
                   <i class="fa-regular fa-eye" aria-hidden="true"></i>
@@ -487,4 +573,6 @@
     </footer>
     }
   </section>
+  }
+
 </div>
