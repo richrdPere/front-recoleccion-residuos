@@ -187,28 +187,28 @@ export class RutasPageComponent implements OnInit, OnDestroy {
   // ============================================================
   // ABRIR RUTAS DE LA ZONA
   // ============================================================
+  abrirRutasZona(zona: ZonaConResumenRutasData): void {
+    // this.vehiculoExpedienteSeleccionado = vehiculo;
 
-   abrirRutasZona(zona: ZonaConResumenRutasData): void {
-      // this.vehiculoExpedienteSeleccionado = vehiculo;
-
-      if (zona.id_zona === null ||
-        zona.id_zona === undefined) {
-        return;
-      }
-
-      void this.router.navigate(
-        [
-          '/admin',
-          'rutas',
-          zona.id_zona,
-        ],
-        {
-          state: {
-            zona: zona,
-          },
-        },
-      );
+    if (zona.id_zona === null ||
+      zona.id_zona === undefined) {
+      return;
     }
+
+    void this.router.navigate(
+      [
+        '/admin',
+        'rutas',
+        zona.id_zona,
+      ],
+      {
+        state: {
+          zona: zona,
+          poligono_geojson: zona.poligono_geojson
+        },
+      },
+    );
+  }
 
   // async eliminarRuta(ruta: RutaPaginadaItem): Promise<void> {
   //   if (this.estaProcesando(ruta.id_ruta)) {

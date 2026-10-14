@@ -2,6 +2,8 @@
 // TIPOS
 // *********************************************************
 
+import { ZonaPoligonoGeoJSON } from "src/app/features/zonas/interfaces";
+
 // BIGINT puede llegar como número o cadena.
 export type ZonaResumenRutasIdentificador = number | string;
 
@@ -53,6 +55,9 @@ export interface ZonaConResumenRutasData {
   nombre: string;
   descripcion: string | null;
   color: string;
+
+  // Poligono
+  poligono_geojson: ZonaPoligonoGeoJSON | null;
 
   // Los campos DECIMAL pueden llegar como cadenas.
   centro_latitud: number | string | null;

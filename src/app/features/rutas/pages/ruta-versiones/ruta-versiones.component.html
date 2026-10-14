@@ -1,61 +1,359 @@
-<!-- MODALES -->
-<ruta-version-form [mostrarModal]="mostrarModalVersionForm" [ruta_id]="ruta_id"
-  (modalCerrado)="mostrarModalVersionForm = false" (versionCreada)="cargarVersiones()"></ruta-version-form>
-
 @if (mostrarModal) {
 <div class="modal modal-open">
-  <section class="modal-box w-11/12 max-w-6xl" role="dialog" aria-modal="true" aria-labelledby="ruta-versiones-titulo"
+
+  <!-- ===================================================== -->
+  <!-- MODAL: LISTADO DE VERSIONES - RUTAS -->
+  <!-- ===================================================== -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center
+             bg-black/30 p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="ruta-versiones-titulo"
     [attr.aria-busy]="cargando()" (keydown.escape)="cerrarModal()">
-    <!-- ENCABEZADO -->
-    <header class="flex items-start justify-between gap-4 border-b
-               border-base-300 pb-4">
-      <div>
-        <h2 id="ruta-versiones-titulo" class="text-xl font-bold">
-          <i class="fa-solid fa-code-branch mr-2 text-primary" aria-hidden="true"></i>
-          Versiones de ruta
-        </h2>
 
-        <button type="button" class="btn btn-primary btn-sm" [disabled]="cargando()" (click)="abrirVersionForm()">
-          <i class="fa-solid fa-plus" aria-hidden="true"></i>
-          Crear versión
+    <section class="relative flex max-h-[92vh] w-full flex-col
+             overflow-hidden rounded-2xl border border-base-300
+             bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+
+      <!-- ================================================= -->
+      <!-- HEADER MODAL -->
+      <!-- ================================================= -->
+      <header class="flex shrink-0 items-center justify-between gap-4
+         border-b border-base-300
+         px-5 py-4 sm:px-6">
+
+        <!-- Ícono e información -->
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-12 w-12 shrink-0 items-center
+                  justify-center rounded-2xl
+                  bg-primary/10 text-primary">
+            <i class="fa-solid fa-code-branch mr-2 text-primary" aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="ruta-versiones-titulo" class="text-xl font-bold">
+
+              Versiones de ruta -
+              <span class="badge badge-primary badge-outline px-3 font-mono text-sm">
+                Ruta #{{ ruta_id }}
+              </span>
+            </h2>
+
+            <p class="mt-1 text-sm text-base-content/60">
+              Consulta las versiones y sus puntos registrados.
+            </p>
+          </div>
+
+
+
+        </div>
+
+        <button type="button" class="btn btn-sm btn-circle btn-ghost" aria-label="Cerrar versiones de ruta"
+          (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
-
-        <p class="mt-1 text-sm text-base-content/60">
-          Consulta las versiones y sus puntos registrados.
-        </p>
-
-        <span class="badge badge-outline mt-2">
-          Ruta #{{ ruta_id }}
-        </span>
-      </div>
-
-      <button type="button" class="btn btn-sm btn-circle btn-ghost" aria-label="Cerrar versiones de ruta"
-        (click)="cerrarModal()">
-        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-      </button>
-    </header>
+      </header>
 
 
+      <!-- ================================================= -->
+      <!-- CONTENIDO DEL MODAL -->
+      <!-- ================================================= -->
+      <section class="space-y-5" aria-label="Versiones de la ruta" [attr.aria-busy]="cargando()">
+
+        <!-- ================================================= -->
+        <!-- CABECERA -->
+        <!-- ================================================= -->
+        @if (!mostrarPuntos()) {
+        <div class="flex flex-col gap-4 border-b border-base-300 px-4 py-4
+             sm:flex-row sm:items-center sm:justify-between sm:px-5">
+
+          <!-- Cantidad -->
+          @if (!cargando() && !error()) {
+          <span class="badge badge-soft badge-primary h-auto px-3 py-2">
+            {{ versiones().length }}
+            {{ versiones().length === 1 ? 'versión' : 'versiones' }}
+          </span>
+          }
+
+          <!-- Botón crear -->
+          <div class="flex w-full items-center
+                 justify-end sm:w-auto">
+
+            <button type="button" class="btn btn-primary btn-sm" [disabled]="cargando()" (click)="abrirVersionForm()">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              Crear versión
+            </button>
+            <!-- <h3 class="text-xl font-bold">
+              Versiones de la ruta
+            </h3>
+
+            <p class="mt-1 text-sm text-base-content/60">
+              Selecciona una versión para consultar su configuración.
+            </p> -->
+          </div>
+
+          <!-- <div>
+            <h3 class="text-xl font-bold">
+              <i class="fa-solid mr-2 text-primary" [class.fa-code-branch]="!mostrarPuntos()"
+                [class.fa-location-dot]="mostrarPuntos()" aria-hidden="true"></i>
+
+              {{
+              mostrarPuntos()
+              ? 'Puntos de la versión'
+              : 'Versiones de la ruta'
+              }}
+            </h3>
+
+            <p class="mt-1 text-sm text-base-content/60">
+              @if (mostrarPuntos()) {
+              @if (versionSeleccionada(); as version) {
+              Versión ID: {{ version.id_ruta_version }}
+              } @else {
+              Actualizando los datos de la versión...
+              }
+              } @else {
+              Consulta las versiones y sus puntos de recolección.
+              }
+            </p>
+          </div> -->
+
+          <!-- @if (mostrarPuntos()) {
+          <button type="button" class="btn btn-outline btn-sm gap-2" (click)="ocultarPuntos()">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            Volver a versiones
+          </button>
+          } @else {
+          <button type="button" class="btn btn-primary btn-sm gap-2" [disabled]="cargando() || ruta_id === null"
+            (click)="abrirVersionForm()">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            Nueva versión
+          </button>
+          } -->
+        </div>
+        }
 
 
-    <!-- CONTENIDO -->
-    <!-- <ruta-puntos [version]="versionSeleccionada()" (crearPunto)="abrirCrearPunto($event)"
-      (editarPunto)="abrirEditarPunto($event)" (puntosActualizados)="cargarVersiones()"></ruta-puntos> -->
+        <!-- ================================================= -->
+        <!-- CARGANDO -->
+        <!-- ================================================= -->
+        @if (cargando()) {
+        <div class="flex min-h-56 flex-col items-center justify-center gap-3" role="status" aria-live="polite">
+          <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
+
+          <p class="text-sm text-base-content/60">
+            {{
+            mostrarPuntos()
+            ? 'Actualizando puntos de la versión...'
+            : 'Cargando versiones de la ruta...'
+            }}
+          </p>
+        </div>
+        }
+
+        <!-- ================================================= -->
+        <!-- ERROR -->
+        <!-- ================================================= -->
+        @else if (error(); as mensaje) {
+        <div class="alert alert-error alert-soft" role="alert">
+          <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+
+          <div class="min-w-0">
+            <p class="font-semibold">
+              No se pudieron cargar los datos
+            </p>
+
+            <p class="mt-1 wrap-break-word text-sm">
+              {{ mensaje }}
+            </p>
+          </div>
+
+          <button type="button" class="btn btn-sm btn-outline" (click)="cargarVersiones()">
+            Reintentar
+          </button>
+        </div>
+        }
+
+        <!-- ================================================= -->
+        <!-- VISTA: PUNTOS -->
+        <!-- ================================================= -->
+        @else if (mostrarPuntos()) {
+        @if (versionSeleccionada(); as version) {
+        <ruta-puntos [version]="version" (puntosActualizados)="cargarVersiones()"></ruta-puntos>
+        } @else {
+        <div class="rounded-2xl border border-dashed
+          border-base-300 p-8 text-center">
+          <p class="text-sm text-base-content/60">
+            La versión seleccionada no está disponible.
+            Vuelve al listado para seleccionar otra.
+          </p>
+        </div>
+        }
+        }
+
+        <!-- ================================================= -->
+        <!-- VISTA: VERSIONES -->
+        <!-- ================================================= -->
+        @else {
+        <div class="overflow-hidden rounded-2xl border border-base-300">
+          <div class="max-h-[55vh] overflow-auto">
+            <table class="table table-zebra w-full">
+              <caption class="sr-only">
+                Versiones de la ruta y acceso a sus puntos.
+              </caption>
+
+              <thead class="sticky top-0 z-10 bg-base-200 text-base-content">
+                <tr>
+                  <th scope="col" class="text-center">
+                    N.º
+                  </th>
+
+                  <th scope="col">
+                    Versión
+                  </th>
+
+                  <th scope="col" class="text-center">
+                    Puntos registrados
+                  </th>
+
+                  <th scope="col" class="text-center">
+                    Puntos habilitados
+                  </th>
+
+                  <th scope="col" class="text-center">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                @for ( version of versiones(); track version.id_ruta_version; let i = $index ) {
+                <tr class="transition-colors hover:bg-base-200/60">
+
+                  <!-- N° -->
+                  <td class="text-center text-base-content/60">
+                    {{ i + 1 }}
+                  </td>
+
+                  <!-- Version -->
+                  <th scope="row">
+                    <div class="flex items-center gap-3">
+                      <div class="flex h-10 w-10 shrink-0 items-center
+                    justify-center rounded-xl bg-primary/10 text-primary">
+                        <i class="fa-solid fa-code-branch" aria-hidden="true"></i>
+                      </div>
+
+                      <span class="font-semibold">
+                        Versión ID: {{ version.id_ruta_version }}
+                      </span>
+                    </div>
+                  </th>
+
+                  <!-- Puntos registrados -->
+                  <td class="text-center font-semibold tabular-nums">
+                    {{ version.puntos.length }}
+                  </td>
+
+                  <!-- Puntos habilitados -->
+                  <td class="text-center font-semibold tabular-nums">
+                    {{ contarPuntosHabilitados(version.puntos) }}
+                  </td>
+
+                  <!-- Acciones -->
+                  <td>
+                    <div class="flex items-center justify-center gap-1">
+
+                      <!-- Ver puntos -->
+                      <div class="tooltip tooltip-left" data-tip="Ver puntos de la versión">
+                        <button type="button" class="btn btn-ghost btn-circle btn-md" (click)="verPuntosVersion(i)"
+                          aria-label="Ver puntos de la versión">
+                          <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                        </button>
+                      </div>
+
+                      <!-- Editar version -->
+                      <!-- <div class="tooltip tooltip-left" data-tip="Editar version">
+                        <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="editarVersion(version)"
+                          aria-label="Editar version">
+                          <i class="fa-regular fa-pen-to-square"></i>
+                        </button>
+                      </div> -->
+
+                    </div>
+                    <!-- <div class="flex justify-end">
+                      <button type="button" class="btn btn-primary btn-outline btn-sm
+                    gap-2 rounded-full" [attr.aria-label]="
+                    'Ver puntos de la versión con identificador ' +
+                    version.id_ruta_version
+                  " (click)="verPuntosVersion(i)">
+                        <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                        Ver puntos
+                      </button>
+                    </div> -->
+                  </td>
+                </tr>
+                } @empty {
+                <tr>
+                  <td colspan="5" class="px-6 py-12 text-center">
+                    <i class="fa-solid fa-code-branch
+                  text-3xl text-base-content/30" aria-hidden="true"></i>
+
+                    <p class="mt-3 font-semibold">
+                      Esta ruta todavía no tiene versiones
+                    </p>
+
+                    <p class="mt-2 text-sm text-base-content/60">
+                      Utiliza “Nueva versión” para registrar la primera.
+                    </p>
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+        }
+      </section>
+
+      <!-- =============================================== -->
+      <!-- FOOTER -->
+      <!-- =============================================== -->
+      <footer class="flex shrink-0 flex-wrap items-center
+                 justify-between gap-3 border-t border-base-300
+                 bg-base-200/30 px-5 py-4 sm:px-6">
+
+        @if (mostrarPuntos()) {
+        <div class="flex w-full flex-wrap items-center justify-center gap-5">
+          <button type="button" class="btn btn-primary gap-2" (click)="ocultarPuntos()">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            Volver a versiones
+          </button>
+
+          <button type="button" class="btn btn-accent min-w-28" (click)="cerrarModal()">
+            <i class="fa-solid fa-check" aria-hidden="true"></i>
+            Cerrar
+          </button>
+        </div>
+
+        } @else {
+
+        <div class="flex items-center gap-2 text-xs text-base-content/50">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          <span>Consulte las versiones alternas de esta ruta.</span>
+        </div>
+
+        <button type="button" class="btn btn-accent min-w-28" (click)="cerrarModal()">
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
+          Cerrar
+        </button>
+        }
 
 
+      </footer>
+    </section>
 
-    <!-- PIE -->
-    <footer class="flex justify-end border-t border-base-300 pt-4">
-      <button type="button" class="btn" (click)="cerrarModal()">
-        Cerrar
-      </button>
-    </footer>
-  </section>
-
-  <div class="modal-backdrop" aria-hidden="true">
-    <button type="button" tabindex="-1" aria-label="Cerrar" (click)="cerrarModal()">
-      Cerrar
-    </button>
   </div>
+
 </div>
 }
+
+<!-- MODALES -->
+<ruta-version-form [mostrarModal]="mostrarModalVersionForm" [ruta_id]="ruta_id" [poligono_geojson]="poligono_geojson"
+  (modalCerrado)="mostrarModalVersionForm = false" (versionCreada)="cargarVersiones()"></ruta-version-form>

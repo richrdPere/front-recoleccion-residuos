@@ -162,7 +162,8 @@
   </rutas-view>
 
   <!-- Modal de versiones de ruta -->
-  <ruta-versiones [mostrarModal]="mostrarModalVersiones" [ruta_id]="rutaVersionesId" (modalCerrado)="cerrarVersiones()"
+  <ruta-versiones [mostrarModal]="mostrarModalVersiones" [ruta_id]="rutaVersionesId"
+    [poligono_geojson]="poligono_geojson" (modalCerrado)="cerrarVersiones()"
     (gestionarPuntos)="gestionarPuntosVersion($event)"></ruta-versiones>
 
   <!-- Modal de horarios de una ruta -->

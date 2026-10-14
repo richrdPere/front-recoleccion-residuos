@@ -1,18 +1,13 @@
 import { AfterViewInit, Component, ElementRef, EventEmitter, Inject, Input, NgZone, OnChanges, OnDestroy, Output, PLATFORM_ID, SimpleChanges, ViewChild } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import type { GeoJSONSource, IControl, Map as MapboxMap, Marker } from 'mapbox-gl';
+import type { GeoJSONSource, IControl, Map as MapboxMap, Marker, MapMouseEvent, } from 'mapbox-gl';
 import type { FeatureCollection, Geometry, Polygon } from 'geojson';
 
 // Environment
 import { environment } from '../../../../environments/environment';
 
 // Interfaces
-import type {
-  MonitoreoMapaItem,
-  MonitoreoRecorridoDetalleData,
-  MonitoreoUltimaUbicacion,
-  MonitoreoZona,
-} from 'src/app/features/monitoreo/interfaces';
+import type { MonitoreoMapaItem, MonitoreoRecorridoDetalleData, MonitoreoUltimaUbicacion, MonitoreoZona } from 'src/app/features/monitoreo/interfaces';
 
 type MapboxAPI = typeof import('mapbox-gl').default;
 
@@ -87,6 +82,12 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() poligonoEditable: PoligonoZonaEditable | null = null;
 
   @Input() zonaVisual: ZonaVisualMapa | null = null;
+
+  // Selección de ubicaciones para una versión de ruta.
+  @Input() habilitarSeleccionRuta = false;
+  @Input() coordenadasRuta: [number, number][] = [];
+
+  @Output() coordenadaSeleccionada = new EventEmitter<[number, number]>();
 
   // *********************************************************
   // 2. EVENTOS
@@ -317,8 +318,21 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.listo = true;
 
         // También procesa datos que llegaron antes del load.
+        console.log(
+          'Zona visual al cargar el mapa:',
+          this.zonaVisual,
+        );
+
+
         this.actualizarZonaVisual();
         this.actualizarDatos();
+        this.actualizarEditorRuta();
+
+        this.mapa?.on(
+          'click',
+          this.alSeleccionarCoordenada,
+        );
+
         this.configurarEditorZona();
 
         this.centrarSeleccionado();
@@ -365,6 +379,14 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
       if (changes['idRecorridoSeleccionado']) {
         this.centrarSeleccionado();
       }
+
+      if (
+        changes['coordenadasRuta'] ||
+        changes['habilitarSeleccionRuta'] ||
+        changes['habilitarEdicionZona']
+      ) {
+        this.actualizarEditorRuta();
+      }
     });
   }
 
@@ -374,28 +396,47 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
     if (
       this.destruido ||
       !mapa ||
-      !mapa.isStyleLoaded()
+      !this.listo
     ) {
       return;
     }
 
     const geometria = this.zonaVisual?.poligono_geojson;
 
+    if (
+      geometria &&
+      (
+        geometria.type !== 'Polygon' ||
+        !this.poligonoValido(geometria.coordinates)
+      )
+    ) {
+      this.ngZone.run(() => {
+        this.mapaError.emit(
+          'El polígono de la zona no tiene una estructura válida.',
+        );
+      });
+
+      return;
+    }
+
     const data: FeatureCollection<Polygon> = {
       type: 'FeatureCollection',
       features: geometria
-        ? [{
-          type: 'Feature',
-          geometry: geometria,
-          properties: {
-            nombre: this.zonaVisual?.nombre ?? '',
-            color: this.zonaVisual?.color || '#2563eb',
+        ? [
+          {
+            type: 'Feature',
+            geometry: geometria,
+            properties: {
+              nombre: this.zonaVisual?.nombre ?? '',
+              color: this.colorSeguro(this.zonaVisual?.color),
+            },
           },
-        }]
+        ]
         : [],
     };
 
     const fuenteId = 'zona-detalle-source';
+
     const fuente = mapa.getSource(fuenteId) as
       GeoJSONSource | undefined;
 
@@ -406,7 +447,10 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
         type: 'geojson',
         data,
       });
+    }
 
+    // Comprobar las capas independientemente de la fuente.
+    if (!mapa.getLayer('zona-detalle-relleno')) {
       mapa.addLayer({
         id: 'zona-detalle-relleno',
         type: 'fill',
@@ -416,7 +460,9 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
           'fill-opacity': 0.2,
         },
       });
+    }
 
+    if (!mapa.getLayer('zona-detalle-borde')) {
       mapa.addLayer({
         id: 'zona-detalle-borde',
         type: 'line',
@@ -428,34 +474,23 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
       });
     }
 
-    // Ajustar la vista al anillo exterior del polígono.
     const coordenadas = geometria?.coordinates[0];
 
-    if (!coordenadas?.length) {
+    if (!coordenadas?.length || !this.mapboxgl) {
       return;
     }
 
-    const longitudes = coordenadas.map(([longitud]) => longitud);
-    const latitudes = coordenadas.map(([, latitud]) => latitud);
+    const limites = new this.mapboxgl.LngLatBounds();
 
-    if (
-      !longitudes.every(Number.isFinite) ||
-      !latitudes.every(Number.isFinite)
-    ) {
-      return;
+    for (const [longitud, latitud] of coordenadas) {
+      limites.extend([longitud, latitud]);
     }
 
-    mapa.fitBounds(
-      [
-        [Math.min(...longitudes), Math.min(...latitudes)],
-        [Math.max(...longitudes), Math.max(...latitudes)],
-      ],
-      {
-        padding: 45,
-        maxZoom: 16,
-        duration: 0,
-      },
-    );
+    mapa.fitBounds(limites, {
+      padding: 45,
+      maxZoom: 16,
+      duration: 0,
+    });
   }
 
   private actualizarDatos(): void {
@@ -607,8 +642,7 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
 
       registro.marcador.setLngLat(coordenadas);
 
-      const seleccionado =
-        item.id_recorrido === this.idRecorridoSeleccionado;
+      const seleccionado = item.id_recorrido === this.idRecorridoSeleccionado;
 
       const segundos = item.gps.segundos_sin_actualizar;
       const fechaGps =
@@ -629,14 +663,11 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
         (segundos === null ||
           segundos <= this.maxAntiguedadGpsSegundos);
 
-      registro.boton.textContent =
-        `${reciente ? '🚛' : '⚠'} ${item.vehiculo.placa}`;
+      registro.boton.textContent = `${reciente ? '🚛' : '⚠'} ${item.vehiculo.placa}`;
 
-      registro.boton.style.backgroundColor =
-        seleccionado ? '#4f46e5' : reciente ? '#2563eb' : '#64748b';
+      registro.boton.style.backgroundColor = seleccionado ? '#4f46e5' : reciente ? '#2563eb' : '#64748b';
 
-      registro.boton.style.outline =
-        seleccionado ? '3px solid #a5b4fc' : 'none';
+      registro.boton.style.outline = seleccionado ? '3px solid #a5b4fc' : 'none';
 
       registro.boton.setAttribute(
         'aria-pressed',
@@ -754,51 +785,6 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     this.actualizarFuente(this.fuentePuntos, data);
   }
-  // private actualizarPuntos(): void {
-  //   const data = this.coleccionVacia();
-  //   const detalle = this.detalleActual();
-
-  //   if (this.mostrarPuntos && detalle) {
-  //     const atendidos = new Set(
-  //       detalle.recolecciones
-  //         .filter((r) => r.estado_recoleccion === 'VALIDA')
-  //         .map((r) => r.id_ruta_punto),
-  //     );
-
-  //     // Confirmar el catálogo de estado_recoleccion antes
-  //     // de usar "VALIDA" para determinar atención.
-  //     // En esta versión mantenemos el mismo color para todos.
-  //     void atendidos;
-
-  //     for (const punto of detalle.programacion.version_ruta.puntos) {
-  //       if (!punto.estado || punto.deleted_at) continue;
-
-  //       const coordenadas = this.convertirCoordenadas(
-  //         punto.longitud,
-  //         punto.latitud,
-  //       );
-
-  //       if (!coordenadas) continue;
-
-  //       data.features.push({
-  //         type: 'Feature',
-  //         id: punto.id_ruta_punto,
-  //         geometry: {
-  //           type: 'Point',
-  //           coordinates: coordenadas,
-  //         },
-  //         properties: {
-  //           nombre: punto.nombre,
-  //           orden: punto.orden,
-  //           tipo: punto.tipo_punto,
-  //           color: '#f59e0b',
-  //         },
-  //       });
-  //     }
-  //   }
-
-  //   this.actualizarFuente(this.fuentePuntos, data);
-  // }
 
   // *********************************************************
   // 11. CENTRAR VEHÍCULO
@@ -926,6 +912,142 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   // *********************************************************
+  // EDITOR DE TRAYECTO
+  // *********************************************************
+
+  private readonly fuenteEditorRuta = 'editor-ruta-source';
+
+  private readonly alSeleccionarCoordenada = (
+    evento: MapMouseEvent,
+  ): void => {
+    if (
+      this.destruido ||
+      !this.habilitarSeleccionRuta ||
+      this.habilitarEdicionZona
+    ) {
+      return;
+    }
+
+    const coordenada: [number, number] = [
+      evento.lngLat.wrap().lng,
+      evento.lngLat.lat,
+    ];
+
+    if (!this.posicionValida(coordenada)) {
+      return;
+    }
+
+    this.ngZone.run(() => {
+      this.coordenadaSeleccionada.emit(coordenada);
+    });
+  };
+
+  private actualizarEditorRuta(): void {
+    const mapa = this.mapa;
+
+    if (!mapa || !this.listo || this.destruido) {
+      return;
+    }
+
+    const data: FeatureCollection<Geometry> = {
+      type: 'FeatureCollection',
+      features: [],
+    };
+
+    const coordenadas = this.coordenadasRuta;
+
+    if (coordenadas.every((punto) => this.posicionValida(punto))) {
+      // Los marcadores también se muestran cuando solo hay un punto.
+      coordenadas.forEach((coordenada, indice) => {
+        data.features.push({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [...coordenada],
+          },
+          properties: {
+            orden: indice + 1,
+          },
+        });
+      });
+
+      if (coordenadas.length >= 2) {
+        data.features.push({
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: coordenadas.map(
+              ([longitud, latitud]) => [longitud, latitud],
+            ),
+          },
+          properties: {},
+        });
+      }
+    }
+
+    const fuente = mapa.getSource(
+      this.fuenteEditorRuta,
+    ) as GeoJSONSource | undefined;
+
+    if (fuente) {
+      fuente.setData(data);
+    } else {
+      mapa.addSource(this.fuenteEditorRuta, {
+        type: 'geojson',
+        data,
+      });
+
+      mapa.addLayer({
+        id: 'editor-ruta-linea',
+        type: 'line',
+        source: this.fuenteEditorRuta,
+        filter: ['==', '$type', 'LineString'],
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+        },
+        paint: {
+          'line-color': '#4F46E5',
+          'line-width': 4,
+        },
+      });
+
+      mapa.addLayer({
+        id: 'editor-ruta-puntos',
+        type: 'circle',
+        source: this.fuenteEditorRuta,
+        filter: ['==', '$type', 'Point'],
+        paint: {
+          'circle-radius': 9,
+          'circle-color': '#4F46E5',
+          'circle-stroke-color': '#FFFFFF',
+          'circle-stroke-width': 2,
+        },
+      });
+
+      mapa.addLayer({
+        id: 'editor-ruta-numeros',
+        type: 'symbol',
+        source: this.fuenteEditorRuta,
+        filter: ['==', '$type', 'Point'],
+        layout: {
+          'text-field': ['to-string', ['get', 'orden']],
+          'text-size': 12,
+          'text-allow-overlap': true,
+        },
+        paint: {
+          'text-color': '#FFFFFF',
+        },
+      });
+    }
+
+    mapa.getCanvas().style.cursor =
+      this.habilitarSeleccionRuta && !this.habilitarEdicionZona
+        ? 'crosshair'
+        : '';
+  }
+
+  // *********************************************************
   // 13. LIBERAR RECURSOS
   // *********************************************************
   ngOnDestroy(): void {
@@ -933,6 +1055,13 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.listo = false;
 
     this.observadorTamano?.disconnect();
+
+    this.mapa?.off(
+      'click',
+      this.alSeleccionarCoordenada,
+    );
+
+    this.retirarEditorZona();
 
     for (const registro of this.marcadores.values()) {
       this.eliminarMarcador(registro);

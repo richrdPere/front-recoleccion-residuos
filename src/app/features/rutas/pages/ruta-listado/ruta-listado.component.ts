@@ -6,19 +6,20 @@ import { finalize, Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 
 // Services
-import { RutasServices } from '../../../services/rutas.service';
+import { RutasServices } from '../../services/rutas.service';
 
 // Interfaces
-import { RutaPaginadaItem, RutaZonaData, RutasPaginadasFilters } from '../../../interfaces/rutas/get-rutas-paginated.interface';
-import { RutaData, RutaVersionConPuntosData, ZonaConResumenRutasData } from '../../../interfaces/rutas';
+import { RutaPaginadaItem, RutaZonaData, RutasPaginadasFilters } from '../../interfaces/rutas/get-rutas-paginated.interface';
+import { RutaData, RutaVersionConPuntosData, ZonaConResumenRutasData } from '../../interfaces/rutas';
 
 // Componentes
-import { RutasFormComponent } from '../../components/ruta-form/ruta-form.component';
-import { RutasViewComponent } from '../../components/ruta-view/ruta-view.component';
-import { RutaVersionesComponent } from '../../ruta-versiones/ruta-versiones.component';
-import { RutaHorarioComponent } from '../../ruta-horarios/ruta-horarios.component';
+import { RutasFormComponent } from '../components/ruta-form/ruta-form.component';
+import { RutasViewComponent } from '../components/ruta-view/ruta-view.component';
+import { RutaVersionesComponent } from '../ruta-versiones/ruta-versiones.component';
+import { RutaHorarioComponent } from '../ruta-horarios/ruta-horarios.component';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MantenimientoIdentificador } from 'src/app/features/mantenimientos/interfaces';
+import { ZonaPoligonoGeoJSON } from 'src/app/features/zonas/interfaces';
 
 type EstadoRuta = 'BORRADOR' | 'ACTIVA' | 'INACTIVA';
 
@@ -41,6 +42,7 @@ export class RutaListadoComponent implements OnInit, OnDestroy {
   // Zona
   zona: ZonaConResumenRutasData | null = null;
   zona_id: number | null = null;
+  poligono_geojson: ZonaPoligonoGeoJSON | null = null;
 
   // Rutas
   rutas: RutaPaginadaItem[] = [];
@@ -142,16 +144,23 @@ export class RutaListadoComponent implements OnInit, OnDestroy {
     }
 
     const state = history.state as {
-      zona?: ZonaConResumenRutasData;
+      zona?: ZonaConResumenRutasData | null;
+      poligono_geojson?: ZonaPoligonoGeoJSON | null;
     } | null;
 
     const zonaRecibido = state?.zona;
 
-    this.zona =
-      zonaRecibido &&
-        String(zonaRecibido.id_zona) === String(id)
-        ? zonaRecibido
-        : null;
+    this.zona = zonaRecibido &&
+      String(zonaRecibido.id_zona) === String(id)
+      ? zonaRecibido
+      : null;
+
+    // Usar el polígono únicamente si la zona coincide con la URL.
+    this.poligono_geojson = this.zona
+      ? this.zona.poligono_geojson
+      ?? state?.poligono_geojson
+      ?? null
+      : null;
 
     this.zona_id = id;
     this.getRutasPaginated();

@@ -9,6 +9,7 @@ import { RutaVersionService } from '../../services/ruta-version.service';
 import { RutaPuntoData, RutaVersionConPuntosData, } from '../../interfaces/rutas';
 import { RutaVersionFormComponent } from './ruta-version-form/ruta-version-form.component';
 import { RutaPuntoComponent } from '../ruta-punto/ruta-punto.component';
+import { ZonaPoligonoGeoJSON } from 'src/app/features/zonas/interfaces';
 
 @Component({
   selector: 'ruta-versiones',
@@ -17,14 +18,14 @@ import { RutaPuntoComponent } from '../ruta-punto/ruta-punto.component';
   templateUrl: './ruta-versiones.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RutaVersionesComponent
-  implements OnChanges, OnDestroy {
+export class RutaVersionesComponent implements OnChanges, OnDestroy {
 
   // *********************************************************
   // INPUTS / OUTPUTS
   // *********************************************************
   @Input() mostrarModal = false;
   @Input() ruta_id: number | null = null;
+  @Input() poligono_geojson: ZonaPoligonoGeoJSON | null = null;
 
   @Output() modalCerrado = new EventEmitter<void>();
   @Output() gestionarPuntos = new EventEmitter<RutaVersionConPuntosData>();
@@ -39,13 +40,13 @@ export class RutaVersionesComponent
   // ESTADO
   // *********************************************************
   mostrarModalVersionForm = false;
+  modalWidthClass = 'max-w-4xl';
 
+  readonly mostrarPuntos = signal(false);
   readonly cargando = signal(false);
   readonly error = signal<string | null>(null);
 
-  readonly versiones =
-    signal<RutaVersionConPuntosData[]>([]);
-
+  readonly versiones = signal<RutaVersionConPuntosData[]>([]);
   readonly indiceSeleccionado = signal<number | null>(null);
 
   readonly versionSeleccionada =
@@ -78,6 +79,10 @@ export class RutaVersionesComponent
       return;
     }
 
+    this.mostrarPuntos.set(false);
+    this.indiceSeleccionado.set(null);
+
+    this.setModalWidth('xl');
     this.cargarVersiones();
   }
 
@@ -93,6 +98,9 @@ export class RutaVersionesComponent
     // reemplace los datos de otra ruta.
     this.consulta?.unsubscribe();
 
+    // Conservar la selección cuando el hijo actualice sus puntos.
+    const idVersionAnterior = this.versionSeleccionada()?.id_ruta_version ?? null;
+
     this.versiones.set([]);
     this.indiceSeleccionado.set(null);
     this.error.set(null);
@@ -101,6 +109,7 @@ export class RutaVersionesComponent
 
     if (idRuta === null || !Number.isSafeInteger(idRuta) || idRuta <= 0) {
       this.cargando.set(false);
+      this.mostrarPuntos.set(false);
       this.error.set('El identificador de la ruta no es válido.');
       return;
     }
@@ -124,12 +133,25 @@ export class RutaVersionesComponent
 
           const versiones = response.data ?? [];
 
-          console.log("VERSIONES: ", versiones);
-
           this.versiones.set(versiones);
-          this.indiceSeleccionado.set(
-            versiones.length > 0 ? 0 : null,
+
+          const indiceAnterior = versiones.findIndex(
+            (version) =>
+              version.id_ruta_version === idVersionAnterior,
           );
+
+          this.indiceSeleccionado.set(
+            indiceAnterior >= 0
+              ? indiceAnterior
+              : versiones.length > 0
+                ? 0
+                : null,
+          );
+
+          // Si la versión consultada ya no existe, ocultar su panel.
+          if (indiceAnterior < 0) {
+            this.mostrarPuntos.set(false);
+          }
         },
         error: (error: unknown) => {
           this.error.set(this.obtenerMensajeError(error));
@@ -184,11 +206,34 @@ export class RutaVersionesComponent
   }
 
   // *********************************************************
-  // 4. CERRAR
+  // 4. EDITAR VERSION
+  // *********************************************************
+  editarVersion(version: RutaVersionConPuntosData) {
+
+
+  }
+  // *********************************************************
+  // 5. CERRAR
   // *********************************************************
   cerrarModal(): void {
     this.limpiar();
     this.modalCerrado.emit();
+  }
+
+  // *********************************************************
+  // VISUALIZACIÓN DE PUNTOS DENTRO DEL MODAL
+  // *********************************************************
+  verPuntosVersion(indice: number): void {
+    if (!this.versiones()[indice]) {
+      return;
+    }
+
+    this.seleccionarVersion(indice);
+    this.mostrarPuntos.set(true);
+  }
+
+  ocultarPuntos(): void {
+    this.mostrarPuntos.set(false);
   }
 
   // *********************************************************
@@ -202,6 +247,8 @@ export class RutaVersionesComponent
     this.error.set(null);
     this.versiones.set([]);
     this.indiceSeleccionado.set(null);
+    this.mostrarPuntos.set(false);
+    this.mostrarModalVersionForm = false;
   }
 
   private obtenerMensajeError(error: unknown): string {
@@ -239,4 +286,26 @@ export class RutaVersionesComponent
 
     return 'No se pudieron obtener las versiones de la ruta.';
   }
+
+  contarPuntosHabilitados(puntos: RutaPuntoData[]): number {
+    return puntos.filter(
+      (punto) => punto.estado && punto.deleted_at === null,
+    ).length;
+  }
+
+  setModalWidth(
+    size: 'sm' | 'md' | 'lg' | 'xl' | 'full',
+  ): void {
+    const clases = {
+      sm: 'max-w-md',
+      md: 'max-w-xl',
+      lg: 'max-w-4xl',
+      xl: 'max-w-6xl',
+      full: 'max-w-full w-[95vw]',
+    };
+
+    this.modalWidthClass = clases[size];
+  }
+
+
 }

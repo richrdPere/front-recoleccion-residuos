@@ -201,7 +201,7 @@ export const adminFeatureRoutes: Routes = [
         path: 'rutas/:zonaId',
         canActivate: [roleGuard],
         loadComponent: () =>
-          import('./rutas/pages/components/ruta-listado/ruta-listado.component')
+          import('./rutas/pages/ruta-listado/ruta-listado.component')
             .then(m => m.RutaListadoComponent),
         data: {
           roles: ['ADMIN', 'OPERADOR', 'GERENTE_SERENAZGO', 'SUPERVISOR_SERENAZGO']
