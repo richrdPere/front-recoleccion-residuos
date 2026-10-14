@@ -43,8 +43,7 @@ export interface RutaPuntoData {
 // *********************************************************
 // VERSIÓN CON PUNTOS
 // *********************************************************
-export interface RutaVersionConPuntosData
-  extends RutaVersionDetalleData {
+export interface RutaVersionConPuntosData extends RutaVersionDetalleData {
   puntos: RutaPuntoData[];
 }
 

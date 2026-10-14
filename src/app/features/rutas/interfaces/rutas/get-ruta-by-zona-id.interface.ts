@@ -18,8 +18,7 @@ export interface RutaGeometriaGeoJSON {
 // *********************************************************
 // VERSIÓN COMPLETA DE LA RUTA
 // *********************************************************
-export interface RutaVersionDetalleData
-  extends RutaVersionVigenteData {
+export interface RutaVersionDetalleData extends RutaVersionVigenteData {
   id_ruta: number;
 
   geometria_geojson: RutaGeometriaGeoJSON | null;

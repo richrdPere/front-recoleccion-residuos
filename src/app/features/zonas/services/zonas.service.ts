@@ -12,7 +12,7 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
 // Interfaces
-import { ChangeZonaEstadoRequest, ChangeZonaEstadoResponse, CreateZonaRequest, CreateZonaResponse, DeleteZonaResponse, GetZonaByIdResponse, GetZonasActivasResponse, GetZonasPaginatedResponse, UpdateZonaRequest, UpdateZonaResponse, ZonasPaginadasFilters } from '../interfaces';
+import { ChangeZonaEstadoRequest, ChangeZonaEstadoResponse, CreateZonaRequest, CreateZonaResponse, DeleteZonaResponse, GetZonaByIdResponse, GetZonasActivasResponse, GetZonasPaginatedResponse, UltimoCodigoResponse, UpdateZonaRequest, UpdateZonaResponse, ZonasPaginadasFilters } from '../interfaces';
 
 @Injectable({
   providedIn: 'root'
@@ -27,6 +27,7 @@ export class ZonasServices {
   private readonly API_GET_ZONAS_PAGINATED: string = this.API_BASE + '/paginado';
   private readonly API_GET_ZONAS_ACTIVAS: string = this.API_BASE + '/activas';
   private readonly API_GET_ZONA_BY_ID: string = this.API_BASE + '/view/';
+  private readonly API_GET_ULTIMO_CODIGO: string = this.API_BASE + '/codigo';
   private readonly API_UPDATE_ZONA: string = this.API_BASE + '/update/';
   private readonly API_PATCH_ESTADO_ZONA: string = this.API_BASE + '/estado/';
   private readonly API_DELETE_ZONA: string = this.API_BASE + '/delete/';
@@ -196,6 +197,28 @@ export class ZonasServices {
           HttpServiceHelper.handleError(
             error,
             'No se pudo eliminar el vehículo.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 8. OBTENER ULTIMO CODIGO VEHICULO
+  // *********************************************************
+  getLastCodigoZona(
+  ): Observable<UltimoCodigoResponse> {
+    const headers = this.getJsonHeaders();
+
+    return this.http
+      .get<UltimoCodigoResponse>(
+        this.API_GET_ULTIMO_CODIGO,
+        { headers },
+      )
+      .pipe(
+        catchError((error) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo obtener el último código de la ruta.',
           ),
         ),
       );

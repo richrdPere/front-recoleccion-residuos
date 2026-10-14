@@ -61,201 +61,225 @@
       <!-- FORMULARIO -->
       <!-- ================================================= -->
       <form [formGroup]="formZona" (ngSubmit)="crearOEditarZona()" class="flex min-h-0 flex-1 flex-col">
-
-        <!-- =============================================== -->
         <!-- CONTENIDO CON SCROLL -->
-        <!-- =============================================== -->
         <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6"
           [attr.inert]="isLoading ? '' : null">
+          <fieldset [disabled]="isLoading" class="min-w-0">
+            <legend class="sr-only">
+              Datos y delimitación de la zona
+            </legend>
 
-          <fieldset [disabled]="isLoading" class="space-y-6">
+            <div class="grid min-w-0 grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+              <!-- ============================================= -->
+              <!-- IZQUIERDA: CAMPOS -->
+              <!-- ============================================= -->
+              <div class="min-w-0 space-y-5">
 
-            <!-- DATOS GENERALES -->
-            <section class="rounded-xl border border-base-300 p-4">
-              <h3 class="mb-4 flex items-center gap-2 font-semibold">
-                <i class="fa-solid fa-map-location-dot text-primary" aria-hidden="true"></i>
-                Datos de la zona
-              </h3>
+                <!-- DATOS GENERALES -->
+                <section class="rounded-xl border border-base-300 p-4">
+                  <h3 class="mb-4 flex items-center gap-2 font-semibold">
+                    <i class="fa-solid fa-map-location-dot text-primary" aria-hidden="true"></i>
+                    Datos de la zona
+                  </h3>
 
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div class="space-y-4">
+                    <!-- CÓDIGO -->
+                    <!-- <div>
+                      <label for="zona-codigo" class="mb-1 block text-sm font-medium">
+                        Código <span class="text-error">*</span>
+                      </label>
 
-                <!-- CÓDIGO -->
-                <div>
-                  <label for="zona-codigo" class="mb-1 block text-sm font-medium">
-                    Código <span class="text-error">*</span>
-                  </label>
+                      <input id="zona-codigo" type="text" formControlName="codigo"
+                        class="input input-bordered w-full uppercase" [class.input-error]="campoInvalido('codigo')"
+                        placeholder="Ejemplo: ZON-001" autocomplete="off" aria-describedby="zona-codigo-error" />
 
-                  <input id="zona-codigo" type="text" formControlName="codigo"
-                    class="input input-bordered w-full uppercase" [class.input-error]="campoInvalido('codigo')"
-                    placeholder="Ejemplo: ZON-001" autocomplete="off" aria-describedby="zona-codigo-error" />
+                      @if (campoInvalido('codigo')) {
+                      <p id="zona-codigo-error" class="mt-1 text-xs text-error">
+                        {{ obtenerError('codigo') }}
+                      </p>
+                      }
+                    </div> -->
 
-                  @if (campoInvalido('codigo')) {
-                  <p id="zona-codigo-error" class="mt-1 text-xs text-error">
-                    {{ obtenerError('codigo') }}
-                  </p>
-                  }
-                </div>
+                    <!-- NOMBRE -->
+                    <div>
+                      <label for="zona-nombre" class="mb-1 block text-sm font-medium">
+                        Nombre <span class="text-error">*</span>
+                      </label>
 
-                <!-- NOMBRE -->
-                <div>
-                  <label for="zona-nombre" class="mb-1 block text-sm font-medium">
-                    Nombre <span class="text-error">*</span>
-                  </label>
+                      <input id="zona-nombre" type="text" formControlName="nombre" class="input input-bordered w-full"
+                        [class.input-error]="campoInvalido('nombre')" placeholder="Ejemplo: Sector centro"
+                        autocomplete="off" aria-describedby="zona-nombre-error" appUppercase />
 
-                  <input id="zona-nombre" type="text" formControlName="nombre" class="input input-bordered w-full"
-                    [class.input-error]="campoInvalido('nombre')" placeholder="Ejemplo: Sector centro"
-                    autocomplete="off" aria-describedby="zona-nombre-error" appUppercase />
+                      @if (campoInvalido('nombre')) {
+                      <p id="zona-nombre-error" class="mt-1 text-xs text-error">
+                        {{ obtenerError('nombre') }}
+                      </p>
+                      }
+                    </div>
 
-                  @if (campoInvalido('nombre')) {
-                  <p id="zona-nombre-error" class="mt-1 text-xs text-error">
-                    {{ obtenerError('nombre') }}
-                  </p>
-                  }
-                </div>
+                    <!-- DESCRIPCIÓN -->
+                    <div>
+                      <label for="zona-descripcion" class="mb-1 block text-sm font-medium">
+                        Descripción
+                      </label>
 
-                <!-- DESCRIPCIÓN -->
-                <div class="sm:col-span-2">
-                  <label for="zona-descripcion" class="mb-1 block text-sm font-medium">
-                    Descripción
-                  </label>
+                      <textarea id="zona-descripcion" formControlName="descripcion" rows="3"
+                        class="textarea textarea-bordered w-full"
+                        placeholder="Describe el sector y sus referencias principales." appUppercase></textarea>
+                    </div>
 
-                  <textarea id="zona-descripcion" formControlName="descripcion" rows="3"
-                    class="textarea textarea-bordered w-full"
-                    placeholder="Describe el sector y sus referencias principales." appUppercase></textarea>
-                </div>
+                    <!-- COLOR -->
+                    <div>
+                      <label for="zona-color" class="mb-1 block text-sm font-medium">
+                        Color de identificación
+                        <span class="text-error">*</span>
+                      </label>
 
-                <!-- COLOR -->
-                <div class="sm:col-span-2">
-                  <label for="zona-color" class="mb-1 block text-sm font-medium">
-                    Color de identificación <span class="text-error">*</span>
-                  </label>
+                      <div class="flex items-center gap-3">
+                        <input id="zona-color" type="color" formControlName="color" class="h-11 w-16 cursor-pointer rounded-lg
+                      border border-base-300 bg-base-100 p-1" />
 
-                  <div class="flex items-center gap-3">
-                    <input id="zona-color" type="color" formControlName="color" class="h-11 w-16 cursor-pointer rounded-lg
-                     border border-base-300 bg-base-100 p-1" />
+                        <span class="font-mono text-sm uppercase
+                      text-base-content/70">
+                          {{ formZona.get('color')?.value }}
+                        </span>
+                      </div>
 
-                    <span class="font-mono text-sm uppercase text-base-content/70">
-                      {{ formZona.get('color')?.value }}
-                    </span>
+                      @if (campoInvalido('color')) {
+                      <p class="mt-1 text-xs text-error">
+                        {{ obtenerError('color') }}
+                      </p>
+                      }
+                    </div>
                   </div>
+                </section>
 
-                  @if (campoInvalido('color')) {
-                  <p class="mt-1 text-xs text-error">
-                    {{ obtenerError('color') }}
+                <!-- PUNTO DE REFERENCIA -->
+                <section class="rounded-xl border border-base-300 p-4">
+                  <h3 class="mb-2 flex items-center gap-2 font-semibold">
+                    <i class="fa-solid fa-location-dot text-primary" aria-hidden="true"></i>
+                    Punto de referencia de la zona
+                  </h3>
+
+                  <p class="mb-4 text-sm text-base-content/60">
+                    Las coordenadas se calculan automáticamente al dibujar o
+                    modificar el polígono. Puedes ajustarlas si necesitas
+                    utilizar otro punto de referencia.
+                  </p>
+
+                  @if (errorCentro) {
+                  <p class="mb-4 text-sm text-error" role="alert">
+                    {{ errorCentro }}
                   </p>
                   }
-                </div>
+                  <div class="space-y-4">
+                    <!-- LATITUD -->
+                    <div>
+                      <label for="zona-latitud" class="mb-1 block text-sm font-medium">
+                        Latitud <span class="text-error">*</span>
+                      </label>
+
+                      <input id="zona-latitud" type="number" formControlName="centro_latitud" step="any" min="-90"
+                        max="90" class="input input-bordered w-full"
+                        [class.input-error]="campoInvalido('centro_latitud')" placeholder="Ejemplo: -13.322" />
+
+                      @if (campoInvalido('centro_latitud')) {
+                      <p class="mt-1 text-xs text-error">
+                        {{ obtenerError('centro_latitud') }}
+                      </p>
+                      }
+                    </div>
+
+                    <!-- LONGITUD -->
+                    <div>
+                      <label for="zona-longitud" class="mb-1 block text-sm font-medium">
+                        Longitud <span class="text-error">*</span>
+                      </label>
+
+                      <input id="zona-longitud" type="number" formControlName="centro_longitud" step="any" min="-180"
+                        max="180" class="input input-bordered w-full"
+                        [class.input-error]="campoInvalido('centro_longitud')" placeholder="Ejemplo: -71.955" />
+
+                      @if (campoInvalido('centro_longitud')) {
+                      <p class="mt-1 text-xs text-error">
+                        {{ obtenerError('centro_longitud') }}
+                      </p>
+                      }
+                    </div>
+                  </div>
+                </section>
               </div>
-            </section>
 
-            <!-- POLÍGONO -->
-            <section class="space-y-4 rounded-xl border border-base-300 p-4">
-              <div class="flex flex-wrap items-center justify-between gap-3">
-                <h3 class="flex items-center gap-2 font-semibold">
-                  <i class="fa-solid fa-draw-polygon text-primary" aria-hidden="true"></i>
-                  Delimitación de la zona
-                  <span class="text-error">*</span>
-                </h3>
+              <!-- ============================================= -->
+              <!-- DERECHA: MAPA -->
+              <!-- ============================================= -->
+              <section class="min-w-0 space-y-4 rounded-xl
+            border border-base-300 p-4 lg:sticky lg:top-0">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <h3 class="flex items-center gap-2 font-semibold">
+                    <i class="fa-solid fa-draw-polygon text-primary" aria-hidden="true"></i>
+                    Delimitación de la zona
+                    <span class="text-error">*</span>
+                  </h3>
 
-                <span class="badge badge-soft" [class.badge-success]="formZona.get('poligono_geojson')?.valid"
-                  [class.badge-warning]="!formZona.get('poligono_geojson')?.valid">
-                  {{
-                  formZona.get('poligono_geojson')?.valid
-                  ? 'Polígono definido'
-                  : 'Pendiente de delimitar'
-                  }}
-                </span>
-              </div>
-
-              <p class="text-sm text-base-content/60">
-                Usa la herramienta de polígono del mapa y marca los vértices
-                de la zona. Finaliza con doble clic. Puedes seleccionar el
-                trazado para editarlo o eliminarlo con la papelera.
-              </p>
-
-              <mapa-base [habilitarEdicionZona]="true" [poligonoEditable]="formZona.get('poligono_geojson')?.value"
-                [mostrarZonas]="false" [mostrarRuta]="false" [mostrarPuntos]="false"
-                (poligonoCambiado)="recibirPoligono($event)" (mapaError)="mostrarErrorMapa($event)"></mapa-base>
-
-              @if (campoInvalido('poligono_geojson')) {
-              <p class="text-sm text-error">
-                {{ obtenerError('poligono_geojson') }}
-              </p>
-              }
-
-              <p class="text-xs text-base-content/50">
-                Se guarda un único polígono por zona. Al finalizar un nuevo
-                polígono, este reemplazará el anterior.
-              </p>
-            </section>
-
-            <!-- CENTRO -->
-            <section class="rounded-xl border border-base-300 p-4">
-              <h3 class="mb-2 flex items-center gap-2 font-semibold">
-                <i class="fa-solid fa-location-dot text-primary" aria-hidden="true"></i>
-                Centro geográfico
-              </h3>
-
-              <p class="mb-4 text-sm text-base-content/60">
-                Ingresa las coordenadas del punto de referencia central.
-                Si modificas el polígono, vuelve a definir este punto.
-              </p>
-
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label for="zona-latitud" class="mb-1 block text-sm font-medium">
-                    Latitud <span class="text-error">*</span>
-                  </label>
-
-                  <input id="zona-latitud" type="number" formControlName="centro_latitud" step="any" min="-90" max="90"
-                    class="input input-bordered w-full" [class.input-error]="campoInvalido('centro_latitud')"
-                    placeholder="Ejemplo: -13.322" />
-
-                  @if (campoInvalido('centro_latitud')) {
-                  <p class="mt-1 text-xs text-error">
-                    {{ obtenerError('centro_latitud') }}
-                  </p>
-                  }
+                  <span class="badge badge-soft" [class.badge-success]="
+                formZona.get('poligono_geojson')?.valid
+              " [class.badge-warning]="
+                !formZona.get('poligono_geojson')?.valid
+              ">
+                    {{
+                    formZona.get('poligono_geojson')?.valid
+                    ? 'Polígono definido'
+                    : 'Pendiente de delimitar'
+                    }}
+                  </span>
                 </div>
 
-                <div>
-                  <label for="zona-longitud" class="mb-1 block text-sm font-medium">
-                    Longitud <span class="text-error">*</span>
-                  </label>
+                <p class="text-sm text-base-content/60">
+                  Usa la herramienta de polígono del mapa y marca los
+                  vértices de la zona. Finaliza con doble clic. Puedes
+                  seleccionar el trazado para editarlo o eliminarlo
+                  con la papelera.
+                </p>
 
-                  <input id="zona-longitud" type="number" formControlName="centro_longitud" step="any" min="-180"
-                    max="180" class="input input-bordered w-full" [class.input-error]="campoInvalido('centro_longitud')"
-                    placeholder="Ejemplo: -71.955" />
-
-                  @if (campoInvalido('centro_longitud')) {
-                  <p class="mt-1 text-xs text-error">
-                    {{ obtenerError('centro_longitud') }}
-                  </p>
-                  }
+                <div class="h-80 overflow-hidden rounded-xl
+              border border-base-300 sm:h-96
+              lg:h-[clamp(320px,50vh,560px)]">
+                  <mapa-base class="block h-full w-full" [habilitarEdicionZona]="true" [poligonoEditable]="
+                formZona.get('poligono_geojson')?.value
+              " [mostrarZonas]="false" [mostrarRuta]="false" [mostrarPuntos]="false"
+                    (poligonoCambiado)="recibirPoligono($event)" (mapaError)="mostrarErrorMapa($event)"></mapa-base>
                 </div>
-              </div>
-            </section>
 
+                @if (campoInvalido('poligono_geojson')) {
+                <p class="text-sm text-error">
+                  {{ obtenerError('poligono_geojson') }}
+                </p>
+                }
+
+                <p class="text-xs text-base-content/50">
+                  Se guarda un único polígono por zona. Al finalizar
+                  un nuevo polígono, este reemplazará el anterior.
+                </p>
+              </section>
+            </div>
           </fieldset>
         </div>
 
-        <!-- =============================================== -->
+        <!-- ================================================= -->
         <!-- FOOTER -->
-        <!-- =============================================== -->
-        <footer class="flex shrink-0 flex-col-reverse gap-3
-               border-t border-base-300 bg-base-100
-               px-5 py-4 sm:flex-row sm:items-center
-               sm:justify-center sm:px-6">
-
-          <div class="flex flex-col-reverse gap-5
-                 sm:flex-row sm:justify-end">
+        <!-- ================================================= -->
+        <footer class="flex shrink-0 justify-center border-t
+      border-base-300 bg-base-100 px-5 py-4 sm:px-6">
+          <div class="flex w-full flex-col-reverse gap-3
+        sm:w-auto sm:flex-row sm:gap-5">
             <button type="button" class="btn btn-error" [disabled]="isLoading" (click)="cerrarModal()">
               Cancelar
             </button>
 
-            <button type="submit" class="btn btn-primary" [disabled]="formZona.invalid">
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading || formZona.invalid">
               @if (isLoading) {
-              <span class="loading loading-spinner loading-sm"></span>
+              <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
               {{ modoEdicion ? 'Actualizando...' : 'Guardando...' }}
               } @else {
               {{ modoEdicion ? 'Actualizar' : 'Guardar' }}

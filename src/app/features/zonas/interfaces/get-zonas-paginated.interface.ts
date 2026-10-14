@@ -64,7 +64,16 @@ export interface ZonasPaginadasFilters {
 }
 
 // *********************************************************
+// ULTIMO CODIGO
+// *********************************************************
+export interface UltimoCodigoData {
+  codigo: string;
+}
+
+// *********************************************************
 // RESPUESTA
 // *********************************************************
 
 export type GetZonasPaginatedResponse = ApiResponse<ZonasPaginadasData>;
+
+export type UltimoCodigoResponse = ApiResponse<UltimoCodigoData>;

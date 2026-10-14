@@ -29,6 +29,19 @@
 
           <div class="min-w-0">
             <h2 id="ruta-versiones-titulo" class="text-xl font-bold">
+              {{ modoEdicion ? 'Editar versión de ruta' : 'Nueva versión de ruta' }}
+
+              <span class="badge badge-primary badge-outline px-3 font-mono text-sm">
+                Ruta #{{ ruta_id }}
+              </span>
+            </h2>
+
+            @if (modoEdicion && versionSeleccionada) {
+            <p class="mt-1 text-sm text-base-content/60">
+              Versión ID: {{ versionSeleccionada.id_ruta_version }}
+            </p>
+            }
+            <!-- <h2 id="ruta-versiones-titulo" class="text-xl font-bold">
 
               Nueva versión de ruta -
               <span class="badge badge-primary badge-outline px-3 font-mono text-sm">
@@ -38,7 +51,7 @@
 
             <p class="mt-1 text-sm text-base-content/60">
               Registra el trazado y la vigencia de la versión.
-            </p>
+            </p> -->
           </div>
 
           <!--
@@ -302,10 +315,8 @@
         <!-- ================================================= -->
         <!-- FOOTER -->
         <!-- ================================================= -->
-        <footer class="flex shrink-0 justify-center border-t
-      border-base-300 bg-base-100 px-5 py-4 sm:px-6">
-          <div class="flex w-full flex-col-reverse gap-3
-        sm:w-auto sm:flex-row sm:gap-5">
+        <footer class="flex shrink-0 justify-center border-t border-base-300 bg-base-100 px-5 py-4 sm:px-6">
+          <div class="flex w-full flex-col-reverse gap-3 sm:w-auto sm:flex-row sm:gap-5">
             <button type="button" class="btn btn-error" [disabled]="guardando()" (click)="cerrarModal()">
               Cancelar
             </button>
@@ -313,10 +324,12 @@
             <button type="submit" class="btn btn-primary" [disabled]="guardando()">
               @if (guardando()) {
               <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
-              Guardando...
+
+              {{ modoEdicion ? 'Actualizando...' : 'Guardando...' }}
               } @else {
               <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
-              Guardar
+
+              {{ modoEdicion ? 'Guardar cambios' : 'Guardar versión' }}
               }
             </button>
           </div>

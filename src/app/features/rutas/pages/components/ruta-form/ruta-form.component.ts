@@ -232,8 +232,6 @@ export class RutasFormComponent implements OnChanges {
       color: form.color,
     };
 
-    console.log("CREAR RUTA: ", payloadCrear);
-
     // Solo los campos permitidos para actualizar.
     const payloadActualizar: UpdateRutaRequest = {
       nombre: form.nombre,

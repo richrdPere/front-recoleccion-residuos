@@ -41,9 +41,6 @@
               Consulta las versiones y sus puntos registrados.
             </p>
           </div>
-
-
-
         </div>
 
         <button type="button" class="btn btn-sm btn-circle btn-ghost" aria-label="Cerrar versiones de ruta"
@@ -67,7 +64,7 @@
 
           <!-- Cantidad -->
           @if (!cargando() && !error()) {
-          <span class="badge badge-soft badge-primary h-auto px-3 py-2">
+          <span class="badge badge-soft badge-info h-auto px-3 py-2">
             {{ versiones().length }}
             {{ versiones().length === 1 ? 'versión' : 'versiones' }}
           </span>
@@ -209,6 +206,10 @@
                     Versión
                   </th>
 
+                  <th scope="col">
+                    Vigencia
+                  </th>
+
                   <th scope="col" class="text-center">
                     Puntos registrados
                   </th>
@@ -246,6 +247,11 @@
                     </div>
                   </th>
 
+                   <!-- Vigencia -->
+                  <td class="text-center font-semibold tabular-nums">
+                    {{ version.vigente }}
+                  </td>
+
                   <!-- Puntos registrados -->
                   <td class="text-center font-semibold tabular-nums">
                     {{ version.puntos.length }}
@@ -269,12 +275,12 @@
                       </div>
 
                       <!-- Editar version -->
-                      <!-- <div class="tooltip tooltip-left" data-tip="Editar version">
-                        <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="editarVersion(version)"
-                          aria-label="Editar version">
+                      <div class="tooltip tooltip-left" data-tip="Editar version">
+                        <button type="button" class="btn btn-ghost btn-circle btn-sm"
+                          (click)="abrirEditarVersion(version)" aria-label="Editar version">
                           <i class="fa-regular fa-pen-to-square"></i>
                         </button>
-                      </div> -->
+                      </div>
 
                     </div>
                     <!-- <div class="flex justify-end">
@@ -356,4 +362,5 @@
 
 <!-- MODALES -->
 <ruta-version-form [mostrarModal]="mostrarModalVersionForm" [ruta_id]="ruta_id" [poligono_geojson]="poligono_geojson"
-  (modalCerrado)="mostrarModalVersionForm = false" (versionCreada)="cargarVersiones()"></ruta-version-form>
+  [modoEdicion]="modoEdicionVersion" [versionSeleccionada]="versionParaEditar" (modalCerrado)="cerrarVersionForm()"
+  (versionCreada)="onVersionCreada()" (versionActualizada)="onVersionActualizada()"></ruta-version-form>

@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Observable, finalize } from 'rxjs';
+import { polygon } from '@turf/helpers';
+import { pointOnFeature } from '@turf/point-on-feature';
 import Swal from 'sweetalert2';
 
 // Directives
@@ -196,6 +198,7 @@ export class ZonaFormComponent implements OnChanges {
 
   isLoading = false;
   modalWidthClass = 'max-w-4xl';
+  errorCentro: string | null = null;
 
   constructor(
     private readonly fb: FormBuilder,
@@ -228,7 +231,8 @@ export class ZonaFormComponent implements OnChanges {
 
     if (!debeSincronizar) return;
 
-    this.setModalWidth('lg');
+    this.setModalWidth('xl');
+    this.getCodigo();
 
     if (this.modoEdicion && this.zonaSeleccionada) {
       this.cargarZona(this.zonaSeleccionada);
@@ -242,7 +246,7 @@ export class ZonaFormComponent implements OnChanges {
   // ============================================================
   private initFormulario(): FormGroup {
     return this.fb.group({
-      codigo: ['', [Validators.required, textoNoVacio]],
+      codigo: [''],
       nombre: ['', [Validators.required, textoNoVacio]],
       descripcion: [''],
       color: ['#2563EB', [Validators.required, colorHexadecimal]],
@@ -277,27 +281,56 @@ export class ZonaFormComponent implements OnChanges {
   }
 
   private cargarZona(zona: ZonaData): void {
+    this.errorCentro = null;
+
+    const poligono = zona.poligono_geojson
+      ? this.copiarPoligono(zona.poligono_geojson)
+      : null;
+
+    let latitud = this.numeroONull(zona.centro_latitud);
+    let longitud = this.numeroONull(zona.centro_longitud);
+
+    const centroValido =
+      latitud !== null &&
+      longitud !== null &&
+      Math.abs(latitud) <= 90 &&
+      Math.abs(longitud) <= 180;
+
+    if (!centroValido) {
+      latitud = null;
+      longitud = null;
+
+      if (poligono && esPoligonoValido(poligono)) {
+        const centro = this.calcularCentroZona(poligono);
+
+        if (centro) {
+          latitud = centro.latitud;
+          longitud = centro.longitud;
+        }
+      }
+    }
+
     this.formZona.reset({
       codigo: zona.codigo,
       nombre: zona.nombre,
       descripcion: zona.descripcion ?? '',
       color: zona.color ?? '#2563EB',
-
-      // Copia profunda para no modificar el objeto del listado.
-      poligono_geojson: zona.poligono_geojson
-        ? this.copiarPoligono(zona.poligono_geojson)
-        : null,
-
-      centro_latitud: this.numeroONull(zona.centro_latitud),
-      centro_longitud: this.numeroONull(zona.centro_longitud),
+      poligono_geojson: poligono,
+      centro_latitud: latitud,
+      centro_longitud: longitud,
     });
   }
 
   // ============================================================
-  // RECIBIR DATOS DEL EDITOR DEL MAPA
+  // RECIBIR POLÍGONO Y CALCULAR PUNTO DE REFERENCIA
   // ============================================================
-  recibirPoligono(poligono: ZonaPoligonoGeoJSON | null): void {
+
+  recibirPoligono(
+    poligono: ZonaPoligonoGeoJSON | null,
+  ): void {
     if (this.isLoading) return;
+
+    this.errorCentro = null;
 
     const control = this.formZona.get('poligono_geojson');
 
@@ -308,13 +341,69 @@ export class ZonaFormComponent implements OnChanges {
     control?.markAsDirty();
     control?.markAsTouched();
 
-    // Al cambiar el trazado, el centro anterior debe revisarse.
+    // Limpiar las coordenadas de la delimitación anterior.
     this.formZona.patchValue({
       centro_latitud: null,
       centro_longitud: null,
     });
 
+    if (poligono && esPoligonoValido(poligono)) {
+      const centro = this.calcularCentroZona(poligono);
+
+      if (centro) {
+        this.formZona.patchValue({
+          centro_latitud: centro.latitud,
+          centro_longitud: centro.longitud,
+        });
+      }
+    }
+
+    this.formZona.get('centro_latitud')?.markAsDirty();
+    this.formZona.get('centro_longitud')?.markAsDirty();
+
     this.cdr.markForCheck();
+  }
+
+  // ============================================================
+  // CALCULAR PUNTO DE REFERENCIA DE LA ZONA
+  // ============================================================
+
+  private calcularCentroZona(
+    poligono: ZonaPoligonoGeoJSON,
+  ): { latitud: number; longitud: number } | null {
+    if (!esPoligonoValido(poligono)) {
+      return null;
+    }
+
+    try {
+      const feature = polygon(
+        this.copiarPoligono(poligono).coordinates,
+      );
+
+      const punto = pointOnFeature(feature);
+
+      // GeoJSON: primero longitud, después latitud.
+      const [longitud, latitud] = punto.geometry.coordinates;
+
+      if (
+        !Number.isFinite(longitud) ||
+        !Number.isFinite(latitud) ||
+        Math.abs(longitud) > 180 ||
+        Math.abs(latitud) > 90
+      ) {
+        throw new Error('Las coordenadas calculadas no son válidas.');
+      }
+
+      return {
+        latitud,
+        longitud,
+      };
+    } catch {
+      this.errorCentro =
+        'No se pudo calcular el punto de referencia. Revisa el polígono.';
+
+      return null;
+    }
   }
 
   recibirCentro(
@@ -459,6 +548,33 @@ export class ZonaFormComponent implements OnChanges {
   // ============================================================
   // VALIDACIONES PARA EL HTML
   // ============================================================
+  getCodigo(): void {
+    this.zonaService
+      .getLastCodigoZona()
+      .subscribe({
+        next: (resp) => {
+          // Evita aplicar la respuesta si se cerró el modal
+          // o se cambió a modo edición mientras cargaba.
+          if (!this.mostrarModal || this.modoEdicion) {
+            return;
+          }
+
+          if (!resp.success || !resp.data?.codigo) {
+            return;
+          }
+
+          this.formZona.patchValue({
+            codigo: resp.data.codigo,
+          });
+
+          this.cdr.markForCheck();
+        },
+
+        error: (error) => {
+          console.error('Error al obtener el código de la ruta:', error);
+        },
+      });
+  }
 
   campoInvalido(campo: string): boolean {
     const control = this.formZona.get(campo);
@@ -608,6 +724,8 @@ export class ZonaFormComponent implements OnChanges {
   }
 
   cerrarModal(): void {
+    this.errorCentro = null;
+
     if (this.isLoading) return;
 
     this.resetearFormulario();

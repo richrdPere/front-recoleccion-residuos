@@ -42,6 +42,9 @@ export class RutaVersionesComponent implements OnChanges, OnDestroy {
   mostrarModalVersionForm = false;
   modalWidthClass = 'max-w-4xl';
 
+  modoEdicionVersion = false;
+  versionParaEditar: RutaVersionConPuntosData | null = null;
+
   readonly mostrarPuntos = signal(false);
   readonly cargando = signal(false);
   readonly error = signal<string | null>(null);
@@ -133,6 +136,8 @@ export class RutaVersionesComponent implements OnChanges, OnDestroy {
 
           const versiones = response.data ?? [];
 
+          console.log("VERSIONES: ",versiones);
+
           this.versiones.set(versiones);
 
           const indiceAnterior = versiones.findIndex(
@@ -188,30 +193,52 @@ export class RutaVersionesComponent implements OnChanges, OnDestroy {
     }
   }
 
+  // *********************************************************
+  // 4. FORMULARIO DE CREACIÓN / EDICIÓN
+  // *********************************************************
   abrirVersionForm(): void {
-    if (this.ruta_id === null || this.ruta_id <= 0) {
+    if (
+      this.ruta_id === null ||
+      !Number.isSafeInteger(this.ruta_id) ||
+      this.ruta_id <= 0
+    ) {
       return;
     }
 
+    this.modoEdicionVersion = false;
+    this.versionParaEditar = null;
+    this.mostrarModalVersionForm = true;
+  }
+
+  abrirEditarVersion(version: RutaVersionConPuntosData): void {
+    if (
+      !Number.isSafeInteger(version.id_ruta_version) ||
+      version.id_ruta_version <= 0
+    ) {
+      return;
+    }
+
+    this.modoEdicionVersion = true;
+    this.versionParaEditar = version;
     this.mostrarModalVersionForm = true;
   }
 
   cerrarVersionForm(): void {
     this.mostrarModalVersionForm = false;
+    this.modoEdicionVersion = false;
+    this.versionParaEditar = null;
   }
 
   onVersionCreada(): void {
-    this.mostrarModalVersionForm = false;
+    this.cerrarVersionForm();
     this.cargarVersiones();
   }
 
-  // *********************************************************
-  // 4. EDITAR VERSION
-  // *********************************************************
-  editarVersion(version: RutaVersionConPuntosData) {
-
-
+  onVersionActualizada(): void {
+    this.cerrarVersionForm();
+    this.cargarVersiones();
   }
+
   // *********************************************************
   // 5. CERRAR
   // *********************************************************
@@ -221,7 +248,7 @@ export class RutaVersionesComponent implements OnChanges, OnDestroy {
   }
 
   // *********************************************************
-  // VISUALIZACIÓN DE PUNTOS DENTRO DEL MODAL
+  // 6. VISUALIZACIÓN DE PUNTOS DENTRO DEL MODAL
   // *********************************************************
   verPuntosVersion(indice: number): void {
     if (!this.versiones()[indice]) {
@@ -242,6 +269,9 @@ export class RutaVersionesComponent implements OnChanges, OnDestroy {
   private limpiar(): void {
     this.consulta?.unsubscribe();
     this.consulta = undefined;
+
+    this.modoEdicionVersion = false;
+    this.versionParaEditar = null;
 
     this.cargando.set(false);
     this.error.set(null);

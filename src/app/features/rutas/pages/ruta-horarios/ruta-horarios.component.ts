@@ -45,6 +45,7 @@ export class RutaHorarioComponent implements OnChanges, OnDestroy {
 
   isLoading = false;
   errorCarga: string | null = null;
+  modalWidthClass = 'max-w-4xl';
 
   mostrarModalForm = false;
   modoEdicion = false;
@@ -90,6 +91,7 @@ export class RutaHorarioComponent implements OnChanges, OnDestroy {
     }
 
     clearTimeout(this.searchTimeout);
+    this.setModalWidth('xl');
     this.consulta?.unsubscribe();
 
     this.reiniciarFiltros();
@@ -100,6 +102,7 @@ export class RutaHorarioComponent implements OnChanges, OnDestroy {
       this.getHorariosByRuta();
     }
     this.cerrarModalForm();
+
   }
 
   ngOnDestroy(): void {
@@ -673,6 +676,20 @@ export class RutaHorarioComponent implements OnChanges, OnDestroy {
     return typeof mensaje === 'string' && mensaje.trim()
       ? mensaje
       : fallback;
+  }
+
+  setModalWidth(
+    size: 'sm' | 'md' | 'lg' | 'xl' | 'full',
+  ): void {
+    const clases = {
+      sm: 'max-w-md',
+      md: 'max-w-xl',
+      lg: 'max-w-4xl',
+      xl: 'max-w-6xl',
+      full: 'max-w-full w-[95vw]',
+    };
+
+    this.modalWidthClass = clases[size];
   }
 
   // ================================
