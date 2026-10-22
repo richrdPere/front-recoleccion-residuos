@@ -12,9 +12,6 @@ import { AuthService } from '../../services/auth.service';
 import { AuthRole, LoginRequest } from '../../models';
 import { AuthStorageService } from '../../../../core/auth/auth-storage.service';
 
-
-
-
 @Component({
   selector: 'app-login-page',
   imports: [

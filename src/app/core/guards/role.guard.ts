@@ -1,28 +1,10 @@
-import {
-  inject,
-} from '@angular/core';
-
-import {
-  CanActivateFn,
-  Router,
-  UrlTree,
-} from '@angular/router';
-
-import {
-  Observable,
-  catchError,
-  map,
-  of,
-} from 'rxjs';
+import { inject } from '@angular/core';
+import { CanActivateFn, Router, UrlTree } from '@angular/router';
+import { Observable, catchError, map, of } from 'rxjs';
 
 // Services
-import {
-  AuthService,
-} from '../../features/auth/services/auth.service';
-
-import {
-  AuthStorageService,
-} from '../auth/auth-storage.service';
+import { AuthService } from '../../features/auth/services/auth.service';
+import { AuthStorageService } from '../auth/auth-storage.service';
 
 /*
 |--------------------------------------------------------------------------
@@ -57,14 +39,11 @@ export const roleGuard: CanActivateFn = (
   |--------------------------------------------------------------------------
   */
 
-  const router =
-    inject(Router);
+  const router = inject(Router);
 
-  const authService =
-    inject(AuthService);
+  const authService = inject(AuthService);
 
-  const authStorage =
-    inject(AuthStorageService);
+  const authStorage = inject(AuthStorageService);
 
   /*
   |--------------------------------------------------------------------------
@@ -94,20 +73,19 @@ export const roleGuard: CanActivateFn = (
   |--------------------------------------------------------------------------
   */
 
-  const redirectToAccessDenied =
-    (): UrlTree => {
-      return router.createUrlTree(
-        [
-          '/acceso-denegado',
-        ],
-        {
-          queryParams: {
-            returnUrl:
-              state.url,
-          },
+  const redirectToAccessDenied = (): UrlTree => {
+    return router.createUrlTree(
+      [
+        '/acceso-denegado',
+      ],
+      {
+        queryParams: {
+          returnUrl:
+            state.url,
         },
-      );
-    };
+      },
+    );
+  };
 
   /*
   |--------------------------------------------------------------------------

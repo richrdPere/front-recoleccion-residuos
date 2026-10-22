@@ -133,9 +133,8 @@
                   </label>
 
                   <input id="version-duracion" type="number" formControlName="duracion_estimada_min"
-                    class="input input-bordered w-full" min="0" step="any" placeholder="Ej. 90" [class.input-error]="
-                campoInvalido('duracion_estimada_min')
-              " />
+                    class="input input-bordered w-full" min="0" step="any" placeholder="Ej. 90"
+                    [class.input-error]="campoInvalido('duracion_estimada_min')" />
 
                   @if (campoInvalido('duracion_estimada_min')) {
                   <p class="mt-1 text-xs text-error">
@@ -152,9 +151,7 @@
                   </label>
 
                   <input id="version-fecha-desde" type="date" formControlName="fecha_vigencia_desde"
-                    class="input input-bordered w-full" [class.input-error]="
-                campoInvalido('fecha_vigencia_desde')
-              " />
+                    class="input input-bordered w-full" [class.input-error]="campoInvalido('fecha_vigencia_desde')" />
 
                   @if (campoInvalido('fecha_vigencia_desde')) {
                   <p class="mt-1 text-xs text-error">
@@ -170,10 +167,8 @@
                   </label>
 
                   <input id="version-fecha-hasta" type="date" formControlName="fecha_vigencia_hasta"
-                    class="input input-bordered w-full" [attr.min]="
-                form.controls.fecha_vigencia_desde.value || null
-              " [class.input-error]="
-                campoInvalido('fecha_vigencia_hasta') ||
+                    class="input input-bordered w-full" [attr.min]="form.controls.fecha_vigencia_desde.value || null"
+                    [class.input-error]="campoInvalido('fecha_vigencia_hasta') ||
                 (
                   form.hasError('rangoFechasInvalido') &&
                   form.controls.fecha_vigencia_hasta.touched
@@ -212,8 +207,7 @@
                 </div>
 
                 <!-- VIGENTE -->
-                <div class="rounded-xl border border-base-300
-              bg-base-200/50 p-4">
+                <div class="rounded-xl border border-base-300 bg-base-200/50 p-4">
                   <label for="version-vigente" class="flex cursor-pointer items-start gap-3">
                     <input id="version-vigente" type="checkbox" formControlName="vigente"
                       class="checkbox checkbox-primary mt-1" />
@@ -265,25 +259,42 @@
                 @if (mostrarModal) {
                 <div
                   class="h-80 overflow-hidden rounded-2xl border border-base-300 sm:h-96 lg:h-[clamp(280px,45vh,480px)]">
-                  <mapa-base class="block h-full w-full" [zonaVisual]="zonaVisualMapa" [mostrarZonas]="false"
-                    [mostrarRuta]="false" [mostrarPuntos]="false" [habilitarEdicionZona]="false"
-                    [habilitarSeleccionRuta]="!guardando()" [coordenadasRuta]="coordenadasRuta()"
-                    (coordenadaSeleccionada)="agregarCoordenada($event)"
-                    (mapaError)="errorMapa.set($event)"></mapa-base>
+                  <mapa-base class="block h-full w-full"
+                  [zonaVisual]="zonaVisualMapa"
+                  [mostrarZonas]="false"
+                  [mostrarRuta]="false"
+                  [mostrarPuntos]="false"
+                  [habilitarEdicionZona]="false"
+                  [habilitarSeleccionRuta]="!guardando()"
+                  [coordenadasRuta]="coordenadasRuta()"
+                  (coordenadaSeleccionada)="agregarCoordenada($event)"
+                  (mapaError)="errorMapa.set($event)"></mapa-base>
                 </div>
                 }
 
+                <!-- Ruta trazado -->
+                <ruta-trazado-selector [coordenadas]="coordenadasRuta()"></ruta-trazado-selector>
+                <p class="text-xs text-base-content/60">Al guardar se conserva el trazado. Después abre “Asignar puntos”
+                  para registrar inicio, final y las paradas de recolección que necesites.</p>
+
+                <!-- Deshacer el ultimo boton -->
                 <div class="flex flex-wrap items-center gap-2">
-                  <button type="button" class="btn btn-outline btn-sm" [disabled]="
-                guardando() || coordenadasRuta().length === 0
-              " (click)="deshacerUltimoPunto()">
+
+                  <!-- Invertir sentido -->
+                  <button type="button" class="btn btn-outline btn-sm"
+                    [disabled]="guardando() || coordenadasRuta().length < 2" (click)="invertirSentido()">Invertir
+                    sentido
+                  </button>
+
+                  <!-- Deshacer ultimo punto -->
+                  <button type="button" class="btn btn-outline btn-sm"
+                    [disabled]="guardando() || coordenadasRuta().length === 0" (click)="deshacerUltimoPunto()">
                     <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
                     Deshacer último punto
                   </button>
 
-                  <button type="button" class="btn btn-ghost btn-sm text-error" [disabled]="
-                guardando() || coordenadasRuta().length === 0
-              " (click)="limpiarTrayecto()">
+                  <button type="button" class="btn btn-ghost btn-sm text-error"
+                    [disabled]="guardando() || coordenadasRuta().length === 0" (click)="limpiarTrayecto()">
                     <i class="fa-solid fa-trash" aria-hidden="true"></i>
                     Limpiar recorrido
                   </button>

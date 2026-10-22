@@ -49,7 +49,7 @@ export class PersonalPageComponent implements OnInit {
   searchTimeout: any;
 
   mostrarModalConductor = false;
-personalConductorId: number | string | null = null;
+  personalConductorId: number | string | null = null;
 
   // Search
   searchBusqueda: string = '';
@@ -292,14 +292,14 @@ personalConductorId: number | string | null = null;
 
   // - Sabe conducir
   abrirPerfilConductor(idPersonal: number | string): void {
-  this.personalConductorId = idPersonal;
-  this.mostrarModalConductor = true;
-}
+    this.personalConductorId = idPersonal;
+    this.mostrarModalConductor = true;
+  }
 
-cerrarPerfilConductor(): void {
-  this.mostrarModalConductor = false;
-  this.personalConductorId = null;
-}
+  cerrarPerfilConductor(): void {
+    this.mostrarModalConductor = false;
+    this.personalConductorId = null;
+  }
 
 
 
@@ -328,6 +328,12 @@ cerrarPerfilConductor(): void {
   // ================================
   // Helpers methods
   // ================================
+  get hayFiltros(): boolean {
+    return !!(
+      this.searchBusqueda.trim() || this.tipoContratoBusqueda || this.estadoLaboralBusqueda
+    );
+  }
+
   getIconoUnidad(
     tipo: string | null | undefined,
   ): string {

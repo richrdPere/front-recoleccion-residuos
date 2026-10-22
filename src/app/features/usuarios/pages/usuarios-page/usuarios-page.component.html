@@ -119,6 +119,7 @@
           </div> -->
 
           <!-- Limpiar -->
+          @if ( hayFiltros ) {
           <div class="min-w-0">
             <button type="button" class="btn btn-secondary h-11 min-h-11
                    w-full gap-2 rounded-xl
@@ -130,6 +131,8 @@
               Limpiar
             </button>
           </div>
+          }
+
         </div>
       </div>
 
@@ -167,7 +170,7 @@
   </usuario-roles>
 
   <!-- ================================================= -->
-  <!-- TABLA DE VEHICULOS -->
+  <!-- TABLA DE USUARIOS -->
   <!-- ================================================= -->
   @if (isLoading || usuarios.length > 0) {
   <section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm"

@@ -372,6 +372,14 @@ export class VehiculosPageComponent implements OnInit {
   // ================================
   // Helpers methods
   // ================================
+  get hayFiltros(): boolean {
+    return !!(
+      this.searchBusqueda.trim() ||
+      this.estadoOperativoBusqueda ||
+      this.tipoVehiculoBusqueda
+    );
+  }
+
   getIconoUnidad(
     tipo: string | null | undefined,
   ): string {

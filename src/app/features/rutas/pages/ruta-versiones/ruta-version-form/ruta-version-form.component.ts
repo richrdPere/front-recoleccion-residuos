@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnD
 import { CommonModule } from '@angular/common';
 import { AbstractControl, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators, FormBuilder } from '@angular/forms';
 import { finalize, map, Observable, Subscription } from 'rxjs';
+import Swal from 'sweetalert2';
 
 // Service
 import { RutaVersionService } from '../../../services/ruta-version.service';
@@ -10,8 +11,10 @@ import { RutaVersionService } from '../../../services/ruta-version.service';
 import { CreateRutaVersionData, CreateRutaVersionRequest, UpdateRutaVersionRequest } from '../../../interfaces/ruta-versiones';
 import { RutaGeometriaGeoJSON, RutaVersionConPuntosData } from '../../../interfaces/rutas';
 import { ZonaPoligonoGeoJSON } from 'src/app/features/zonas/interfaces';
+
+// Componentes
 import { MapaBaseComponent } from 'src/app/shared/components/mapa-base/mapa-base.component';
-import Swal from 'sweetalert2';
+import { TrazadoSelectorComponent } from '../../components/trazado-selector/trazado-selector.component';
 
 // *********************************************************
 // VALIDACIÓN DE GEOMETRÍA
@@ -42,10 +45,7 @@ function leerGeometria(
     const coordenadas: [number, number][] = [];
 
     for (const coordenada of geometria.coordinates) {
-      if (
-        !Array.isArray(coordenada) ||
-        coordenada.length !== 2
-      ) {
+      if (!Array.isArray(coordenada) || coordenada.length !== 2) {
         return null;
       }
 
@@ -175,7 +175,7 @@ const rangoFechasValidator: ValidatorFn = (
 @Component({
   selector: 'ruta-version-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MapaBaseComponent],
+  imports: [CommonModule, ReactiveFormsModule, MapaBaseComponent, TrazadoSelectorComponent],
   templateUrl: './ruta-version-form.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -342,14 +342,9 @@ export class RutaVersionFormComponent
 
     const esEdicion = this.modoEdicion;
     const idRuta = this.ruta_id;
-    const idVersion =
-      this.versionSeleccionada?.id_ruta_version ?? null;
+    const idVersion = this.versionSeleccionada?.id_ruta_version ?? null;
 
-    if (
-      idRuta === null ||
-      !Number.isSafeInteger(idRuta) ||
-      idRuta <= 0
-    ) {
+    if (idRuta === null || !Number.isSafeInteger(idRuta) || idRuta <= 0) {
       this.error.set('El identificador de la ruta no es válido.');
       return;
     }
@@ -383,13 +378,22 @@ export class RutaVersionFormComponent
       return;
     }
 
+    // No dejar puntos extremos guardados fuera de los nuevos extremos.
+    if (esEdicion && this.versionSeleccionada?.puntos.some(p => {
+      if (p.tipo_punto !== 'INICIO' && p.tipo_punto !== 'FINAL') return false;
+      const extremo = p.tipo_punto === 'INICIO' ? geometria.coordinates[0] : geometria.coordinates[geometria.coordinates.length - 1];
+      return Math.abs(Number(p.longitud) - extremo[0]) > 0.0000001 || Math.abs(Number(p.latitud) - extremo[1]) > 0.0000001;
+    })) {
+      this.error.set('El cambio desplaza un inicio o final ya registrado. Crea una nueva versión para conservar la coherencia y el historial.');
+      return;
+    }
+
     const datos = {
       geometria_geojson: geometria,
       distancia_estimada_km: valores.distancia_estimada_km,
       duracion_estimada_min: valores.duracion_estimada_min,
       fecha_vigencia_desde: valores.fecha_vigencia_desde,
-      fecha_vigencia_hasta:
-        valores.fecha_vigencia_hasta || null,
+      fecha_vigencia_hasta: valores.fecha_vigencia_hasta || null,
       observacion: valores.observacion.trim() || null,
     };
 
@@ -514,110 +518,6 @@ export class RutaVersionFormComponent
         },
       });
   }
-  // guardar(): void {
-  //   if (this.guardando()) {
-  //     return;
-  //   }
-
-  //   this.error.set(null);
-  //   this.form.markAllAsTouched();
-
-  //   const idRuta = this.ruta_id;
-
-  //   if (
-  //     idRuta === null ||
-  //     !Number.isSafeInteger(idRuta) ||
-  //     idRuta <= 0
-  //   ) {
-  //     this.error.set('El identificador de la ruta no es válido.');
-  //     return;
-  //   }
-
-  //   if (this.form.invalid) {
-  //     return;
-  //   }
-
-  //   const valores = this.form.getRawValue();
-  //   const geometria = leerGeometria(valores.geometria_geojson);
-
-  //   if (
-  //     !geometria ||
-  //     valores.distancia_estimada_km === null ||
-  //     valores.duracion_estimada_min === null
-  //   ) {
-  //     return;
-  //   }
-
-  //   const request: CreateRutaVersionRequest = {
-  //     geometria_geojson: geometria,
-  //     distancia_estimada_km: valores.distancia_estimada_km,
-  //     duracion_estimada_min: valores.duracion_estimada_min,
-  //     fecha_vigencia_desde: valores.fecha_vigencia_desde,
-  //     fecha_vigencia_hasta:
-  //       valores.fecha_vigencia_hasta || null,
-  //     observacion: valores.observacion.trim() || null,
-  //     vigente: valores.vigente,
-  //   };
-
-  //   this.guardando.set(true);
-  //   this.form.disable({ emitEvent: false });
-
-  //   this.consulta = this.rutaVersionService
-  //     .createRutaVersion(idRuta, request)
-  //     .pipe(
-  //       finalize(() => {
-  //         this.guardando.set(false);
-  //         this.form.enable({ emitEvent: false });
-  //       }),
-  //     )
-  //     .subscribe({
-  //       next: (response) => {
-  //         if (!response.success || !response.data) {
-  //           const mensaje =
-  //             response.message ||
-  //             'No se pudo registrar la versión de la ruta.';
-
-  //           this.error.set(mensaje);
-
-  //           void Swal.fire({
-  //             icon: 'error',
-  //             title: 'No se pudo registrar la versión',
-  //             text: mensaje,
-  //             confirmButtonText: 'Aceptar',
-  //           });
-
-  //           return;
-  //         }
-
-  //         this.error.set(null);
-
-  //         this.versionCreada.emit(response.data);
-  //         this.modalCerrado.emit();
-
-  //         void Swal.fire({
-  //           icon: 'success',
-  //           title: 'Versión registrada',
-  //           text:
-  //             response.message ||
-  //             'La versión de la ruta se registró correctamente.',
-  //           confirmButtonText: 'Aceptar',
-  //         });
-  //       },
-
-  //       error: (error: unknown) => {
-  //         const mensaje = this.obtenerMensajeError(error);
-
-  //         this.error.set(mensaje);
-
-  //         void Swal.fire({
-  //           icon: 'error',
-  //           title: 'No se pudo registrar la versión',
-  //           text: mensaje,
-  //           confirmButtonText: 'Aceptar',
-  //         });
-  //       },
-  //     });
-  // }
 
   // *********************************************************
   // 2. CERRAR MODAL
@@ -664,17 +564,13 @@ export class RutaVersionFormComponent
         ? JSON.stringify(geometria)
         : '',
 
-      distancia_estimada_km:
-        this.convertirNumeroPositivo(version.distancia_estimada_km),
+      distancia_estimada_km: this.convertirNumeroPositivo(version.distancia_estimada_km),
 
-      duracion_estimada_min:
-        this.convertirNumeroPositivo(version.duracion_estimada_min),
+      duracion_estimada_min: this.convertirNumeroPositivo(version.duracion_estimada_min),
 
-      fecha_vigencia_desde:
-        version.fecha_vigencia_desde?.slice(0, 10) ?? '',
+      fecha_vigencia_desde: version.fecha_vigencia_desde?.slice(0, 10) ?? '',
 
-      fecha_vigencia_hasta:
-        version.fecha_vigencia_hasta?.slice(0, 10) ?? '',
+      fecha_vigencia_hasta: version.fecha_vigencia_hasta?.slice(0, 10) ?? '',
 
       observacion: version.observacion ?? '',
     }, { emitEvent: false });
@@ -848,6 +744,10 @@ export class RutaVersionFormComponent
       ...coordenadas,
       [longitud, latitud],
     ]);
+  }
+
+  invertirSentido(): void {
+    if (!this.guardando()) this.actualizarGeometria([...this.coordenadasRuta()].reverse());
   }
 
   deshacerUltimoPunto(): void {

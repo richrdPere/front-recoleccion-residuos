@@ -16,7 +16,7 @@ export interface UpdateRutaPuntoRequest {
 
   orden?: number;
   radio_atencion_metros?: number;
-  tiempo_estimado_min?: number;
+  tiempo_estimado_min?:  number | null;
 
   obligatorio?: boolean;
 }

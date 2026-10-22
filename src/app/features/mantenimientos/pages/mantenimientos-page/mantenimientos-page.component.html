@@ -124,6 +124,7 @@
           </div>
 
           <!-- Limpiar filtros -->
+          @if (hayFiltros) {
           <button type="button" class="btn btn-secondary h-11 min-h-11 gap-2 rounded-xl" [disabled]="
           !searchBusqueda.trim() &&
           !tipoVehiculoBusqueda &&
@@ -133,6 +134,8 @@
             <i class="fa-solid fa-eraser" aria-hidden="true"></i>
             Limpiar
           </button>
+          }
+
 
         </div>
 

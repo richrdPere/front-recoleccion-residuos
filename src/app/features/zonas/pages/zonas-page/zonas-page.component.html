@@ -57,14 +57,14 @@
           <div class="min-w-0">
             <label for="filtro-placa" class="mb-1.5 block text-xs font-semibold
                    uppercase tracking-wide text-base-content/60">
-              Descripción
+              Zona
             </label>
 
             <div class="relative">
               <input id="filtro-placa" type="text" class="input input-bordered h-11 min-h-11
                      w-full min-w-0 rounded-xl bg-base-100
                      pl-11 pr-4 focus:outline-none
-                     focus:ring-2 focus:ring-primary/30" placeholder="Buscar por placa" autocomplete="off"
+                     focus:ring-2 focus:ring-primary/30" placeholder="Buscar por nombre o descripción" autocomplete="off"
                 [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()" appUppercase />
 
               <span class="pointer-events-none absolute inset-y-0 left-0 z-10
@@ -118,6 +118,7 @@
           </div> -->
 
           <!-- Limpiar -->
+          @if (hayFiltros) {
           <div class="min-w-0">
             <button type="button" class="btn btn-secondary h-11 min-h-11
                    w-full gap-2 rounded-xl
@@ -126,6 +127,8 @@
               Limpiar
             </button>
           </div>
+          }
+
         </div>
       </div>
 
@@ -212,7 +215,7 @@
             <th class="min-w-52">Descripción</th>
             <th class="min-w-32">Color</th>
             <th class="min-w-40">Cobertura</th>
-            <th class="min-w-44">Centro geográfico</th>
+            <th class="min-w-44">Punto de referencia</th>
             <th class="min-w-28 text-center">Estado</th>
             <th class="min-w-40">Actualización</th>
             <th class="w-28 text-center">Acciones</th>

@@ -1,0 +1,39 @@
+<div class="space-y-3 rounded-xl border border-base-300 bg-base-200/30 p-4">
+  <p class="text-sm font-semibold">Inicio y final del trazado</p>
+  <p class="text-xs text-base-content/60">Esquema del recorrido, sin mapa de fondo. Verde: inicio; rojo: final. Las
+    ubicaciones dibujan la línea; solo las que guardes serán puntos operativos.</p>
+  @if (vertices.length >= 2) {
+  <svg viewBox="0 0 600 240" class="h-52 w-full rounded-lg bg-base-100" role="img"
+    aria-label="Esquema del trazado con inicio y final">
+    <polyline [attr.points]="linea" fill="none" stroke="currentColor" class="text-primary" stroke-width="3" />
+    @for (v of vertices; track v.indice) {
+    <circle [attr.cx]="v.x" [attr.cy]="v.y" [attr.r]="v.indice === seleccionado ? 7 : 4"
+      [attr.fill]="v.indice === 0 ? '#15803d' : v.indice === vertices.length - 1 ? '#dc2626' : '#2563eb'"
+      (click)="elegir(v.indice)">
+      <title>Ubicación {{ v.indice + 1 }}</title>
+    </circle>
+    }
+    <text [attr.x]="vertices[0].x + 8" [attr.y]="vertices[0].y - 10" fill="currentColor" font-size="12">Inicio</text>
+    <text [attr.x]="vertices[vertices.length - 1].x + 8" [attr.y]="vertices[vertices.length - 1].y + 18"
+      fill="currentColor" font-size="12">Final</text>
+  </svg>
+  @if (editable) {
+  <label class="block text-sm">Ubicación del trazado
+    <select class="select select-bordered mt-1 w-full" [disabled]="deshabilitado" [value]="seleccionado"
+      (change)="cambiar($event)">
+      <option value="-1" disabled>Seleccionar ubicación</option>
+      @for (c of coordenadas; track $index; let i = $index) {
+      <option [value]="i">{{ i + 1 }} · {{ c[1] }}, {{ c[0] }} {{ i === 0 ? '(Inicio)' : i === coordenadas.length - 1 ?
+        '(Final)' : '' }}</option>
+      }
+    </select>
+  </label>
+  }
+  <div class="grid gap-2 text-xs sm:grid-cols-2">
+    <p>Inicio: {{ coordenadas[0][1] }}, {{ coordenadas[0][0] }}</p>
+    <p>Final: {{ coordenadas[coordenadas.length - 1][1] }}, {{ coordenadas[coordenadas.length - 1][0] }}</p>
+  </div>
+  } @else {
+  <p class="text-sm text-warning">Dibuja y guarda un trazado válido con al menos dos ubicaciones.</p>
+  }
+</div>

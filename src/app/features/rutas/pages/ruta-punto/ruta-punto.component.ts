@@ -5,9 +5,7 @@ import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
 
 // Directives
-import {
-  UppercaseDirective
-} from 'src/app/shared/directives/uppercase.directive';
+import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directive';
 
 // Service
 import { RutaVersionPuntoService } from '../../services/ruta-version-punto.service';
@@ -59,6 +57,7 @@ export class RutaPuntoComponent implements OnChanges, OnDestroy {
   modoEdicion = false;
   puntoSeleccionado: RutaPuntoData | null = null;
   ordenSugerido = 1;
+  tipoSugerido: TipoRutaPunto = 'RECOLECCION';
 
   // Search / filtros
   searchBusqueda = '';
@@ -98,6 +97,9 @@ export class RutaPuntoComponent implements OnChanges, OnDestroy {
       return;
     }
 
+    console.log("VERSION: ", this.version);
+
+    if (this.idRutaVersion !== this.version?.id_ruta_version) this.cerrarModal();
     clearTimeout(this.searchTimeout);
 
     this.idRutaVersion = this.version?.id_ruta_version ?? null;
@@ -126,11 +128,17 @@ export class RutaPuntoComponent implements OnChanges, OnDestroy {
   // ================================
   // Methods
   // ================================
-  abrirNuevoPunto(): void {
+  abrirNuevoPunto(tipo: TipoRutaPunto = 'RECOLECCION'): void {
     if (this.idRutaVersion === null || this.isSaving) {
       return;
     }
 
+    const existente = this.puntos.find(p => p.tipo_punto === tipo);
+    if ((tipo === 'INICIO' || tipo === 'FINAL') && existente) {
+      this.abrirEditarPunto(existente);
+      return;
+    }
+    this.tipoSugerido = tipo;
     this.modoEdicion = false;
     this.puntoSeleccionado = null;
 
@@ -138,8 +146,28 @@ export class RutaPuntoComponent implements OnChanges, OnDestroy {
       ? Math.max(...this.puntos.map((punto) => punto.orden)) + 1
       : 1;
 
+    if (tipo === 'INICIO') this.ordenSugerido = 1;
+    else if (tipo === 'FINAL') this.ordenSugerido += 1000;
+    else {
+      this.ordenSugerido = (this.puntos.find(p => p.tipo_punto === 'INICIO')?.orden ?? 0) + 1;
+      while (this.puntos.some(p => p.orden === this.ordenSugerido)) this.ordenSugerido++;
+    }
     this.mostrarModal = true;
   }
+  // abrirNuevoPunto(): void {
+  //   if (this.idRutaVersion === null || this.isSaving) {
+  //     return;
+  //   }
+
+  //   this.modoEdicion = false;
+  //   this.puntoSeleccionado = null;
+
+  //   this.ordenSugerido = this.puntos.length
+  //     ? Math.max(...this.puntos.map((punto) => punto.orden)) + 1
+  //     : 1;
+
+  //   this.mostrarModal = true;
+  // }
 
   abrirEditarPunto(punto: RutaPuntoData): void {
     if (this.isSaving) {
@@ -286,11 +314,16 @@ export class RutaPuntoComponent implements OnChanges, OnDestroy {
       nuevoOrden[indice],
     ];
 
+    if (nuevoOrden.some((p, i) => (p.tipo_punto === 'INICIO' && i !== 0) || (p.tipo_punto === 'FINAL' && i !== nuevoOrden.length - 1))) {
+      void Swal.fire({ icon: 'info', title: 'Orden del recorrido', text: 'El inicio debe permanecer primero y el final último.' });
+      return;
+    }
+
     // Se envían todos los puntos con orden consecutivo.
     const request: ReorderRutaPuntosRequest = {
       puntos: nuevoOrden.map((item, posicion) => ({
         id_ruta_punto: item.id_ruta_punto,
-        orden: posicion + 1,
+        orden: (posicion + 1) * 1000,
       })),
     };
 

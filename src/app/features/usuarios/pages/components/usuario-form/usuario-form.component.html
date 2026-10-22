@@ -190,7 +190,7 @@
 
                   <input id="usuario-nombres" type="text" formControlName="nombres" placeholder="Ingrese los nombres"
                     maxlength="100"
-                    class="input input-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
                     [class.input-success]="campoCompleto('nombres')" [class.input-error]="campoInvalido('nombres')"
                     [attr.aria-invalid]="campoInvalido('nombres')"
                     [attr.aria-describedby]="campoInvalido('nombres') ? 'usuario-nombres-error' : null"
@@ -216,7 +216,7 @@
 
                   <input id="usuario-apellidos" type="text" formControlName="apellidos"
                     placeholder="Ingrese los apellidos" maxlength="100"
-                    class="input input-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
                     [class.input-success]="campoCompleto('apellidos')" [class.input-error]="campoInvalido('apellidos')"
                     [attr.aria-invalid]="campoInvalido('apellidos')"
                     [attr.aria-describedby]="campoInvalido('apellidos') ? 'usuario-apellidos-error' : null"
@@ -237,7 +237,7 @@
                   </label>
 
                   <select id="usuario-genero" formControlName="genero"
-                    class="select select-bordered border-2 w-full transition-colors duration-200"
+                    class="select select-bordered border-2 w-full rounded-lg transition-colors duration-200"
                     [class.select-success]="campoCompleto('genero')" [class.select-error]="campoInvalido('genero')"
                     [attr.aria-invalid]="campoInvalido('genero')"
                     [attr.aria-describedby]="campoInvalido('genero') ? 'usuario-genero-error' : null">
@@ -272,7 +272,7 @@
                   </label>
 
                   <select id="usuario-tipo-documento" formControlName="tipo_documento"
-                    class="select select-bordered border-2 w-full transition-colors duration-200"
+                    class="select select-bordered border-2 w-full rounded-lg transition-colors duration-200"
                     [class.select-success]="campoCompleto('tipo_documento')"
                     [class.select-error]="campoInvalido('tipo_documento')"
                     [attr.aria-invalid]="campoInvalido('tipo_documento')"
@@ -303,7 +303,7 @@
 
                   <input id="usuario-numero-documento" type="text" formControlName="numero_documento"
                     inputmode="numeric" placeholder="Ingrese el número de documento" pattern="[0-9]*" maxlength="8"
-                    class="input input-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
                     [class.input-success]="campoCompleto('numero_documento')"
                     [class.input-error]="campoInvalido('numero_documento')"
                     [attr.aria-invalid]="campoInvalido('numero_documento')"
@@ -325,7 +325,7 @@
                   </label>
 
                   <input id="usuario-fecha-nacimiento" type="date" formControlName="fecha_nacimiento"
-                    class="input input-bordered border-2 w-full transition-colors duration-200"
+                  class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
                     [class.input-success]="campoCompleto('fecha_nacimiento')"
                     [class.input-error]="campoInvalido('fecha_nacimiento')"
                     [attr.aria-invalid]="campoInvalido('fecha_nacimiento')"

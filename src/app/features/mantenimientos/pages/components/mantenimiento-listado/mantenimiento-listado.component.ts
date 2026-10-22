@@ -399,6 +399,14 @@ export class MantenimientoListadoComponent implements OnInit, OnChanges, OnDestr
     this.getMantenimientoPaginated();
   }
 
+  get hayFiltros(): boolean {
+    return !!(
+      this.searchBusqueda.trim() ||
+      this.tipoMantenimientoBusqueda ||
+      this.estadoMantenimientoBusqueda
+    );
+  }
+
   // *********************************************************
   // 6. PAGINACIÓN
   // *********************************************************

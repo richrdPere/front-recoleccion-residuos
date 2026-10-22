@@ -291,6 +291,12 @@ export class ZonasPageComponent implements OnInit {
   // ================================
   // Helpers methods
   // ================================
+  get hayFiltros(): boolean {
+    return !!(
+      this.searchBusqueda.trim()
+    );
+  }
+
   onSearchChange() {
     clearTimeout(this.searchTimeout);
 

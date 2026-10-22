@@ -323,6 +323,15 @@ export class MantenimientosPageComponent implements OnInit, OnDestroy {
     this.getVehiculosPaginated();
   }
 
+  get hayFiltros(): boolean {
+    return !!(
+      this.searchBusqueda.trim() ||
+      this.tipoVehiculoBusqueda ||
+      this.estadoOperativoBusqueda ||
+      this.soloConMantenimientos
+    );
+  }
+
   // *********************************************************
   // 5. PAGINACIÓN
   // *********************************************************

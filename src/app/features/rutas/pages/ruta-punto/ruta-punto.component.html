@@ -24,6 +24,19 @@
 
   @if (version) {
 
+  <div class="rounded-xl border border-base-300 p-4 space-y-3">
+    <p class="text-sm">Asigna los extremos del trazado y agrega solamente las paradas de recolección que necesites
+      controlar.</p>
+    <div class="flex flex-wrap gap-2">
+      <button type="button" class="btn btn-success btn-sm" [disabled]="isSaving"
+        (click)="abrirNuevoPunto('INICIO')">Asignar inicio</button>
+      <button type="button" class="btn btn-error btn-sm" [disabled]="isSaving"
+        (click)="abrirNuevoPunto('FINAL')">Asignar final</button>
+      <button type="button" class="btn btn-primary btn-sm" [disabled]="isSaving"
+        (click)="abrirNuevoPunto('RECOLECCION')">Agregar recolección</button>
+    </div>
+  </div>
+
   <!-- ================================================= -->
   <!-- FILTROS -->
   <!-- ================================================= -->
@@ -256,7 +269,9 @@
     </div>
   </div>
 
+  <!-- ===================================================== -->
   <!-- PAGINACIÓN -->
+  <!-- ===================================================== -->
   <footer class="flex flex-wrap items-center justify-between gap-3">
     <p class="text-sm text-base-content/60">
       {{ totalItems }} puntos encontrados
@@ -285,6 +300,15 @@
 </section>
 
 
-<ruta-punto-form [mostrarModal]="mostrarModal" [modoEdicion]="modoEdicion" [idRutaVersion]="idRutaVersion"
-  [puntoSeleccionado]="puntoSeleccionado" [ordenSugerido]="ordenSugerido" (modalCerrado)="cerrarModal()"
-  (puntoGuardado)="onPuntoGuardado()"></ruta-punto-form>
+<ruta-punto-form
+  [mostrarModal]="mostrarModal"
+  [modoEdicion]="modoEdicion"
+  [idRutaVersion]="idRutaVersion"
+  [version]="version"
+  [puntosExistentes]="puntos"
+  [tipoSugerido]="tipoSugerido"
+  [puntoSeleccionado]="puntoSeleccionado"
+  [ordenSugerido]="ordenSugerido"
+  (modalCerrado)="cerrarModal()"
+  (puntoGuardado)="onPuntoGuardado()"
+  ></ruta-punto-form>

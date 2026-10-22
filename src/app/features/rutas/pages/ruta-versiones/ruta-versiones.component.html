@@ -38,7 +38,7 @@
             </h2>
 
             <p class="mt-1 text-sm text-base-content/60">
-              Consulta las versiones y sus puntos registrados.
+              Guarda el trazado y luego asigna su inicio, final y puntos de recolección.
             </p>
           </div>
         </div>
@@ -198,29 +198,12 @@
 
               <thead class="sticky top-0 z-10 bg-base-200 text-base-content">
                 <tr>
-                  <th scope="col" class="text-center">
-                    N.º
-                  </th>
-
-                  <th scope="col">
-                    Versión
-                  </th>
-
-                  <th scope="col">
-                    Vigencia
-                  </th>
-
-                  <th scope="col" class="text-center">
-                    Puntos registrados
-                  </th>
-
-                  <th scope="col" class="text-center">
-                    Puntos habilitados
-                  </th>
-
-                  <th scope="col" class="text-center">
-                    Acciones
-                  </th>
+                  <th scope="col" class="text-center"> N.º </th>
+                  <th scope="col"> Versión </th>
+                  <th scope="col"> Vigencia </th>
+                  <th scope="col" class="text-center"> Puntos registrados </th>
+                  <th scope="col" class="text-center"> Puntos habilitados </th>
+                  <th scope="col" class="text-center"> Acciones </th>
                 </tr>
               </thead>
 
@@ -236,8 +219,8 @@
                   <!-- Version -->
                   <th scope="row">
                     <div class="flex items-center gap-3">
-                      <div class="flex h-10 w-10 shrink-0 items-center
-                    justify-center rounded-xl bg-primary/10 text-primary">
+                      <div
+                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                         <i class="fa-solid fa-code-branch" aria-hidden="true"></i>
                       </div>
 
@@ -247,9 +230,9 @@
                     </div>
                   </th>
 
-                   <!-- Vigencia -->
+                  <!-- Vigencia -->
                   <td class="text-center font-semibold tabular-nums">
-                    {{ version.vigente }}
+                    {{ version.vigente ? 'Vigente' : 'No vigente' }}
                   </td>
 
                   <!-- Puntos registrados -->
@@ -267,9 +250,9 @@
                     <div class="flex items-center justify-center gap-1">
 
                       <!-- Ver puntos -->
-                      <div class="tooltip tooltip-left" data-tip="Ver puntos de la versión">
+                      <div class="tooltip tooltip-left" data-tip="Asignar puntos de la versión">
                         <button type="button" class="btn btn-ghost btn-circle btn-md" (click)="verPuntosVersion(i)"
-                          aria-label="Ver puntos de la versión">
+                          aria-label="Asignar puntos de la versión">
                           <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
                         </button>
                       </div>

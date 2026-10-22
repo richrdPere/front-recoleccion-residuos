@@ -450,6 +450,14 @@ export class UsuariosPageComponent implements OnInit {
   // ================================
   // Helpers methods
   // ================================
+
+  get hayFiltros(): boolean {
+    return !!(
+      this.searchBusqueda.trim() ||
+      this.rolBusqueda
+    );
+  }
+
   onSearchChange() {
     clearTimeout(this.searchTimeout);
 
@@ -493,6 +501,8 @@ export class UsuariosPageComponent implements OnInit {
     this.getUsuariosPaginated();
   }
 
+
+
   // ================================
   // Modales methods
   // ================================
@@ -510,8 +520,6 @@ export class UsuariosPageComponent implements OnInit {
     this.mostrarModalView = false;
     this.usuario_id = null;
   }
-
-
 
   cerrarModalRoles(): void {
     this.mostrarModalRoles = false;

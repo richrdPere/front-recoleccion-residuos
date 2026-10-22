@@ -8,8 +8,12 @@ import Swal from 'sweetalert2';
 import { RutaVersionPuntoService } from '../../../services/ruta-version-punto.service';
 
 // Interfaces
-import { RutaPuntoData } from '../../../interfaces/rutas';
+import { RutaPuntoData, RutaVersionConPuntosData } from '../../../interfaces/rutas';
 import { CreateRutaPuntoData, CreateRutaPuntoRequest, CreateRutaPuntoResponse, TipoRutaPunto, UpdateRutaPuntoData, UpdateRutaPuntoRequest, UpdateRutaPuntoResponse } from '../../../interfaces/ruta-puntos';
+
+// Componentes
+import { MapaBaseComponent, PuntoOperativoMapa } from 'src/app/shared/components/mapa-base/mapa-base.component';
+import { TrazadoSelectorComponent } from '../../components/trazado-selector/trazado-selector.component';
 
 // *********************************************************
 // VALIDADORES
@@ -85,6 +89,8 @@ type CampoNumerico =
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    TrazadoSelectorComponent,
+    MapaBaseComponent,
   ],
   templateUrl: './ruta-punto-form.component.html',
   styles: ``,
@@ -103,6 +109,16 @@ export class RutaPuntoFormComponent
 
   // El padre puede sugerir el orden del nuevo punto.
   @Input() ordenSugerido = 1;
+  @Input() version: RutaVersionConPuntosData | null = null;
+  @Input() puntosExistentes: RutaPuntoData[] = [];
+  @Input() tipoSugerido: TipoRutaPunto = 'RECOLECCION';
+  coordenadas: [number, number][] = [];
+  indiceSeleccionado = -1;
+  private cambiosTipo?: Subscription;
+  private cambiosFormulario?: Subscription;
+  puntosMapa: PuntoOperativoMapa[] = [];
+  puntoTemporal: PuntoOperativoMapa | null = null;
+  errorMapa: string | null = null;
 
   @Output() modalCerrado = new EventEmitter<void>();
 
@@ -152,16 +168,16 @@ export class RutaPuntoFormComponent
       {
         campo: 'radio_atencion_metros',
         etiqueta: 'Radio de atención (m)',
-        min: 0,
-        max: null,
-        step: 'any',
+        min: 1,
+        max: 1000,
+        step: '1',
       },
       {
         campo: 'tiempo_estimado_min',
         etiqueta: 'Tiempo estimado (min)',
-        min: 0,
+        min: 1,
         max: null,
-        step: 'any',
+        step: '1',
       },
     ];
 
@@ -171,7 +187,7 @@ export class RutaPuntoFormComponent
   readonly form = new FormGroup({
     codigo: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, textoNoVacio],
+      validators: [Validators.required, textoNoVacio, Validators.minLength(2), Validators.maxLength(30)],
     }),
 
     nombre: new FormControl('', {
@@ -212,16 +228,18 @@ export class RutaPuntoFormComponent
       Validators.min(1),
     ]),
 
-    radio_atencion_metros: new FormControl<number | null>(0, [
+    radio_atencion_metros: new FormControl<number | null>(30, [
       Validators.required,
       numeroFinito,
-      Validators.min(0),
+      numeroEntero,
+      Validators.min(1),
+      Validators.max(1000),
     ]),
 
-    tiempo_estimado_min: new FormControl<number | null>(0, [
-      Validators.required,
+    tiempo_estimado_min: new FormControl<number | null>(null, [
       numeroFinito,
-      Validators.min(0),
+      numeroEntero,
+      Validators.min(1),
     ]),
 
     obligatorio: new FormControl(false, {
@@ -232,14 +250,20 @@ export class RutaPuntoFormComponent
   constructor(
     private puntosService: RutaVersionPuntoService,
     private cdr: ChangeDetectorRef,
-  ) { }
+  ) {
+    this.cambiosTipo = this.form.controls.tipo_punto.valueChanges.subscribe(() => this.aplicarTipo());
+    this.cambiosFormulario = this.form.valueChanges.subscribe(() => this.actualizarMarcadoresMapa());
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['puntosExistentes']) this.actualizarMarcadoresMapa();
     const cambiaContexto =
       changes['mostrarModal'] ||
       changes['modoEdicion'] ||
       changes['idRutaVersion'] ||
-      changes['puntoSeleccionado'];
+      changes['puntoSeleccionado'] ||
+      changes['version'] ||
+      changes['tipoSugerido'];
 
     if (!cambiaContexto) {
       return;
@@ -255,6 +279,8 @@ export class RutaPuntoFormComponent
 
   ngOnDestroy(): void {
     this.consulta?.unsubscribe();
+    this.cambiosTipo?.unsubscribe();
+    this.cambiosFormulario?.unsubscribe();
   }
 
   // ================================
@@ -290,8 +316,7 @@ export class RutaPuntoFormComponent
         punto.id_ruta_version !== idVersion
       )
     ) {
-      this.errorFormulario =
-        'Selecciona un punto que pertenezca a esta versión.';
+      this.errorFormulario = 'Selecciona un punto que pertenezca a esta versión.';
       return;
     }
 
@@ -300,13 +325,37 @@ export class RutaPuntoFormComponent
     }
 
     const valores = this.form.getRawValue();
+    const otros = this.puntosExistentes.filter(p => p.id_ruta_punto !== punto?.id_ruta_punto);
+    const esExtremo = valores.tipo_punto === 'INICIO' || valores.tipo_punto === 'FINAL';
+
+    if (esExtremo && otros.some(p => p.tipo_punto === valores.tipo_punto)) {
+      this.errorFormulario = 'Esta versión ya tiene un punto de ese tipo. Edita el existente.';
+      return;
+    }
+    if (otros.some(p => p.orden === valores.orden || p.codigo.trim().toUpperCase() === valores.codigo.trim().toUpperCase())) {
+      this.errorFormulario = 'El código y el orden deben ser únicos dentro de la versión.';
+      return;
+    }
+    const orden = valores.orden ?? 0;
+    if (otros.some(p =>
+      (valores.tipo_punto === 'INICIO' && p.orden <= orden) ||
+      (valores.tipo_punto === 'FINAL' && p.orden >= orden) ||
+      (p.tipo_punto === 'INICIO' && p.orden >= orden) ||
+      (p.tipo_punto === 'FINAL' && p.orden <= orden))) {
+      this.errorFormulario = 'El inicio debe tener el menor orden y el final el mayor. Coloca las recolecciones entre ambos.';
+      return;
+    }
+    const extremo = valores.tipo_punto === 'INICIO' ? this.coordenadas[0] : this.coordenadas[this.coordenadas.length - 1];
+    if (esExtremo && (!extremo || valores.longitud !== extremo[0] || valores.latitud !== extremo[1])) {
+      this.errorFormulario = 'Selecciona el extremo correspondiente del trazado.';
+      return;
+    }
 
     if (
       valores.latitud === null ||
       valores.longitud === null ||
       valores.orden === null ||
-      valores.radio_atencion_metros === null ||
-      valores.tiempo_estimado_min === null
+      valores.radio_atencion_metros === null
     ) {
       return;
     }
@@ -392,9 +441,7 @@ export class RutaPuntoFormComponent
   // ================================
   // Helpers methods
   // ================================
-  campoInvalido(
-    campo: keyof typeof this.form.controls,
-  ): boolean {
+  campoInvalido(campo: keyof typeof this.form.controls): boolean {
     const control = this.form.controls[campo];
 
     return control.invalid && control.touched;
@@ -412,7 +459,7 @@ export class RutaPuntoFormComponent
     }
 
     if (control.hasError('numeroEntero')) {
-      return 'El orden debe ser un número entero.';
+      return 'El valor debe ser un número entero.';
     }
 
     if (control.hasError('min')) {
@@ -428,13 +475,19 @@ export class RutaPuntoFormComponent
 
   private prepararFormulario(): void {
     this.errorFormulario = null;
+    this.errorMapa = null;
     this.form.enable({ emitEvent: false });
+
+    const geometria = this.version?.geometria_geojson;
+    this.coordenadas = geometria?.type === 'LineString'
+      ? geometria.coordinates.map(c => [c[0], c[1]] as [number, number]) : [];
+    this.indiceSeleccionado = -1;
 
     this.form.reset({
       codigo: '',
       nombre: '',
       descripcion: '',
-      tipo_punto: 'RECOLECCION',
+      tipo_punto: this.tipoSugerido,
       latitud: null,
       longitud: null,
       orden:
@@ -442,8 +495,8 @@ export class RutaPuntoFormComponent
           this.ordenSugerido > 0
           ? this.ordenSugerido
           : 1,
-      radio_atencion_metros: 0,
-      tiempo_estimado_min: 0,
+      radio_atencion_metros: 30,
+      tiempo_estimado_min: null,
       obligatorio: false,
     });
 
@@ -464,7 +517,82 @@ export class RutaPuntoFormComponent
       });
     }
 
+    if (!this.modoEdicion) {
+      const tipo = this.form.controls.tipo_punto.value;
+      this.form.patchValue({
+        codigo: `${tipo}-${this.idRutaVersion}-${this.ordenSugerido}`.slice(0, 30),
+        nombre: tipo === 'INICIO' ? 'Inicio del recorrido' : tipo === 'FINAL' ? 'Final del recorrido' : 'Punto de recolección',
+      }, { emitEvent: false });
+    }
+    this.aplicarTipo();
+    this.actualizarMarcadoresMapa();
     this.cdr.markForCheck();
+  }
+
+  seleccionarEnMapa(coordenada: [number, number]): void {
+    if (this.isSaving || this.esExtremo) return;
+
+    const [longitud, latitud] = coordenada;
+
+    if (
+      !Number.isFinite(longitud) ||
+      !Number.isFinite(latitud) ||
+      Math.abs(longitud) > 180 ||
+      Math.abs(latitud) > 90) {
+      return
+    };
+
+    this.form.patchValue({ longitud, latitud }, { emitEvent: false });
+    this.actualizarMarcadoresMapa();
+    this.indiceSeleccionado = this.coordenadas.findIndex(c => c[0] === longitud && c[1] === latitud);
+    this.cdr.markForCheck();
+  }
+
+  aplicarTipo(): void {
+    const tipo = this.form.controls.tipo_punto.value;
+    if (tipo === 'INICIO') this.seleccionarUbicacion(0);
+    else if (tipo === 'FINAL') this.seleccionarUbicacion(this.coordenadas.length - 1);
+    else {
+      const { longitud, latitud } = this.form.getRawValue();
+      this.indiceSeleccionado = this.coordenadas.findIndex(c => c[0] === longitud && c[1] === latitud);
+    }
+    this.cdr.markForCheck();
+  }
+
+  seleccionarUbicacion(indice: number): void {
+    if (this.isSaving) return;
+    const tipo = this.form.controls.tipo_punto.value;
+    const elegido = tipo === 'INICIO' ? 0 : tipo === 'FINAL' ? this.coordenadas.length - 1 : indice;
+    const coordenada = this.coordenadas[elegido];
+    if (!coordenada) return;
+    this.indiceSeleccionado = elegido;
+    this.form.patchValue({ longitud: coordenada[0], latitud: coordenada[1] }, { emitEvent: false });
+    this.actualizarMarcadoresMapa();
+  }
+
+  private actualizarMarcadoresMapa(): void {
+    const idEditado = this.modoEdicion ? this.puntoSeleccionado?.id_ruta_punto : undefined;
+    this.puntosMapa = this.puntosExistentes
+      .filter(p => p.estado && p.id_ruta_punto !== idEditado)
+      .map(p => ({
+        longitud: Number(p.longitud), latitud: Number(p.latitud),
+        tipo_punto: p.tipo_punto, orden: p.orden, nombre: p.nombre
+      }))
+      .filter(p => Number.isFinite(p.longitud) && Number.isFinite(p.latitud));
+    const v = this.form.getRawValue();
+    this.puntoTemporal = typeof v.longitud === 'number' && typeof v.latitud === 'number' &&
+      Number.isFinite(v.longitud) && Number.isFinite(v.latitud) &&
+      Math.abs(v.longitud) <= 180 && Math.abs(v.latitud) <= 90
+      ? {
+        longitud: v.longitud, latitud: v.latitud, tipo_punto: v.tipo_punto,
+        orden: v.orden ?? undefined, nombre: v.nombre
+      }
+      : null;
+    this.cdr.markForCheck();
+  }
+
+  get esExtremo(): boolean {
+    return ['INICIO', 'FINAL'].includes(this.form.controls.tipo_punto.value);
   }
 
   private convertirNumero(valor: unknown): number | null {
