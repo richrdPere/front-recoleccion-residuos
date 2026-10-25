@@ -132,6 +132,8 @@ export class RutaPuntoFormComponent
   isSaving = false;
   errorFormulario: string | null = null;
 
+   modalWidthClass = 'max-w-6xl';
+
   readonly tiposPunto = TIPOS_PUNTO;
 
   private consulta?: Subscription;
@@ -237,6 +239,7 @@ export class RutaPuntoFormComponent
     ]),
 
     tiempo_estimado_min: new FormControl<number | null>(null, [
+       Validators.required,
       numeroFinito,
       numeroEntero,
       Validators.min(1),

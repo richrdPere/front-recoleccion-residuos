@@ -2,13 +2,15 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EMPTY, Observable, Subject, catchError, defer, finalize, forkJoin, of, switchMap } from 'rxjs';
+import { EMPTY, Observable, Subject, auditTime, interval, takeUntil, catchError, defer, finalize, forkJoin, of, switchMap } from 'rxjs';
 
 // Services
 import { MonitoreoService } from '../../services/monitoreo.service';
+import { MonitoreoSocketService } from 'src/app/core/socket/monitoreo-socket.service';
+import { provideMonitoreoSocketAutenticado } from 'src/app/core/socket/monitoreo-socket-auth.provider';
 
 // Interfaces
-import { MonitoreoAlertasData, MonitoreoAlertasFilters, MonitoreoMapaData, MonitoreoMapaFilters, MonitoreoMapaItem, MonitoreoOperacionData, MonitoreoOperacionFilters, MonitoreoRecorridoDetalleData, MonitoreoUltimaUbicacion } from '../../interfaces';
+import { MonitoreoAlertasData, MonitoreoAlertasFilters, MonitoreoMapaData, MonitoreoMapaFilters, MonitoreoMapaItem, MonitoreoOperacionData, MonitoreoOperacionFilters, MonitoreoRecorridoDetalleData, MonitoreoUltimaUbicacion, MonitoreoZona } from '../../interfaces';
 
 // *********************************************************
 // RESULTADO DE CADA CONSULTA
@@ -20,6 +22,8 @@ interface ResultadoConsulta<T> {
 
 // Componentes
 import { MapaBaseComponent } from 'src/app/shared/components/mapa-base/mapa-base.component';
+import { RecorridoActualizadoSocket, TrackingActualizadoSocket } from 'src/app/core/socket/monitoreo-socket.types';
+import { esMasReciente, gpsVisual, normalizarTracking } from 'src/app/core/socket/monitoreo-tracking.utils';
 
 @Component({
   selector: 'app-monitoreo-page',
@@ -29,14 +33,34 @@ import { MapaBaseComponent } from 'src/app/shared/components/mapa-base/mapa-base
     FormsModule,
     MapaBaseComponent,
   ],
+  providers: [MonitoreoSocketService, provideMonitoreoSocketAutenticado()],
   templateUrl: './monitoreo-page.component.html',
-  styles: ``,
+  // styles: ``,
+  // styleUrl: './monitoreo-page.component.scss' ,
+  styleUrls: ['./monitoreo-page.component.scss'],
+  host: {
+    '(document:keydown.escape)': 'cerrarPanel()',
+  },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MonitoreoPageComponent implements OnInit {
 
   private readonly monitoreoService = inject(MonitoreoService);
   private readonly destroyRef = inject(DestroyRef);
+  readonly socketMonitoreo = inject(MonitoreoSocketService);
+  readonly ultimaRecepcionSocket = signal<string | null>(null);
+  readonly sincronizando = signal(false);
+  private readonly posicionesSocket = new Map<number, MonitoreoUltimaUbicacion>();
+  private readonly refrescosSocket$ = new Subject<void>();
+  private sesionDisponible = true;
+  private consultaEnCurso = false;
+  private consultaEnFondo = false;
+  private refrescoPendiente = false;
+  private ultimoRecorridoDesconocido = 0;
+
+  readonly consultaActual = computed(() =>
+    !this.filtros().fecha || this.filtros().fecha === this.obtenerFechaLima());
+
 
   // *********************************************************
   // 1. SOLICITUDES
@@ -140,15 +164,19 @@ export class MonitoreoPageComponent implements OnInit {
   ngOnInit(): void {
     this.configurarConsultas();
     this.configurarDetalle();
-
+    this.configurarTiempoReal();
     this.actualizarMonitoreo();
+    void this.socketMonitoreo.iniciar();
+    this.destroyRef.onDestroy(() => this.socketMonitoreo.detener());
   }
 
   // *********************************************************
   // 7. ACTUALIZAR MONITOREO
   // *********************************************************
   actualizarMonitoreo(): void {
+    if (!this.sesionDisponible) return;
     this.cerrarDetalle();
+    this.consultaEnFondo = false;
     this.consultas$.next({ ...this.filtros() });
   }
 
@@ -194,18 +222,42 @@ export class MonitoreoPageComponent implements OnInit {
   // 9. SELECCIONAR RECORRIDO
   // *********************************************************
   seleccionarRecorrido(idRecorrido: number): void {
-    if (!Number.isInteger(idRecorrido) || idRecorrido <= 0) {
+    if (!this.sesionDisponible) return;
+
+    idRecorrido = Number(idRecorrido);
+
+    if (!Number.isSafeInteger(idRecorrido) || idRecorrido <= 0) {
       return;
     }
 
+    this.panelActivo.set('detalle');
     this.idRecorridoSeleccionado.set(idRecorrido);
     this.selecciones$.next(idRecorrido);
   }
 
   cerrarDetalle(): void {
+    if (this.panelActivo() === 'detalle') {
+      this.cerrarPanel();
+    }
+
     this.idRecorridoSeleccionado.set(null);
     this.selecciones$.next(null);
   }
+  // seleccionarRecorrido(idRecorrido: number): void {
+  //   if (!this.sesionDisponible) return;
+  //   idRecorrido = Number(idRecorrido);
+  //   if (!Number.isSafeInteger(idRecorrido) || idRecorrido <= 0) {
+  //     return;
+  //   }
+
+  //   this.idRecorridoSeleccionado.set(idRecorrido);
+  //   this.selecciones$.next(idRecorrido);
+  // }
+
+  // cerrarDetalle(): void {
+  //   this.idRecorridoSeleccionado.set(null);
+  //   this.selecciones$.next(null);
+  // }
 
   // *********************************************************
   // 10. VALIDAR COORDENADAS
@@ -257,7 +309,11 @@ export class MonitoreoPageComponent implements OnInit {
       .pipe(
         switchMap((filters) =>
           defer(() => {
-            this.cargando.set(true);
+            const enFondo = this.consultaEnFondo;
+            this.consultaEnFondo = false;
+            this.consultaEnCurso = true;
+            this.sincronizando.set(enFondo);
+            this.cargando.set(!enFondo);
 
             this.errorOperacion.set(null);
             this.errorMapa.set(null);
@@ -265,9 +321,11 @@ export class MonitoreoPageComponent implements OnInit {
 
             // Evita mostrar datos anteriores con nuevos filtros.
             // Esto no debe destruir la instancia del mapa.
-            this.operacion.set(null);
-            this.mapa.set(null);
-            this.alertas.set(null);
+            if (!enFondo) {
+              this.operacion.set(null);
+              this.mapa.set(null);
+              this.alertas.set(null);
+            }
 
             const filtrosOperacion: MonitoreoOperacionFilters = {
               ...filters,
@@ -299,16 +357,30 @@ export class MonitoreoPageComponent implements OnInit {
                 'No se pudieron obtener las alertas.',
               ),
             }).pipe(
-              finalize(() => this.cargando.set(false)),
+              takeUntil(this.socketMonitoreo.sesionCerrada$),
+              finalize(() => {
+                this.consultaEnCurso = false;
+                this.cargando.set(false);
+                this.sincronizando.set(false);
+              }),
             );
           }),
         ),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((resultado) => {
-        this.operacion.set(resultado.operacion.data);
-        this.mapa.set(resultado.mapa.data);
-        this.alertas.set(resultado.alertas.data);
+        // Si una actualización de fondo falla, conservar el último dato útil.
+        // Un cambio de filtros ya vació los datos al comenzar la consulta.
+        if (resultado.operacion.data) this.operacion.set(resultado.operacion.data);
+        if (resultado.mapa.data) this.mapa.set(resultado.mapa.data);
+        if (resultado.alertas.data) this.alertas.set(resultado.alertas.data);
+        this.reaplicarPosiciones();
+        const seleccionado = this.idRecorridoSeleccionado();
+        if (seleccionado !== null) this.selecciones$.next(seleccionado);
+        if (this.refrescoPendiente) {
+          this.refrescoPendiente = false;
+          this.refrescosSocket$.next();
+        }
 
         this.errorOperacion.set(resultado.operacion.error);
         this.errorMapa.set(resultado.mapa.error);
@@ -325,7 +397,7 @@ export class MonitoreoPageComponent implements OnInit {
       .pipe(
         switchMap((idRecorrido) =>
           defer(() => {
-            this.detalle.set(null);
+            if (this.detalle()?.id_recorrido !== idRecorrido) this.detalle.set(null);
             this.errorDetalle.set(null);
             this.cargandoDetalle.set(false);
 
@@ -341,6 +413,7 @@ export class MonitoreoPageComponent implements OnInit {
               ),
               'No se pudo obtener el detalle del recorrido.',
             ).pipe(
+              takeUntil(this.socketMonitoreo.sesionCerrada$),
               finalize(() => this.cargandoDetalle.set(false)),
             );
           }),
@@ -348,7 +421,13 @@ export class MonitoreoPageComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((resultado) => {
-        this.detalle.set(resultado.data);
+        if (resultado.data) {
+          this.detalle.set({
+            ...resultado.data,
+            ...this.proyectarUbicacion(resultado.data.id_recorrido,
+              resultado.data.ultima_ubicacion, resultado.data.gps),
+          });
+        }
         this.errorDetalle.set(resultado.error);
       });
   }
@@ -441,7 +520,164 @@ export class MonitoreoPageComponent implements OnInit {
   // *********************************************************
   // 15. OBTENER ZONAS LOCALES DE CALCA
   // *********************************************************
-  zonasMapa(): import("../../interfaces").MonitoreoZona[] {
-    throw new Error('Method not implemented.');
+  readonly zonasMapa = computed<MonitoreoZona[]>(() => {
+    const zonas = new Map<number, MonitoreoZona>();
+    for (const item of [...this.recorridosMapa(), ...this.programaciones()]) {
+      if (item.ruta?.zona) zonas.set(item.ruta.zona.id_zona, item.ruta.zona);
+    }
+    return [...zonas.values()];
+  });
+
+  // *********************************************************
+  // 16. TIEMPO REAL Y RECONCILIACIÓN
+  // *********************************************************
+  private configurarTiempoReal(): void {
+    this.socketMonitoreo.sesionCerrada$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.sesionDisponible = false;
+        this.refrescoPendiente = false;
+        this.posicionesSocket.clear();
+        this.ultimaRecepcionSocket.set(null);
+        this.cerrarDetalle();
+        this.detalle.set(null);
+        this.mapa.set(null);
+        this.operacion.set(null);
+        this.alertas.set(null);
+      });
+    this.socketMonitoreo.ubicacion$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((evento) => this.aplicarTracking(evento));
+
+    this.socketMonitoreo.recorrido$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((evento) => this.aplicarEstadoRecorrido(evento));
+
+    this.socketMonitoreo.sincronizar$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.sesionDisponible = true;
+        this.refrescosSocket$.next();
+      });
+
+    // Agrupar cambios de estado y programación; no consultar por cada GPS.
+    this.refrescosSocket$
+      .pipe(auditTime(1000), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.refrescarEnSegundoPlano());
+
+    // Envejecimiento visual aunque deje de llegar GPS.
+    interval(15000).pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.reaplicarPosiciones());
+
+    // Resumen/alertas no están incluidos en el evento de ubicación.
+    // También recupera datos perdidos por una desconexión.
+    interval(30000).pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        if (this.consultaActual() && !this.consultaEnCurso) {
+          this.refrescosSocket$.next();
+        }
+      });
+  }
+
+  reconectarSocket(): void {
+    void this.socketMonitoreo.iniciar();
+  }
+
+  private refrescarEnSegundoPlano(): void {
+    if (!this.sesionDisponible || !this.consultaActual()) return;
+    if (this.consultaEnCurso) {
+      this.refrescoPendiente = true;
+      return;
+    }
+    this.consultaEnFondo = true;
+    this.consultas$.next({ ...this.filtros() });
+  }
+
+  private aplicarTracking(evento: TrackingActualizadoSocket): void {
+    if (!this.consultaActual()) return;
+    const ubicacion = normalizarTracking(evento);
+    if (!ubicacion) return;
+    const id = ubicacion.id_recorrido;
+    if (!esMasReciente(ubicacion, this.posicionesSocket.get(id) ?? null)) return;
+    this.posicionesSocket.delete(id);
+    this.posicionesSocket.set(id, ubicacion);
+    // Una sola posición por recorrido, con límite de memoria.
+    if (this.posicionesSocket.size > 500) {
+      const primero = this.posicionesSocket.keys().next().value;
+      if (primero !== undefined) this.posicionesSocket.delete(primero);
+    }
+    this.ultimaRecepcionSocket.set(new Date().toISOString());
+    this.reaplicarPosiciones();
+
+    // Un recorrido nuevo requiere su DTO completo; no fabricar ruta/vehículo.
+    if (!this.recorridosMapa().some((item) => Number(item.id_recorrido) === id) &&
+      Date.now() - this.ultimoRecorridoDesconocido > 30000) {
+      this.ultimoRecorridoDesconocido = Date.now();
+      this.refrescosSocket$.next();
+    }
+  }
+
+  private aplicarEstadoRecorrido(evento: RecorridoActualizadoSocket): void {
+    if (!this.consultaActual()) return;
+    // El estado y sus efectos en filtros, resumen y programación los resuelve REST.
+    // Así un evento retrasado no devuelve un recorrido finalizado a EN_CURSO.
+    if (!Number.isSafeInteger(Number(evento?.id_recorrido))) return;
+    this.refrescosSocket$.next();
+  }
+
+  private proyectarUbicacion(
+    id: number,
+    actual: MonitoreoUltimaUbicacion | null,
+    gps: import('../../interfaces').MonitoreoGps,
+  ): {
+    ultima_ubicacion: MonitoreoUltimaUbicacion | null;
+    gps: import('../../interfaces').MonitoreoGps
+  } {
+    if (!this.consultaActual()) return { ultima_ubicacion: actual, gps };
+    const pendiente = this.posicionesSocket.get(Number(id));
+    const elegida = pendiente && esMasReciente(pendiente, actual) ? pendiente : actual;
+    return {
+      ultima_ubicacion: elegida,
+      gps: elegida ? gpsVisual(elegida) : gps,
+    };
+  }
+
+  private reaplicarPosiciones(): void {
+    if (!this.consultaActual()) return;
+    // Reaplicar después de REST evita que una respuesta en vuelo haga retroceder
+    // un marcador que ya recibió una posición más reciente por socket.
+    this.mapa.update((data) => data ? {
+      ...data, items: data.items.map((item) => ({
+        ...item,
+        ...this.proyectarUbicacion(item.id_recorrido, item.ultima_ubicacion, item.gps),
+      })),
+    } : null);
+    this.operacion.update((data) => data ? {
+      ...data, items: data.items.map((item) => item.recorrido ? {
+        ...item,
+        ...this.proyectarUbicacion(item.recorrido.id_recorrido, item.ultima_ubicacion, item.gps),
+      } : item),
+    } : null);
+    this.detalle.update((data) => data ? {
+      ...data,
+      ...this.proyectarUbicacion(data.id_recorrido, data.ultima_ubicacion, data.gps),
+    } : null);
+  }
+
+  // *********************************************************
+  // PANELES SUPERPUESTOS AL MAPA
+  // *********************************************************
+  readonly panelActivo = signal<
+    'recorridos' | 'alertas' | 'detalle' | null
+  >(null);
+
+  alternarPanel(panel: 'recorridos' | 'alertas'): void {
+    this.panelActivo.update((actual) =>
+      actual === panel ? null : panel,
+    );
+  }
+
+  cerrarPanel(): void {
+    this.panelActivo.set(null);
   }
 }

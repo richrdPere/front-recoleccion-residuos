@@ -9,7 +9,11 @@
         <h2 id="ruta-horario-form-titulo" class="text-xl font-bold">
           <i class="fa-solid fa-clock mr-2 text-primary" aria-hidden="true"></i>
 
-          {{ modoEdicion ? 'Editar horario' : 'Nuevo horario' }}
+          {{ modoEdicion ? 'Editar horario - ' : 'Nuevo horario - ' }}
+
+          <span class="badge badge-outline">
+            Ruta #{{ ruta_id }}
+          </span>
         </h2>
 
         <p class="mt-1 text-sm text-base-content/60">
@@ -20,9 +24,7 @@
           }}
         </p>
 
-        <span class="badge badge-outline mt-2">
-          Ruta #{{ ruta_id }}
-        </span>
+
       </div>
 
       <button type="button" class="btn btn-sm btn-circle btn-ghost" aria-label="Cerrar formulario" [disabled]="isSaving"
@@ -50,51 +52,86 @@
 
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <!-- DÍA -->
-        <div>
+        <div class="form-control">
           <label for="horario-dia" class="mb-2 block text-sm font-semibold">
             Día de la semana
-            <span class="text-error">*</span>
+
+            @if (esRequerido('dia_semana')) {
+            <span class="font-bold text-red-500">*</span>
+            }
           </label>
 
-          <input id="horario-dia" type="text" formControlName="dia_semana" class="input input-bordered w-full"
-            placeholder="Día de la semana" [class.input-error]="campoInvalido('dia_semana')" />
+          <select id="horario-dia" formControlName="dia_semana" class="select select-bordered border-2 w-full rounded-lg
+           transition-colors duration-200" [class.select-success]="campoCompleto('dia_semana')"
+            [class.select-error]="campoInvalido('dia_semana')" [attr.aria-invalid]="campoInvalido('dia_semana')"
+            [attr.aria-describedby]="campoInvalido('dia_semana') ? 'dia-semana-error' : null">
+            <option [ngValue]="null" disabled>
+              Seleccionar día de la semana
+            </option>
+
+            @for (opcion of diasSemana; track opcion.value) {
+            <option [ngValue]="opcion.value">
+              {{ opcion.label }}
+            </option>
+            }
+          </select>
 
           @if (campoInvalido('dia_semana')) {
-          <p class="mt-1 text-xs text-error">
-            Ingresa el día de la semana.
+          <p id="dia-semana-error" class="mt-1 text-xs text-error">
+            Selecciona un día de la semana válido.
           </p>
           }
         </div>
 
         <!-- FRECUENCIA -->
-        <div>
+        <div class="form-control">
           <label for="horario-frecuencia" class="mb-2 block text-sm font-semibold">
             Frecuencia
-            <span class="text-error">*</span>
+            @if (esRequerido('frecuencia')) {
+            <span class="font-bold text-red-500">*</span>
+            }
           </label>
 
-          <input id="horario-frecuencia" type="text" formControlName="frecuencia" class="input input-bordered w-full"
-            placeholder="Frecuencia del horario" [class.input-error]="campoInvalido('frecuencia')" />
+          <select id="horario-frecuencia" formControlName="frecuencia" class="select select-bordered border-2 w-full rounded-lg
+           transition-colors duration-200" [class.select-success]="campoCompleto('frecuencia')"
+            [class.select-error]="campoInvalido('frecuencia')" [attr.aria-invalid]="campoInvalido('frecuencia')"
+            [attr.aria-describedby]="campoInvalido('frecuencia') ? 'horario-frecuencia-error' : null">
+            <option [ngValue]="null" disabled>
+              Seleccionar frecuencia
+            </option>
+
+            @for (opcion of frecuencia; track opcion.value) {
+            <option [ngValue]="opcion.value">
+              {{ opcion.label }}
+            </option>
+            }
+          </select>
 
           @if (campoInvalido('frecuencia')) {
-          <p class="mt-1 text-xs text-error">
-            Ingresa la frecuencia.
+          <p id="horario-frecuencia-error" class="mt-1 text-xs text-error">
+            Selecciona una frecuencia válida.
           </p>
           }
         </div>
+
 
         <!-- HORA INICIO -->
         <div>
           <label for="horario-inicio" class="mb-2 block text-sm font-semibold">
             Hora de inicio
-            <span class="text-error">*</span>
+            @if (esRequerido('hora_inicio')) {
+            <span class="font-bold text-red-500">*</span>
+            }
           </label>
 
           <input id="horario-inicio" type="time" step="1" formControlName="hora_inicio"
-            class="input input-bordered w-full" [class.input-error]="campoInvalido('hora_inicio')" />
+            class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+            [class.input-success]="campoCompleto('hora_inicio')" [class.input-error]="campoInvalido('hora_inicio')"
+            [attr.aria-invalid]="campoInvalido('hora_inicio')"
+            [attr.aria-describedby]="campoInvalido('hora_inicio') ? 'horario-inicio-error' : null" />
 
           @if (campoInvalido('hora_inicio')) {
-          <p class="mt-1 text-xs text-error">
+          <p id="horario-inicio-error" class="mt-1 text-xs text-error">
             Ingresa una hora de inicio válida.
           </p>
           }
@@ -104,14 +141,19 @@
         <div>
           <label for="horario-fin" class="mb-2 block text-sm font-semibold">
             Hora de finalización
-            <span class="text-error">*</span>
+            @if (esRequerido('hora_fin')) {
+            <span class="font-bold text-red-500">*</span>
+            }
           </label>
 
-          <input id="horario-fin" type="time" step="1" formControlName="hora_fin" class="input input-bordered w-full"
-            [class.input-error]="campoInvalido('hora_fin')" />
+          <input id="horario-fin" type="time" step="1" formControlName="hora_fin"
+            class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+            [class.input-success]="campoCompleto('hora_fin')" [class.input-error]="campoInvalido('hora_fin')"
+            [attr.aria-invalid]="campoInvalido('hora_fin')"
+            [attr.aria-describedby]="campoInvalido('hora_fin') ? 'horario-fin-error' : null" />
 
           @if (campoInvalido('hora_fin')) {
-          <p class="mt-1 text-xs text-error">
+          <p id="horario-fin-error" class="mt-1 text-xs text-error">
             Ingresa una hora de finalización válida.
           </p>
           }
@@ -121,16 +163,20 @@
         <div>
           <label for="horario-fecha-desde" class="mb-2 block text-sm font-semibold">
             Vigencia desde
-            <span class="text-error">*</span>
+            @if (esRequerido('fecha_vigencia_desde')) {
+            <span class="font-bold text-red-500">*</span>
+            }
           </label>
 
           <input id="horario-fecha-desde" type="date" formControlName="fecha_vigencia_desde"
-            class="input input-bordered w-full" [class.input-error]="
-                campoInvalido('fecha_vigencia_desde')
-              " />
+            class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+            [class.input-success]="campoCompleto('fecha_vigencia_desde')"
+            [class.input-error]="campoInvalido('fecha_vigencia_desde')"
+            [attr.aria-invalid]="campoInvalido('fecha_vigencia_desde')"
+            [attr.aria-describedby]="campoInvalido('fecha_vigencia_desde') ? 'fecha-desde-error' : null" />
 
           @if (campoInvalido('fecha_vigencia_desde')) {
-          <p class="mt-1 text-xs text-error">
+          <p id="fecha-desde-error" class="mt-1 text-xs text-error">
             Ingresa una fecha inicial válida.
           </p>
           }
@@ -140,18 +186,22 @@
         <div>
           <label for="horario-fecha-hasta" class="mb-2 block text-sm font-semibold">
             Vigencia hasta
+            @if (esRequerido('fecha_vigencia_hasta')) {
+            <span class="font-bold text-red-500">*</span>
+            }
           </label>
 
           <input id="horario-fecha-hasta" type="date" formControlName="fecha_vigencia_hasta"
-            class="input input-bordered w-full" [attr.min]="
-                form.controls.fecha_vigencia_desde.value || null
-              " [class.input-error]="
+            class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+            [attr.min]="form.controls.fecha_vigencia_desde.value || null"
+            [class.input-success]="campoCompleto('fecha_vigencia_hasta')" [class.input-error]="
                 campoInvalido('fecha_vigencia_hasta') ||
                 (
                   form.hasError('rangoFechasInvalido') &&
                   form.controls.fecha_vigencia_hasta.touched
                 )
-              " />
+              " [attr.aria-invalid]="campoInvalido('fecha_vigencia_hasta')"
+            [attr.aria-describedby]="campoInvalido('fecha_vigencia_hasta') ? 'fecha-hasta-error' : null" />
 
           @if (!modoEdicion) {
           <p class="mt-1 text-xs text-base-content/60">
@@ -160,7 +210,7 @@
           }
 
           @if (campoInvalido('fecha_vigencia_hasta')) {
-          <p class="mt-1 text-xs text-error">
+          <p id="fecha-hasta-error" class="mt-1 text-xs text-error">
             Ingresa una fecha final válida.
           </p>
           }
@@ -179,33 +229,50 @@
         <div class="md:col-span-2">
           <label for="horario-observacion" class="mb-2 block text-sm font-semibold">
             Observación
+            @if (esRequerido('observacion')) {
+            <span class="font-bold text-red-500">*</span>
+            }
           </label>
 
-          <textarea id="horario-observacion" formControlName="observacion" class="textarea textarea-bordered w-full"
-            rows="3" placeholder="Indicaciones u observaciones del horario..."></textarea>
+          <textarea id="horario-observacion" formControlName="observacion" class="textarea textarea-bordered border-2 w-full
+                           rounded-lg placeholder-gray-400
+                           transition-colors duration-200" rows="3"
+            placeholder="Indicaciones u observaciones del horario..."
+             [class.input-success]="campoCompleto('observacion')"
+            [class.input-error]="campoInvalido('observacion')"
+            [attr.aria-invalid]="campoInvalido('observacion')"
+            appUppercase></textarea>
         </div>
       </div>
 
-      <!-- BOTONES -->
-      <footer class="mt-6 flex justify-end gap-3
-                 border-t border-base-300 pt-4">
-        <button type="button" class="btn" [disabled]="isSaving" (click)="cerrarModal()">
-          Cancelar
-        </button>
+      <!-- =============================================== -->
+      <!-- FOOTER -->
+      <!-- =============================================== -->
+      <footer class="flex shrink-0 flex-col-reverse gap-3
+               border-t border-base-300 bg-base-100
+               px-5 py-4 sm:flex-row sm:items-center
+               sm:justify-center sm:px-6">
 
-        <button type="submit" class="btn btn-primary" [disabled]="isSaving">
-          @if (isSaving) {
-          <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
-          Guardando...
-          } @else {
-          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
-          {{
-          modoEdicion
-          ? 'Actualizar horario'
-          : 'Guardar horario'
-          }}
-          }
-        </button>
+        <div class="flex flex-col-reverse gap-5 sm:flex-row sm:justify-end">
+          <button type="button" class="btn btn-error" [disabled]="isSaving" (click)="cerrarModal()">
+            Cancelar
+          </button>
+
+          <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+            @if (isSaving) {
+            <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+            Guardando...
+            } @else {
+            <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+            {{
+            modoEdicion
+            ? 'Actualizar'
+            : 'Guardar'
+            }}
+            }
+          </button>
+        </div>
+
       </footer>
     </form>
   </section>

@@ -4,12 +4,15 @@ import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, Validatio
 import { finalize, Observable, Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 
+// Directives
+import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directive';
+
 // Service
 import { RutaHorarioService } from '../../../services/ruta-horario.service';
 
 // Interfaces
 import { RutaHorarioData } from '../../../interfaces/rutas';
-import { CreateRutaHorarioData, CreateRutaHorarioRequest, CreateRutaHorarioResponse, UpdateRutaHorarioRequest, UpdateRutaHorarioResponse } from '../../../interfaces/ruta-horario';
+import { CreateRutaHorarioData, CreateRutaHorarioRequest, CreateRutaHorarioResponse, DiasSemana, Frecuencia, UpdateRutaHorarioRequest, UpdateRutaHorarioResponse } from '../../../interfaces/ruta-horario';
 
 // *********************************************************
 // VALIDADORES
@@ -78,6 +81,23 @@ const fechaValidator: ValidatorFn = (
     : { fechaInvalida: true };
 };
 
+const opcionPermitida = (
+  opciones: readonly string[],
+): ValidatorFn => (
+  control: AbstractControl,
+): ValidationErrors | null => {
+    const valor = control.value;
+
+    // El campo obligatorio lo valida Validators.required.
+    if (valor === null || valor === undefined || valor === '') {
+      return null;
+    }
+
+    return typeof valor === 'string' && opciones.includes(valor)
+      ? null
+      : { opcionInvalida: true };
+  };
+
 const rangoFechasValidator: ValidatorFn = (
   control: AbstractControl,
 ): ValidationErrors | null => {
@@ -112,6 +132,7 @@ const rangoFechasValidator: ValidatorFn = (
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    UppercaseDirective,
   ],
   templateUrl: './ruta-horario-form.component.html',
   styles: ``,
@@ -140,14 +161,78 @@ export class RutaHorarioFormComponent
 
   private consulta?: Subscription;
 
+
+  // ============================================================
+  // Selectores
+  // ============================================================
+  readonly diasSemana: {
+    value: DiasSemana;
+    label: string;
+  }[] = [
+      {
+        value: 'LUNES',
+        label: 'LUNES',
+      },
+      {
+        value: 'MARTES',
+        label: 'MARTES',
+      },
+      {
+        value: 'MIERCOLES',
+        label: 'MIERCOLES',
+      },
+      {
+        value: 'JUEVES',
+        label: 'JUEVES',
+      },
+      {
+        value: 'VIERNES',
+        label: 'VIERNES',
+      },
+      {
+        value: 'SABADO',
+        label: 'SABADO',
+      },
+      {
+        value: 'DOMINGO',
+        label: 'DOMINGO',
+      },
+    ];
+
+  readonly frecuencia: {
+    value: Frecuencia;
+    label: string;
+  }[] = [
+      {
+        value: 'SEMANAL',
+        label: 'SEMANAL',
+      },
+      {
+        value: 'QUINCENAL',
+        label: 'QUINCENAL',
+      },
+      {
+        value: 'MENSUAL',
+        label: 'MENSUAL',
+      },
+      {
+        value: 'ESPECIAL',
+        label: 'ESPECIAL',
+      },
+    ];
+
   // ================================
   // Formulario
   // ================================
   readonly form = new FormGroup(
     {
-      dia_semana: new FormControl('', {
-        nonNullable: true,
-        validators: [Validators.required, textoNoVacio],
+      dia_semana: new FormControl<DiasSemana | null>(null, {
+        validators: [
+          Validators.required,
+          opcionPermitida(
+            this.diasSemana.map(opcion => opcion.value),
+          ),
+        ],
       }),
 
       hora_inicio: new FormControl('', {
@@ -160,9 +245,13 @@ export class RutaHorarioFormComponent
         validators: [Validators.required, horaValidator],
       }),
 
-      frecuencia: new FormControl('', {
-        nonNullable: true,
-        validators: [Validators.required, textoNoVacio],
+      frecuencia: new FormControl<Frecuencia | null>(null, {
+        validators: [
+          Validators.required,
+          opcionPermitida(
+            this.frecuencia.map(opcion => opcion.value),
+          ),
+        ],
       }),
 
       fecha_vigencia_desde: new FormControl('', {
@@ -283,11 +372,20 @@ export class RutaHorarioFormComponent
         request,
       );
     } else {
+      if (
+        valores.dia_semana === null ||
+        valores.frecuencia === null
+      ) {
+        this.errorFormulario =
+          'Selecciona el día de la semana y la frecuencia.';
+        return;
+      }
+
       const request: CreateRutaHorarioRequest = {
-        dia_semana: valores.dia_semana.trim(),
+        dia_semana: valores.dia_semana,
         hora_inicio: horaInicio,
         hora_fin: horaFin,
-        frecuencia: valores.frecuencia.trim(),
+        frecuencia: valores.frecuencia,
         fecha_vigencia_desde: valores.fecha_vigencia_desde,
         fecha_vigencia_hasta:
           valores.fecha_vigencia_hasta || null,
@@ -361,10 +459,10 @@ export class RutaHorarioFormComponent
     this.form.enable({ emitEvent: false });
 
     this.form.reset({
-      dia_semana: '',
+      dia_semana: null,
       hora_inicio: '',
       hora_fin: '',
-      frecuencia: '',
+      frecuencia: null,
       fecha_vigencia_desde: '',
       fecha_vigencia_hasta: '',
       observacion: '',
@@ -373,11 +471,19 @@ export class RutaHorarioFormComponent
     if (this.modoEdicion && this.horarioSeleccionado) {
       const horario = this.horarioSeleccionado;
 
+      const diaSeleccionado = this.diasSemana.find(
+        opcion => opcion.value === horario.dia_semana,
+      )?.value ?? null;
+
+      const frecuenciaSeleccionada = this.frecuencia.find(
+        opcion => opcion.value === horario.frecuencia,
+      )?.value ?? null;
+
       this.form.patchValue({
-        dia_semana: horario.dia_semana,
+        dia_semana: diaSeleccionado,
         hora_inicio: horario.hora_inicio,
         hora_fin: horario.hora_fin,
-        frecuencia: horario.frecuencia,
+        frecuencia: frecuenciaSeleccionada,
         fecha_vigencia_desde: horario.fecha_vigencia_desde,
         fecha_vigencia_hasta: horario.fecha_vigencia_hasta ?? '',
         observacion: horario.observacion ?? '',
@@ -386,6 +492,34 @@ export class RutaHorarioFormComponent
 
     this.configurarCampos();
     this.cdr.markForCheck();
+  }
+
+  esRequerido(campo: string): boolean {
+    return (
+      this.form
+        .get(campo)
+        ?.hasValidator(Validators.required) ?? false
+    );
+  }
+
+  campoCompleto(campo: string): boolean {
+    const control = this.form.get(campo);
+
+    if (!control || !control.valid) {
+      return false;
+    }
+
+    const valor = control.value;
+
+    if (typeof valor === 'string') {
+      return valor.trim().length > 0;
+    }
+
+    if (Array.isArray(valor)) {
+      return valor.length > 0;
+    }
+
+    return valor !== null && valor !== undefined;
   }
 
   private configurarCampos(): void {

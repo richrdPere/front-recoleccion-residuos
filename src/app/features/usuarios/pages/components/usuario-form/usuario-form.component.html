@@ -1,5 +1,4 @@
 @if (mostrarModal) {
-
 <div class="modal modal-open">
 
   <!-- ===================================================== -->
@@ -29,7 +28,7 @@
           </div>
 
           <div class="min-w-0">
-            <h2 id="patrullaje-form-title" class="truncate text-lg font-bold sm:text-xl">
+            <h2 id="usuario-form-title" class="truncate text-lg font-bold sm:text-xl">
               {{ modoEdicion ? 'Editar usuario' : 'Nuevo usuario' }}
             </h2>
 
@@ -60,34 +59,40 @@
           <fieldset class="min-w-0 space-y-6" [disabled]="isLoading">
 
             <!-- ================================================= -->
-            <!-- DATOS DE ACCESO -->
+            <!-- DATOS DE ACCESO AUTOMÁTICOS -->
             <!-- ================================================= -->
-            <div class="space-y-3">
+            <!-- <div class="space-y-3">
               <h3 class="flex items-center gap-2 text-lg font-semibold">
                 <i class="fa-solid fa-user-lock text-primary" aria-hidden="true"></i>
+
                 Datos de acceso
               </h3>
 
+              <p class="text-sm text-base-content/60">
+                El nombre de usuario se obtiene del número de documento.
+                El correo de acceso corresponde al correo de contacto.
+              </p>
+
               <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 
-                <!-- Username -->
+
                 <div class="form-control">
                   <label class="label" for="usuario-username">
-                    <span class="label-text flex items-center gap-1">
+                    <span class="label-text">
                       Nombre de usuario
-                      @if (esRequerido('username')) {
-                      <span class="font-bold text-red-500">*</span>
-                      }
+                    </span>
+
+                    <span class="label-text-alt text-base-content/55">
+                      Automático
                     </span>
                   </label>
 
-                  <input id="usuario-username" type="text" formControlName="username" placeholder="Ej. carlos.pereira"
-                    autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="50"
-                    class="input input-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
+                  <input id="usuario-username" type="text" formControlName="username"
+                    placeholder="Se obtiene del documento" autocomplete="off" readonly
+                    class="input input-bordered border-2 w-full bg-base-200 placeholder-gray-400 transition-colors duration-200"
                     [class.input-success]="campoCompleto('username')" [class.input-error]="campoInvalido('username')"
                     [attr.aria-invalid]="campoInvalido('username')"
-                    [attr.aria-describedby]="campoInvalido('username') ? 'usuario-username-error' : null"
-                    (blur)="normalizarCampo('username')" />
+                    [attr.aria-describedby]="campoInvalido('username') ? 'usuario-username-error' : null" />
 
                   @if (campoInvalido('username')) {
                   <p id="usuario-username-error" class="mt-1 text-sm text-red-500">
@@ -96,64 +101,71 @@
                   }
                 </div>
 
-                <!-- Correo de acceso -->
+
                 <div class="form-control">
-                  <label class="label" for="usuario-email-acceso">
+                  <label class="label" for="usuario-email-contacto">
                     <span class="label-text flex items-center gap-1">
-                      Correo de acceso
-                      @if (esRequerido('email_acceso')) {
+                      Correo de contacto
                       <span class="font-bold text-red-500">*</span>
-                      }
                     </span>
                   </label>
 
-                  <input id="usuario-email-acceso" type="email" formControlName="email_acceso"
-                    placeholder="Ej. carlos@example.com" autocomplete="off" autocapitalize="none" spellcheck="false"
-                    maxlength="150"
+                  <input id="usuario-email-contacto" type="email" formControlName="email_contacto"
+                    placeholder="Ej. contacto@example.com" autocomplete="off" autocapitalize="none" spellcheck="false"
+                    maxlength="150" required
                     class="input input-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
-                    [class.input-success]="campoCompleto('email_acceso')"
-                    [class.input-error]="campoInvalido('email_acceso')"
-                    [attr.aria-invalid]="campoInvalido('email_acceso')"
-                    [attr.aria-describedby]="campoInvalido('email_acceso') ? 'usuario-email-acceso-error' : null"
-                    (blur)="normalizarCampo('email_acceso')" />
+                    [class.input-success]="campoCompleto('email_contacto')"
+                    [class.input-error]="campoInvalido('email_contacto')"
+                    [attr.aria-invalid]="campoInvalido('email_contacto')"
+                    [attr.aria-describedby]="campoInvalido('email_contacto') ? 'usuario-email-contacto-error' : 'usuario-email-contacto-ayuda'"
+                    (blur)="normalizarCampo('email_contacto')" />
 
-                  @if (campoInvalido('email_acceso')) {
-                  <p id="usuario-email-acceso-error" class="mt-1 text-sm text-red-500">
-                    {{ obtenerError('email_acceso') }}
+                  <p id="usuario-email-contacto-ayuda" class="mt-1 text-xs text-base-content/55">
+                    Este correo también se utilizará para iniciar sesión.
+                  </p>
+
+                  @if (campoInvalido('email_contacto')) {
+                  <p id="usuario-email-contacto-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('email_contacto') }}
                   </p>
                   }
                 </div>
 
-                <!-- Contraseña: solamente al crear -->
+
                 @if (!modoEdicion) {
                 <div class="form-control">
                   <label class="label" for="usuario-password">
-                    <span class="label-text flex items-center gap-1">
-                      Contraseña
-                      @if (esRequerido('password')) {
-                      <span class="font-bold text-red-500">*</span>
-                      }
+                    <span class="label-text">
+                      Contraseña inicial
+                    </span>
+
+                    <span class="label-text-alt text-base-content/55">
+                      Automática
                     </span>
                   </label>
 
                   <div class="relative">
                     <input id="usuario-password" [type]="mostrarPassword ? 'text' : 'password'"
-                      formControlName="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password"
-                      class="input input-bordered border-2 w-full pr-12 placeholder-gray-400 transition-colors duration-200"
+                      formControlName="password" placeholder="Se obtiene del documento" autocomplete="new-password"
+                      readonly
+                      class="input input-bordered border-2 w-full bg-base-200 pr-12 placeholder-gray-400 transition-colors duration-200"
                       [class.input-success]="campoCompleto('password')" [class.input-error]="campoInvalido('password')"
                       [attr.aria-invalid]="campoInvalido('password')"
-                      [attr.aria-describedby]="campoInvalido('password') ? 'usuario-password-error' : null" />
+                      [attr.aria-describedby]="campoInvalido('password') ? 'usuario-password-error' : 'usuario-password-ayuda'" />
 
                     <button type="button"
-                      class="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-base-content/60 hover:bg-base-200"
+                      class="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-base-content/60 hover:bg-base-300"
                       [attr.aria-label]="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
                       [attr.aria-pressed]="mostrarPassword" aria-controls="usuario-password"
                       (click)="toggleMostrarPassword()">
-
-                      <i class="fa-solid" [ngClass]="mostrarPassword ? 'fa-eye-slash' : 'fa-eye'" aria-hidden="true">
-                      </i>
+                      <i class="fa-solid" [ngClass]="mostrarPassword ? 'fa-eye-slash' : 'fa-eye'"
+                        aria-hidden="true"></i>
                     </button>
                   </div>
+
+                  <p id="usuario-password-ayuda" class="mt-1 text-xs text-base-content/55">
+                    La contraseña inicial será el número de DNI.
+                  </p>
 
                   @if (campoInvalido('password')) {
                   <p id="usuario-password-error" class="mt-1 text-sm text-red-500">
@@ -163,12 +175,18 @@
                 </div>
                 }
               </div>
-            </div>
+
+              @if (modoEdicion) {
+              <p class="text-xs text-base-content/60">
+                La contraseña actual se conserva al actualizar.
+              </p>
+              }
+            </div> -->
 
             <!-- ================================================= -->
             <!-- INFORMACIÓN PERSONAL -->
             <!-- ================================================= -->
-            <div class="space-y-3 border-t border-base-300 pt-5">
+            <div class="space-y-3 "> <!-- border-t border-base-300 pt-5-->
               <h3 class="flex items-center gap-2 text-lg font-semibold">
                 <i class="fa-solid fa-address-card text-primary" aria-hidden="true"></i>
                 Información personal
@@ -191,7 +209,8 @@
                   <input id="usuario-nombres" type="text" formControlName="nombres" placeholder="Ingrese los nombres"
                     maxlength="100"
                     class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
-                    [class.input-success]="campoCompleto('nombres')" [class.input-error]="campoInvalido('nombres')"
+                    [class.input-success]="campoCompleto('nombres')"
+                    [class.input-error]="campoInvalido('nombres')"
                     [attr.aria-invalid]="campoInvalido('nombres')"
                     [attr.aria-describedby]="campoInvalido('nombres') ? 'usuario-nombres-error' : null"
                     (blur)="normalizarCampo('nombres', true)" appUppercase />
@@ -229,29 +248,28 @@
                   }
                 </div>
 
-                <!-- Género -->
+                <!-- Correo del contacto -->
                 <div class="form-control">
-                  <label class="label" for="usuario-genero">
-                    <span class="label-text">Género</span>
-                    <span class="label-text-alt text-base-content/55">Opcional</span>
+                  <label class="label" for="usuario-email-contacto">
+                    <span class="label-text">
+                      Correo de contacto
+                      <span class="text-red-500">*</span>
+                    </span>
                   </label>
 
-                  <select id="usuario-genero" formControlName="genero"
-                    class="select select-bordered border-2 w-full rounded-lg transition-colors duration-200"
-                    [class.select-success]="campoCompleto('genero')" [class.select-error]="campoInvalido('genero')"
-                    [attr.aria-invalid]="campoInvalido('genero')"
-                    [attr.aria-describedby]="campoInvalido('genero') ? 'usuario-genero-error' : null">
+                  <input id="usuario-email-contacto" type="email" formControlName="email_contacto"
+                    placeholder="Ej. contacto@example.com" autocapitalize="none" spellcheck="false" maxlength="150"
+                    required
+                    class="input input-bordered border-2 w-full rounded-lg placeholder-gray-400 transition-colors duration-200"
+                    [class.input-success]="campoCompleto('email_contacto')"
+                    [class.input-error]="campoInvalido('email_contacto')"
+                    [attr.aria-invalid]="campoInvalido('email_contacto')"
+                    [attr.aria-describedby]="campoInvalido('email_contacto') ? 'usuario-email-contacto-error' : null"
+                    (blur)="normalizarCampo('email_contacto')" />
 
-                    <option [ngValue]="null">Sin especificar</option>
-
-                    @for (opcion of generos; track opcion.value) {
-                    <option [value]="opcion.value">{{ opcion.label }}</option>
-                    }
-                  </select>
-
-                  @if (campoInvalido('genero')) {
-                  <p id="usuario-genero-error" class="mt-1 text-sm text-red-500">
-                    {{ obtenerError('genero') }}
+                  @if (campoInvalido('email_contacto')) {
+                  <p id="usuario-email-contacto-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('email_contacto') }}
                   </p>
                   }
                 </div>
@@ -321,11 +339,11 @@
                 <div class="form-control">
                   <label class="label" for="usuario-fecha-nacimiento">
                     <span class="label-text">Fecha de nacimiento</span>
-                    <span class="label-text-alt text-base-content/55">Opcional</span>
+                    <!-- <span class="label-text-alt text-base-content/55">Opcional</span> -->
                   </label>
 
                   <input id="usuario-fecha-nacimiento" type="date" formControlName="fecha_nacimiento"
-                  class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+                    class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
                     [class.input-success]="campoCompleto('fecha_nacimiento')"
                     [class.input-error]="campoInvalido('fecha_nacimiento')"
                     [attr.aria-invalid]="campoInvalido('fecha_nacimiento')"
@@ -351,39 +369,18 @@
 
               <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 
-                <!-- Correo de contacto -->
-                <div class="form-control">
-                  <label class="label" for="usuario-email-contacto">
-                    <span class="label-text">Correo de contacto</span>
-                    <span class="label-text-alt text-base-content/55">Opcional</span>
-                  </label>
-
-                  <input id="usuario-email-contacto" type="email" formControlName="email_contacto"
-                    placeholder="Ej. contacto@example.com" autocapitalize="none" spellcheck="false" maxlength="150"
-                    class="input input-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
-                    [class.input-success]="campoCompleto('email_contacto')"
-                    [class.input-error]="campoInvalido('email_contacto')"
-                    [attr.aria-invalid]="campoInvalido('email_contacto')"
-                    [attr.aria-describedby]="campoInvalido('email_contacto') ? 'usuario-email-contacto-error' : null"
-                    (blur)="normalizarCampo('email_contacto')" />
-
-                  @if (campoInvalido('email_contacto')) {
-                  <p id="usuario-email-contacto-error" class="mt-1 text-sm text-red-500">
-                    {{ obtenerError('email_contacto') }}
-                  </p>
-                  }
-                </div>
-
-                <!-- Celular -->
+                <!-- CELULAR: 1/3 -->
                 <div class="form-control">
                   <label class="label" for="usuario-celular">
                     <span class="label-text">Celular</span>
-                    <span class="label-text-alt text-base-content/55">Opcional</span>
+                    <!-- <span class="label-text-alt text-base-content/55">
+                      Opcional
+                    </span> -->
                   </label>
 
                   <input id="usuario-celular" type="tel" formControlName="celular" placeholder="Ej. 987654321"
                     inputmode="numeric" pattern="[0-9]*" maxlength="9"
-                    class="input input-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
+                    class="input input-bordered border-2 w-full rounded-lg placeholder-gray-400 transition-colors duration-200"
                     [class.input-success]="campoCompleto('celular')" [class.input-error]="campoInvalido('celular')"
                     [attr.aria-invalid]="campoInvalido('celular')"
                     [attr.aria-describedby]="campoInvalido('celular') ? 'usuario-celular-error' : null"
@@ -396,20 +393,79 @@
                   }
                 </div>
 
-                <!-- Foto URL -->
-                <div class="form-control">
-                  <label class="label" for="usuario-foto-url">
-                    <span class="label-text">URL de fotografía</span>
-                    <span class="label-text-alt text-base-content/55">Opcional</span>
+                <!-- DIRECCIÓN: 2/3 -->
+                <div class="form-control md:col-span-2">
+                  <label class="label" for="usuario-direccion">
+                    <span class="label-text">Dirección</span>
+                    <!-- <span class="label-text-alt text-base-content/55">
+                      Opcional
+                    </span> -->
                   </label>
 
-                  <input id="usuario-foto-url" type="text" inputmode="url" formControlName="foto_url"
-                    placeholder="Ingrese la URL de la fotografía" autocapitalize="none" spellcheck="false"
-                    maxlength="255"
-                    class="input input-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
-                    [class.input-success]="campoCompleto('foto_url')" [class.input-error]="campoInvalido('foto_url')"
-                    [attr.aria-invalid]="campoInvalido('foto_url')"
-                    [attr.aria-describedby]="campoInvalido('foto_url') ? 'usuario-foto-url-error' : null" />
+                  <input id="usuario-direccion" type="text" formControlName="direccion" maxlength="255"
+                    placeholder="Ingrese la dirección del usuario"
+                    class="input input-bordered border-2 w-full rounded-lg placeholder-gray-400 transition-colors duration-200"
+                    [class.input-success]="campoCompleto('direccion')"
+                    [class.input-error]="campoInvalido('direccion')"
+                    [attr.aria-invalid]="campoInvalido('direccion')"
+                    [attr.aria-describedby]="campoInvalido('direccion') ? 'usuario-direccion-error' : null"
+                    (blur)="normalizarCampo('direccion', true)" appUppercase />
+
+                  @if (campoInvalido('direccion')) {
+                  <p id="usuario-direccion-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('direccion') }}
+                  </p>
+                  }
+                </div>
+              </div>
+
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+                <!-- GENERO: 1/3 -->
+                <div class="form-control">
+                  <label class="label" for="usuario-genero">
+                    <span class="label-text">Género</span>
+                    <!-- <span class="label-text-alt text-base-content/55">Opcional</span> -->
+                  </label>
+
+                  <select id="usuario-genero" formControlName="genero"
+                    class="select select-bordered border-2 w-full rounded-lg transition-colors duration-200"
+                    [class.select-success]="campoCompleto('genero')"
+                    [class.select-error]="campoInvalido('genero')"
+                    [attr.aria-invalid]="campoInvalido('genero')"
+                    [attr.aria-describedby]="campoInvalido('genero') ? 'usuario-genero-error' : null">
+
+                    <option [ngValue]="null">Sin especificar</option>
+
+                    @for (opcion of generos; track opcion.value) {
+                    <option [value]="opcion.value">{{ opcion.label }}</option>
+                    }
+                  </select>
+
+                  @if (campoInvalido('genero')) {
+                  <p id="usuario-genero-error" class="mt-1 text-sm text-red-500">
+                    {{ obtenerError('genero') }}
+                  </p>
+                  }
+                </div>
+
+
+                <!-- ARCHIVO: 2/3 -->
+                <div class="form-control md:col-span-2">
+                  <label class="label" for="usuario-fotografia">
+                    <span class="label-text">Fotografía</span>
+                    <!-- <span class="label-text-alt text-base-content/55">
+                      Opcional
+                    </span> -->
+                  </label>
+
+                  <input id="usuario-fotografia" type="file" class="file-input file-input-bordered w-full rounded-lg"
+                    aria-describedby="usuario-fotografia-ayuda" />
+
+                  <p id="usuario-fotografia-ayuda" class="mt-1 text-xs text-base-content/55">
+                    Tamaño máximo: 2 MB.
+                  </p>
 
                   @if (campoInvalido('foto_url')) {
                   <p id="usuario-foto-url-error" class="mt-1 text-sm text-red-500">
@@ -417,29 +473,11 @@
                   </p>
                   }
                 </div>
+
               </div>
 
-              <!-- Dirección -->
-              <div class="form-control">
-                <label class="label" for="usuario-direccion">
-                  <span class="label-text">Dirección</span>
-                  <span class="label-text-alt text-base-content/55">Opcional</span>
-                </label>
 
-                <textarea id="usuario-direccion" formControlName="direccion" rows="3" maxlength="255"
-                  placeholder="Ingrese la dirección del usuario"
-                  class="textarea textarea-bordered border-2 w-full placeholder-gray-400 transition-colors duration-200"
-                  [class.textarea-success]="campoCompleto('direccion')"
-                  [class.textarea-error]="campoInvalido('direccion')" [attr.aria-invalid]="campoInvalido('direccion')"
-                  [attr.aria-describedby]="campoInvalido('direccion') ? 'usuario-direccion-error' : null"
-                  (blur)="normalizarCampo('direccion', true)" appUppercase></textarea>
 
-                @if (campoInvalido('direccion')) {
-                <p id="usuario-direccion-error" class="mt-1 text-sm text-red-500">
-                  {{ obtenerError('direccion') }}
-                </p>
-                }
-              </div>
             </div>
 
             <!-- ================================================= -->
@@ -491,7 +529,7 @@
               </fieldset>
 
               <!-- Estado de la cuenta -->
-              <div class="flex items-center justify-between gap-4 rounded-xl border border-base-300 p-4">
+              <!-- <div class="flex items-center justify-between gap-4 rounded-xl border border-base-300 p-4">
                 <div>
                   <label for="usuario-estado" class="cursor-pointer text-sm font-semibold">
                     Cuenta activa
@@ -503,7 +541,7 @@
                 </div>
 
                 <input id="usuario-estado" type="checkbox" formControlName="estado" class="toggle toggle-success" />
-              </div>
+              </div> -->
             </div>
             }
 
@@ -531,7 +569,9 @@
               <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
               {{ modoEdicion ? 'Actualizando...' : 'Guardando...' }}
               } @else {
-              {{ textoBotonGuardar }}
+              <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+
+              {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
               }
             </button>
 

@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, finalize, tap } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, catchError, defer, finalize, firstValueFrom, map, of, shareReplay, takeUntil, tap, throwError } from 'rxjs';
 import { JwtHelperService } from '@auth0/angular-jwt';
 
 // Environment
@@ -15,14 +15,7 @@ import { AuthStorageService, StoredSession, TokenExpiration } from 'src/app/core
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
 // Interfaces
-import {
-  AuthJwtPayload,
-  AuthUser,
-  LoginRequest,
-  LoginResponse,
-  LogoutResponse,
-  RefreshTokenResponse,
-} from '../models';
+import { AuthJwtPayload, AuthUser, LoginRequest, LoginResponse, LogoutResponse, RefreshTokenResponse } from '../models';
 
 // Requests adicionales
 export interface ChangePasswordRequest {
@@ -71,6 +64,16 @@ export class AuthService {
   // =========================================================
   private readonly currentUserSubject = new BehaviorSubject<AuthUser | null>(null);
   readonly currentUser$ = this.currentUserSubject.asObservable();
+
+  // Eventos de sesión compartidos con clientes en tiempo real.
+  private readonly tokensActualizadosSubject = new Subject<void>();
+  private readonly sesionCerradaSubject = new Subject<void>();
+  readonly tokensActualizados$ = this.tokensActualizadosSubject.asObservable();
+  readonly sesionCerrada$ = this.sesionCerradaSubject.asObservable();
+
+  // HTTP y socket comparten una única renovación en curso.
+  private refreshRequest$: Observable<RefreshTokenResponse> | null = null;
+  private versionSesion = 0;
 
   constructor(
     // private readonly socketService: SocketService,
@@ -170,52 +173,150 @@ export class AuthService {
   // 4. RENOVAR TOKENS
   // *********************************************************
   refreshToken(): Observable<RefreshTokenResponse> {
-    const refreshToken = this.authStorage.getRefreshToken();
+    if (this.refreshRequest$)
+      return this.refreshRequest$;
 
-    if (!refreshToken) {
-      throw new Error(
-        'No existe un refresh token disponible.',
-      );
-    }
+    const version = this.versionSesion;
 
-    return this.http
-      .post<RefreshTokenResponse>(
+    const request$: Observable<RefreshTokenResponse> = defer(() => {
+      if (version !== this.versionSesion) {
+        return throwError(() => new Error('La sesión cambió antes de renovarse.'));
+      }
+
+      const refreshToken = this.authStorage.getRefreshToken();
+
+      if (!refreshToken) {
+        return throwError(() => new Error('No existe un refresh token disponible.'));
+      }
+      return this.http.post<RefreshTokenResponse>(
         this.API_REFRESH,
         {
-          refresh_token: refreshToken,
+          refresh_token: refreshToken
         },
         {
-          headers: HttpServiceHelper.getHeaders(),
+          headers: HttpServiceHelper.getHeaders()
         },
-      )
-      .pipe(
-        tap((response) => {
-          const {
-            access_token,
-            refresh_token,
-            expires_in,
-            refresh_expires_in,
-          } = response.data;
-
-          this.authStorage.saveTokens(
-            access_token,
-            refresh_token,
-            {
-              accessToken: expires_in,
-              refreshToken: refresh_expires_in,
-            },
-          );
-
-          this.updateStoredSession(access_token);
-        }),
-
-        catchError((error) =>
-          HttpServiceHelper.handleError(
-            error,
-            'No se pudo renovar la sesión.',
-          ),
-        ),
       );
+    }).pipe(
+      // Logout cancela la renovación; una respuesta tardía no restaura la sesión.
+      takeUntil(this.sesionCerrada$),
+      tap((response) => {
+        if (version !== this.versionSesion) {
+          throw new Error('La sesión cambió durante la renovación.');
+        }
+
+        if (!response.success || !response.data?.access_token || !response.data?.refresh_token) {
+          throw new Error('El servidor no devolvió una renovación válida.');
+        }
+
+        const {
+          access_token,
+          refresh_token,
+          expires_in,
+          refresh_expires_in
+        } = response.data;
+
+        const payload = this.decodeAccessToken(access_token);
+
+        if (!payload || !Number.isFinite(payload.exp) || !payload.session_id) {
+          throw new Error('El token renovado no contiene una sesión válida.');
+        }
+
+        this.authStorage.saveTokens(access_token, refresh_token, {
+          accessToken: expires_in,
+          refreshToken: refresh_expires_in,
+        });
+        this.updateStoredSession(access_token);
+        this.tokensActualizadosSubject.next();
+      }),
+
+      // Conservar la sesión ante fallos de red; cerrar ante rechazo definitivo.
+      tap({
+        error: (error: unknown) => {
+          const status = (error as { status?: number } | null)?.status;
+
+          if (version === this.versionSesion && (status === 401 || status === 403)) {
+            this.closeLocalSession();
+          }
+        }
+      }),
+
+      catchError((error) => HttpServiceHelper.handleError(error, 'No se pudo renovar la sesión.')),
+      finalize(() => {
+        if (this.refreshRequest$ === request$) this.refreshRequest$ = null;
+      }),
+      shareReplay({ bufferSize: 1, refCount: false }),
+    );
+
+    this.refreshRequest$ = request$;
+    return request$;
+
+    // const refreshToken = this.authStorage.getRefreshToken();
+
+    // if (!refreshToken) {
+    //   throw new Error(
+    //     'No existe un refresh token disponible.',
+    //   );
+    // }
+
+    // return this.http
+    //   .post<RefreshTokenResponse>(
+    //     this.API_REFRESH,
+    //     {
+    //       refresh_token: refreshToken,
+    //     },
+    //     {
+    //       headers: HttpServiceHelper.getHeaders(),
+    //     },
+    //   )
+    //   .pipe(
+    //     tap((response) => {
+    //       const {
+    //         access_token,
+    //         refresh_token,
+    //         expires_in,
+    //         refresh_expires_in,
+    //       } = response.data;
+
+    //       this.authStorage.saveTokens(
+    //         access_token,
+    //         refresh_token,
+    //         {
+    //           accessToken: expires_in,
+    //           refreshToken: refresh_expires_in,
+    //         },
+    //       );
+
+    //       this.updateStoredSession(access_token);
+    //     }),
+
+    //     catchError((error) =>
+    //       HttpServiceHelper.handleError(
+    //         error,
+    //         'No se pudo renovar la sesión.',
+    //       ),
+    //     ),
+    //   );
+  }
+
+  /** Devuelve el token vigente y reutiliza refreshToken() si debe renovarse. */
+  getAccessTokenForSocket(forzarRenovacion = false): Promise<string | null> {
+
+    return firstValueFrom(defer(() => {
+
+      const token = this.authStorage.getAccessToken();
+      const payload = this.decodeAccessToken(token);
+
+      if (!forzarRenovacion && token && payload &&
+        Number.isFinite(payload.exp) && payload.exp * 1000 > Date.now() + 30000) {
+        return of(token);
+      }
+      if (!this.canRefreshSession()) {
+        this.closeLocalSession();
+        return of(null);
+      }
+      return this.refreshToken().pipe(map(() => this.authStorage.getAccessToken()));
+    }));
   }
 
   // *********************************************************
@@ -415,6 +516,10 @@ export class AuthService {
       refreshToken: refresh_expires_in,
     };
 
+    this.versionSesion++;
+    this.sesionCerradaSubject.next();
+    this.refreshRequest$ = null;
+
     this.authStorage.saveLogin({
       accessToken: access_token,
       refreshToken: refresh_token,
@@ -426,6 +531,7 @@ export class AuthService {
     });
 
     this.currentUserSubject.next(usuario);
+    this.tokensActualizadosSubject.next();
 
     /*
      * Posteriormente:
@@ -487,8 +593,9 @@ export class AuthService {
   }
 
   private clearInvalidSession(): void {
-    this.authStorage.clearSession();
-    this.currentUserSubject.next(null);
+    this.closeLocalSession();
+    // this.authStorage.clearSession();
+    // this.currentUserSubject.next(null);
   }
 
   // - DECODIFICAR ACCESS TOKEN
@@ -518,9 +625,11 @@ export class AuthService {
      * this.mapaTrackingService.limpiarTodo();
      */
 
+    this.versionSesion++;
     this.authStorage.clearSession();
-
     this.currentUserSubject.next(null);
+    this.sesionCerradaSubject.next();
+    this.refreshRequest$ = null;
   }
 
   // =========================================================

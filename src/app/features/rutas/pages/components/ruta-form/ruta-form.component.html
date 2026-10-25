@@ -77,21 +77,27 @@
               <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 
                 <!-- Nombre -->
-                <div class="form-control">
+                <div class="form-control md:col-span-2">
                   <label class="label" for="ruta-nombre">
                     <span class="label-text">
                       Nombre de la ruta
+
+                      @if (esRequerido('nombre')) {
                       <span class="font-bold text-red-500">*</span>
+                      }
                     </span>
                   </label>
 
                   <input id="ruta-nombre" type="text" formControlName="nombre"
                     placeholder="Ej. Recolección del sector centro"
-                    class="input input-bordered w-full placeholder-gray-400"
-                    [class.input-error]="campoInvalido('nombre')" (blur)="normalizarCampo('nombre')" appUppercase />
+                    class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+                    [class.input-success]="campoCompleto('nombre')" [class.input-error]="campoInvalido('nombre')"
+                    [attr.aria-invalid]="campoInvalido('nombre')"
+                    [attr.aria-describedby]="campoInvalido('nombre') ? 'nombre-ruta-error' : null"
+                    (blur)="normalizarCampo('nombre')" appUppercase />
 
                   @if (campoInvalido('nombre')) {
-                  <p class="mt-1 text-sm text-red-500">
+                  <p id="nombre-ruta-error" class="mt-1 text-sm text-red-500">
                     {{ obtenerError('nombre') }}
                   </p>
                   }
@@ -102,17 +108,23 @@
                   <label class="label" for="ruta-descripcion">
                     <span class="label-text">
                       Descripción
+                      @if (esRequerido('descripcion')) {
                       <span class="font-bold text-red-500">*</span>
+                      }
                     </span>
                   </label>
 
                   <textarea id="ruta-descripcion" formControlName="descripcion" rows="4"
-                    placeholder="Describa el recorrido y los sectores atendidos." class="textarea textarea-bordered w-full
-                             placeholder-gray-400" [class.textarea-error]="campoInvalido('descripcion')"
+                    placeholder="Describa el recorrido y los sectores atendidos."
+                    class="textarea textarea-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+                    [class.textarea-success]="campoCompleto('descripcion')"
+                    [class.textarea-error]="campoInvalido('descripcion')"
+                    [attr.aria-invalid]="campoInvalido('descripcion')"
+                    [attr.aria-describedby]="campoInvalido('descripcion') ? 'descripcion-ruta-error' : null"
                     appUppercase></textarea>
 
                   @if (campoInvalido('descripcion')) {
-                  <p class="mt-1 text-sm text-red-500">
+                  <p id="descripcion-ruta-error" class="mt-1 text-sm text-red-500">
                     {{ obtenerError('descripcion') }}
                   </p>
                   }

@@ -4,6 +4,9 @@ import { AbstractControl, ReactiveFormsModule, ValidationErrors, ValidatorFn, Va
 import { finalize, map, Observable, Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 
+// Directives
+import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directive';
+
 // Service
 import { RutaVersionService } from '../../../services/ruta-version.service';
 
@@ -175,7 +178,7 @@ const rangoFechasValidator: ValidatorFn = (
 @Component({
   selector: 'ruta-version-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MapaBaseComponent, TrazadoSelectorComponent],
+  imports: [CommonModule, UppercaseDirective, ReactiveFormsModule, MapaBaseComponent, TrazadoSelectorComponent],
   templateUrl: './ruta-version-form.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -539,6 +542,34 @@ export class RutaVersionFormComponent
     const control = this.form.controls[campo];
 
     return control.invalid && control.touched;
+  }
+
+  campoCompleto(campo: string): boolean {
+    const control = this.form.get(campo);
+
+    if (!control || !control.valid) {
+      return false;
+    }
+
+    const valor = control.value;
+
+    if (typeof valor === 'string') {
+      return valor.trim().length > 0;
+    }
+
+    if (Array.isArray(valor)) {
+      return valor.length > 0;
+    }
+
+    return valor !== null && valor !== undefined;
+  }
+
+  esRequerido(campo: string): boolean {
+    return (
+      this.form
+        .get(campo)
+        ?.hasValidator(Validators.required) ?? false
+    );
   }
 
   // *********************************************************

@@ -51,8 +51,15 @@
               Orden #{{ mantenimiento.id_mantenimiento }}
             </h3>
 
-            <span class="badge badge-outline">
-              {{ mantenimiento.tipo_mantenimiento }}
+            <span class="badge badge-soft whitespace-nowrap"
+              [class.badge-info]="mantenimiento.tipo_mantenimiento === 'PREVENTIVO'"
+              [class.badge-secondary]="mantenimiento.tipo_mantenimiento === 'CORRECTIVO'">
+              <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>
+              {{
+              mantenimiento.tipo_mantenimiento === 'PREVENTIVO'
+              ? 'PREVENTIVO'
+              : 'CORRECTIVO'
+              }}
             </span>
           </div>
 
@@ -61,7 +68,7 @@
             · {{ mantenimiento.vehiculo.placa }}
           </p>
 
-          <p class="mt-3 whitespace-pre-wrap text-sm text-base-content/70">
+          <p class="mt-2 whitespace-pre-wrap text-sm text-base-content/70">
             {{ mantenimiento.motivo }}
           </p>
 
@@ -119,14 +126,12 @@
             </label>
 
             <textarea id="cancelacion-motivo" formControlName="motivo_cancelacion" rows="4"
-              class="textarea textarea-bordered w-full"
+              class="textarea textarea-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
               placeholder="Ejemplo: El taller no tiene disponibilidad. Se registrará una nueva orden."
+              [class.textarea-success]="campoCompleto('motivo_cancelacion')"
               [class.textarea-error]="campoInvalido('motivo_cancelacion')"
-              [attr.aria-invalid]="campoInvalido('motivo_cancelacion')" [attr.aria-describedby]="
-                campoInvalido('motivo_cancelacion')
-                  ? 'cancelacion-motivo-error'
-                  : null
-              ">
+              [attr.aria-invalid]="campoInvalido('motivo_cancelacion')"
+              [attr.aria-describedby]="campoInvalido('motivo_cancelacion') ? 'cancelacion-motivo-error' : null">
             </textarea>
 
             @if (campoInvalido('motivo_cancelacion')) {
@@ -137,7 +142,7 @@
           </div>
         </fieldset>
 
-        <div class="rounded-xl bg-base-200 p-4 text-sm text-base-content/70">
+        <div class="rounded-xl bg-secondary/10 p-4 text-sm text-base-content/70">
           La orden pasará a CANCELADO. El motivo quedará registrado
           en su historial.
         </div>
@@ -146,21 +151,23 @@
       <!-- ===================================================== -->
       <!-- FOOTER -->
       <!-- ===================================================== -->
-      <footer class="flex shrink-0 flex-col-reverse gap-3 border-t border-base-300
-               px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+      <footer class="flex shrink-0 flex-col-reverse gap-3
+           border-t border-base-300 bg-base-100
+           px-5 py-4 sm:flex-row sm:items-center
+           sm:justify-center sm:px-6">
 
-        <button type="button" class="btn btn-ghost" [disabled]="isLoading" (click)="cerrarModal()">
+        <button type="button" class="btn btn-error" [disabled]="isLoading" (click)="cerrarModal()">
           Cerrar
         </button>
 
-        <button type="submit" class="btn btn-error" [disabled]="isLoading || !puedeCancelar">
+        <button type="submit" class="btn btn-primary" [disabled]="isLoading || !puedeCancelar">
 
           @if (isLoading) {
           <span class="loading loading-spinner loading-sm"></span>
           Cancelando…
           } @else {
           <i class="fa-solid fa-ban" aria-hidden="true"></i>
-          Cancelar mantenimiento
+          Cancelar
           }
         </button>
       </footer>

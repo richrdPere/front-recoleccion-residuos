@@ -1,5 +1,9 @@
 @if (mostrarModal) {
 <div class="modal modal-open">
+
+  <!-- ===================================================== -->
+  <!-- MODAL: FORM - PROGRAMACIONES -->
+  <!-- ===================================================== -->
   <div class="fixed inset-0 z-50 flex items-center justify-center
              bg-black/30 p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="programacion-form-title"
     [attr.aria-busy]="isLoading">
@@ -7,9 +11,13 @@
                overflow-hidden rounded-2xl border border-base-300
                bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
 
-      <!-- HEADER -->
+      <!-- ================================================= -->
+      <!-- HEADER MODAL -->
+      <!-- ================================================= -->
       <header class="flex shrink-0 items-center justify-between gap-4
                  border-b border-base-300 px-5 py-4 sm:px-6">
+
+        <!-- Ícono e información -->
         <div class="flex min-w-0 items-center gap-3">
           <div class="flex h-12 w-12 shrink-0 items-center justify-center
                      rounded-2xl bg-primary/10 text-primary">
@@ -39,15 +47,27 @@
         </button>
       </header>
 
+      <!-- ================================================= -->
+      <!-- FORMULARIO -->
+      <!-- ================================================= -->
       <form [formGroup]="formProgramacion" (ngSubmit)="crearOEditarProgramacion()" class="flex min-h-0 flex-1 flex-col"
         novalidate>
 
+        <!-- =============================================== -->
         <!-- CONTENIDO CON SCROLL -->
+        <!-- =============================================== -->
         <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain
                    px-5 py-5 sm:px-6">
           <fieldset class="min-w-0 space-y-6" [disabled]="isLoading">
 
-            <!-- RUTA Y VEHÍCULO -->
+            @if (errorPlanificacion) { <div class="alert alert-error" role="alert">{{ errorPlanificacion }}</div> }
+            @if (cargandoRutas) { <p class="text-sm" role="status">Cargando rutas activas...</p> }
+            @if (errorRutas) {
+            <div class="alert alert-warning" role="alert"><span>{{ errorRutas }}</span>
+              <button type="button" class="btn btn-sm" (click)="recargarRutas.emit()">Reintentar rutas</button>
+            </div>
+            }
+            <!-- RUTA Y HORARIO -->
             <div class="space-y-3">
               <h3 class="flex items-center gap-2 text-lg font-semibold">
                 <i class="fa-solid fa-route text-primary" aria-hidden="true"></i>
@@ -55,6 +75,7 @@
               </h3>
 
               <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
                 <div class="form-control">
                   <label class="label" for="programacion-ruta">
                     <span class="label-text">
@@ -63,7 +84,8 @@
                   </label>
 
                   <select id="programacion-ruta" formControlName="id_ruta" class="select select-bordered w-full"
-                    [class.select-error]="campoInvalido('id_ruta')" (change)="onRutaChange()">
+                    [class.select-error]="campoInvalido('id_ruta')" [attr.disabled]="cargandoRutas ? true : null"
+                    (change)="onRutaChange()">
                     <option [ngValue]="null" disabled>Seleccionar ruta</option>
 
                     @for (ruta of rutasDisponibles; track ruta.id_ruta) {
@@ -88,9 +110,10 @@
                   </label>
 
                   <select id="programacion-version" formControlName="id_ruta_version"
-                    class="select select-bordered w-full" [class.select-error]="campoInvalido('id_ruta_version')">
+                    class="select select-bordered w-full" [attr.disabled]="true"
+                    [class.select-error]="campoInvalido('id_ruta_version')">
                     <option [ngValue]="null" disabled>
-                      Seleccionar versión
+                      Seleccione fecha y ruta
                     </option>
 
                     @for (
@@ -98,7 +121,7 @@
                     track version.id_ruta_version
                     ) {
                     <option [ngValue]="version.id_ruta_version">
-                      Versión {{ version.numero_version }}
+                      Versión {{ version.numero_version }} {{ mantieneContextoOriginal ? '(guardada)' : '(vigente)' }}
                     </option>
                     }
                   </select>
@@ -109,13 +132,15 @@
                   </p>
                   }
 
+                  <p class="mt-1 text-xs text-base-content/55">La versión se asigna automáticamente. En edición se
+                    conserva la guardada mientras no cambie la ruta o fecha.</p>
                   @if (!formProgramacion.get('id_ruta')?.value) {
                   <p class="mt-1 text-xs text-base-content/55">
                     Seleccione primero una ruta.
                   </p>
                   } @else if (versionesDisponibles.length === 0) {
                   <p class="mt-1 text-xs text-warning">
-                    No hay versiones disponibles para esta ruta.
+                    Seleccione una fecha válida. La ruta debe tener una versión vigente habilitada para ese día.
                   </p>
                   }
                 </div>
@@ -218,6 +243,36 @@
                   }
                 </div>
 
+                <div class="form-control sm:col-span-2">
+                  <label class="label" for="programacion-horario"><span class="label-text">Horario de la ruta <span
+                        class="text-error">*</span></span></label>
+                  <select id="programacion-horario" formControlName="id_ruta_horario"
+                    class="select select-bordered w-full"
+                    [attr.disabled]="cargandoHorarios || !formProgramacion.get('id_ruta')?.value || !formProgramacion.get('fecha_programada')?.value ? true : null"
+                    (change)="onHorarioChange()">
+                    <option [ngValue]="null">{{ mantieneContextoOriginal ? 'Conservar horario guardado' : 'Seleccionar
+                      horario' }}</option>
+                    @for (horario of horariosDisponibles; track horario.id_ruta_horario) {
+                    <option [ngValue]="horario.id_ruta_horario">
+                      {{ horario.dia_semana }} · {{ horario.hora_inicio }} – {{ horario.hora_fin }} · {{
+                      horario.frecuencia }}
+                    </option>
+                    }
+                  </select>
+                  @if (cargandoHorarios) { <p class="text-xs mt-1" role="status">Cargando horarios...</p> }
+                  @else if (errorHorarios) {
+                  <p class="text-error text-sm mt-1" role="alert">{{ errorHorarios }}</p>
+                  <button type="button" class="btn btn-ghost btn-xs" (click)="cargarHorariosRuta()">Reintentar
+                    horarios</button>
+                  } @else if (formProgramacion.get('id_ruta')?.value && formProgramacion.get('fecha_programada')?.value
+                  && horariosDisponibles.length === 0) {
+                  <p class="text-warning text-sm mt-1">No hay horarios habilitados para ese día dentro de su vigencia.
+                  </p>
+                  }
+                  @if (mantieneContextoOriginal) { <p class="text-xs mt-1">Puede conservar las horas originales aunque
+                    el horario habitual haya cambiado.</p> }
+                </div>
+
                 <div class="form-control">
                   <label class="label" for="programacion-inicio">
                     <span class="label-text">
@@ -225,7 +280,7 @@
                     </span>
                   </label>
 
-                  <input id="programacion-inicio" type="time" step="1" formControlName="hora_inicio_programada"
+                  <input id="programacion-inicio" type="time" step="1" readonly formControlName="hora_inicio_programada"
                     class="input input-bordered w-full" [class.input-error]="
                         campoInvalido('hora_inicio_programada')
                       " />
@@ -244,7 +299,7 @@
                     </span>
                   </label>
 
-                  <input id="programacion-fin" type="time" step="1" formControlName="hora_fin_programada"
+                  <input id="programacion-fin" type="time" step="1" readonly formControlName="hora_fin_programada"
                     class="input input-bordered w-full" [class.input-error]="
                         campoInvalido('hora_fin_programada')
                       " />
@@ -423,7 +478,7 @@
             </button>
 
             <button type="submit" class="btn btn-primary" [disabled]="
-                  isLoading ||
+                  isLoading || cargandoHorarios || cargandoRutas || !disponibilidadLista ||
                   (modoEdicion && !programacionSeleccionada)
                 ">
               @if (isLoading) {

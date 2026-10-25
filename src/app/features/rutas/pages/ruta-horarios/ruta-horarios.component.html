@@ -50,91 +50,100 @@
       <!-- ================================================= -->
       <!-- FILTROS -->
       <!-- ================================================= -->
-      <section class="mb-6 overflow-hidden rounded-2xl
+      <section class="my-4 mx-2 overflow-hidden rounded-2xl
            border border-base-300 bg-base-100 shadow-sm">
-        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_170px]">
-
-          <!-- ================================================= -->
-          <!-- CAMPOS DE FILTRO -->
-          <!-- ================================================= -->
-          <div class="min-w-0 p-4 sm:p-5">
-            <div class="grid grid-cols-1 items-end gap-4
+        <!-- ================================================= -->
+        <!-- CAMPOS DE FILTRO -->
+        <!-- ================================================= -->
+        <div class="min-w-0 p-4 sm:p-5">
+          <div class="grid grid-cols-1 items-end gap-4
                sm:grid-cols-2
-               xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+               xl:grid-cols-4">
 
-              <!-- Buscar por descripcion -->
-              <div>
-                <label for="horarios-busqueda" class="mb-1 block text-sm">
-                  Buscar
-                </label>
+            <!-- Buscar por descripcion -->
+            <div class="min-w-0">
+              <label for="horarios-busqueda" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+                Buscar
+              </label>
 
-                <input id="horarios-busqueda" type="text" class="input input-bordered w-full"
-                  placeholder="Día, hora u observación" [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()"
-                  [disabled]="isLoading" />
+              <div class="relative">
+                <input id="horarios-busqueda" type="text" class="input input-bordered h-11 min-h-11
+                      w-full min-w-0 rounded-xl bg-base-200
+                     pl-11 pr-4 transition-colors
+                     focus:border-primary focus:outline-none
+                     focus:ring-2 focus:ring-primary/30" placeholder="Día, hora u observación" autocomplete="off"
+                  [ngClass]="searchBusqueda.trim() ? 'border-primary' : 'border-base-500'" [(ngModel)]="searchBusqueda"
+                  (ngModelChange)="onSearchChange()" [disabled]="isLoading" appUppercase />
+
+                <span class="pointer-events-none absolute inset-y-0 left-0 z-10
+                     flex w-11 items-center justify-center
+                     text-base-content/50" aria-hidden="true">
+                  <i class="fa-solid fa-magnifying-glass text-base"></i>
+                </span>
               </div>
+            </div>
 
-              <div>
-                <label for="horarios-dia" class="mb-1 block text-sm">
-                  Día
-                </label>
+            <!-- POR DIA -->
+            <div class="min-w-0">
+              <label for="horarios-dia" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+                Día
+              </label>
 
-                <select id="horarios-dia" class="select select-bordered w-full" [(ngModel)]="filtroDia"
-                  (ngModelChange)="onFiltroChange()" [disabled]="isLoading">
-                  <option value="">Todos</option>
+              <select id="horarios-dia" class="select select-bordered h-11 min-h-11
+                  w-full min-w-0 rounded-xl bg-base-200
+                  pl-4 pr-10 transition-colors
+                  focus:border-primary focus:outline-none
+                  focus:ring-2 focus:ring-primary/30" [ngClass]="filtroDia ? 'border-primary' : 'border-base-500'"
+                [(ngModel)]="filtroDia" (ngModelChange)="onFiltroChange()" [disabled]="isLoading">
+                <option value="">Todos</option>
 
-                  @for (dia of diasDisponibles; track dia) {
-                  <option [value]="dia">{{ dia }}</option>
-                  }
-                </select>
-              </div>
+                @for (dia of diasDisponibles; track dia) {
+                <option [value]="dia">{{ dia }}</option>
+                }
+              </select>
+            </div>
 
-              <div>
-                <label for="horarios-frecuencia" class="mb-1 block text-sm">
-                  Frecuencia
-                </label>
+            <!-- POR FRECUENCIA -->
+            <div class="min-w-0">
+              <label for="horarios-frecuencia" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+                Frecuencia
+              </label>
 
-                <select id="horarios-frecuencia" class="select select-bordered w-full" [(ngModel)]="filtroFrecuencia"
-                  (ngModelChange)="onFiltroChange()" [disabled]="isLoading">
-                  <option value="">Todas</option>
+              <select id="horarios-frecuencia" class="select select-bordered h-11 min-h-11
+                  w-full min-w-0 rounded-xl bg-base-200
+                  pl-4 pr-10 transition-colors
+                  focus:border-primary focus:outline-none
+                  focus:ring-2 focus:ring-primary/30"
+                [ngClass]="filtroFrecuencia ? 'border-primary' : 'border-base-500'" [(ngModel)]="filtroFrecuencia"
+                (ngModelChange)="onFiltroChange()" [disabled]="isLoading">
+                <option value="">Todas</option>
 
-                  @for (frecuencia of frecuenciasDisponibles; track frecuencia) {
-                  <option [value]="frecuencia">{{ frecuencia }}</option>
-                  }
-                </select>
-              </div>
+                @for (frecuencia of frecuenciasDisponibles; track frecuencia) {
+                <option [value]="frecuencia">{{ frecuencia }}</option>
+                }
+              </select>
+            </div>
 
-              <div>
-                <label for="horarios-estado" class="mb-1 block text-sm">
-                  Estado
-                </label>
+            <!-- POR ESTADO -->
+            <div>
+              <label for="horarios-estado" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+                Estado
+              </label>
 
-                <select id="horarios-estado" class="select select-bordered w-full" [(ngModel)]="filtroEstado"
-                  (ngModelChange)="onFiltroChange()" [disabled]="isLoading">
-                  <option [ngValue]="null">Todos</option>
-                  <option [ngValue]="true">Activos</option>
-                  <option [ngValue]="false">Inactivos</option>
-                </select>
-              </div>
-
-              <!-- <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-2">
-                  <label for="horarios-limite" class="text-sm">
-                    Mostrar
-                  </label>
-
-                  <select id="horarios-limite" class="select select-bordered select-sm" [(ngModel)]="limit"
-                    (ngModelChange)="cambiarLimite()" [disabled]="isLoading">
-                    @for (cantidad of pageSizeOptions; track cantidad) {
-                    <option [ngValue]="cantidad">{{ cantidad }}</option>
-                    }
-                  </select>
-                </div>
-
-                <button type="button" class="btn btn-ghost btn-sm" [disabled]="isLoading" (click)="limpiarFiltros()">
-                  <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i>
-                  Limpiar filtros
-                </button>
-              </div> -->
+              <select id="horarios-estado" class="select select-bordered h-11 min-h-11
+                  w-full min-w-0 rounded-xl bg-base-200
+                  pl-4 pr-10 transition-colors
+                  focus:border-primary focus:outline-none
+                  focus:ring-2 focus:ring-primary/30" [ngClass]="filtroEstado ? 'border-primary' : 'border-base-500'"
+                [(ngModel)]="filtroEstado" (ngModelChange)="onFiltroChange()" [disabled]="isLoading">
+                <option [ngValue]="null">Todos</option>
+                <option [ngValue]="true">Activos</option>
+                <option [ngValue]="false">Inactivos</option>
+              </select>
             </div>
           </div>
         </div>
@@ -143,7 +152,7 @@
       <!-- ================================================= -->
       <!-- TABLA GENERAL DE HORARIOS -->
       <!-- ================================================= -->
-      <div class="overflow-hidden rounded-2xl
+      <div class="mx-2 mb-4 overflow-hidden rounded-2xl
            border border-base-300
            bg-base-100 shadow-sm" aria-label="Horarios registrados">
 
@@ -175,8 +184,6 @@
               ítems por página
             </span>
           </div>
-
-
 
           <!-- <span class="text-sm text-base-content/60">
             {{ horarios.length }} horarios registrados
@@ -266,10 +273,7 @@
                 <td class="whitespace-nowrap text-xs">
                   <div>
                     Desde:
-                    {{
-                    horario.fecha_vigencia_desde
-                    | date:'dd/MM/yyyy'
-                    }}
+                    {{ horario.fecha_vigencia_desde | date:'dd/MM/yyyy' }}
                   </div>
 
                   <div>
@@ -324,12 +328,47 @@
               </tr>
               } @empty {
               <tr>
-                <td colspan="7" class="py-10 text-center">
-                  {{
-                  horarios.length === 0
-                  ? 'Esta ruta no tiene horarios registrados.'
-                  : 'No se encontraron horarios con estos filtros.'
-                  }}
+                <td colspan="7" class="px-4 py-12 sm:py-16">
+                  <div class="mx-auto flex max-w-md flex-col items-center text-center">
+
+                    <div class="mb-4 flex h-16 w-16 items-center justify-center
+                    rounded-2xl bg-base-200 text-base-content/40">
+                      <i class="fa-solid text-2xl" [ngClass]="horarios.length === 0
+              ? 'fa-calendar-days'
+              : 'fa-magnifying-glass'" aria-hidden="true">
+                      </i>
+                    </div>
+
+                    <p class="text-base font-semibold text-base-content">
+                      {{
+                      horarios.length === 0
+                      ? 'Todavía no hay horarios'
+                      : 'No se encontraron resultados'
+                      }}
+                    </p>
+
+                    <p class="mt-2 text-sm leading-relaxed text-base-content/60">
+                      {{
+                      horarios.length === 0
+                      ? 'Esta ruta aún no tiene horarios de recolección registrados.'
+                      : 'Prueba con otra búsqueda o limpia los filtros para ver todos los horarios.'
+                      }}
+                    </p>
+
+                    @if (
+                    searchBusqueda.trim() ||
+                    filtroDia ||
+                    filtroFrecuencia ||
+                    filtroEstado !== null
+                    ) {
+                    <button type="button" class="btn btn-secondary btn-sm mt-5 gap-2" [disabled]="isLoading"
+                      (click)="limpiarFiltros()">
+                      <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+                      Limpiar filtros
+                    </button>
+                    }
+
+                  </div>
                 </td>
               </tr>
               }
@@ -338,32 +377,71 @@
         </div>
 
         <!-- PAGINACIÓN -->
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <p class="text-sm text-base-content/60">
-            {{ totalItems }} horarios encontrados
+        @if (!isLoading && totalItems>0 ) {
+        <div class="flex flex-col gap-4 border-t border-base-300
+           bg-base-200/50 px-4 py-4 sm:px-5
+           lg:flex-row lg:items-center lg:justify-between">
 
-            @if (totalPages > 0) {
-            · Página {{ currentPage }} de {{ totalPages }}
-            }
-          </p>
+          <div class="text-center sm:text-left">
+            <h3 class="font-semibold text-base-content">
+              Horarios registrados
+            </h3>
 
-          <div class="join">
-            <button type="button" class="btn btn-sm join-item" [disabled]="page <= 1" (click)="cambiarPagina(page - 1)">
-              Anterior
-            </button>
+            <p class="mt-0.5 text-sm text-base-content/55">
+              {{ totalItems }}
+              {{ totalItems === 1 ? 'horario encontrado' : 'horarios encontrados' }}
+            </p>
+          </div>
 
-            <button type="button" class="btn btn-sm join-item" [disabled]="page >= totalPages"
-              (click)="cambiarPagina(page + 1)">
-              Siguiente
-            </button>
+
+          <div class="flex w-full flex-col items-center gap-3
+             text-sm text-base-content/70 sm:w-auto sm:flex-row">
+            <span class="whitespace-nowrap">
+              Página
+              <strong class="text-base-content">{{ page }}</strong>
+              de
+              <strong class="text-base-content">{{ totalPages }}</strong>
+            </span>
+
+            <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+              <button type="button" class="btn btn-sm w-full gap-2 rounded-lg sm:w-auto"
+                [disabled]="isLoading || page <= 1" (click)="cambiarPagina(page - 1)">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+
+                Anterior
+              </button>
+
+              <button type="button" class="btn btn-sm w-full gap-2 rounded-lg sm:w-auto" [disabled]="
+            isLoading ||
+            totalPages === 0 ||
+            page >= totalPages
+          " (click)="cambiarPagina(page + 1)">
+                Siguiente
+
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+            </div>
           </div>
         </div>
         }
+        }
       </div>
 
-      <!-- PIE -->
-      <footer class="flex justify-end border-t border-base-300 pt-4">
-        <button type="button" class="btn" [disabled]="horariosEnOperacion.size > 0" (click)="cerrarModal()">
+      <!-- =============================================== -->
+      <!-- FOOTER -->
+      <!-- =============================================== -->
+      <footer class="flex shrink-0 flex-wrap items-center
+                 justify-between gap-3 border-t border-base-300
+                 bg-base-200/30 px-5 py-4 sm:px-6">
+
+        <div class="flex items-center gap-2 text-xs text-base-content/50">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          <span>Consulte los horarios disponibles para esta ruta.</span>
+        </div>
+
+        <button type="button" class="btn btn-accent min-w-28" [disabled]="horariosEnOperacion.size > 0"
+          (click)="cerrarModal()">
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
           Cerrar
         </button>
       </footer>

@@ -211,9 +211,25 @@
                 @for ( version of versiones(); track version.id_ruta_version; let i = $index ) {
                 <tr class="transition-colors hover:bg-base-200/60">
 
-                  <!-- N° -->
-                  <td class="text-center text-base-content/60">
-                    {{ i + 1 }}
+                  <!-- N.º / Activar versión -->
+                  <td class="text-center">
+                    <div class="flex items-center justify-center gap-3">
+                      <span class="text-base-content/60">
+                        {{ i + 1 }}
+                      </span>
+
+                      @if (activandoVersionId() === version.id_ruta_version) {
+                      <span class="loading loading-spinner loading-sm text-primary" role="status"
+                        aria-label="Activando versión">
+                      </span>
+                      } @else {
+                      <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" [checked]="version.vigente"
+                        [disabled]="version.vigente || !version.estado || cargando() || activandoVersionId() !== null"
+                        [attr.aria-label]="version.vigente ? 'Versión vigente' : 'Activar versión ' + version.numero_version"
+                        [title]="version.vigente ? 'Esta es la versión vigente' : 'Establecer como vigente'"
+                        (change)="activarVersion(version, $event)" />
+                      }
+                    </div>
                   </td>
 
                   <!-- Version -->

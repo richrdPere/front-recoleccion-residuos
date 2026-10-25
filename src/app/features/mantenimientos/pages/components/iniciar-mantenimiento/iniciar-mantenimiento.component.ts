@@ -207,6 +207,26 @@ export class IniciarMantenimientoComponent implements OnChanges {
     return control.invalid && (control.touched || control.dirty);
   }
 
+  campoCompleto(campo: string): boolean {
+    const control = this.formInicio.get(campo);
+
+    if (!control || control.disabled || !control.valid) {
+      return false;
+    }
+
+    const value = control.value;
+
+    if (typeof value === 'string') {
+      return value.trim().length > 0;
+    }
+
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    }
+
+    return value !== null && value !== undefined;
+  }
+
   // *********************************************************
   // INICIAR INTERVENCIÓN
   // *********************************************************

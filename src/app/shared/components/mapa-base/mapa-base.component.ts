@@ -390,7 +390,11 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
     }
 
     this.ngZone.runOutsideAngular(() => {
-      this.actualizarDatos();
+      this.actualizarMarcadores();
+      if (changes['zonas'] || changes['mostrarZonas']) this.actualizarZonas();
+      if (changes['detalle'] || changes['mostrarRuta']) this.actualizarRuta();
+      if (changes['detalle'] || changes['mostrarPuntos']) this.actualizarPuntos();
+      if (changes['habilitarEdicionZona'] || changes['poligonoEditable']) this.configurarEditorZona();
 
       // No mueve la cámara con cada posición GPS.
       if (changes['idRecorridoSeleccionado']) {
@@ -1141,6 +1145,7 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 }
 
+
 // import { AfterViewInit, Component, ElementRef, EventEmitter, Inject, Input, NgZone, OnChanges, OnDestroy, Output, PLATFORM_ID, SimpleChanges, ViewChild } from '@angular/core';
 // import { isPlatformBrowser } from '@angular/common';
 // import type { GeoJSONSource, IControl, Map as MapboxMap, Marker, MapMouseEvent, } from 'mapbox-gl';
@@ -1270,6 +1275,7 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
 //   private readonly fuenteZonas = 'monitoreo-zonas';
 //   private readonly fuenteRuta = 'monitoreo-ruta';
 //   private readonly fuentePuntos = 'monitoreo-puntos';
+//   private readonly fuenteOperativos = 'planificacion-puntos-operativos';
 
 //   private dibujoZona?: ControlDibujoZona;
 //   private firmaPoligonoEditor: string | undefined;
@@ -1599,7 +1605,8 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
 
 //     const fuenteId = 'zona-detalle-source';
 
-//     const fuente = mapa.getSource(fuenteId) as GeoJSONSource | undefined;
+//     const fuente = mapa.getSource(fuenteId) as
+//       GeoJSONSource | undefined;
 
 //     if (fuente) {
 //       fuente.setData(data);
@@ -2083,7 +2090,7 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
 //   ): void => {
 //     if (
 //       this.destruido ||
-//       !this.habilitarSeleccionRuta ||
+//       (!this.habilitarSeleccionRuta && !this.habilitarSeleccionPunto) ||
 //       this.habilitarEdicionZona
 //     ) {
 //       return;
@@ -2099,7 +2106,11 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
 //     }
 
 //     this.ngZone.run(() => {
-//       this.coordenadaSeleccionada.emit(coordenada);
+//       if (this.habilitarSeleccionPunto) {
+//         this.coordenadaPuntoSeleccionada.emit(coordenada);
+//       } else {
+//         this.coordenadaSeleccionada.emit(coordenada);
+//       }
 //     });
 //   };
 
@@ -2119,7 +2130,7 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
 
 //     if (coordenadas.every((punto) => this.posicionValida(punto))) {
 //       // Los marcadores también se muestran cuando solo hay un punto.
-//       coordenadas.forEach((coordenada, indice) => {
+//       if (this.mostrarVerticesRuta) coordenadas.forEach((coordenada, indice) => {
 //         data.features.push({
 //           type: 'Feature',
 //           geometry: {
@@ -2203,7 +2214,7 @@ export class MapaBaseComponent implements AfterViewInit, OnChanges, OnDestroy {
 //     }
 
 //     mapa.getCanvas().style.cursor =
-//       this.habilitarSeleccionRuta && !this.habilitarEdicionZona
+//       (this.habilitarSeleccionRuta || this.habilitarSeleccionPunto) && !this.habilitarEdicionZona
 //         ? 'crosshair'
 //         : '';
 //   }

@@ -1,17 +1,33 @@
-// *********************************************************
-// REQUEST PARA CREAR HORARIO
-
 import { ApiResponse } from "src/app/core/models/api-response.model";
 
 // *********************************************************
+// REQUEST PARA CREAR HORARIO
+// *********************************************************
+
+export type DiasSemana =
+  | 'DOMINGO'
+  | 'LUNES'
+  | 'MARTES'
+  | 'MIERCOLES'
+  | 'JUEVES'
+  | 'VIERNES'
+  | 'SABADO';
+
+export type Frecuencia =
+  | 'SEMANAL'
+  | 'QUINCENAL'
+  | 'MENSUAL'
+  | 'ESPECIAL';
+
+
 export interface CreateRutaHorarioRequest {
-  dia_semana: string;
+  dia_semana: DiasSemana;
 
   // Formato: HH:mm:ss.
   hora_inicio: string;
   hora_fin: string;
 
-  frecuencia: string;
+  frecuencia: Frecuencia;
 
   // Formato: YYYY-MM-DD.
   fecha_vigencia_desde: string;

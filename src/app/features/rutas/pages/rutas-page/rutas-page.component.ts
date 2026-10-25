@@ -73,7 +73,7 @@ export class RutasPageComponent implements OnInit, OnDestroy {
   // ============================================================
 
   page = 1;
-  limit = 5;
+  limit = 4;
   totalItems = 0;
   totalPages = 0;
   currentPage = 1;
@@ -81,7 +81,7 @@ export class RutasPageComponent implements OnInit, OnDestroy {
   hasNextPage = false;
   hasPreviousPage = false;
 
-  readonly pageSizeOptions = [5, 10, 20, 50];
+  readonly pageSizeOptions = [4, 8, 20, 32];
 
   constructor(
     private readonly router: Router,

@@ -1,206 +1,378 @@
 @if (mostrarModal) {
 <div class="modal modal-open">
-  <section class="modal-box w-11/12 max-w-3xl" role="dialog" aria-modal="true" aria-labelledby="ruta-punto-form-titulo"
-    [attr.aria-busy]="isSaving" (keydown.escape)="cerrarModal()">
-    <!-- ENCABEZADO -->
-    <header class="flex items-start justify-between gap-4
-               border-b border-base-300 pb-4">
-      <div>
-        <h2 id="ruta-punto-form-titulo" class="text-xl font-bold">
-          <i class="fa-solid fa-location-dot mr-2 text-primary" aria-hidden="true"></i>
 
-          {{ modoEdicion ? 'Editar punto' : 'Nuevo punto' }}
-        </h2>
+  <!-- MODAL: FORMULARIO DE PUNTOS -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center
+           bg-black/30 p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="ruta-punto-form-titulo"
+    [attr.aria-busy]="isSaving" (keydown.escape)="!isSaving && cerrarModal()">
 
-        <p class="mt-1 text-sm text-base-content/60">
-          {{
-          modoEdicion
-          ? 'Actualiza los datos del punto seleccionado.'
-          : 'Registra un punto para esta versión de ruta.'
-          }}
-        </p>
+    <section class="relative flex max-h-[92vh] w-full flex-col
+             overflow-hidden rounded-2xl border border-base-300
+             bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
 
-        <span class="badge badge-outline mt-2">
-          Versión #{{ idRutaVersion }}
-        </span>
-      </div>
+      <!-- HEADER -->
+      <header class="flex shrink-0 items-center justify-between gap-4
+               border-b border-base-300 px-5 py-4 sm:px-6">
+        <div class="flex min-w-0 items-center gap-3">
 
-      <button type="button" class="btn btn-sm btn-circle btn-ghost" aria-label="Cerrar formulario" [disabled]="isSaving"
-        (click)="cerrarModal()">
-        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-      </button>
-    </header>
-
-    <!-- FORMULARIO -->
-    <form [formGroup]="form" (ngSubmit)="guardarPunto()" class="mt-5">
-      @if (errorFormulario) {
-      <div class="alert alert-error mb-5" role="alert">
-        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
-        <span>{{ errorFormulario }}</span>
-      </div>
-      }
-
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <!-- CÓDIGO -->
-        <div>
-          <label for="punto-codigo" class="mb-2 block text-sm font-semibold">
-            Código <span class="text-error">*</span>
-          </label>
-
-          <input id="punto-codigo" type="text" formControlName="codigo" class="input input-bordered w-full"
-            placeholder="Ej. PTO-001" [class.input-error]="campoInvalido('codigo')" />
-
-          @if (campoInvalido('codigo')) {
-          <p class="mt-1 text-xs text-error">
-            Ingresa el código del punto.
-          </p>
-          }
-        </div>
-
-        <!-- NOMBRE -->
-        <div>
-          <label for="punto-nombre" class="mb-2 block text-sm font-semibold">
-            Nombre <span class="text-error">*</span>
-          </label>
-
-          <input id="punto-nombre" type="text" formControlName="nombre" class="input input-bordered w-full"
-            placeholder="Nombre del punto" [class.input-error]="campoInvalido('nombre')" />
-
-          @if (campoInvalido('nombre')) {
-          <p class="mt-1 text-xs text-error">
-            Ingresa el nombre del punto.
-          </p>
-          }
-        </div>
-
-        <!-- TIPO -->
-        <div class="md:col-span-2">
-          <label for="punto-tipo" class="mb-2 block text-sm font-semibold">
-            Tipo de punto <span class="text-error">*</span>
-          </label>
-
-          <select id="punto-tipo" formControlName="tipo_punto" class="select select-bordered w-full"
-            [class.select-error]="campoInvalido('tipo_punto')">
-            @for (tipo of tiposPunto; track tipo) {
-            <option [value]="tipo">{{ tipo }}</option>
-            }
-          </select>
-
-          @if (campoInvalido('tipo_punto')) {
-          <p class="mt-1 text-xs text-error">
-            Selecciona un tipo de punto válido.
-          </p>
-          }
-        </div>
-
-        <div class="md:col-span-2">
-          @if (coordenadas.length >= 2) {
-          <div class="h-72 overflow-hidden rounded-xl border border-base-300 mb-3">
-            <mapa-base class="block h-full w-full" [mostrarZonas]="false" [mostrarRuta]="false" [mostrarPuntos]="false"
-              [habilitarEdicionZona]="false" [habilitarSeleccionRuta]="false"
-              [habilitarSeleccionPunto]="!isSaving && !esExtremo" [mostrarVerticesRuta]="false"
-              [puntosOperativos]="puntosMapa" [puntoOperativoTemporal]="puntoTemporal" [coordenadasRuta]="coordenadas"
-              (coordenadaPuntoSeleccionada)="seleccionarEnMapa($event)" (mapaError)="errorMapa = $event"></mapa-base>
+          <div class="flex h-12 w-12 shrink-0 items-center
+                   justify-center rounded-2xl
+                   bg-primary/10 text-primary">
+            <i class="fa-solid fa-location-dot text-lg" aria-hidden="true"></i>
           </div>
-          @if (!esExtremo) {
-          <p class="mb-2 text-xs">Haz clic en el mapa para elegir el lugar de atención. La ubicación elegida aparece en
-            los campos de latitud y longitud.</p>
-          }
-          }
-          @if (errorMapa) { <p class="text-sm text-error" role="alert">{{ errorMapa }}</p> }
-          <div class="mb-3 flex flex-wrap gap-3 text-xs" aria-label="Leyenda de puntos">
-            <span class="text-green-600">● Inicio</span><span class="text-red-600">● Final</span>
-            <span class="text-orange-600">● Recolección</span><span>El borde oscuro indica el punto seleccionado sin
-              guardar.</span>
+
+          <div class="min-w-0">
+            <h2 id="ruta-punto-form-titulo" class="flex flex-wrap items-center gap-2 text-xl font-bold">
+              {{ modoEdicion ? 'Editar punto de ruta' : 'Nuevo punto de ruta' }}
+
+              <span class="badge badge-primary badge-outline
+                       px-3 font-mono text-sm">
+                Versión #{{ idRutaVersion }}
+              </span>
+            </h2>
+
+            <p class="mt-1 text-sm text-base-content/60">
+              {{
+              modoEdicion
+              ? 'Actualiza los datos y la ubicación del punto seleccionado.'
+              : 'Registra los datos y la ubicación del punto de atención.'
+              }}
+            </p>
           </div>
-          <ruta-trazado-selector [coordenadas]="coordenadas" [editable]="!esExtremo" [deshabilitado]="isSaving"
-            [seleccionado]="indiceSeleccionado"
-            (ubicacionSeleccionada)="seleccionarUbicacion($event)"></ruta-trazado-selector>
-          <p class="mt-2 text-xs text-base-content/60">Inicio y final usan automáticamente los extremos. Para
-            recolección, elige una ubicación del trazado o ingresa las coordenadas del lugar de atención.</p>
-        </div>
-        <!-- CAMPOS NUMÉRICOS -->
-        @for (config of camposNumericos; track config.campo) {
-        <div>
-          <label [for]="'punto-' + config.campo" class="mb-2 block text-sm font-semibold">
-            {{ config.etiqueta }}
-            @if (config.campo !== 'tiempo_estimado_min') { <span class="text-error">*</span> }
-            @else { <span class="text-xs text-base-content/60">(opcional)</span> }
-          </label>
-
-          <input [id]="'punto-' + config.campo" type="number"
-            [readOnly]="esExtremo && (config.campo === 'latitud' || config.campo === 'longitud')"
-            [formControlName]="config.campo" class="input input-bordered w-full" [attr.min]="config.min"
-            [attr.max]="config.max" [attr.step]="config.step" [class.input-error]="campoInvalido(config.campo)"
-            [attr.aria-invalid]="campoInvalido(config.campo)" [attr.aria-describedby]="
-                  campoInvalido(config.campo)
-                    ? 'error-' + config.campo
-                    : null
-                " />
-
-          @if (campoInvalido(config.campo)) {
-          <p [id]="'error-' + config.campo" class="mt-1 text-xs text-error">
-            {{ mensajeNumerico(config.campo) }}
-          </p>
-          }
-        </div>
-        }
-
-        <!-- DESCRIPCIÓN -->
-        <div class="md:col-span-2">
-          <label for="punto-descripcion" class="mb-2 block text-sm font-semibold">
-            Descripción
-          </label>
-
-          <textarea id="punto-descripcion" formControlName="descripcion" class="textarea textarea-bordered w-full"
-            rows="3" placeholder="Referencia o indicaciones del punto..."></textarea>
         </div>
 
-        <!-- OBLIGATORIO -->
-        <div class="rounded-xl border border-base-300
-                   bg-base-200/50 p-4 md:col-span-2">
-          <label for="punto-obligatorio" class="flex cursor-pointer items-start gap-3">
-            <input id="punto-obligatorio" type="checkbox" formControlName="obligatorio"
-              class="checkbox checkbox-primary mt-1" />
-
-            <span>
-              <span class="block text-sm font-semibold">
-                Punto obligatorio
-              </span>
-
-              <span class="mt-1 block text-xs text-base-content/60">
-                Marca esta opción si el punto es obligatorio
-                dentro del recorrido.
-              </span>
-            </span>
-          </label>
-        </div>
-      </div>
-
-      <!-- BOTONES -->
-      <footer class="mt-6 flex justify-end gap-3
-                 border-t border-base-300 pt-4">
-        <button type="button" class="btn" [disabled]="isSaving" (click)="cerrarModal()">
-          Cancelar
+        <button type="button" class="btn btn-sm btn-circle btn-ghost shrink-0" aria-label="Cerrar formulario"
+          [disabled]="isSaving" (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
+      </header>
 
-        <button type="submit" class="btn btn-primary" [disabled]="isSaving">
-          @if (isSaving) {
-          <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
-          Guardando...
-          } @else {
-          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
-          {{ modoEdicion ? 'Actualizar punto' : 'Guardar punto' }}
+      <!-- FORMULARIO -->
+      <form [formGroup]="form" (ngSubmit)="guardarPunto()" class="flex min-h-0 flex-1 flex-col" novalidate>
+
+        <!-- CONTENIDO DESPLAZABLE -->
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain
+                 px-5 py-5 sm:px-6">
+          @if (errorFormulario) {
+          <div class="alert alert-error mb-5" role="alert">
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+
+            <span>{{ errorFormulario }}</span>
+          </div>
           }
-        </button>
-      </footer>
-    </form>
-  </section>
 
-  <div class="modal-backdrop" aria-hidden="true">
-    <button type="button" tabindex="-1" aria-label="Cerrar" [disabled]="isSaving" (click)="cerrarModal()">
-      Cerrar
-    </button>
+          <fieldset class="min-w-0" [disabled]="isSaving">
+            <legend class="sr-only">
+              Datos y ubicación del punto de ruta
+            </legend>
+
+            <div class="grid min-w-0 grid-cols-1 items-start gap-6
+                     lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+
+              <!-- IZQUIERDA: DATOS DEL PUNTO -->
+              <div class="min-w-0 space-y-5">
+
+                <h3 class="font-semibold">
+                  <i class="fa-solid fa-sliders mr-2 text-primary" aria-hidden="true"></i>
+
+                  Datos del punto
+                </h3>
+
+                <!-- CÓDIGO -->
+                <div class="form-control">
+                  <label for="punto-codigo" class="mb-2 block text-sm font-semibold">
+                    Código
+                    <span class="font-bold text-red-500">*</span>
+                  </label>
+
+                  <input id="punto-codigo" type="text" formControlName="codigo" placeholder="Ej. PTO-001"
+                    autocomplete="off" class="input input-bordered border-2 w-full
+                           rounded-lg placeholder-gray-400
+                           transition-colors duration-200"
+                    [class.input-success]="form.get('codigo')?.valid && !!form.get('codigo')?.value"
+                    [class.input-error]="campoInvalido('codigo')" [attr.aria-invalid]="campoInvalido('codigo')"
+                    [attr.aria-describedby]="campoInvalido('codigo') ? 'punto-codigo-error' : null" />
+
+                  @if (campoInvalido('codigo')) {
+                  <p id="punto-codigo-error" class="mt-1 text-xs text-error">
+                    Ingresa el código del punto.
+                  </p>
+                  }
+                </div>
+
+                <!-- NOMBRE -->
+                <div class="form-control">
+                  <label for="punto-nombre" class="mb-2 block text-sm font-semibold">
+                    Nombre
+                    <span class="font-bold text-red-500">*</span>
+                  </label>
+
+                  <input id="punto-nombre" type="text" formControlName="nombre" placeholder="Nombre del punto" class="input input-bordered border-2 w-full
+                           rounded-lg placeholder-gray-400
+                           transition-colors duration-200"
+                    [class.input-success]="form.get('nombre')?.valid && !!form.get('nombre')?.value"
+                    [class.input-error]="campoInvalido('nombre')" [attr.aria-invalid]="campoInvalido('nombre')"
+                    [attr.aria-describedby]="campoInvalido('nombre') ? 'punto-nombre-error' : null" />
+
+                  @if (campoInvalido('nombre')) {
+                  <p id="punto-nombre-error" class="mt-1 text-xs text-error">
+                    Ingresa el nombre del punto.
+                  </p>
+                  }
+                </div>
+
+                <!-- TIPO -->
+                <div class="form-control">
+                  <label for="punto-tipo" class="mb-2 block text-sm font-semibold">
+                    Tipo de punto
+                    <span class="font-bold text-red-500">*</span>
+                  </label>
+
+                  <select id="punto-tipo" formControlName="tipo_punto" class="select select-bordered border-2 w-full
+                           rounded-lg transition-colors duration-200"
+                    [class.select-success]="form.get('tipo_punto')?.valid && !!form.get('tipo_punto')?.value"
+                    [class.select-error]="campoInvalido('tipo_punto')" [attr.aria-invalid]="campoInvalido('tipo_punto')"
+                    [attr.aria-describedby]="campoInvalido('tipo_punto') ? 'punto-tipo-error' : null">
+                    @for (tipo of tiposPunto; track tipo) {
+                    <option [value]="tipo">
+                      {{ tipo }}
+                    </option>
+                    }
+                  </select>
+
+                  @if (campoInvalido('tipo_punto')) {
+                  <p id="punto-tipo-error" class="mt-1 text-xs text-error">
+                    Selecciona un tipo de punto válido.
+                  </p>
+                  }
+                </div>
+
+                <!-- CAMPOS NUMÉRICOS -->
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  @for (config of camposNumericos; track config.campo) {
+                  <div class="form-control min-w-0">
+                    <label [for]="'punto-' + config.campo" class="mb-2 block text-sm font-semibold">
+                      {{ config.etiqueta }}
+
+                      <span class="font-bold text-red-500">*</span>
+
+                      <!-- @if (config.campo !== 'tiempo_estimado_min') {
+                      <span class="font-bold text-red-500">*</span>
+                      } @else {
+                      <span class="text-xs font-normal text-base-content/60">
+                        (opcional)
+                      </span>
+                      } -->
+                    </label>
+
+                    <input [id]="'punto-' + config.campo" type="number" [formControlName]="config.campo" [readOnly]="
+                          esExtremo &&
+                          (
+                            config.campo === 'latitud' ||
+                            config.campo === 'longitud'
+                          )
+                        " [attr.min]="config.min" [attr.max]="config.max" [attr.step]="config.step" class="input input-bordered border-2 w-full
+                               rounded-lg placeholder-gray-400
+                               transition-colors duration-200
+                               read-only:bg-base-200" [class.input-success]="
+                          form.get(config.campo)?.valid &&
+                          form.get(config.campo)?.value !== null &&
+                          form.get(config.campo)?.value !== undefined
+                        " [class.input-error]="campoInvalido(config.campo)"
+                      [attr.aria-invalid]="campoInvalido(config.campo)"
+                      [attr.aria-describedby]="campoInvalido(config.campo) ? 'punto-error-' + config.campo : null" />
+
+                    @if (campoInvalido(config.campo)) {
+                    <p [id]="'punto-error-' + config.campo" class="mt-1 text-xs text-error">
+                      {{ mensajeNumerico(config.campo) }}
+                    </p>
+                    }
+                  </div>
+                  }
+                </div>
+
+                <!-- DESCRIPCIÓN -->
+                <div class="form-control">
+                  <label for="punto-descripcion" class="mb-2 block text-sm font-semibold">
+                    Descripción
+                    <span class="text-xs font-normal text-base-content/60">
+                      (opcional)
+                    </span>
+                  </label>
+
+                  <textarea id="punto-descripcion" formControlName="descripcion" rows="3"
+                    placeholder="Referencia o indicaciones del punto..." class="textarea textarea-bordered border-2 w-full
+                           rounded-lg placeholder-gray-400
+                           transition-colors duration-200"
+                           [class.textarea-success]="
+                      form.get('descripcion')?.valid &&
+                      !!form.get('descripcion')?.value
+                    " [class.textarea-error]="campoInvalido('descripcion')"
+                    [attr.aria-invalid]="campoInvalido('descripcion')" [attr.aria-describedby]="
+                      campoInvalido('descripcion')
+                        ? 'punto-descripcion-error'
+                        : null
+                    "></textarea>
+
+                  @if (campoInvalido('descripcion')) {
+                  <p id="punto-descripcion-error" class="mt-1 text-xs text-error">
+                    Revisa la descripción del punto.
+                  </p>
+                  }
+                </div>
+
+                <!-- OBLIGATORIO -->
+                <!-- <div class="rounded-xl border border-base-300
+                         bg-base-200/50 p-4">
+                  <label for="punto-obligatorio" class="flex cursor-pointer items-start gap-3">
+                    <input id="punto-obligatorio" type="checkbox" formControlName="obligatorio"
+                      class="checkbox checkbox-primary mt-1" />
+
+                    <span>
+                      <span class="block text-sm font-semibold">
+                        Punto obligatorio
+                      </span>
+
+                      <span class="mt-1 block text-xs text-base-content/60">
+                        Marca esta opción si el punto es obligatorio
+                        dentro del recorrido.
+                      </span>
+                    </span>
+                  </label>
+                </div> -->
+              </div>
+
+              <!-- DERECHA: MAPA Y SELECCIÓN -->
+              <section class="min-w-0 space-y-3 lg:sticky lg:top-0" aria-labelledby="punto-ubicacion-titulo">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 id="punto-ubicacion-titulo" class="font-semibold">
+                      <i class="fa-solid fa-map-location-dot mr-2 text-primary" aria-hidden="true"></i>
+
+                      Ubicación del punto
+                      <span class="font-bold text-red-500">*</span>
+                    </h3>
+
+                    <p class="mt-1 text-xs text-base-content/60">
+                      @if (esExtremo) {
+                      La ubicación se asigna automáticamente
+                      desde los extremos del trazado.
+                      } @else {
+                      Selecciona en el mapa el lugar de atención.
+                      }
+                    </p>
+                  </div>
+
+                  <span class="badge badge-outline">
+                    {{ coordenadas.length }} ubicaciones
+                  </span>
+                </div>
+
+                @if (coordenadas.length >= 2) {
+                <div class="h-80 overflow-hidden rounded-2xl
+                           border border-base-300 sm:h-96
+                           lg:h-[clamp(280px,45vh,480px)]">
+                  <mapa-base class="block h-full w-full" [mostrarZonas]="false" [mostrarRuta]="false"
+                    [mostrarPuntos]="false" [habilitarEdicionZona]="false" [habilitarSeleccionRuta]="false"
+                    [habilitarSeleccionPunto]="!isSaving && !esExtremo" [mostrarVerticesRuta]="false"
+                    [puntosOperativos]="puntosMapa" [puntoOperativoTemporal]="puntoTemporal"
+                    [coordenadasRuta]="coordenadas" (coordenadaPuntoSeleccionada)="seleccionarEnMapa($event)"
+                    (mapaError)="errorMapa = $event"></mapa-base>
+                </div>
+                } @else {
+                <div class="flex min-h-64 flex-col items-center
+                           justify-center gap-3 rounded-2xl
+                           border border-dashed border-base-300
+                           bg-base-200/50 p-6 text-center" role="status">
+                  <i class="fa-solid fa-map text-3xl text-base-content/40" aria-hidden="true"></i>
+
+                  <p class="text-sm text-base-content/60">
+                    No hay suficientes coordenadas para mostrar
+                    el trazado de esta versión.
+                  </p>
+                </div>
+                }
+
+                @if (errorMapa) {
+                <p class="text-sm text-error" role="alert">
+                  {{ errorMapa }}
+                </p>
+                }
+
+                <!-- LEYENDA -->
+                <div class="flex flex-wrap gap-x-4 gap-y-2
+                         rounded-xl border border-base-300
+                         bg-base-200/50 p-3 text-xs" aria-label="Leyenda de puntos">
+                  <span class="text-green-600">
+                    ● Inicio
+                  </span>
+
+                  <span class="text-red-600">
+                    ● Final
+                  </span>
+
+                  <span class="text-orange-600">
+                    ● Recolección
+                  </span>
+
+                  <span class="w-full text-base-content/60">
+                    El borde oscuro indica el punto seleccionado sin guardar.
+                  </span>
+                </div>
+
+                @if (!esExtremo && coordenadas.length >= 2) {
+                <p class="text-xs text-base-content/60">
+                  Haz clic sobre el mapa para elegir el lugar de atención.
+                  La ubicación seleccionada se mostrará en los campos
+                  de latitud y longitud.
+                </p>
+                }
+
+                <!-- SELECTOR DEL TRAZADO -->
+                <div class="rounded-xl border border-base-300 p-3">
+                  <h4 class="mb-3 text-sm font-semibold">
+                    Selección desde el trazado
+                  </h4>
+
+                  <ruta-trazado-selector [coordenadas]="coordenadas" [editable]="!esExtremo" [deshabilitado]="isSaving"
+                    [seleccionado]="indiceSeleccionado"
+                    (ubicacionSeleccionada)="seleccionarUbicacion($event)"></ruta-trazado-selector>
+                </div>
+
+                <p class="text-xs text-base-content/60">
+                  Inicio y final usan automáticamente los extremos.
+                  Para recolección, elige una ubicación del trazado
+                  o ingresa las coordenadas del lugar de atención.
+                </p>
+              </section>
+            </div>
+          </fieldset>
+        </div>
+
+        <!-- FOOTER FIJO -->
+        <footer class="flex shrink-0 justify-center border-t
+                 border-base-300 bg-base-100 px-5 py-4 sm:px-6">
+          <div class="flex w-full flex-col-reverse gap-3
+                   sm:w-auto sm:flex-row sm:gap-5">
+            <button type="button" class="btn btn-error" [disabled]="isSaving" (click)="cerrarModal()">
+              Cancelar
+            </button>
+
+            <button type="submit" class="btn btn-primary" [disabled]="isSaving" [attr.aria-busy]="isSaving">
+              @if (isSaving) {
+              <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+
+              {{ modoEdicion ? 'Actualizando...' : 'Guardando...' }}
+              } @else {
+              <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+
+              {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
+              }
+            </button>
+          </div>
+        </footer>
+      </form>
+    </section>
   </div>
 </div>
 }

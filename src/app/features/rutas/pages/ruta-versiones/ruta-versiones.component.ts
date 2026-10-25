@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { finalize, Subscription } from 'rxjs';
+import Swal from 'sweetalert2';
 
 // Service
 import { RutaVersionService } from '../../services/ruta-version.service';
@@ -10,6 +11,7 @@ import { RutaPuntoData, RutaVersionConPuntosData, } from '../../interfaces/rutas
 import { RutaVersionFormComponent } from './ruta-version-form/ruta-version-form.component';
 import { RutaPuntoComponent } from '../ruta-punto/ruta-punto.component';
 import { ZonaPoligonoGeoJSON } from 'src/app/features/zonas/interfaces';
+
 
 @Component({
   selector: 'ruta-versiones',
@@ -51,6 +53,9 @@ export class RutaVersionesComponent implements OnChanges, OnDestroy {
 
   readonly versiones = signal<RutaVersionConPuntosData[]>([]);
   readonly indiceSeleccionado = signal<number | null>(null);
+
+  // ID de la versión que se está activando.
+  readonly activandoVersionId = signal<number | null>(null);
 
   readonly versionSeleccionada =
     computed<RutaVersionConPuntosData | null>(() => {
@@ -136,7 +141,7 @@ export class RutaVersionesComponent implements OnChanges, OnDestroy {
 
           const versiones = response.data ?? [];
 
-          console.log("VERSIONES: ",versiones);
+          console.log("VERSIONES: ", versiones);
 
           this.versiones.set(versiones);
 
@@ -261,6 +266,87 @@ export class RutaVersionesComponent implements OnChanges, OnDestroy {
 
   ocultarPuntos(): void {
     this.mostrarPuntos.set(false);
+  }
+
+  // *********************************************************
+  // 7. ACTIVAR O DESACTIVAR UNA VERSION
+  // *********************************************************
+  activarVersion(
+    version: RutaVersionConPuntosData,
+    event: Event,
+  ): void {
+    const checkbox = event.target as HTMLInputElement;
+
+    // Mantener el estado confirmado hasta recibir la respuesta.
+    checkbox.checked = version.vigente;
+
+    if (
+      version.vigente ||
+      !version.estado ||
+      this.activandoVersionId() !== null ||
+      this.cargando()
+    ) {
+      return;
+    }
+
+    const idVersion = version.id_ruta_version;
+
+    if (!Number.isSafeInteger(idVersion) || idVersion <= 0) {
+      return;
+    }
+
+    this.activandoVersionId.set(idVersion);
+
+    this.rutaVersionService
+      .activateRutaVersion(idVersion)
+      .pipe(
+        finalize(() => {
+          this.activandoVersionId.set(null);
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          if (!response.success) {
+            void Swal.fire({
+              icon: 'error',
+              title: 'No se pudo activar la versión',
+              text: response.message || 'Inténtalo nuevamente.',
+            });
+
+            return;
+          }
+
+          // Consultar nuevamente para reflejar qué versión quedó vigente.
+          this.cargarVersiones();
+
+          void Swal.fire({
+            icon: 'success',
+            title: 'Versión activada',
+            text: response.message ||
+              'La versión se estableció como vigente.',
+            timer: 1800,
+            showConfirmButton: false,
+          });
+        },
+        error: (error: unknown) => {
+          const err = error as {
+            error?: { message?: string } | string;
+            message?: string;
+          };
+
+          const mensaje =
+            typeof err?.error === 'string'
+              ? err.error
+              : err?.error?.message;
+
+          void Swal.fire({
+            icon: 'error',
+            title: 'No se pudo activar la versión',
+            text: mensaje || err?.message ||
+              'Ocurrió un error al activar la versión.',
+          });
+        },
+      });
   }
 
   // *********************************************************

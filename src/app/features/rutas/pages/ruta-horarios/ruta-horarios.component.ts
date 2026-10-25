@@ -4,6 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { finalize, firstValueFrom, Observable, Subject, Subscription, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
 
+// Directives
+import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directive';
+
 // Service
 import { RutaHorarioService } from '../../services/ruta-horario.service';
 
@@ -18,6 +21,7 @@ import { RutaHorarioFormComponent } from './ruta-horario-form/ruta-horario-form.
     CommonModule,
     DatePipe,
     FormsModule,
+    UppercaseDirective,
     RutaHorarioFormComponent
   ],
   templateUrl: './ruta-horarios.component.html',
@@ -652,6 +656,15 @@ export class RutaHorarioComponent implements OnChanges, OnDestroy {
         this.cdr.markForCheck();
       }
     }
+  }
+
+    get hayFiltros(): boolean {
+    return !!(
+      this.searchBusqueda.trim() ||
+      this.filtroDia ||
+      this.filtroFrecuencia ||
+      this.filtroEstado
+    );
   }
 
   private obtenerMensajeError(

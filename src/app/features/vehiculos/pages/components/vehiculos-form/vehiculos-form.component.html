@@ -1,5 +1,6 @@
 @if (mostrarModal) {
 <div class="modal modal-open">
+
   <!-- ===================================================== -->
   <!-- MODAL: FORM - VEHICULOS -->
   <!-- ===================================================== -->
@@ -94,7 +95,8 @@
                   <input id="vehiculo-placa" type="text" formControlName="placa"
                     placeholder="Ingrese la placa (Ej. ABC-123)"
                     class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
-                    [class.input-success]="campoCompleto('placa')" [class.input-error]="campoInvalido('placa')"
+                    [class.input-success]="campoCompleto('placa')"
+                    [class.input-error]="campoInvalido('placa')"
                     [attr.aria-invalid]="campoInvalido('placa')"
                     [attr.aria-describedby]="campoInvalido('placa') ? 'vehiculo-placa-error' : null"
                     (blur)="normalizarCampo('placa', true)" appUppercase />
@@ -452,6 +454,7 @@
               <span class="loading loading-spinner loading-sm"></span>
               {{ modoEdicion ? 'Actualizando...' : 'Guardando...' }}
               } @else {
+              <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
               {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
               }
             </button>

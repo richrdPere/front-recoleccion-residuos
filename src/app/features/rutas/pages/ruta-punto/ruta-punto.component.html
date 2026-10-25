@@ -24,7 +24,7 @@
 
   @if (version) {
 
-  <div class="rounded-xl border border-base-300 p-4 space-y-3">
+  <!-- <div class="rounded-xl border border-base-300 p-4 space-y-3">
     <p class="text-sm">Asigna los extremos del trazado y agrega solamente las paradas de recolección que necesites
       controlar.</p>
     <div class="flex flex-wrap gap-2">
@@ -35,12 +35,12 @@
       <button type="button" class="btn btn-primary btn-sm" [disabled]="isSaving"
         (click)="abrirNuevoPunto('RECOLECCION')">Agregar recolección</button>
     </div>
-  </div>
+  </div> -->
 
   <!-- ================================================= -->
   <!-- FILTROS -->
   <!-- ================================================= -->
-  <div class="mb-6 overflow-hidden rounded-2xl
+  <section class="my-4 mx-2 overflow-hidden rounded-2xl
          border border-base-300 bg-base-100 shadow-sm">
     <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_170px]">
 
@@ -51,25 +51,44 @@
         <div class="grid grid-cols-1 items-end gap-4
                sm:grid-cols-2
                xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+
           <!-- Buscar por punto -->
           <div class="min-w-0">
-            <label for="puntos-busqueda" class="mb-1 block text-sm">
+            <label for="puntos-busqueda" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
               Buscar punto
             </label>
 
-            <input id="puntos-busqueda" type="text" class="input input-bordered w-full"
-              placeholder="Código, nombre o descripción" [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()"
-              appUppercase />
+            <div class="relative">
+              <input id="puntos-busqueda" type="text" class="input input-bordered h-11 min-h-11
+                      w-full min-w-0 rounded-xl bg-base-200
+                     pl-11 pr-4 transition-colors
+                     focus:border-primary focus:outline-none
+                     focus:ring-2 focus:ring-primary/30" placeholder="Código, nombre o descripción" autocomplete="off"
+                [ngClass]="searchBusqueda.trim() ? 'border-primary' : 'border-base-500'" [(ngModel)]="searchBusqueda"
+                (ngModelChange)="onSearchChange()" appUppercase />
+
+              <span class="pointer-events-none absolute inset-y-0 left-0 z-10
+                     flex w-11 items-center justify-center
+                     text-base-content/50" aria-hidden="true">
+                <i class="fa-solid fa-magnifying-glass text-base"></i>
+              </span>
+            </div>
           </div>
 
           <!-- Buscar por tipo punto -->
           <div>
-            <label for="puntos-tipo" class="mb-1 block text-sm">
+            <label for="puntos-tipo" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
               Tipo de punto
             </label>
 
-            <select id="puntos-tipo" class="select select-bordered w-full" [(ngModel)]="filtroTipo"
-              (ngModelChange)="onFiltroChange()">
+            <select id="puntos-tipo" class="select select-bordered h-11 min-h-11
+                  w-full min-w-0 rounded-xl bg-base-200
+                  pl-4 pr-10 transition-colors
+                  focus:border-primary focus:outline-none
+                  focus:ring-2 focus:ring-primary/30" [ngClass]="filtroTipo ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="filtroTipo" [(ngModel)]="filtroTipo" (ngModelChange)="onFiltroChange()">
               <option value="">Todos</option>
 
               @for (tipo of tiposPunto; track tipo) {
@@ -80,12 +99,17 @@
 
           <!-- Buscar por estado -->
           <div>
-            <label for="puntos-estado" class="mb-1 block text-sm">
+            <label for="puntos-estado" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
               Estado
             </label>
 
-            <select id="puntos-estado" class="select select-bordered w-full" [(ngModel)]="filtroEstado"
-              (ngModelChange)="onFiltroChange()">
+            <select id="puntos-estado" class="select select-bordered h-11 min-h-11
+                  w-full min-w-0 rounded-xl bg-base-200
+                  pl-4 pr-10 transition-colors
+                  focus:border-primary focus:outline-none
+                  focus:ring-2 focus:ring-primary/30" [ngClass]="filtroEstado ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="filtroEstado" (ngModelChange)="onFiltroChange()">
               <option [ngValue]="null">Todos</option>
               <option [ngValue]="true">Activos</option>
               <option [ngValue]="false">Inactivos</option>
@@ -93,10 +117,8 @@
           </div>
         </div>
       </div>
-
     </div>
-
-  </div>
+  </section>
 
 
 
@@ -109,7 +131,7 @@
   <!-- ===================================================== -->
   <!-- TABLA GENERAL DE PUNTOS -->
   <!-- ===================================================== -->
-  <div class="overflow-hidden rounded-2xl
+  <div class="mx-2 overflow-hidden rounded-2xl
            border border-base-300
            bg-base-100 shadow-sm" aria-label="Puntos registrados">
 
@@ -147,24 +169,43 @@
       Limpiar filtros
     </button> -->
 
+      <!-- Botones -->
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="btn btn-success btn-sm" [disabled]="isSaving"
+          (click)="abrirNuevoPunto('INICIO')">Asignar inicio</button>
+        <button type="button" class="btn btn-error btn-sm" [disabled]="isSaving"
+          (click)="abrirNuevoPunto('FINAL')">Asignar final</button>
+        <button type="button" class="btn btn-primary btn-sm" [disabled]="isSaving"
+          (click)="abrirNuevoPunto('RECOLECCION')">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          Agregar recolección
+        </button>
+      </div>
       <!-- Botón crear -->
-      <button type="button" class="btn btn-primary btn-sm" [disabled]="idRutaVersion === null || isSaving"
+      <!-- <button type="button" class="btn btn-primary btn-sm" [disabled]="idRutaVersion === null || isSaving"
         (click)="abrirNuevoPunto()">
         <i class="fa-solid fa-plus" aria-hidden="true"></i>
         Nuevo punto
-      </button>
+      </button> -->
     </div>
 
     <!-- ===================================================== -->
-    <!-- TABLA DE PUNTOS -->
+    <!-- TABLA DE PUNTOS CON SCROLL INDEPENDIENTE -->
     <!-- ===================================================== -->
-    <div class="overflow-x-auto">
+    <div class="relative min-h-0
+         max-h-[clamp(220px,45dvh,520px)]
+         overflow-auto overscroll-contain
+         rounded-xl border border-base-300
+         focus-visible:outline-none
+         focus-visible:ring-2 focus-visible:ring-primary" tabindex="0" role="region"
+      aria-label="Listado de puntos de la versión">
       <table class="table min-w-275">
         <caption class="sr-only">
           Listado de puntos de la versión
         </caption>
 
-        <thead class="bg-base-200">
+        <!-- ENCABEZADO FIJO AL DESPLAZARSE -->
+        <thead class="sticky top-0 z-10 bg-base-200 shadow-sm">
           <tr>
             <th scope="col">Orden</th>
             <th scope="col">Punto</th>
@@ -255,12 +296,45 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="7" class="py-10 text-center">
-              {{
-              puntos.length === 0
-              ? 'Esta versión no tiene puntos registrados.'
-              : 'No se encontraron puntos con los filtros aplicados.'
-              }}
+            <td colspan="7" class="px-4 py-12 sm:py-16">
+              <div class="mx-auto flex max-w-md flex-col items-center text-center">
+
+                <div class="mb-4 flex h-16 w-16 items-center justify-center
+                    rounded-2xl bg-base-200 text-base-content/40">
+                  <i class="fa-solid text-2xl" [ngClass]="puntos.length === 0
+              ? 'fa-calendar-days'
+              : 'fa-magnifying-glass'" aria-hidden="true">
+                  </i>
+                </div>
+
+                <p>
+                  {{
+                  puntos.length === 0
+                  ? 'Esta versión no tiene puntos registrados.'
+                  : 'No se encontraron puntos con los filtros aplicados.'
+                  }}
+                </p>
+
+                <p class="mt-2 text-sm leading-relaxed text-base-content/60">
+                  {{
+                  puntos.length === 0
+                  ? 'Esta ruta aún no tiene puntos de recolección registrados.'
+                  : 'Prueba con otra búsqueda o limpia los filtros para ver todos los puntos.'
+                  }}
+                </p>
+
+                @if (
+                searchBusqueda.trim() ||
+                filtroTipo ||
+                filtroEstado ||
+                filtroEstado !== null
+                ) {
+                <button type="button" class="btn btn-secondary btn-sm mt-5 gap-2" (click)="limpiarFiltros()">
+                  <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+                  Limpiar filtros
+                </button>
+                }
+              </div>
             </td>
           </tr>
           }
@@ -272,23 +346,28 @@
   <!-- ===================================================== -->
   <!-- PAGINACIÓN -->
   <!-- ===================================================== -->
-  <footer class="flex flex-wrap items-center justify-between gap-3">
+  <footer class="flex flex-wrap px-2 items-center justify-between gap-3">
     <p class="text-sm text-base-content/60">
-      {{ totalItems }} puntos encontrados
-      @if (totalPages > 0) {
-      · Página {{ currentPage }} de {{ totalPages }}
-      }
+      {{ totalItems }}
+      {{ totalItems === 1 ? 'punto encontrado' : 'puntos encontrados' }}
     </p>
 
-    <div class="join">
-      <button type="button" class="btn btn-sm join-item" [disabled]="page <= 1 || isSaving"
+    <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+      <button type="button" class="btn btn-sm w-full gap-2 rounded-lg sm:w-auto" [disabled]="page <= 1"
         (click)="cambiarPagina(page - 1)">
+        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+
         Anterior
       </button>
 
-      <button type="button" class="btn btn-sm join-item" [disabled]="page >= totalPages || isSaving"
-        (click)="cambiarPagina(page + 1)">
+      <button type="button" class="btn btn-sm w-full gap-2 rounded-lg sm:w-auto" [disabled]="
+
+            totalPages === 0 ||
+            page >= totalPages
+          " (click)="cambiarPagina(page + 1)">
         Siguiente
+
+        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
       </button>
     </div>
   </footer>
@@ -300,15 +379,6 @@
 </section>
 
 
-<ruta-punto-form
-  [mostrarModal]="mostrarModal"
-  [modoEdicion]="modoEdicion"
-  [idRutaVersion]="idRutaVersion"
-  [version]="version"
-  [puntosExistentes]="puntos"
-  [tipoSugerido]="tipoSugerido"
-  [puntoSeleccionado]="puntoSeleccionado"
-  [ordenSugerido]="ordenSugerido"
-  (modalCerrado)="cerrarModal()"
-  (puntoGuardado)="onPuntoGuardado()"
-  ></ruta-punto-form>
+<ruta-punto-form [mostrarModal]="mostrarModal" [modoEdicion]="modoEdicion" [idRutaVersion]="idRutaVersion"
+  [version]="version" [puntosExistentes]="puntos" [tipoSugerido]="tipoSugerido" [puntoSeleccionado]="puntoSeleccionado"
+  [ordenSugerido]="ordenSugerido" (modalCerrado)="cerrarModal()" (puntoGuardado)="onPuntoGuardado()"></ruta-punto-form>

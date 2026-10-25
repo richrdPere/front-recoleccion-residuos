@@ -139,6 +139,26 @@ export class CancelarMantenimientoComponent implements OnChanges {
       (control.touched || control.dirty);
   }
 
+  campoCompleto(campo: string): boolean {
+    const control = this.formCancelacion.get(campo);
+
+    if (!control || !control.valid) {
+      return false;
+    }
+
+    const valor = control.value;
+
+    if (typeof valor === 'string') {
+      return valor.trim().length > 0;
+    }
+
+    if (Array.isArray(valor)) {
+      return valor.length > 0;
+    }
+
+    return valor !== null && valor !== undefined;
+  }
+
   obtenerError(nombre: string): string {
     const control = this.formCancelacion.get(nombre);
 

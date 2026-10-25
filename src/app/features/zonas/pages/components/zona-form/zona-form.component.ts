@@ -576,6 +576,34 @@ export class ZonaFormComponent implements OnChanges {
       });
   }
 
+  esRequerido(campo: string): boolean {
+    return (
+      this.formZona
+        .get(campo)
+        ?.hasValidator(Validators.required) ?? false
+    );
+  }
+
+  campoCompleto(campo: string): boolean {
+    const control = this.formZona.get(campo);
+
+    if (!control || !control.valid) {
+      return false;
+    }
+
+    const valor = control.value;
+
+    if (typeof valor === 'string') {
+      return valor.trim().length > 0;
+    }
+
+    if (Array.isArray(valor)) {
+      return valor.length > 0;
+    }
+
+    return valor !== null && valor !== undefined;
+  }
+
   campoInvalido(campo: string): boolean {
     const control = this.formZona.get(campo);
 

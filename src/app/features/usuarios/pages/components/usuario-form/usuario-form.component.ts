@@ -182,9 +182,9 @@ export class UsuarioFormComponent implements OnChanges {
     value: UsuarioGenero;
     label: string;
   }[] = [
-      { value: 'M', label: 'Masculino' },
-      { value: 'F', label: 'Femenino' },
-      { value: 'OTRO', label: 'Otro' },
+      { value: 'M', label: 'MASCULINO' },
+      { value: 'F', label: 'FEMENINO' },
+      // { value: 'OTRO', label: 'Otro' },
     ];
 
   constructor(
@@ -193,7 +193,9 @@ export class UsuarioFormComponent implements OnChanges {
     private readonly cdr: ChangeDetectorRef,
   ) {
     this.formUsuario = this.initFormulario();
+    this.configurarSincronizacionAcceso();
   }
+
 
   // ============================================================
   // CICLO DE VIDA
@@ -233,21 +235,22 @@ export class UsuarioFormComponent implements OnChanges {
   // ============================================================
 
   private initFormulario(): FormGroup {
-    // Campos planos para simplificar los formControlName del HTML.
-    // El objeto persona se construye al enviar el request.
     return this.fb.group({
       id_usuario: [null],
 
       username: ['', [Validators.required, textoNoVacio, Validators.maxLength(50)]],
-      email_acceso: ['', [Validators.required, textoNoVacio, Validators.email, Validators.maxLength(150),]],
+      email_acceso: ['', [Validators.required, textoNoVacio, Validators.email, Validators.maxLength(150)]],
       password: ['', [Validators.required, passwordValida]],
       estado: [true],
       roles_ids: [[], [Validators.required, rolesValidos]],
-      nombres: ['', [Validators.required, textoNoVacio, Validators.maxLength(100),]],
-      apellidos: ['', [Validators.required, textoNoVacio, Validators.maxLength(100),]],
-      tipo_documento: ['DNI', [Validators.required, opcionPermitida(this.tiposDocumento.map(opcion => opcion.value)),]],
-      numero_documento: ['', [Validators.required, textoNoVacio, Validators.maxLength(20),]],
-      email_contacto: ['', [Validators.email, Validators.maxLength(150)]],
+
+      nombres: ['', [Validators.required, textoNoVacio, Validators.maxLength(100)]],
+      apellidos: ['', [Validators.required, textoNoVacio, Validators.maxLength(100)]],
+      tipo_documento: ['DNI', [Validators.required, opcionPermitida(this.tiposDocumento.map(opcion => opcion.value),),]],
+      numero_documento: ['', [Validators.required, textoNoVacio, Validators.maxLength(20)]],
+
+      // Ahora es obligatorio.
+      email_contacto: ['', [Validators.required, textoNoVacio, Validators.email, Validators.maxLength(150)]],
       fecha_nacimiento: ['', fechaValida],
       celular: ['', Validators.maxLength(20)],
       direccion: ['', Validators.maxLength(255)],
@@ -255,6 +258,30 @@ export class UsuarioFormComponent implements OnChanges {
       genero: [null, opcionPermitida(this.generos.map(opcion => opcion.value))],
     });
   }
+
+  // private initFormulario(): FormGroup {
+  //   // Campos planos para simplificar los formControlName del HTML.
+  //   // El objeto persona se construye al enviar el request.
+  //   return this.fb.group({
+  //     id_usuario: [null],
+
+  //     username: ['', [Validators.required, textoNoVacio, Validators.maxLength(50)]],
+  //     email_acceso: ['', [Validators.required, textoNoVacio, Validators.email, Validators.maxLength(150),]],
+  //     password: ['', [Validators.required, passwordValida]],
+  //     estado: [true],
+  //     roles_ids: [[], [Validators.required, rolesValidos]],
+  //     nombres: ['', [Validators.required, textoNoVacio, Validators.maxLength(100),]],
+  //     apellidos: ['', [Validators.required, textoNoVacio, Validators.maxLength(100),]],
+  //     tipo_documento: ['DNI', [Validators.required, opcionPermitida(this.tiposDocumento.map(opcion => opcion.value)),]],
+  //     numero_documento: ['', [Validators.required, textoNoVacio, Validators.maxLength(20),]],
+  //     email_contacto: ['', [Validators.email, Validators.maxLength(150)]],
+  //     fecha_nacimiento: ['', fechaValida],
+  //     celular: ['', Validators.maxLength(20)],
+  //     direccion: ['', Validators.maxLength(255)],
+  //     foto_url: ['', Validators.maxLength(255)],
+  //     genero: [null, opcionPermitida(this.generos.map(opcion => opcion.value))],
+  //   });
+  // }
 
   private resetearFormulario(): void {
     this.formUsuario.reset({
@@ -324,6 +351,53 @@ export class UsuarioFormComponent implements OnChanges {
         control?.enable({ emitEvent: false });
       }
     }
+
+    this.sincronizarDatosAcceso();
+  }
+
+  // ============================================================
+  // SINCRONIZAR DATOS DE ACCESO
+  // ============================================================
+
+  private configurarSincronizacionAcceso(): void {
+    this.formUsuario.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.sincronizarDatosAcceso();
+        this.cdr.markForCheck();
+      });
+  }
+
+  private sincronizarDatosAcceso(): void {
+    const form = this.formUsuario.getRawValue();
+
+    // Conservar como texto para no perder ceros iniciales.
+    const numeroDocumento = String(
+      form.numero_documento ?? '',
+    ).trim();
+
+    const correoContacto = String(
+      form.email_contacto ?? '',
+    ).trim().toLowerCase();
+
+    const cambios: {
+      username: string;
+      email_acceso: string;
+      password?: string;
+    } = {
+      username: numeroDocumento,
+      email_acceso: correoContacto,
+    };
+
+    // La contraseña automática se asigna únicamente al crear.
+    if (!this.modoEdicion) {
+      cambios.password = numeroDocumento;
+    }
+
+    this.formUsuario.patchValue(
+      cambios,
+      { emitEvent: false },
+    );
   }
 
   // ============================================================
@@ -335,6 +409,7 @@ export class UsuarioFormComponent implements OnChanges {
     }
 
     this.normalizarCamposTexto();
+    this.sincronizarDatosAcceso();
 
     if (this.formUsuario.invalid) {
       this.formUsuario.markAllAsTouched();
@@ -355,13 +430,16 @@ export class UsuarioFormComponent implements OnChanges {
       return;
     }
 
+    const numeroDocumento = String(form.numero_documento ?? '').trim();
+    const correoContacto = String(form.email_contacto ?? '').trim().toLowerCase();
+
     const persona: CreateUsuarioPersonaRequest = {
       nombres: form.nombres,
       apellidos: form.apellidos,
       tipo_documento: form.tipo_documento,
-      numero_documento: form.numero_documento,
+      numero_documento: numeroDocumento,
 
-      email_contacto: this.textoONull(form.email_contacto),
+      email_contacto: correoContacto,
       fecha_nacimiento: this.textoONull(form.fecha_nacimiento),
       celular: this.textoONull(form.celular),
       direccion: this.textoONull(form.direccion),
@@ -497,8 +575,6 @@ export class UsuarioFormComponent implements OnChanges {
       },
       { emitEvent: false },
     );
-
-    // La contraseña se conserva exactamente como fue ingresada.
   }
 
   normalizarCampo(

@@ -14,10 +14,7 @@ import { VehiculosService } from 'src/app/features/vehiculos/services/vehiculos.
 
 // Interfaces
 import { EstadoMantenimiento, MantenimientoDetalleData, MantenimientoPaginadoItem, TipoMantenimiento, VehiculoExpedienteData, VehiculosExpedientesPaginadosFilters, ExpedienteEstadoOperativoVehiculo, ExpedienteTipoVehiculo } from '../../interfaces';
-
-import {
-  VehiculoSelectorItem,
-} from 'src/app/features/vehiculos/models';
+import { VehiculoSelectorItem } from 'src/app/features/vehiculos/models';
 
 
 @Component({
@@ -25,17 +22,10 @@ import {
   standalone: true,
   imports: [
     CurrencyPipe,
-    // DatePipe,
-    // DecimalPipe,
     FormsModule,
     CommonModule,
     UppercaseDirective,
-    // MantenimientoFormComponent,
-    // MantenimientoViewComponent,
-    // IniciarMantenimientoComponent,
-    // FinalizarMantenimientoComponent,
-    // CancelarMantenimientoComponent,
-    // MantenimientoListadoComponent
+
   ],
   templateUrl: './mantenimientos-page.component.html',
 })

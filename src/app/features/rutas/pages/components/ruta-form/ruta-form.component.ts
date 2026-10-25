@@ -120,7 +120,7 @@ export class RutasFormComponent implements OnChanges {
     const debeSincronizar =
       !!changes['mostrarModal'] ||
       !!changes['modoEdicion'] ||
-       !!changes['zona_id'] ||
+      !!changes['zona_id'] ||
       !!changes['rutaSeleccionada'];
 
     // Actualizar la lista de zonas no borra los datos del formulario.
@@ -304,6 +304,34 @@ export class RutasFormComponent implements OnChanges {
   // ============================================================
   // NORMALIZACIÓN
   // ============================================================
+  esRequerido(campo: string): boolean {
+    const control = this.formRuta.get(campo);
+
+    return !!(
+      control?.enabled &&
+      control.hasValidator(Validators.required)
+    );
+  }
+
+  campoCompleto(campo: string): boolean {
+    const control = this.formRuta.get(campo);
+
+    if (!control || control.disabled || !control.valid) {
+      return false;
+    }
+
+    const value = control.value;
+
+    if (typeof value === 'string') {
+      return value.trim().length > 0;
+    }
+
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    }
+
+    return value !== null && value !== undefined;
+  }
 
   normalizarCampo(
     campo: 'codigo' | 'nombre',

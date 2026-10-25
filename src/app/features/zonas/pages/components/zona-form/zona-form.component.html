@@ -103,12 +103,19 @@
                     <!-- NOMBRE -->
                     <div>
                       <label for="zona-nombre" class="mb-1 block text-sm font-medium">
-                        Nombre <span class="text-error">*</span>
+                        Nombre
+                        @if (esRequerido('nombre')) {
+                        <span class="font-bold text-red-500">*</span>
+                        }
                       </label>
 
-                      <input id="zona-nombre" type="text" formControlName="nombre" class="input input-bordered w-full"
-                        [class.input-error]="campoInvalido('nombre')" placeholder="Ejemplo: Sector centro"
-                        autocomplete="off" aria-describedby="zona-nombre-error" appUppercase />
+                      <input id="zona-nombre" type="text" formControlName="nombre"
+                        class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+                        [class.input-success]="campoCompleto('nombre')" [class.input-error]="campoInvalido('nombre')"
+                        [attr.aria-invalid]="campoInvalido('nombre')"
+                        [attr.aria-describedby]="campoInvalido('nombre') ? 'zona-nombre-error' : null"
+                        placeholder="Ejemplo: Sector centro" autocomplete="off" aria-describedby="zona-nombre-error"
+                        appUppercase />
 
                       @if (campoInvalido('nombre')) {
                       <p id="zona-nombre-error" class="mt-1 text-xs text-error">
@@ -121,18 +128,28 @@
                     <div>
                       <label for="zona-descripcion" class="mb-1 block text-sm font-medium">
                         Descripción
+
+                        @if (esRequerido('descripcion')) {
+                        <span class="font-bold text-red-500">*</span>
+                        }
                       </label>
 
                       <textarea id="zona-descripcion" formControlName="descripcion" rows="3"
-                        class="textarea textarea-bordered w-full"
-                        placeholder="Describe el sector y sus referencias principales." appUppercase></textarea>
+                        placeholder="Describe el sector y sus referencias principales."
+                        class="textarea textarea-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+                        [class.textarea-success]="campoCompleto('descripcion')"
+                        [class.textarea-error]="campoInvalido('descripcion')"
+                        [attr.aria-invalid]="campoInvalido('descripcion')" appUppercase></textarea>
                     </div>
 
                     <!-- COLOR -->
                     <div>
                       <label for="zona-color" class="mb-1 block text-sm font-medium">
                         Color de identificación
-                        <span class="text-error">*</span>
+
+                        @if (esRequerido('color')) {
+                        <span class="font-bold text-red-500">*</span>
+                        }
                       </label>
 
                       <div class="flex items-center gap-3">
@@ -282,6 +299,7 @@
               <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
               {{ modoEdicion ? 'Actualizando...' : 'Guardando...' }}
               } @else {
+              <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
               {{ modoEdicion ? 'Actualizar' : 'Guardar' }}
               }
             </button>
