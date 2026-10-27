@@ -787,17 +787,26 @@
       para los filtros seleccionados.
     </p>
 
-    @if (
-    searchBusqueda ||
-    estadoLaboralBusqueda ||
-    tipoContratoBusqueda
-    ) {
-    <button type="button" class="btn btn-primary btn-sm mt-5" (click)="limpiarFiltros()">
-      <i class="fa-solid fa-filter-circle-xmark"></i>
+    <!-- Acciones -->
+    <div class="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+      @if (
+      searchBusqueda.trim() ||
+      estadoLaboralBusqueda ||
+      tipoContratoBusqueda
+      ) {
+      <button type="button" class="btn btn-primary btn-sm mt-5" (click)="limpiarFiltros()">
+        <i class="fa-solid fa-filter-circle-xmark"></i>
 
-      Limpiar filtros
-    </button>
-    }
+        Limpiar filtros
+      </button>
+      } @else {
+      <button type="button" class="btn btn-primary btn-sm w-full gap-2 rounded-xl sm:w-auto" (click)="abrirModal()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        Nuevo personal
+      </button>
+      }
+    </div>
+
   </section>
   }
 </div>
