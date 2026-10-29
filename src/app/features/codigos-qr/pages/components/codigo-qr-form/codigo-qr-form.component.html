@@ -1,0 +1,301 @@
+@if (mostrarModal) {
+<div class="modal modal-open">
+
+  <!-- ===================================================== -->
+  <!-- MODAL: FORM - CODIGO QR -->
+  <!-- ===================================================== -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center
+           bg-black/30 p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="codigo-qr-form-title">
+
+    <section class="relative flex max-h-[92vh] w-full flex-col
+             overflow-hidden rounded-2xl border border-base-300
+             bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+      <!-- ================================================= -->
+      <!-- HEADER MODAL -->
+      <!-- ================================================= -->
+      <header class="flex shrink-0 items-center justify-between gap-4
+         border-b border-base-300
+         px-5 py-4 sm:px-6">
+
+        <!-- Ícono e información -->
+        <div class="flex min-w-0 items-center gap-3">
+
+          <div class="flex h-12 w-12 shrink-0 items-center
+                  justify-center rounded-2xl
+                  bg-primary/10 text-primary">
+            <i class="fa-solid text-lg fa-qrcode" aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="codigo-qr-form-titulo" class="text-xl font-bold">
+              Crear código QR
+            </h2>
+
+            <p class="mt-1 text-sm text-base-content/60">
+              Genera un código QR para consultar una ruta o zona.
+            </p>
+          </div>
+
+        </div>
+
+        <button type="button" class="btn btn-circle btn-ghost btn-sm shrink-0" aria-label="Cerrar formulario"
+          [disabled]="isSaving" (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </header>
+
+      <!-- ===================================================== -->
+      <!-- ERROR GENERAL -->
+      <!-- ===================================================== -->
+      @if (errorMensaje) {
+      <div role="alert" class="alert alert-error">
+        <span>{{ errorMensaje }}</span>
+      </div>
+      }
+
+      <!-- ===================================================== -->
+      <!-- FORMULARIO -->
+      <!-- ===================================================== -->
+      <form [formGroup]="codigoQrForm" (ngSubmit)="guardar()" class="flex min-h-0 flex-1 flex-col">
+
+        <!-- =============================================== -->
+        <!-- CONTENIDO CON SCROLL -->
+        <!-- =============================================== -->
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
+          <fieldset class="space-y-5" [disabled]="isSaving">
+            <legend class="sr-only">
+              Datos del nuevo código QR
+            </legend>
+
+            <!-- Tipo de recurso -->
+            <div class="space-y-2">
+              <label for="qr-tipo-recurso" class="block text-sm font-medium">
+                Tipo de recurso
+                <span class="text-error">*</span>
+              </label>
+
+              <select id="qr-tipo-recurso" class="select select-bordered w-full" formControlName="tipo_recurso"
+                (change)="onTipoRecursoChange()">
+                <option value="RUTA">Ruta</option>
+                <option value="ZONA">Zona</option>
+              </select>
+            </div>
+
+            <!-- Zona -->
+            <div class="space-y-2">
+              <label for="qr-zona" class="block text-sm font-medium">
+                Zona
+                <span class="text-error">*</span>
+              </label>
+
+              <select id="qr-zona" class="select select-bordered w-full" formControlName="id_zona"
+                [class.select-error]="codigoQrForm.controls.id_zona.touched && codigoQrForm.controls.id_zona.invalid"
+                [attr.aria-busy]="isLoadingZonas" (change)="onZonaChange()">
+                <option [ngValue]="null">
+                  {{
+                  isLoadingZonas
+                  ? 'Cargando zonas...'
+                  : 'Selecciona una zona'
+                  }}
+                </option>
+
+                @for (zona of zonasDisponibles; track zona.id_zona) {
+                <option [ngValue]="zona.id_zona">
+                  {{ zona.codigo }} — {{ zona.nombre }}
+                </option>
+                }
+              </select>
+
+              @if (
+              codigoQrForm.controls.id_zona.touched &&
+              codigoQrForm.controls.id_zona.hasError('required')
+              ) {
+              <p class="text-xs text-error">
+                Selecciona una zona.
+              </p>
+              }
+
+              @if (errorZonas) {
+              <div role="alert" class="flex flex-wrap items-center gap-2 text-sm text-error">
+                <span>{{ errorZonas }}</span>
+
+                <button type="button" class="btn btn-ghost btn-xs" [disabled]="isLoadingZonas" (click)="cargarZonas()">
+                  Reintentar
+                </button>
+              </div>
+              } @else if (
+              !isLoadingZonas &&
+              zonasDisponibles.length === 0
+              ) {
+              <p class="text-xs text-base-content/60">
+                No hay zonas activas disponibles.
+              </p>
+              }
+
+              @if (esRuta) {
+              <p class="text-xs text-base-content/60">
+                Selecciona la zona para consultar sus rutas.
+              </p>
+              }
+            </div>
+
+            <!-- Ruta: solo para recurso RUTA -->
+            @if (esRuta) {
+            <div class="space-y-2">
+              <label for="qr-ruta" class="block text-sm font-medium">
+                Ruta
+                <span class="text-error">*</span>
+              </label>
+
+              <select id="qr-ruta" class="select select-bordered w-full" formControlName="id_ruta"
+                [class.select-error]="codigoQrForm.controls.id_ruta.touched && codigoQrForm.controls.id_ruta.invalid"
+                [attr.aria-busy]="isLoadingRutas">
+                <option [ngValue]="null">
+                  @if (isLoadingRutas) {
+                  Cargando rutas...
+                  } @else if (
+                  codigoQrForm.controls.id_zona.value === null
+                  ) {
+                  Selecciona primero una zona
+                  } @else {
+                  Selecciona una ruta
+                  }
+                </option>
+
+                @for (ruta of rutasDisponibles; track ruta.id_ruta) {
+                <option [ngValue]="ruta.id_ruta">
+                  {{ ruta.codigo }} — {{ ruta.nombre }}
+                </option>
+                }
+              </select>
+
+              @if (
+              codigoQrForm.controls.id_ruta.touched &&
+              codigoQrForm.controls.id_ruta.hasError('required')
+              ) {
+              <p class="text-xs text-error">
+                Selecciona una ruta.
+              </p>
+              }
+
+              @if (errorRutas) {
+              <div role="alert" class="flex flex-wrap items-center gap-2 text-sm text-error">
+                <span>{{ errorRutas }}</span>
+
+                <button type="button" class="btn btn-ghost btn-xs" [disabled]="isLoadingRutas"
+                  (click)="reintentarRutas()">
+                  Reintentar
+                </button>
+              </div>
+              } @else if (
+              !isLoadingRutas &&
+              codigoQrForm.controls.id_zona.value !== null &&
+              rutasDisponibles.length === 0
+              ) {
+              <p class="text-xs text-base-content/60">
+                La zona seleccionada no tiene rutas disponibles.
+              </p>
+              }
+            </div>
+            }
+
+            <!-- Título -->
+            <div class="space-y-2">
+              <label for="qr-titulo" class="block text-sm font-medium">
+                Título
+                <span class="text-error">*</span>
+              </label>
+
+              <input id="qr-titulo" type="text" class="input input-bordered w-full" formControlName="titulo"
+                placeholder="Ejemplo: Consulta de recolección — Ruta CO-2"
+                [class.input-error]="codigoQrForm.controls.titulo.touched && codigoQrForm.controls.titulo.invalid" />
+
+              @if (
+              codigoQrForm.controls.titulo.touched &&
+              codigoQrForm.controls.titulo.hasError('required')
+              ) {
+              <p class="text-xs text-error">
+                Ingresa el título del código QR.
+              </p>
+              }
+            </div>
+
+            <!-- Descripción -->
+            <div class="space-y-2">
+              <label for="qr-descripcion" class="block text-sm font-medium">
+                Descripción
+              </label>
+
+              <textarea id="qr-descripcion" class="textarea textarea-bordered w-full" rows="3"
+                formControlName="descripcion" placeholder="Describe el propósito del código QR."></textarea>
+            </div>
+
+            <!-- Fecha de expiración -->
+            <div class="space-y-2">
+              <label for="qr-fecha-expiracion" class="block text-sm font-medium">
+                Fecha de expiración
+              </label>
+
+              <input id="qr-fecha-expiracion" type="datetime-local" class="input input-bordered w-full"
+                formControlName="fecha_expiracion" [class.input-error]="codigoQrForm.controls.fecha_expiracion.invalid"
+                (input)="limpiarErrorFecha()" />
+
+              <p class="text-xs text-base-content/60">
+                Opcional. La hora corresponde a tu dispositivo.
+                Si dejas el campo vacío, se enviará sin expiración.
+              </p>
+
+              @if (
+              codigoQrForm.controls.fecha_expiracion
+              .hasError('fechaFutura')
+              ) {
+              <p class="text-xs text-error">
+                Ingresa una fecha y hora posteriores a la actual.
+              </p>
+              }
+            </div>
+
+            <!-- Observación -->
+            <div class="space-y-2">
+              <label for="qr-observacion" class="block text-sm font-medium">
+                Observación
+              </label>
+
+              <textarea id="qr-observacion" class="textarea textarea-bordered w-full" rows="3"
+                formControlName="observacion" placeholder="Información adicional del registro."></textarea>
+            </div>
+          </fieldset>
+        </div>
+
+        <!-- =============================================== -->
+        <!-- FOOTER -->
+        <!-- =============================================== -->
+        <footer class="flex shrink-0 flex-col-reverse gap-3
+               border-t border-base-300 bg-base-100
+               px-5 py-4 sm:flex-row sm:items-center
+               sm:justify-center sm:px-6">
+
+          <div class="flex flex-col-reverse gap-5 sm:flex-row sm:justify-end">
+
+            <button type="button" class="btn btn-error" [disabled]="isSaving" (click)="cerrarModal()">
+              Cancelar
+            </button>
+
+            <button type="submit" class="btn btn-primary"
+              [disabled]="isSaving || isLoadingZonas || isLoadingRutas || zonasDisponibles.length === 0 || !!errorZonas || (esRuta && (rutasDisponibles.length === 0 || !!errorRutas))">
+              @if (isSaving) {
+              <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+              }
+
+              {{ isSaving ? 'Creando...' : 'Crear código QR' }}
+            </button>
+          </div>
+        </footer>
+      </form>
+    </section>
+
+  </div>
+
+</div>
+}

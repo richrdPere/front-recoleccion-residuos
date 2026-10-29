@@ -1,0 +1,220 @@
+@if (mostrarModal) {
+
+<div class="modal modal-open">
+
+  <!-- ===================================================== -->
+  <!-- MODAL: IMAGEN - CODIGO QR -->
+  <!-- ===================================================== -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center
+           bg-black/30 p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="qr-imagen-titulo">
+
+    <section class="relative flex max-h-[92vh] w-full flex-col
+             overflow-hidden rounded-2xl border border-base-300
+             bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+      <!-- ================================================= -->
+      <!-- HEADER MODAL -->
+      <!-- ================================================= -->
+      <header class="flex shrink-0 items-center justify-between gap-4
+         border-b border-base-300
+         px-5 py-4 sm:px-6">
+
+        <!-- Ícono e información -->
+        <div class="flex min-w-0 items-center gap-3">
+
+          <div class="flex h-12 w-12 shrink-0 items-center
+                  justify-center rounded-2xl
+                  bg-primary/10 text-primary">
+            <i class="fa-solid text-lg fa-qrcode" aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="qr-imagen-titulo" class="text-xl font-bold">
+              Imagen del código QR
+            </h2>
+
+            <p class="mt-1 text-sm text-base-content/60">
+              Código QR #{{ idCodigoQr }}
+            </p>
+          </div>
+        </div>
+
+
+        <button type="button" class="btn btn-circle btn-ghost btn-sm shrink-0" aria-label="Cerrar vista de imagen QR"
+          (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </header>
+
+      <!-- ===================================================== -->
+      <!-- FORMULARIO -->
+      <!-- ===================================================== -->
+      <form #opcionesForm="ngForm" class="rounded-xl border border-base-300 p-4" (ngSubmit)="cargarImagen()">
+        <fieldset [disabled]="isLoading">
+          <legend class="sr-only">
+            Opciones de la imagen
+          </legend>
+
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+
+            <!-- Formato -->
+            <div class="space-y-2">
+              <label for="qr-imagen-formato" class="block text-sm font-medium">
+                Formato
+              </label>
+
+              <select id="qr-imagen-formato" name="formato"
+                class="select select-bordered border-2 w-full rounded-lg transition-colors duration-200"
+                [class.select-success]="formato" [(ngModel)]="formato" required>
+                @for ( opcion of formatosDisponibles; track opcion ) {
+                <option [ngValue]="opcion">
+                  {{ opcion }}
+                </option>
+                }
+              </select>
+            </div>
+
+            <!-- Ancho -->
+            <div class="space-y-2">
+              <label for="qr-imagen-width" class="block text-sm font-medium">
+                Ancho
+              </label>
+
+              <input #anchoControl="ngModel" id="qr-imagen-width" name="width" type="number" min="1" step="1" required
+                class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+                [(ngModel)]="width" [class.input-success]="width"
+                [class.input-error]="anchoControl.touched && anchoControl.invalid" />
+
+              @if (anchoControl.touched && anchoControl.invalid) {
+              <p class="text-xs text-error">
+                Ingresa un ancho mayor que cero.
+              </p>
+              }
+            </div>
+
+            <!-- Margen -->
+            <div class="space-y-2">
+              <label for="qr-imagen-margin" class="block text-sm font-medium">
+                Margen
+              </label>
+
+              <input #margenControl="ngModel" id="qr-imagen-margin" name="margin" type="number" min="0" step="1"
+                required
+                class="input input-bordered border-2 w-full placeholder-gray-400 rounded-lg transition-colors duration-200"
+                [(ngModel)]="margin" [class.input-success]="margin"
+                [class.input-error]="margenControl.touched && margenControl.invalid" />
+
+              @if (
+              margenControl.touched &&
+              margenControl.invalid
+              ) {
+              <p class="text-xs text-error">
+                Ingresa un margen mayor o igual a cero.
+              </p>
+              }
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 mt-3 text-xs text-base-content/50">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <span>Conserva un margen alrededor del código para facilitar
+              su lectura.</span>
+          </div>
+
+          <div class="mt-4 flex justify-end">
+            <button type="submit" class="btn btn-primary btn-sm"
+              [disabled]="isLoading || !idValido || opcionesForm.invalid || !opcionesValidas">
+
+              <!-- Actualizar imagen -->
+              <i class="fa-solid fa-arrow-rotate-left"></i>
+              Actualizar imagen
+            </button>
+          </div>
+        </fieldset>
+      </form>
+
+      <!-- ===================================================== -->
+      <!-- ERROR -->
+      <!-- ===================================================== -->
+      @if (errorMensaje) {
+      <div role="alert" class="alert alert-error">
+        <span>{{ errorMensaje }}</span>
+      </div>
+      }
+
+      <!-- ===================================================== -->
+      <!-- VISTA PREVIA -->
+      <!-- ===================================================== -->
+      <div class="rounded-xl border border-base-300 bg-base-200/40 p-5" [attr.aria-busy]="isLoading">
+        @if (isLoading) {
+        <div role="status" class="flex min-h-64 flex-col items-center
+               justify-center gap-3">
+          <span class="loading loading-spinner loading-lg text-primary" aria-hidden="true"></span>
+
+          <p class="text-sm text-base-content/60">
+            Cargando imagen del código QR...
+          </p>
+        </div>
+        } @else if (imagenUrl) {
+        <figure class="flex flex-col items-center gap-4">
+
+          <div class="w-full max-w-sm overflow-hidden
+                 rounded-xl bg-white p-4">
+            <img [src]="imagenUrl" [alt]="'Código QR número ' + idCodigoQr" class="mx-auto block h-auto w-full"
+              (error)="onErrorImagen()" />
+          </div>
+
+          <figcaption class="text-center text-sm text-base-content/60">
+            Formato {{ parametrosImagen?.formato }}
+            · Ancho solicitado: {{ parametrosImagen?.width }}
+            · Margen: {{ parametrosImagen?.margin }}
+          </figcaption>
+
+        </figure>
+        } @else {
+        <div class="flex min-h-64 items-center justify-center">
+          <p class="text-center text-sm text-base-content/60">
+            No hay una imagen disponible para mostrar.
+          </p>
+        </div>
+        }
+      </div>
+
+      @if (hayCambiosPendientes) {
+      <p role="status" class="text-sm text-warning">
+        Actualiza la imagen para aplicar las nuevas opciones.
+        La descarga corresponde a la vista previa actual.
+      </p>
+      }
+
+      <!-- ===================================================== -->
+      <!-- FOOTER MODAL -->
+      <!-- ===================================================== -->
+      <footer class="flex shrink-0 flex-col-reverse gap-3
+               border-t border-base-300 bg-base-100
+               px-5 py-4 sm:flex-row sm:items-center
+               sm:justify-center sm:px-6">
+
+        <div class="flex flex-col-reverse gap-5 sm:flex-row sm:justify-end">
+          <button type="button" class="btn btn-accent min-w-28" (click)="cerrarModal()">
+            <i class="fa-solid fa-check" aria-hidden="true"></i>
+            Cerrar
+          </button>
+
+          <button type="button" class="btn btn-primary" [disabled]="isLoading || !imagenUrl"
+            (click)="descargarImagen()">
+
+            @if (isLoading){
+            <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+            Descargando...
+            } @else {
+            <i class="fa-solid fa-download"></i>
+            Descargar {{ parametrosImagen?.formato ?? formato }}
+            }
+          </button>
+        </div>
+      </footer>
+    </section>
+  </div>
+</div>
+}

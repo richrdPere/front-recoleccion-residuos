@@ -1,1 +1,621 @@
-<p>codigos-qr-page works!</p>
+<!-- ================================================= -->
+<!-- CONTENEDOR DE CODIGOS QR -->
+<!-- ================================================= -->
+<div class="mx-auto w-full max-w-500">
+
+  <!-- ===================================================== -->
+  <!-- ENCABEZADO -->
+  <!-- ===================================================== -->
+  <header class="mb-5 flex flex-col gap-4
+             sm:flex-row sm:items-center
+             sm:justify-between">
+
+    <div class="flex min-w-0 items-center gap-3">
+
+      <div class="flex h-12 w-12 shrink-0
+                 items-center justify-center
+                 rounded-2xl bg-primary/10
+                 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-qrcode text-xl sm:text-2xl"></i>
+      </div>
+
+      <div class="min-w-0">
+        <h1 class="text-2xl font-bold">
+          Códigos QR
+        </h1>
+
+        <p class="mt-1 text-sm text-base-content/70">
+          Consulta los códigos QR y descarga sus imágenes
+          para su distribución.
+        </p>
+      </div>
+    </div>
+
+    <!-- <button type="button" class="btn btn-outline" [disabled]="cargando" (click)="cargarCodigosQr()">
+      @if (cargando) {
+      <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+      }
+
+      Actualizar
+    </button> -->
+  </header>
+
+  <!-- ===================================================== -->
+  <!-- FILTROS -->
+  <!-- ===================================================== -->
+  <section class="mb-6 overflow-hidden rounded-2xl
+         border border-base-300 bg-base-100 shadow-sm">
+
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_170px]">
+
+      <!-- ================================================= -->
+      <!-- CAMPOS DE FILTRO -->
+      <!-- ================================================= -->
+      <div class="min-w-0 p-4 sm:p-5">
+        <div class="grid grid-cols-1 items-end gap-4
+               sm:grid-cols-2
+               xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+          <!-- Búsqueda -->
+          <div class="min-w-0">
+            <label for="qr-search" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Buscar
+            </label>
+
+            <div class="relative">
+              <input id="qr-search" name="search" type="search" class="input input-bordered h-11 min-h-11
+                      w-full min-w-0 rounded-xl bg-base-200
+                     pl-11 pr-4 transition-colors
+                     focus:border-primary focus:outline-none
+                     focus:ring-2 focus:ring-primary/30" placeholder="Buscar códigos QR..."
+                [ngClass]="searchBusqueda.trim() ? 'border-primary' : 'border-base-500'" autocomplete="off"
+                [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()" appUppercase />
+
+              <span class="pointer-events-none absolute inset-y-0 left-0 z-10
+                     flex w-11 items-center justify-center
+                     text-base-content/50" aria-hidden="true">
+                <i class="fa-solid fa-magnifying-glass text-base"></i>
+              </span>
+            </div>
+
+          </div>
+
+          <!-- Zona -->
+          <div class="min-w-0">
+            <label for="qr-zona" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Zonas
+            </label>
+
+            <input id="qr-zona" name="idZona" type="number" min="1" step="1" class="input input-bordered w-full"
+              placeholder="Todas las zonas" [(ngModel)]="idZona" />
+
+            <!-- <select id="filtro-tipo" class="select select-bordered h-11 min-h-11
+                  w-full min-w-0 rounded-xl bg-base-200
+                  pl-4 pr-10 transition-colors
+                  focus:border-primary focus:outline-none
+                  focus:ring-2 focus:ring-primary/30" [ngClass]="rolBusqueda ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="rolBusqueda" (ngModelChange)="onSearchChange()">
+              <option value="">Todos los roles</option>
+
+              @for (opcion of rolesDisponibles; track opcion.id_rol) {
+              <option [value]="opcion.id_rol">
+                {{ opcion.nombre }}
+              </option>
+              }
+            </select> -->
+          </div>
+
+          <!-- Ruta -->
+          <div class="space-y-2">
+            <label for="qr-ruta" class="block text-sm font-medium">
+              ID de ruta
+            </label>
+
+            <input id="qr-ruta" name="idRuta" type="number" min="1" step="1" class="input input-bordered w-full"
+              placeholder="Todas las rutas" [(ngModel)]="idRuta" />
+          </div>
+
+          <!-- Limpiar -->
+          @if ( hayFiltros ) {
+          <div class="min-w-0">
+            <button type="button" class="btn btn-secondary h-11 min-h-11
+                   w-full gap-2 rounded-xl
+                   xl:w-auto xl:min-w-28" [disabled]="
+                   !searchBusqueda &&
+              !idZona &&
+              !idRuta
+            " (click)="limpiarFiltros()">
+              <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+              Limpiar
+            </button>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- ================================================= -->
+      <!-- ILUSTRACIÓN -->
+      <!-- ================================================= -->
+      <div class="hidden items-center justify-center px-5 lg:flex">
+        <span class="imagen-lupa block h-32 w-32 text-base-content opacity-90" aria-hidden="true"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================= -->
+  <!-- MODALES -->
+  <!-- ================================================= -->
+
+  <!-- Form - crear codigo qr-->
+  <codigo-qr-form [mostrarModal]="mostrarModal" (cerrar)="cerrarModal()"
+    (guardado)="onCodigoQrGuardado()"></codigo-qr-form>
+
+  <!-- Form - imagen codigo qr-->
+  <codigo-qr-imagen [mostrarModal]="mostrarModalImagen" [idCodigoQr]="codigoQrImagenId"
+    (cerrar)="cerrarModalImagen()" />
+
+  <!-- Form - regenerar codigo qr -->
+  <codigo-qr-regenerar [mostrarModal]="mostrarModalRegenerar" [idCodigoQr]="codigoQrRegenerarId"
+    (cerrar)="cerrarModalRegenerar()" (regenerado)="onCodigoQrRegenerado($event)" />
+
+  <!-- Modal - view codigo qr-->
+  <codigo-qr-view [mostrarModal]="mostrarModalView" [idCodigoQr]="codigoQrViewId" (cerrar)="cerrarModalInfo()" />
+
+  <!-- ===================================================== -->
+  <!-- ERROR DE DESCARGA -->
+  <!-- ===================================================== -->
+  <!-- @if (errorDescarga) {
+  <div role="alert" class="alert alert-error">
+    <span>{{ errorDescarga }}</span>
+  </div>
+  } -->
+
+  <!-- ===================================================== -->
+  <!-- ERROR DE CONSULTA -->
+  <!-- ===================================================== -->
+  <!-- @if (errorMensaje) {
+  <div role="alert" class="alert alert-error">
+    <span>{{ errorMensaje }}</span>
+
+    <button type="button" class="btn btn-sm" (click)="cargarCodigosQr()">
+      Reintentar
+    </button>
+  </div>
+  } -->
+
+  <!-- ===================================================== -->
+  <!-- TABLA -->
+  <!-- ===================================================== -->
+  @if (isLoading || codigosQr.length>0) {
+  <section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm"
+    aria-label="Codigos QR registrados">
+
+    <!-- Cabecera de tabla -->
+    <div class="flex flex-col gap-4 border-b border-base-300 px-4 py-4
+           sm:flex-row sm:items-center sm:justify-between sm:px-5">
+
+      <!-- Total -->
+      <div class="flex w-full items-center
+                 justify-between gap-3
+                 text-sm text-base-content/70
+                 sm:w-auto sm:justify-start">
+        <label for="usuarios-page-size" class="whitespace-nowrap">
+          Mostrar
+        </label>
+
+        <select id="usuarios-page-size" class="select select-bordered select-sm
+         w-16 min-w-16 shrink-0 pl-3 pr-8" [(ngModel)]="limit" (change)="cambiarLimite()">
+
+          @for ( size of pageSizeOptions; track size ) {
+          <option [ngValue]="size">
+            {{ size }}
+          </option>
+          }
+        </select>
+
+        <span class="whitespace-nowrap">
+          ítems por página
+        </span>
+      </div>
+
+      <!-- Botón crear -->
+      <div class="flex w-full items-center
+                 justify-end sm:w-auto">
+
+        <button type="button" class="btn btn-primary
+                  min-h-10 w-full gap-2
+                  rounded-xl border-none
+                hover:text-white bg-info hover:bg-primary
+                  sm:w-auto sm:min-w-36" (click)="abrirModal()">
+
+          <i class="fa-solid fa-plus"></i>
+
+          Código QR
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="overflow-x-auto">
+      <table class="table min-w-240">
+
+        <thead class="bg-base-200">
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Recurso</th>
+            <th scope="col">Ruta asociada</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Creado por</th>
+            <th scope="col" class="text-center"> Acciones </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @if (isLoading) {
+          <!-- Cargando -->
+          @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+          <tr aria-hidden="true">
+
+            <!-- Numeración paginada -->
+            <td>
+              <div class="skeleton mx-auto h-4 w-8"></div>
+            </td>
+
+            <!-- Tipo de recurso -->
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="skeleton h-11 w-11 rounded-xl"></div>
+
+                <div class="space-y-2">
+                  <div class="skeleton h-4 w-36"></div>
+                  <div class="skeleton h-3 w-24"></div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Ruta -->
+            <td>
+              <div class="space-y-2">
+                <div class="skeleton h-3 w-10"></div>
+                <div class="skeleton h-4 w-24"></div>
+              </div>
+            </td>
+
+            <!-- Estado -->
+            <td>
+              <div class="space-y-2">
+                <div class="skeleton h-4 w-40"></div>
+                <div class="skeleton h-3 w-24"></div>
+              </div>
+            </td>
+
+            <!-- Usuario -->
+            <td>
+              <div class="space-y-2">
+                <div class="skeleton h-6 w-28"></div>
+                <div class="skeleton h-6 w-24"></div>
+              </div>
+            </td>
+
+            <td>
+              <div class="skeleton mx-auto h-6 w-20"></div>
+            </td>
+
+            <td>
+              <div class="skeleton h-4 w-32"></div>
+            </td>
+
+            <td>
+              <div class="skeleton h-4 w-32"></div>
+            </td>
+
+            <!-- Acciones -->
+            <td>
+              <div class="flex justify-center gap-1">
+                <div class="skeleton h-8 w-8 rounded-full"></div>
+                <div class="skeleton h-8 w-8 rounded-full"></div>
+              </div>
+            </td>
+          </tr>
+          }
+          } @else if (errorMensaje) {
+          <tr>
+            <td colspan="6" class="py-10 text-center text-base-content/60">
+              No fue posible cargar el listado.
+            </td>
+          </tr>
+          } @else {
+
+          <!-- Codigos QR -->
+          @for (codigo of codigosQr; track codigo.id_codigo_qr; let i = $index ) {
+          <tr class="transition-colors hover:bg-base-200/40">
+
+            <!-- Numeración paginada -->
+            <td class="text-center text-base-content/60">
+              {{ ((page - 1) * limit) + i + 1 }}
+            </td>
+
+            <!-- Tipo de recurso -->
+            <td>
+              <span class="badge badge-outline">
+                {{ codigo.tipo_recurso }}
+              </span>
+            </td>
+
+            <!-- Ruta -->
+            <td>
+              @if (codigo.ruta; as ruta) {
+              <div class="font-medium">
+                {{ ruta.nombre }}
+              </div>
+
+              <div class="text-xs text-base-content/60">
+                {{ ruta.codigo }}
+                · Zona #{{ ruta.id_zona }}
+              </div>
+              } @else {
+              <span class="text-base-content/50">
+                Sin ruta asociada
+              </span>
+              }
+            </td>
+
+            <!-- Estado -->
+            <td>
+              <span class="badge badge-outline">
+                {{ codigo.estado_qr }}
+              </span>
+
+              @if (codigo.fecha_revocacion) {
+              <div class="mt-1 text-xs text-base-content/60">
+                Revocado:
+                {{ codigo.fecha_revocacion | date: 'dd/MM/yyyy HH:mm' }}
+              </div>
+              }
+
+              @if (codigo.motivo_revocacion) {
+              <p class="mt-1 max-w-xs text-xs text-base-content/60">
+                {{ codigo.motivo_revocacion }}
+              </p>
+              }
+            </td>
+
+            <!-- Usuario -->
+            <td>
+              {{
+              codigo.usuario_creacion?.username
+              ?? 'No disponible'
+              }}
+            </td>
+
+            <!-- Acciones -->
+            <td>
+              <div class="flex items-center justify-center gap-1">
+
+                <!-- Abrir enlace-->
+                @if (codigo.url_publica) {
+                <div class="tooltip tooltip-left" data-tip="Abrir enlace">
+
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" aria-label="Abrir enlace">
+                    <a [href]="codigo.url_publica" target="_blank" rel="noopener noreferrer" [attr.aria-label]="
+                        'Abrir consulta pública del código QR '
+                        + codigo.id_codigo_qr
+                      ">
+                      <i class="fa-solid fa-link"></i>
+                    </a>
+                  </button>
+                </div>
+
+                }
+
+                <!-- Ver imagen codigo -->
+                <div class="tooltip tooltip-left" data-tip="Ver código qr">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="verImagenCodigoQr(codigo)"
+                    aria-label="Ver código qr">
+                    <i class="fa-solid fa-qrcode"></i>
+                  </button>
+                </div>
+
+                <!-- Regenerar codigo qr -->
+                <div class="tooltip tooltip-left" data-tip="Regenerar código qr">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="abrirModalRegenerar(codigo)"
+                    aria-label="Regenerar código qr">
+                    <i class="fa-solid fa-rotate-left"></i>
+                  </button>
+                </div>
+
+                <!-- Ver detalle -->
+                <div class="tooltip tooltip-left" data-tip="Ver detalle">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="verCodigoQr(codigo)"
+                    aria-label="Ver detalle del código qr">
+                    <i class="fa-regular fa-eye"></i>
+                  </button>
+
+                </div>
+
+                <!-- Descargar PNG -->
+                <div class="tooltip tooltip-left" data-tip="Descargar PNG">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" aria-label="Descargar PNG" [disabled]="
+                      descargandoIds.has(codigo.id_codigo_qr)
+                    " [attr.aria-label]="
+                      'Descargar imagen del código QR '
+                      + codigo.id_codigo_qr
+                    " (click)="descargarImagen(codigo)">
+                    @if (
+                    descargandoIds.has(codigo.id_codigo_qr)
+                    ) {
+                    <span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+                    }
+                    <i class="fa-solid fa-download"></i>
+                  </button>
+                </div>
+
+              </div>
+            </td>
+
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- PAGINACIÓN -->
+    <!-- ===================================================== -->
+    @if (!isLoading && totalItems > 0) {
+    <footer class="flex flex-col gap-4 border-t border-base-300
+           bg-base-200/50 px-4 py-4 sm:px-5
+           lg:flex-row lg:items-center lg:justify-between">
+
+      <div class="text-center sm:text-left">
+        <h3 class="font-semibold text-base-content">
+          Códigos QR emitidos
+        </h3>
+
+        <p class="mt-0.5 text-sm text-base-content/55">
+          {{ totalItems }}
+          {{ totalItems === 1 ? 'codigo qr encontrado' : 'codigos qr encontrados' }}
+        </p>
+      </div>
+
+      <div class="flex w-full flex-col items-center gap-3
+             text-sm text-base-content/70 sm:w-auto sm:flex-row">
+        <span class="whitespace-nowrap">
+          Página
+          <strong class="text-base-content">{{ page }}</strong>
+          de
+          <strong class="text-base-content">{{ totalPages }}</strong>
+        </span>
+
+        <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+          <button type="button" class="btn btn-sm w-full gap-2 rounded-lg sm:w-auto" [disabled]="isLoading || page <= 1"
+            (click)="cambiarPagina(page - 1)">
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+
+            Anterior
+          </button>
+
+          <button type="button" class="btn btn-sm w-full gap-2 rounded-lg sm:w-auto" [disabled]="
+            isLoading ||
+            totalPages === 0 ||
+            page >= totalPages
+          " (click)="cambiarPagina(page + 1)">
+            Siguiente
+
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- <nav aria-label="Paginación de códigos QR" class="flex items-center gap-3">
+        <button type="button" class="btn btn-outline btn-sm" [disabled]="isLoading || page <= 1"
+          (click)="cambiarPagina(page - 1)">
+          Anterior
+        </button>
+
+        <span aria-live="polite" class="text-sm">
+          Página {{ totalPages > 0 ? page : 0 }}
+          de {{ totalPages }}
+        </span>
+
+        <button type="button" class="btn btn-outline btn-sm" [disabled]="
+          isLoading ||
+          totalPages === 0 ||
+          page >= totalPages
+        " (click)="cambiarPagina(page + 1)">
+          Siguiente
+        </button>
+      </nav> -->
+    </footer>
+    }
+  </section>
+  }
+
+  <!-- ===================================================== -->
+  <!-- VACÍO -->
+  <!-- ===================================================== -->
+  @if (!isLoading && codigosQr.length === 0) {
+  <section class="rounded-2xl border border-dashed border-base-300
+           bg-base-100 px-6 py-16 text-center shadow-sm" aria-label="Sin usuarios disponibles">
+    <div class="mx-auto flex h-20 w-20 items-center justify-center
+             rounded-full transition-colors" [ngClass]="
+        searchBusqueda.trim() ||
+        idZona ||
+        idRuta
+          ? 'bg-secondary/10 text-secondary'
+          : 'bg-primary/10 text-primary'
+      ">
+      <i class="fa-solid fa-qrcode text-3xl" aria-hidden="true"></i>
+    </div>
+
+    <h2 class="mt-5 text-lg font-bold">
+      @if ( searchBusqueda.trim() || idZona || idRuta ) {
+      No se encontraron códigos qr
+      } @else {
+      Aún no tienes códigos qr registrados
+      }
+    </h2>
+
+    <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-base-content/55">
+      @if ( searchBusqueda.trim() || idZona || idRuta ) {
+      No hay códigos qr disponibles que coincidan con los filtros seleccionados.
+      Prueba con otros criterios de búsqueda.
+      } @else {
+      Registra el primer código qr dentro del sistema.
+      }
+    </p>
+
+    <!-- Acciones -->
+    <div class="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+      @if ( searchBusqueda || idZona || idRuta ) {
+      <button type="button" class="btn btn-secondary btn-sm mt-5" (click)="limpiarFiltros()">
+        <!-- <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i> -->
+        <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+        Limpiar filtros
+      </button>
+      }@else {
+      <button type="button" class="btn btn-primary btn-sm w-full gap-2 rounded-xl sm:w-auto" (click)="abrirModal()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        Nuevo código qr
+      </button>
+      }
+    </div>
+  </section>
+  }
+</div>
+
+
+<!-- @if (mostrarModalImagen) {
+<div class="modal modal-open" role="dialog" aria-modal="true" aria-labelledby="qr-imagen-titulo"
+  (keydown.escape)="cerrarModalImagen()">
+  <div class="modal-box w-11/12 max-w-2xl">
+
+  </div>
+
+  <button type="button" class="modal-backdrop" aria-label="Cerrar vista de imagen QR"
+    (click)="cerrarModalImagen()"></button>
+</div>
+} -->
+
+<!-- @if (mostrarModalRegenerar) {
+<div class="modal modal-open" role="dialog" aria-modal="true" aria-labelledby="qr-regenerar-titulo">
+  <div class="modal-box w-11/12 max-w-xl">
+
+  </div>
+</div>
+} -->
+
+
+<!-- @if (mostrarModalView) {
+<div class="modal modal-open" role="dialog" aria-modal="true" aria-labelledby="qr-view-titulo"
+  (keydown.escape)="cerrarModalInfo()">
+  <div class="modal-box w-11/12 max-w-3xl">
+
+  </div>
+
+  <button type="button" class="modal-backdrop" aria-label="Cerrar detalle del código QR"
+    (click)="cerrarModalInfo()"></button>
+</div>
+} -->

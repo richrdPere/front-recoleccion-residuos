@@ -1,0 +1,589 @@
+@if (mostrarModal) {
+<div class="modal modal-open">
+
+  <!-- ===================================================== -->
+  <!-- MODAL: INFORMACIÓN DEL CÓDIGO QR -->
+  <!-- ===================================================== -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" role="dialog" aria-modal="true"
+    aria-labelledby="qr-view-titulo" [attr.aria-busy]="isLoading" (click)="cerrarModal()">
+    <section class="relative flex max-h-[92vh] w-full flex-col
+             overflow-hidden rounded-2xl border border-base-300
+             bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
+
+      <!-- ===================================================== -->
+      <!-- HEADER MODAL -->
+      <!-- ===================================================== -->
+      <header class="flex shrink-0 items-start justify-between gap-4
+               border-b border-base-300 bg-base-200/50
+               px-5 py-4 sm:px-6">
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center
+                   rounded-xl bg-primary/10 text-primary">
+            <i class="fa-solid fa-qrcode text-lg" aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="qr-view-titulo" class="text-lg font-bold text-base-content sm:text-xl">
+              Información del código QR
+
+              <span class="badge badge-primary badge-outline
+                       px-3 font-mono text-sm">
+                #{{ idCodigoQr }}
+              </span>
+            </h2>
+
+            <p class="mt-0.5 text-sm text-base-content/60">
+              Datos generales, recurso asociado y estado del código.
+            </p>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-ghost btn-circle btn-sm shrink-0" aria-label="Cerrar modal" title="Cerrar"
+          (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <!-- ===================================================== -->
+      <!-- CONTENIDO CON SCROLL -->
+      <!-- ===================================================== -->
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain
+               px-5 py-5 sm:px-6 sm:py-6">
+
+        <!-- CARGANDO -->
+        @if (isLoading) {
+        <div class="space-y-5" role="status" aria-live="polite">
+          <span class="sr-only">
+            Cargando información del código QR.
+          </span>
+
+          <div class="flex flex-col gap-4 rounded-2xl border
+                   border-base-300 bg-base-200/40 p-5
+                   sm:flex-row sm:items-center" aria-hidden="true">
+            <div class="skeleton h-16 w-16 rounded-2xl"></div>
+
+            <div class="flex-1 space-y-3">
+              <div class="skeleton h-6 w-40"></div>
+              <div class="skeleton h-4 w-64 max-w-full"></div>
+            </div>
+
+            <div class="skeleton h-7 w-28 rounded-full"></div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+            @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+            <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+              <div class="skeleton mb-3 h-3 w-24"></div>
+              <div class="skeleton h-5 w-36 max-w-full"></div>
+            </div>
+            }
+          </div>
+
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4" aria-hidden="true">
+            <div class="skeleton mb-3 h-3 w-28"></div>
+            <div class="skeleton h-4 w-full"></div>
+            <div class="skeleton mt-2 h-4 w-3/4"></div>
+          </div>
+        </div>
+
+        <!-- ERROR -->
+        } @else if (errorMensaje) {
+        <div class="flex min-h-64 flex-col items-center justify-center text-center" role="alert">
+          <div class="mb-4 flex h-16 w-16 items-center justify-center
+                   rounded-full bg-error/10 text-error">
+            <i class="fa-solid fa-triangle-exclamation text-2xl" aria-hidden="true"></i>
+          </div>
+
+          <h3 class="font-semibold text-base-content">
+            No se pudo cargar el código QR
+          </h3>
+
+          <p class="mt-1 max-w-sm text-sm text-base-content/60">
+            {{ errorMensaje }}
+          </p>
+
+          @if (idValido) {
+          <button type="button" class="btn btn-primary btn-sm mt-4" (click)="cargarCodigoQr()">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            Reintentar
+          </button>
+          }
+        </div>
+
+        <!-- INFORMACIÓN -->
+        } @else if (codigoQr; as qr) {
+        <div class="space-y-5">
+
+          <!-- ================================================= -->
+          <!-- RESUMEN DEL CÓDIGO QR -->
+          <!-- ================================================= -->
+          <section class="rounded-2xl border border-base-300 bg-base-100 p-4">
+            <div class="flex flex-wrap items-center gap-4">
+
+              <div class="flex h-16 w-16 shrink-0 items-center justify-center
+                       rounded-2xl bg-primary/10 text-primary">
+                <i class="fa-solid fa-qrcode text-3xl" aria-hidden="true"></i>
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-semibold uppercase tracking-wide
+                         text-base-content/50">
+                  Código QR de {{ qr.tipo_recurso === 'RUTA' ? 'ruta' : 'zona' }}
+                </p>
+
+                <h3 class="mt-1 wrap-break-word text-lg font-bold">
+                  {{ qr.titulo }}
+                </h3>
+
+                <p class="mt-1 break-all font-mono text-sm text-base-content/60">
+                  {{ qr.codigo }}
+                </p>
+              </div>
+
+              <span class="badge badge-soft h-auto shrink-0
+                       whitespace-normal px-3 py-1.5 text-center font-semibold"
+                [class.badge-success]="qr.estado_qr === 'ACTIVO'" [class.badge-warning]="qr.estado_qr === 'INACTIVO'"
+                [class.badge-error]="qr.estado_qr === 'REVOCADO'">
+                {{ qr.estado_qr }}
+              </span>
+            </div>
+          </section>
+
+          <!-- ================================================= -->
+          <!-- DATOS GENERALES -->
+          <!-- ================================================= -->
+          <section>
+            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
+              <i class="fa-solid fa-circle-info text-primary" aria-hidden="true"></i>
+              Datos generales
+            </h4>
+
+            <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Tipo de recurso
+                </dt>
+                <dd class="mt-1.5 text-sm font-semibold">
+                  {{ qr.tipo_recurso === 'RUTA' ? 'Ruta' : 'Zona' }}
+                </dd>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Versión
+                </dt>
+                <dd class="mt-1.5 text-sm font-semibold">
+                  {{ qr.version }}
+                </dd>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Creado por
+                </dt>
+                <dd class="mt-1.5 wrap-break-word text-sm font-semibold">
+                  {{
+                  qr.usuario_creacion?.username
+                  ?? ('Usuario #' + qr.id_usuario_creacion)
+                  }}
+                </dd>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Generado el
+                </dt>
+                <dd class="mt-1.5 text-sm font-semibold">
+                  {{ qr.fecha_generacion | date:'dd/MM/yyyy hh:mm a' }}
+                </dd>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300
+                       bg-base-100 p-4 sm:col-span-2">
+                <dt class="text-xs text-base-content/55">
+                  Expiración
+                </dt>
+                <dd class="mt-1.5 text-sm font-semibold">
+                  {{
+                  qr.fecha_expiracion
+                  ? (qr.fecha_expiracion | date:'dd/MM/yyyy hh:mm a')
+                  : 'Sin expiración'
+                  }}
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          <!-- ================================================= -->
+          <!-- DESCRIPCIÓN -->
+          <!-- ================================================= -->
+          <section>
+            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
+              <i class="fa-solid fa-align-left text-primary" aria-hidden="true"></i>
+              Descripción
+            </h4>
+
+            <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+              <p class="whitespace-pre-wrap wrap-break-word
+                       text-sm leading-relaxed text-base-content/70">{{ qr.descripcion || 'Sin descripción registrada.'
+                }}</p>
+            </div>
+          </section>
+
+          <!-- ================================================= -->
+          <!-- RECURSO ASOCIADO -->
+          <!-- ================================================= -->
+          <section>
+            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
+              <i class="fa-solid text-primary"
+                [ngClass]="qr.tipo_recurso === 'RUTA' ? 'fa-route' : 'fa-map-location-dot'" aria-hidden="true"></i>
+
+              {{ qr.tipo_recurso === 'RUTA' ? 'Ruta asociada' : 'Zona asociada' }}
+            </h4>
+
+            @if (qr.tipo_recurso === 'RUTA') {
+            @if (qr.ruta; as ruta) {
+            <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Código de ruta
+                </dt>
+                <dd class="mt-1.5 wrap-break-word text-sm font-semibold">
+                  {{ ruta.codigo }}
+                </dd>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300
+                         bg-base-100 p-4 lg:col-span-2">
+                <dt class="text-xs text-base-content/55">
+                  Nombre
+                </dt>
+                <dd class="mt-1.5 wrap-break-word text-sm font-semibold">
+                  {{ ruta.nombre }}
+                </dd>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Zona de la ruta
+                </dt>
+                <dd class="mt-1.5 text-sm font-semibold">
+                  #{{ ruta.id_zona }}
+                </dd>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Estado de ruta
+                </dt>
+                <dd class="mt-1.5">
+                  <span class="badge badge-outline" [class.badge-success]="ruta.estado_ruta === 'ACTIVA'"
+                    [class.badge-warning]="ruta.estado_ruta === 'BORRADOR'"
+                    [class.badge-error]="ruta.estado_ruta === 'INACTIVA'">
+                    {{ ruta.estado_ruta }}
+                  </span>
+                </dd>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Estado del registro de ruta
+                </dt>
+                <dd class="mt-1.5">
+                  <span class="badge gap-1" [ngClass]="ruta.estado ? 'badge-success' : 'badge-error'">
+                    <i class="fa-solid" [ngClass]="ruta.estado ? 'fa-check' : 'fa-xmark'" aria-hidden="true"></i>
+                    {{ ruta.estado ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </dd>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300
+                         bg-base-100 p-4 sm:col-span-2 lg:col-span-3">
+                <dt class="text-xs text-base-content/55">
+                  Descripción de ruta
+                </dt>
+                <dd class="mt-1.5 whitespace-pre-wrap wrap-break-word
+                           text-sm leading-relaxed text-base-content/70">{{ ruta.descripcion || 'Sin descripción
+                  registrada.' }}</dd>
+              </div>
+            </dl>
+            } @else {
+            <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+              <p class="text-sm text-base-content/60">
+                Ruta #{{ qr.id_ruta }}.
+                No se recibió el detalle de la asociación.
+              </p>
+            </div>
+            }
+            } @else {
+            <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Identificador de zona
+                </dt>
+                <dd class="mt-1.5 text-sm font-semibold">
+                  #{{ qr.id_zona }}
+                </dd>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Código de zona
+                </dt>
+                <dd class="mt-1.5 wrap-break-word text-sm font-semibold">
+                  {{
+                  obtenerCampoAsociacion(qr.zona, 'codigo')
+                  ?? 'No disponible'
+                  }}
+                </dd>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Nombre de zona
+                </dt>
+                <dd class="mt-1.5 wrap-break-word text-sm font-semibold">
+                  {{
+                  obtenerCampoAsociacion(qr.zona, 'nombre')
+                  ?? 'No disponible'
+                  }}
+                </dd>
+              </div>
+            </dl>
+            }
+          </section>
+
+          <!-- ================================================= -->
+          <!-- OBSERVACIONES -->
+          <!-- ================================================= -->
+          <section>
+            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
+              <i class="fa-solid fa-clipboard text-primary" aria-hidden="true"></i>
+              Observaciones
+            </h4>
+
+            <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+              <p class="whitespace-pre-wrap wrap-break-word
+                       text-sm leading-relaxed text-base-content/70">{{ qr.observacion || 'Sin observaciones
+                registradas.' }}</p>
+            </div>
+          </section>
+
+          <!-- ================================================= -->
+          <!-- REVOCACIÓN -->
+          <!-- ================================================= -->
+          @if (
+          qr.estado_qr === 'REVOCADO' ||
+          qr.fecha_revocacion ||
+          qr.motivo_revocacion
+          ) {
+          <section>
+            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
+              <i class="fa-solid fa-ban text-error" aria-hidden="true"></i>
+              Revocación
+            </h4>
+
+            <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div class="min-w-0 rounded-xl border border-error/30 bg-error/5 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Fecha de revocación
+                </dt>
+                <dd class="mt-1.5 text-sm font-semibold">
+                  {{
+                  qr.fecha_revocacion
+                  ? (qr.fecha_revocacion | date:'dd/MM/yyyy hh:mm a')
+                  : 'No registrada'
+                  }}
+                </dd>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-error/30 bg-error/5 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Motivo de revocación
+                </dt>
+                <dd class="mt-1.5 whitespace-pre-wrap wrap-break-word
+                         text-sm leading-relaxed">{{ qr.motivo_revocacion || 'No registrado' }}</dd>
+              </div>
+            </dl>
+          </section>
+          }
+
+          <!-- ================================================= -->
+          <!-- REEMPLAZOS -->
+          <!-- ================================================= -->
+          @if (
+          qr.id_codigo_reemplazado !== null ||
+          qr.codigo_reemplazado ||
+          qr.codigo_reemplazo
+          ) {
+          <section>
+            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
+              <i class="fa-solid fa-arrows-rotate text-primary" aria-hidden="true"></i>
+              Relación con otros códigos QR
+            </h4>
+
+            <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              @if (
+              qr.id_codigo_reemplazado !== null ||
+              qr.codigo_reemplazado
+              ) {
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Código anterior reemplazado por este QR
+                </dt>
+                <dd class="mt-1.5 break-all text-sm font-semibold">
+                  {{
+                  obtenerReferenciaCodigo(
+                  qr.codigo_reemplazado,
+                  qr.id_codigo_reemplazado
+                  )
+                  }}
+                </dd>
+              </div>
+              }
+
+              @if (qr.codigo_reemplazo) {
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Código posterior que reemplaza a este QR
+                </dt>
+                <dd class="mt-1.5 break-all text-sm font-semibold">
+                  {{ obtenerReferenciaCodigo(qr.codigo_reemplazo) }}
+                </dd>
+              </div>
+              }
+            </dl>
+          </section>
+          }
+
+          <!-- ================================================= -->
+          <!-- ENLACE PÚBLICO -->
+          <!-- ================================================= -->
+          <section>
+            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
+              <i class="fa-solid fa-link text-primary" aria-hidden="true"></i>
+              Enlace público
+            </h4>
+
+            <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+              @if (qr.url_publica) {
+              <a class="link link-primary break-all text-sm" [href]="qr.url_publica" target="_blank"
+                rel="noopener noreferrer">
+                {{ qr.url_publica }}
+                <i class="fa-solid fa-arrow-up-right-from-square ml-1" aria-hidden="true"></i>
+                <span class="sr-only">
+                  (se abre en una pestaña nueva)
+                </span>
+              </a>
+              } @else {
+              <p class="text-sm text-base-content/60">
+                No disponible.
+              </p>
+              }
+            </div>
+          </section>
+
+          <!-- ================================================= -->
+          <!-- INFORMACIÓN DEL SISTEMA -->
+          <!-- ================================================= -->
+          <section>
+            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
+              <i class="fa-solid fa-clock text-primary" aria-hidden="true"></i>
+              Información del sistema
+            </h4>
+
+            <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  ID del código QR
+                </dt>
+                <dd class="mt-1.5 text-sm font-semibold">
+                  {{ qr.id_codigo_qr }}
+                </dd>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Estado del registro
+                </dt>
+                <dd class="mt-1.5">
+                  <span class="badge gap-1" [ngClass]="qr.deleted_at ? 'badge-error' : 'badge-success'">
+                    <i class="fa-solid" [ngClass]="qr.deleted_at ? 'fa-trash' : 'fa-check'" aria-hidden="true"></i>
+                    {{ qr.deleted_at ? 'Eliminado' : 'No eliminado' }}
+                  </span>
+                </dd>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Creado el
+                </dt>
+                <dd class="mt-1.5 text-sm font-medium">
+                  {{ qr.created_at | date:'dd/MM/yyyy hh:mm a' }}
+                </dd>
+              </div>
+
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Actualizado el
+                </dt>
+                <dd class="mt-1.5 text-sm font-medium">
+                  {{ qr.updated_at | date:'dd/MM/yyyy hh:mm a' }}
+                </dd>
+              </div>
+
+              @if (qr.deleted_at) {
+              <div class="min-w-0 rounded-xl border border-base-300 bg-base-100 p-4">
+                <dt class="text-xs text-base-content/55">
+                  Eliminado el
+                </dt>
+                <dd class="mt-1.5 text-sm font-medium text-error">
+                  {{ qr.deleted_at | date:'dd/MM/yyyy hh:mm a' }}
+                </dd>
+              </div>
+              }
+            </dl>
+          </section>
+
+        </div>
+
+        <!-- SIN DATOS -->
+        } @else {
+        <div class="flex min-h-64 flex-col items-center justify-center text-center">
+          <div class="mb-4 flex h-16 w-16 items-center justify-center
+                   rounded-full bg-base-200 text-base-content/40">
+            <i class="fa-solid fa-qrcode text-2xl" aria-hidden="true"></i>
+          </div>
+
+          <h3 class="font-semibold text-base-content">
+            No hay información disponible
+          </h3>
+
+          <p class="mt-1 max-w-sm text-sm text-base-content/60">
+            No fue posible encontrar los datos del código QR seleccionado.
+          </p>
+        </div>
+        }
+      </div>
+
+      <!-- ===================================================== -->
+      <!-- FOOTER MODAL -->
+      <!-- ===================================================== -->
+      <footer class="flex shrink-0 flex-col-reverse gap-3
+               border-t border-base-300 px-5 py-4
+               sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div class="flex items-center gap-2 text-xs text-base-content/50">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          <span>Consulte la información completa del código QR.</span>
+        </div>
+
+        <button type="button" class="btn btn-accent min-w-28" (click)="cerrarModal()">
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
+          Cerrar
+        </button>
+      </footer>
+
+    </section>
+  </div>
+</div>
+}

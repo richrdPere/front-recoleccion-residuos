@@ -93,8 +93,10 @@
           </label>
 
           <select id="horario-frecuencia" formControlName="frecuencia" class="select select-bordered border-2 w-full rounded-lg
-           transition-colors duration-200" [class.select-success]="campoCompleto('frecuencia')"
-            [class.select-error]="campoInvalido('frecuencia')" [attr.aria-invalid]="campoInvalido('frecuencia')"
+           transition-colors duration-200"
+           [class.select-success]="campoCompleto('frecuencia')"
+            [class.select-error]="campoInvalido('frecuencia')"
+            [attr.aria-invalid]="campoInvalido('frecuencia')"
             [attr.aria-describedby]="campoInvalido('frecuencia') ? 'horario-frecuencia-error' : null">
             <option [ngValue]="null" disabled>
               Seleccionar frecuencia

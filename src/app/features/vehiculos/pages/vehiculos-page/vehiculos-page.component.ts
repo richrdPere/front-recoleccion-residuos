@@ -139,8 +139,6 @@ export class VehiculosPageComponent implements OnInit {
       // sortOrder: 'ASC'
     };
 
-    console.log("PARAMS: ", params);
-
     this.isLoading = true;
 
     this.vehiculosService.getVehiculosPaginated(params)
