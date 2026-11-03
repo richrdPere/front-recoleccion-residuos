@@ -9,6 +9,9 @@ import { AuthService } from '../../features/auth/services/auth.service';
 // Models
 import { AuthRole, AuthUser } from '../../features/auth/models';
 
+// Components
+import { NotificacionesCampanaComponent } from '../../features/notificaciones/components/notificaciones-campana/notificaciones-campana.component';
+
 // =========================================================
 // INTERFACES
 // =========================================================
@@ -35,6 +38,8 @@ interface AdminNavGroup {
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
+
+    NotificacionesCampanaComponent,
   ],
   templateUrl: './admin-layout.component.html',
   styles: ``,

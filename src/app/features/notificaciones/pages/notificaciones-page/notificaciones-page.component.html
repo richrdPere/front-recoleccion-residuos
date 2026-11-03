@@ -1,1 +1,357 @@
-<p>notificaciones-page works!</p>
+<div class="mx-auto w-full max-w-500">
+
+  <!-- ENCABEZADO -->
+  <header class="mb-5 flex flex-col gap-4
+           sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex items-center gap-3">
+      <div class="flex size-12 shrink-0
+               items-center justify-center
+               rounded-2xl bg-primary/10 text-primary">
+        <i class="fa-regular fa-bell text-xl" aria-hidden="true"></i>
+      </div>
+
+      <div>
+        <h1 class="text-2xl font-bold">
+          Mis notificaciones
+        </h1>
+
+        <p class="mt-1 text-sm text-base-content/60">
+          Consulta tus avisos, confirma su lectura y archívalos.
+        </p>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="badge badge-primary badge-outline">
+        {{ totalNoLeidas }} sin leer
+      </span>
+
+      <button type="button" class="btn btn-ghost btn-sm" [disabled]="isLoading || operando"
+        (click)="getMisNotificaciones()">
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+
+        Actualizar
+      </button>
+
+      @if (!archivadaBusqueda) {
+      <button type="button" class="btn btn-primary btn-sm"
+        title="Marca todas las notificaciones sin archivar, independientemente de los filtros." [disabled]="
+            isLoading ||
+            operando ||
+            totalNoLeidas === 0
+          " (click)="marcarTodasLeidas()">
+        @if (marcandoTodas) {
+        <span class="loading loading-spinner loading-xs"></span>
+        } @else {
+        <i class="fa-solid fa-check-double" aria-hidden="true"></i>
+        }
+
+        Leer todas
+      </button>
+      }
+    </div>
+  </header>
+
+  <!-- FILTROS -->
+  <section class="mb-6 rounded-2xl border border-base-300
+           bg-base-100 p-4 shadow-sm sm:p-5">
+    <div class="grid grid-cols-1 gap-4
+             sm:grid-cols-2 xl:grid-cols-5">
+      <div>
+        <label for="notificacion-search" class="mb-1.5 block text-xs font-semibold
+                 uppercase text-base-content/60">
+          Buscar
+        </label>
+
+        <input id="notificacion-search" type="search" class="input input-bordered w-full rounded-xl"
+          placeholder="Título o mensaje" autocomplete="off" [(ngModel)]="searchBusqueda"
+          (ngModelChange)="onSearchChange()" />
+      </div>
+
+      <div>
+        <label for="notificacion-lectura" class="mb-1.5 block text-xs font-semibold
+                 uppercase text-base-content/60">
+          Lectura
+        </label>
+
+        <select id="notificacion-lectura" class="select select-bordered w-full rounded-xl" [(ngModel)]="lecturaBusqueda"
+          (ngModelChange)="aplicarFiltros()">
+          <option value="TODAS">
+            Todas
+          </option>
+
+          <option value="NO_LEIDAS">
+            Sin leer
+          </option>
+
+          <option value="LEIDAS">
+            Leídas
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label for="notificacion-bandeja" class="mb-1.5 block text-xs font-semibold
+                 uppercase text-base-content/60">
+          Bandeja
+        </label>
+
+        <select id="notificacion-bandeja" class="select select-bordered w-full rounded-xl"
+          [(ngModel)]="archivadaBusqueda" (ngModelChange)="aplicarFiltros()">
+          <option [ngValue]="false">
+            Recibidas
+          </option>
+
+          <option [ngValue]="true">
+            Archivadas
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label for="notificacion-prioridad" class="mb-1.5 block text-xs font-semibold
+                 uppercase text-base-content/60">
+          Prioridad
+        </label>
+
+        <select id="notificacion-prioridad" class="select select-bordered w-full rounded-xl"
+          [(ngModel)]="prioridadBusqueda" (ngModelChange)="aplicarFiltros()">
+          <option value="">
+            Todas
+          </option>
+
+          @for (prioridad of prioridades; track prioridad) {
+          <option [value]="prioridad">
+            {{ prioridad }}
+          </option>
+          }
+        </select>
+      </div>
+
+      <div>
+        <label for="notificacion-tipo" class="mb-1.5 block text-xs font-semibold
+                 uppercase text-base-content/60">
+          Tipo
+        </label>
+
+        <input id="notificacion-tipo" type="text" class="input input-bordered w-full rounded-xl"
+          placeholder="Ej. ASIGNACION_RUTA" autocomplete="off" [(ngModel)]="tipoBusqueda"
+          (ngModelChange)="onSearchChange()" />
+      </div>
+    </div>
+
+    @if (hayFiltros) {
+    <div class="mt-4 flex justify-end">
+      <button type="button" class="btn btn-secondary btn-sm" (click)="limpiarFiltros()">
+        <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+
+        Limpiar filtros
+      </button>
+    </div>
+    }
+  </section>
+
+  <!-- ERROR -->
+  @if (errorMessage) {
+  <div role="alert" class="alert alert-error mb-4">
+    <span>
+      {{ errorMessage }}
+    </span>
+
+    <button type="button" class="btn btn-sm" (click)="getMisNotificaciones()">
+      Reintentar
+    </button>
+  </div>
+  }
+
+  <!-- TABLA -->
+  <section class="overflow-hidden rounded-2xl
+           border border-base-300 bg-base-100 shadow-sm" [attr.aria-busy]="isLoading">
+    <div class="overflow-x-auto">
+      <table class="table w-full">
+        <thead class="bg-base-200">
+          <tr>
+            <th>Notificación</th>
+            <th>Tipo / prioridad</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th class="text-right">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @if (isLoading) {
+          <tr>
+            <td colspan="5" class="py-12 text-center">
+              <span class="loading loading-spinner loading-md"></span>
+
+              <p class="mt-3 text-sm text-base-content/60">
+                Cargando notificaciones…
+              </p>
+            </td>
+          </tr>
+          } @else {
+          @for (
+          item of notificaciones;
+          track item.id_notificacion_usuario
+          ) {
+          <tr [class.bg-primary/5]="!item.leida">
+            <td class="min-w-64 max-w-md">
+              <button type="button" class="text-left font-semibold
+                           hover:text-primary hover:underline" (click)="verNotificacion(item)">
+                {{ item.notificacion.titulo }}
+              </button>
+
+              <p class="mt-1 line-clamp-2
+                           text-sm text-base-content/60">
+                {{ item.notificacion.mensaje }}
+              </p>
+            </td>
+
+            <td>
+              <p class="text-xs text-base-content/60">
+                {{ item.notificacion.tipo_notificacion }}
+              </p>
+
+              <span class="badge badge-sm mt-2" [ngClass]="{
+                      'badge-error':
+                        item.notificacion.prioridad === 'URGENTE',
+                      'badge-warning':
+                        item.notificacion.prioridad === 'ALTA',
+                      'badge-info':
+                        item.notificacion.prioridad === 'NORMAL',
+                      'badge-ghost':
+                        item.notificacion.prioridad === 'BAJA'
+                    }">
+                {{ item.notificacion.prioridad }}
+              </span>
+            </td>
+
+            <td>
+              <span class="badge badge-sm" [class.badge-success]="item.leida" [class.badge-primary]="!item.leida">
+                {{ item.leida ? 'Leída' : 'Sin leer' }}
+              </span>
+
+              @if (item.archivada) {
+              <span class="mt-2 block text-xs text-base-content/50">
+                Archivada
+              </span>
+              }
+            </td>
+
+            <td class="whitespace-nowrap text-xs">
+              {{
+              item.notificacion.created_at
+              | date:'dd/MM/yyyy HH:mm'
+              }}
+            </td>
+
+            <td>
+              <div class="flex justify-end gap-1">
+                <button type="button" class="btn btn-ghost btn-sm btn-square" title="Ver detalle"
+                  aria-label="Ver detalle" [disabled]="operando" (click)="verNotificacion(item)">
+                  <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                </button>
+
+                @if (!item.leida) {
+                <button type="button" class="btn btn-ghost btn-sm btn-square text-success" title="Marcar como leída"
+                  aria-label="Marcar como leída" [disabled]="operando" (click)="marcarLeida(item)">
+                  @if (
+                  leyendo.has(item.id_notificacion_usuario)
+                  ) {
+                  <span class="loading loading-spinner loading-xs"></span>
+                  } @else {
+                  <i class="fa-solid fa-check" aria-hidden="true"></i>
+                  }
+                </button>
+                }
+
+                @if (!item.archivada) {
+                <button type="button" class="btn btn-ghost btn-sm btn-square" title="Archivar" aria-label="Archivar"
+                  [disabled]="operando" (click)="archivar(item)">
+                  @if (
+                  archivando.has(item.id_notificacion_usuario)
+                  ) {
+                  <span class="loading loading-spinner loading-xs"></span>
+                  } @else {
+                  <i class="fa-solid fa-box-archive" aria-hidden="true"></i>
+                  }
+                </button>
+                }
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="5" class="py-12 text-center">
+              <i class="fa-regular fa-bell-slash
+                           text-3xl text-base-content/30" aria-hidden="true"></i>
+
+              <p class="mt-3 font-medium">
+                No se encontraron notificaciones
+              </p>
+
+              <p class="mt-1 text-sm text-base-content/50">
+                Prueba con otros filtros.
+              </p>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <footer class="flex flex-col gap-3 border-t
+             border-base-300 p-4
+             sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="text-sm text-base-content/60">
+          {{ desde }}–{{ hasta }} de {{ totalItems }}
+        </span>
+
+        <select aria-label="Notificaciones por página" class="select select-bordered select-sm" [(ngModel)]="limit"
+          [disabled]="isLoading || operando" (ngModelChange)="cambiarLimite()">
+          @for (cantidad of pageSizeOptions; track cantidad) {
+          <option [ngValue]="cantidad">
+            {{ cantidad }} por página
+          </option>
+          }
+        </select>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button type="button" class="btn btn-sm btn-outline" [disabled]="
+            isLoading ||
+            operando ||
+            currentPage <= 1
+          " (click)="cambiarPagina(currentPage - 1)">
+          Anterior
+        </button>
+
+        <span class="text-sm">
+          {{ totalPages === 0 ? 0 : currentPage }}
+          / {{ totalPages }}
+        </span>
+
+        <button type="button" class="btn btn-sm btn-outline" [disabled]="
+            isLoading ||
+            operando ||
+            currentPage >= totalPages
+          " (click)="cambiarPagina(currentPage + 1)">
+          Siguiente
+        </button>
+      </div>
+    </footer>
+  </section>
+
+  <!-- DETALLE -->
+  @if (
+  mostrarModalView &&
+  notificacion_id !== null
+  ) {
+  <notificacion-view [notificacion_id]="notificacion_id" (modalCerrado)="cerrarModalInfo()"
+    (notificacionActualizada)="onNotificacionActualizada()" />
+  }
+</div>

@@ -113,7 +113,7 @@ export const adminFeatureRoutes: Routes = [
       {
         path: 'notificaciones',
         canActivate: [roleGuard],
-        data: { roles: ['SUPER_ADMIN', 'ADMIN', 'SUPERVISOR'] },
+        data: { roles: ['SUPER_ADMIN', 'ADMIN', 'SUPERVISOR', 'OPERADOR'] },
         loadComponent: () =>
           import('./notificaciones/pages/notificaciones-page/notificaciones-page.component').then(
             (m) => m.NotificacionesPageComponent,

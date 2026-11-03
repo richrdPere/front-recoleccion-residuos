@@ -1,5 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+
+// Services
+import { NotificacionesSesionService } from './features/notificaciones/services/notificaciones-sesion.service';
 
 @Component({
   selector: 'app-root',
@@ -8,5 +11,13 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './app.component.css'
 })
 export class App {
-  protected readonly title = signal('front-recoleccion-residuos');
+  protected readonly title = signal(
+    'front-recoleccion-residuos',
+  );
+
+  private readonly notificacionesSesion = inject(NotificacionesSesionService);
+
+  constructor() {
+    this.notificacionesSesion.iniciar();
+  }
 }

@@ -1,1 +1,845 @@
-<p>incidencias-page works!</p>
+<!-- ================================================= -->
+<!-- CONTENEDOR -->
+<!-- ================================================= -->
+<div class="mx-auto w-full max-w-500">
+
+  <!-- ================================================= -->
+  <!-- ENCABEZADO -->
+  <!-- ================================================= -->
+  <header class="mb-5 flex flex-col gap-4
+           sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex min-w-0 items-center gap-3">
+
+      <div class="flex h-12 w-12 shrink-0 items-center justify-center
+               rounded-2xl bg-warning/15 text-warning" aria-hidden="true">
+        <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+      </div>
+
+      <div class="min-w-0">
+        <h1 class="text-2xl font-bold leading-tight text-base-content">
+          Incidencias
+        </h1>
+
+        <p class="mt-1 max-w-2xl text-sm leading-relaxed
+                 text-base-content/60">
+          Consulte los reportes, asigne responsables y supervise
+          la atención de las incidencias de recolección.
+        </p>
+      </div>
+
+    </div>
+
+    <button type="button" class="btn btn-outline h-10 min-h-10 gap-2 rounded-xl" [disabled]="isLoading"
+      (click)="getIncidenciasPaginated()">
+      <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+      Actualizar
+    </button>
+  </header>
+
+  <!-- ================================================= -->
+  <!-- FILTROS -->
+  <!-- ================================================= -->
+  <section class="mb-6 overflow-hidden rounded-2xl
+           border border-base-300 bg-base-100 shadow-sm" aria-label="Filtros de incidencias">
+    <div class="grid grid-cols-1
+             lg:grid-cols-[minmax(0,1fr)_170px]">
+
+      <!-- CAMPOS -->
+      <div class="min-w-0 p-4 sm:p-5">
+
+        <div class="grid grid-cols-1 items-end gap-4
+                 sm:grid-cols-2 xl:grid-cols-4">
+
+          <!-- BÚSQUEDA -->
+          <div class="min-w-0 sm:col-span-2">
+            <label for="incidencias-search" class="mb-1.5 block text-xs font-semibold
+                     uppercase tracking-wide text-base-content/60">
+              Buscar incidencia
+            </label>
+
+            <div class="relative">
+              <input id="incidencias-search" type="text" class="input input-bordered h-11 min-h-11
+                       w-full min-w-0 rounded-xl bg-base-100
+                       pl-11 pr-4 focus:outline-none
+                       focus:ring-2 focus:ring-primary/30" placeholder="Buscar por título o descripción"
+                autocomplete="off" maxlength="150" [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()"
+                appUppercase />
+
+              <span class="pointer-events-none absolute inset-y-0 left-0
+                       z-10 flex w-11 items-center justify-center
+                       text-base-content/50" aria-hidden="true">
+                <i class="fa-solid fa-magnifying-glass"></i>
+              </span>
+            </div>
+          </div>
+
+          <!-- TIPO -->
+          <div class="min-w-0">
+            <label for="incidencias-tipo" class="mb-1.5 block text-xs font-semibold
+                     uppercase tracking-wide text-base-content/60">
+              Tipo de incidencia
+            </label>
+
+            <select id="incidencias-tipo" class="select select-bordered h-11 min-h-11
+                     w-full min-w-0 rounded-xl bg-base-100" [(ngModel)]="filtroTipo"
+              (ngModelChange)="onFiltroChange()">
+              <option value="">Todos los tipos</option>
+
+              @for (tipo of tiposIncidencia; track tipo) {
+              <option [value]="tipo">
+                {{ tipo.split('_').join(' ') }}
+              </option>
+              }
+            </select>
+          </div>
+
+          <!-- PRIORIDAD -->
+          <div class="min-w-0">
+            <label for="incidencias-prioridad" class="mb-1.5 block text-xs font-semibold
+                     uppercase tracking-wide text-base-content/60">
+              Prioridad
+            </label>
+
+            <select id="incidencias-prioridad" class="select select-bordered h-11 min-h-11
+                     w-full min-w-0 rounded-xl bg-base-100" [(ngModel)]="filtroPrioridad"
+              (ngModelChange)="onFiltroChange()">
+              <option value="">Todas las prioridades</option>
+
+              @for (prioridad of prioridades; track prioridad) {
+              <option [value]="prioridad">
+                {{ prioridad }}
+              </option>
+              }
+            </select>
+          </div>
+
+          <!-- ESTADO DE ATENCIÓN -->
+          <div class="min-w-0">
+            <label for="incidencias-estado" class="mb-1.5 block text-xs font-semibold
+                     uppercase tracking-wide text-base-content/60">
+              Estado de atención
+            </label>
+
+            <select id="incidencias-estado" class="select select-bordered h-11 min-h-11
+                     w-full min-w-0 rounded-xl bg-base-100" [(ngModel)]="filtroEstadoIncidencia"
+              (ngModelChange)="onFiltroChange()">
+              <option value="">Todos los estados</option>
+
+              @for (estado of estadosIncidencia; track estado) {
+              <option [value]="estado">
+                {{ estado.split('_').join(' ') }}
+              </option>
+              }
+            </select>
+          </div>
+
+          <!-- HABILITACIÓN -->
+          <div class="min-w-0">
+            <label for="incidencias-habilitacion" class="mb-1.5 block text-xs font-semibold
+                     uppercase tracking-wide text-base-content/60">
+              Habilitación
+            </label>
+
+            <select id="incidencias-habilitacion" class="select select-bordered h-11 min-h-11
+                     w-full min-w-0 rounded-xl bg-base-100" [(ngModel)]="filtroHabilitacion"
+              (ngModelChange)="onFiltroChange()">
+              <option value="">Todas</option>
+              <option value="true">Habilitadas</option>
+              <option value="false">Deshabilitadas</option>
+            </select>
+          </div>
+
+          <!-- ORIGEN -->
+          <div class="min-w-0">
+            <label for="incidencias-origen" class="mb-1.5 block text-xs font-semibold
+                     uppercase tracking-wide text-base-content/60">
+              Origen
+            </label>
+
+            <select id="incidencias-origen" class="select select-bordered h-11 min-h-11
+                     w-full min-w-0 rounded-xl bg-base-100" [(ngModel)]="filtroOrigen"
+              (ngModelChange)="onFiltroChange()">
+              <option value="">Todos los orígenes</option>
+
+              @for (origen of origenes; track origen) {
+              <option [value]="origen">
+                {{ origen.split('_').join(' ') }}
+              </option>
+              }
+            </select>
+          </div>
+
+          <!-- FECHA INICIAL -->
+          <div class="min-w-0">
+            <label for="incidencias-fecha-desde" class="mb-1.5 block text-xs font-semibold
+                     uppercase tracking-wide text-base-content/60">
+              Fecha de reporte desde
+            </label>
+
+            <input id="incidencias-fecha-desde" type="date" class="input input-bordered h-11 min-h-11
+                     w-full min-w-0 rounded-xl bg-base-100" [(ngModel)]="fechaDesde" [max]="fechaHasta || null"
+              (ngModelChange)="onFiltroChange()" />
+          </div>
+
+          <!-- FECHA FINAL -->
+          <div class="min-w-0">
+            <label for="incidencias-fecha-hasta" class="mb-1.5 block text-xs font-semibold
+                     uppercase tracking-wide text-base-content/60">
+              Fecha de reporte hasta
+            </label>
+
+            <input id="incidencias-fecha-hasta" type="date" class="input input-bordered h-11 min-h-11
+                     w-full min-w-0 rounded-xl bg-base-100" [(ngModel)]="fechaHasta" [min]="fechaDesde || null"
+              (ngModelChange)="onFiltroChange()" />
+          </div>
+
+          <!-- LIMPIAR -->
+          @if (hayFiltros) {
+          <div class="min-w-0">
+            <button type="button" class="btn btn-secondary h-11 min-h-11
+                       w-full gap-2 rounded-xl" (click)="limpiarFiltros()">
+              <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+              Limpiar filtros
+            </button>
+          </div>
+          }
+
+        </div>
+
+        <!-- ============================================= -->
+        <!-- FILTROS ADICIONALES -->
+        <!-- ============================================= -->
+        <details class="mt-5 border-t border-base-300 pt-4">
+          <summary class="cursor-pointer text-sm font-semibold
+                   text-base-content/70">
+            Filtros adicionales y ordenamiento
+          </summary>
+
+          <div class="mt-4 grid grid-cols-1 items-end gap-4
+                   sm:grid-cols-2 xl:grid-cols-4">
+
+            <!-- ID REPORTANTE -->
+            <div class="min-w-0">
+              <label for="incidencias-reportante" class="mb-1.5 block text-xs font-semibold
+                       uppercase tracking-wide text-base-content/60">
+                ID del reportante
+              </label>
+
+              <input id="incidencias-reportante" type="text" inputmode="numeric" class="input input-bordered h-11 min-h-11
+                       w-full rounded-xl" placeholder="Identificador de usuario" autocomplete="off"
+                [(ngModel)]="filtroUsuarioReporte" (change)="onFiltroChange()" />
+            </div>
+
+            <!-- ID RESPONSABLE -->
+            <div class="min-w-0">
+              <label for="incidencias-responsable" class="mb-1.5 block text-xs font-semibold
+                       uppercase tracking-wide text-base-content/60">
+                ID del responsable
+              </label>
+
+              <input id="incidencias-responsable" type="text" inputmode="numeric" class="input input-bordered h-11 min-h-11
+                       w-full rounded-xl" placeholder="Identificador de usuario" autocomplete="off"
+                [(ngModel)]="filtroResponsable" (change)="onFiltroChange()" />
+            </div>
+
+            <!-- ID RECORRIDO -->
+            <div class="min-w-0">
+              <label for="incidencias-recorrido" class="mb-1.5 block text-xs font-semibold
+                       uppercase tracking-wide text-base-content/60">
+                ID del recorrido
+              </label>
+
+              <input id="incidencias-recorrido" type="text" inputmode="numeric" class="input input-bordered h-11 min-h-11
+                       w-full rounded-xl" placeholder="Identificador del recorrido" autocomplete="off"
+                [(ngModel)]="filtroRecorrido" (change)="onFiltroChange()" />
+            </div>
+
+            <!-- ID ZONA -->
+            <div class="min-w-0">
+              <label for="incidencias-zona" class="mb-1.5 block text-xs font-semibold
+                       uppercase tracking-wide text-base-content/60">
+                ID de la zona
+              </label>
+
+              <input id="incidencias-zona" type="text" inputmode="numeric" class="input input-bordered h-11 min-h-11
+                       w-full rounded-xl" placeholder="Identificador de zona" autocomplete="off"
+                [(ngModel)]="filtroZona" (change)="onFiltroChange()" />
+            </div>
+
+            <!-- ID RUTA -->
+            <div class="min-w-0">
+              <label for="incidencias-ruta" class="mb-1.5 block text-xs font-semibold
+                       uppercase tracking-wide text-base-content/60">
+                ID de la ruta
+              </label>
+
+              <input id="incidencias-ruta" type="text" inputmode="numeric" class="input input-bordered h-11 min-h-11
+                       w-full rounded-xl" placeholder="Identificador de ruta" autocomplete="off"
+                [(ngModel)]="filtroRuta" (change)="onFiltroChange()" />
+            </div>
+
+            <!-- ORDENAR POR -->
+            <div class="min-w-0">
+              <label for="incidencias-sort-by" class="mb-1.5 block text-xs font-semibold
+                       uppercase tracking-wide text-base-content/60">
+                Ordenar por
+              </label>
+
+              <select id="incidencias-sort-by" class="select select-bordered h-11 min-h-11
+                       w-full rounded-xl" [(ngModel)]="sortBy" (ngModelChange)="onFiltroChange()">
+                <option value="fecha_reporte">Fecha de reporte</option>
+                <option value="updated_at">Última actualización</option>
+                <option value="created_at">Fecha de registro</option>
+                <option value="id_incidencia">Identificador</option>
+                <option value="titulo">Título</option>
+                <option value="tipo">Tipo</option>
+                <option value="prioridad">Prioridad</option>
+                <option value="estado_incidencia">Estado de atención</option>
+              </select>
+            </div>
+
+            <!-- DIRECCIÓN -->
+            <div class="min-w-0">
+              <label for="incidencias-sort-order" class="mb-1.5 block text-xs font-semibold
+                       uppercase tracking-wide text-base-content/60">
+                Dirección
+              </label>
+
+              <select id="incidencias-sort-order" class="select select-bordered h-11 min-h-11
+                       w-full rounded-xl" [(ngModel)]="sortOrder" (ngModelChange)="onFiltroChange()">
+                <option value="DESC">Descendente</option>
+                <option value="ASC">Ascendente</option>
+              </select>
+            </div>
+
+          </div>
+        </details>
+      </div>
+
+      <!-- ILUSTRACIÓN -->
+      <div class="hidden items-center justify-center px-5 lg:flex">
+        <span class="imagen-lupa block h-32 w-32
+                 text-base-content opacity-90" aria-hidden="true"></span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================================================= -->
+  <!-- MODALES -->
+  <!-- Incorporar aquí los subcomponentes de detalle, -->
+  <!-- responsable y estado cuando estén creados. -->
+  <!-- ================================================= -->
+
+  <!-- ================================================= -->
+  <!-- TABLA DE INCIDENCIAS -->
+  <!-- ================================================= -->
+  <section class="overflow-hidden rounded-2xl border border-base-300
+           bg-base-100 shadow-sm" aria-label="Incidencias registradas" [attr.aria-busy]="isLoading">
+
+    <!-- CABECERA -->
+    <div class="flex flex-col gap-4 border-b border-base-300
+             px-4 py-4 sm:flex-row sm:items-center
+             sm:justify-between sm:px-5">
+
+      <!-- CANTIDAD POR PÁGINA -->
+      <div class="flex w-full items-center justify-between gap-3
+               text-sm text-base-content/70
+               sm:w-auto sm:justify-start">
+        <label for="incidencias-page-size" class="whitespace-nowrap">
+          Mostrar
+        </label>
+
+        <select id="incidencias-page-size" class="select select-bordered select-sm
+                 w-16 min-w-16 shrink-0 pl-3 pr-8" [(ngModel)]="limit" (change)="cambiarLimite()"
+          [disabled]="isLoading">
+          @for (size of pageSizeOptions; track size) {
+          <option [ngValue]="size">
+            {{ size }}
+          </option>
+          }
+        </select>
+
+        <span class="whitespace-nowrap">
+          ítems por página
+        </span>
+      </div>
+
+      <!-- TOTAL -->
+      <div class="text-sm text-base-content/60" aria-live="polite">
+        @if (isLoading) {
+        <span class="inline-flex items-center gap-2">
+          <span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+          Consultando incidencias...
+        </span>
+        } @else {
+        <span>
+          <strong class="text-base-content">{{ totalItems }}</strong>
+          {{ totalItems === 1 ? 'incidencia encontrada' : 'incidencias encontradas' }}
+        </span>
+        }
+      </div>
+
+    </div>
+
+    <!-- TABLA -->
+    <div class="overflow-x-auto">
+      <table class="table min-w-360">
+
+        <caption class="sr-only">
+          Listado de incidencias con prioridad, estado de atención,
+          reportante, responsable y acciones de gestión.
+        </caption>
+
+        <thead class="bg-base-300/90">
+          <tr class="text-xs uppercase tracking-wide text-base-content/60">
+            <th scope="col" class="w-14 text-center">N.°</th>
+            <th scope="col" class="min-w-72">Incidencia</th>
+            <th scope="col" class="min-w-28">Prioridad</th>
+            <th scope="col" class="min-w-40">Atención</th>
+            <th scope="col" class="min-w-36">Reportante</th>
+            <th scope="col" class="min-w-40">Responsable</th>
+            <th scope="col" class="min-w-52">Zona y ruta</th>
+            <th scope="col" class="min-w-40">Fecha de reporte</th>
+            <th scope="col" class="min-w-36 text-center">Habilitación</th>
+            <th scope="col" class="min-w-44 text-center">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <!-- CARGANDO -->
+          @if (isLoading) {
+          @for (item of [1, 2, 3, 4, 5]; track item) {
+          <tr>
+            <td>
+              <div class="skeleton mx-auto h-4 w-6"></div>
+            </td>
+
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="skeleton h-10 w-10 rounded-xl"></div>
+
+                <div class="space-y-2">
+                  <div class="skeleton h-4 w-44"></div>
+                  <div class="skeleton h-3 w-32"></div>
+                  <div class="skeleton h-3 w-24"></div>
+                </div>
+              </div>
+            </td>
+
+            <td>
+              <div class="skeleton h-6 w-20"></div>
+            </td>
+
+            <td>
+              <div class="skeleton h-6 w-28"></div>
+            </td>
+
+            <td>
+              <div class="skeleton h-4 w-24"></div>
+            </td>
+
+            <td>
+              <div class="skeleton h-4 w-28"></div>
+            </td>
+
+            <td>
+              <div class="space-y-2">
+                <div class="skeleton h-3 w-32"></div>
+                <div class="skeleton h-3 w-24"></div>
+              </div>
+            </td>
+
+            <td>
+              <div class="skeleton h-4 w-32"></div>
+            </td>
+
+            <td>
+              <div class="skeleton mx-auto h-6 w-24"></div>
+            </td>
+
+            <td>
+              <div class="flex justify-center gap-1">
+                @for (accion of [1, 2, 3, 4]; track accion) {
+                <div class="skeleton h-8 w-8 rounded-full"></div>
+                }
+              </div>
+            </td>
+          </tr>
+          }
+
+          } @else if (errorListado) {
+
+          <!-- ERROR -->
+          <tr>
+            <td colspan="10" class="px-6 py-16 text-center">
+              <div class="mx-auto flex max-w-md flex-col items-center" role="alert">
+                <div class="flex h-16 w-16 items-center justify-center
+                           rounded-2xl bg-error/10 text-error">
+                  <i class="fa-solid fa-circle-exclamation text-2xl" aria-hidden="true"></i>
+                </div>
+
+                <h3 class="mt-4 text-base font-semibold">
+                  No se pudieron cargar las incidencias
+                </h3>
+
+                <p class="mt-2 text-sm text-base-content/60">
+                  {{ errorListado }}
+                </p>
+
+                <button type="button" class="btn btn-primary btn-sm mt-5 gap-2 rounded-xl"
+                  (click)="getIncidenciasPaginated()">
+                  <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+                  Reintentar
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          } @else {
+
+          <!-- FILAS -->
+          @for (
+          incidencia of incidencias;
+          track incidencia.id_incidencia;
+          let i = $index
+          ) {
+          <tr class="transition-colors hover:bg-base-200/40" [class.opacity-60]="!incidencia.estado">
+
+            <!-- NUMERACIÓN -->
+            <td class="text-center text-base-content/60">
+              {{ ((currentPage - 1) * limit) + i + 1 }}
+            </td>
+
+            <!-- INCIDENCIA -->
+            <td>
+              <div class="flex items-start gap-3">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center
+                             rounded-xl bg-warning/10 text-warning">
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                </div>
+
+                <div class="min-w-0 max-w-72">
+                  <p class="truncate text-sm font-semibold" [title]="incidencia.titulo">
+                    {{ incidencia.titulo }}
+                  </p>
+
+                  <p class="mt-1 truncate text-xs text-base-content/60" [title]="incidencia.descripcion">
+                    {{ incidencia.descripcion }}
+                  </p>
+
+                  <div class="mt-2 flex flex-wrap items-center gap-2
+                               text-xs text-base-content/50">
+                    <span class="font-semibold">
+                      #{{ incidencia.id_incidencia }}
+                    </span>
+
+                    <span aria-hidden="true">·</span>
+
+                    <span>
+                      {{ incidencia.tipo.split('_').join(' ') }}
+                    </span>
+                  </div>
+
+                  <p class="mt-1 text-xs text-base-content/45">
+                    {{ incidencia.origen.split('_').join(' ') }}
+                  </p>
+                </div>
+              </div>
+            </td>
+
+            <!-- PRIORIDAD -->
+            <td>
+              <span class="badge badge-soft whitespace-nowrap font-semibold" [ngClass]="{
+                      'badge-success': incidencia.prioridad === 'BAJA',
+                      'badge-info': incidencia.prioridad === 'MEDIA',
+                      'badge-warning': incidencia.prioridad === 'ALTA',
+                      'badge-error': incidencia.prioridad === 'CRITICA'
+                    }">
+                {{ incidencia.prioridad }}
+              </span>
+            </td>
+
+            <!-- ESTADO DE ATENCIÓN -->
+            <td>
+              <span class="badge badge-soft whitespace-nowrap font-semibold" [ngClass]="{
+                      'badge-info': incidencia.estado_incidencia === 'REPORTADA',
+                      'badge-warning': incidencia.estado_incidencia === 'EN_REVISION',
+                      'badge-primary': incidencia.estado_incidencia === 'EN_ATENCION',
+                      'badge-success': incidencia.estado_incidencia === 'RESUELTA',
+                      'badge-error': incidencia.estado_incidencia === 'RECHAZADA',
+                      'badge-neutral': incidencia.estado_incidencia === 'CANCELADA'
+                    }">
+                {{ incidencia.estado_incidencia.split('_').join(' ') }}
+              </span>
+
+              @if (incidencia.fecha_resolucion) {
+              <p class="mt-2 whitespace-nowrap text-xs text-base-content/50">
+                Cierre:
+                {{ incidencia.fecha_resolucion | date:'dd/MM/yyyy':'-0500' }}
+              </p>
+              }
+            </td>
+
+            <!-- REPORTANTE -->
+            <td>
+              <div class="space-y-1">
+                <p class="text-sm font-medium">
+                  {{ incidencia.reportante?.username || 'No disponible' }}
+                </p>
+
+                <p class="text-xs text-base-content/50">
+                  Usuario #{{ incidencia.id_usuario_reporte }}
+                </p>
+              </div>
+            </td>
+
+            <!-- RESPONSABLE -->
+            <td>
+              @if (incidencia.id_responsable !== null) {
+              <div class="space-y-1">
+                <p class="text-sm font-medium">
+                  {{ incidencia.responsable?.username || 'No disponible' }}
+                </p>
+
+                <p class="text-xs text-base-content/50">
+                  Usuario #{{ incidencia.id_responsable }}
+                </p>
+              </div>
+              } @else {
+              <span class="badge badge-soft badge-warning whitespace-nowrap">
+                Sin asignar
+              </span>
+              }
+            </td>
+
+            <!-- ZONA Y RUTA -->
+            <td>
+              <div class="max-w-56 space-y-1">
+
+                <p class="truncate text-sm" [title]="incidencia.zona?.nombre || 'Sin zona asociada'">
+                  <i class="fa-solid fa-map mr-1 text-base-content/40" aria-hidden="true"></i>
+                  {{ incidencia.zona?.nombre || 'Sin zona asociada' }}
+                </p>
+
+                <p class="truncate text-xs text-base-content/60"
+                  [title]="incidencia.ruta?.nombre || 'Sin ruta asociada'">
+                  {{ incidencia.ruta?.codigo || 'Sin ruta asociada' }}
+                </p>
+
+                @if (incidencia.id_recorrido !== null) {
+                <p class="text-xs text-base-content/50">
+                  Recorrido #{{ incidencia.id_recorrido }}
+                </p>
+                }
+
+                @if (incidencia.direccion_referencia) {
+                <p class="truncate text-xs text-base-content/50" [title]="incidencia.direccion_referencia">
+                  {{ incidencia.direccion_referencia }}
+                </p>
+                }
+
+              </div>
+            </td>
+
+            <!-- FECHA -->
+            <td class="whitespace-nowrap">
+              <p class="text-sm">
+                {{ incidencia.fecha_reporte | date:'dd/MM/yyyy':'-0500' }}
+              </p>
+
+              <p class="mt-1 text-xs text-base-content/50">
+                {{ incidencia.fecha_reporte | date:'hh:mm a':'-0500' }}
+              </p>
+            </td>
+
+            <!-- HABILITACIÓN -->
+            <td class="text-center">
+              <div class="flex flex-col items-center gap-2">
+                <input type="checkbox" class="toggle toggle-sm border-error bg-error/70
+                             checked:border-success checked:bg-success" [checked]="incidencia.estado"
+                  [disabled]="estaProcesando(incidencia)" (change)="cambiarHabilitacion(incidencia, $event)"
+                  [attr.aria-busy]="estaCambiandoEstado(incidencia)" [attr.aria-label]="
+                        (incidencia.estado ? 'Deshabilitar' : 'Habilitar') +
+                        ' incidencia ' + incidencia.id_incidencia
+                      " />
+
+                <span class="text-xs font-medium" [class.text-success]="incidencia.estado"
+                  [class.text-error]="!incidencia.estado">
+                  {{ incidencia.estado ? 'Habilitada' : 'Deshabilitada' }}
+                </span>
+
+                @if (estaCambiandoEstado(incidencia)) {
+                <span class="loading loading-spinner loading-xs text-primary"
+                  aria-label="Actualizando habilitación"></span>
+                }
+              </div>
+            </td>
+
+            <!-- ACCIONES -->
+            <td>
+              <div class="flex items-center justify-center gap-1">
+
+                <!-- VER -->
+                <div class="tooltip tooltip-left" data-tip="Ver incidencia">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="verIncidencia(incidencia)"
+                    [disabled]="estaProcesando(incidencia)" [attr.aria-label]="
+                          'Ver incidencia ' + incidencia.id_incidencia
+                        ">
+                    <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                  </button>
+                </div>
+
+                <!-- RESPONSABLE -->
+                <div class="tooltip tooltip-left" data-tip="Gestionar responsable">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm text-info"
+                    (click)="abrirModalResponsable(incidencia)" [disabled]="
+                          estaProcesando(incidencia) ||
+                          !incidencia.estado ||
+                          ['RESUELTA', 'RECHAZADA', 'CANCELADA']
+                            .includes(incidencia.estado_incidencia)
+                        " [attr.aria-label]="
+                          'Gestionar responsable de incidencia ' +
+                          incidencia.id_incidencia
+                        ">
+                    <i class="fa-solid fa-user-gear" aria-hidden="true"></i>
+                  </button>
+                </div>
+
+                <!-- ESTADO DE ATENCIÓN -->
+                <div class="tooltip tooltip-left" data-tip="Cambiar estado de atención">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm text-primary"
+                    (click)="abrirModalEstado(incidencia)" [disabled]="
+                          estaProcesando(incidencia) ||
+                          !incidencia.estado ||
+                          ['RESUELTA', 'RECHAZADA', 'CANCELADA']
+                            .includes(incidencia.estado_incidencia)
+                        " [attr.aria-label]="
+                          'Cambiar estado de incidencia ' +
+                          incidencia.id_incidencia
+                        ">
+                    <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+                  </button>
+                </div>
+
+                <!-- ELIMINAR -->
+                <div class="tooltip tooltip-left" data-tip="Eliminar incidencia">
+                  <button type="button" class="btn btn-ghost btn-circle btn-sm text-error"
+                    (click)="eliminarIncidencia(incidencia)" [disabled]="estaProcesando(incidencia)" [attr.aria-label]="
+                          'Eliminar incidencia ' + incidencia.id_incidencia
+                        ">
+                    @if (estaEliminando(incidencia)) {
+                    <span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+                    } @else {
+                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                    }
+                  </button>
+                </div>
+
+              </div>
+            </td>
+
+          </tr>
+          } @empty {
+
+          <!-- SIN RESULTADOS -->
+          <tr>
+            <td colspan="10" class="px-6 py-16 text-center">
+              <div class="mx-auto flex max-w-md flex-col items-center">
+
+                <div class="flex h-16 w-16 items-center justify-center
+                             rounded-2xl bg-base-200 text-base-content/35">
+                  <i class="fa-solid fa-clipboard-check text-2xl" aria-hidden="true"></i>
+                </div>
+
+                <h3 class="mt-4 text-base font-semibold">
+                  @if (hayFiltros) {
+                  No se encontraron coincidencias
+                  } @else {
+                  No hay incidencias para mostrar
+                  }
+                </h3>
+
+                <p class="mt-2 text-sm text-base-content/60">
+                  @if (hayFiltros) {
+                  Ajuste los filtros o limpie la búsqueda
+                  para consultar otros reportes.
+                  } @else {
+                  Las incidencias disponibles para su usuario
+                  aparecerán en este listado.
+                  }
+                </p>
+
+                @if (hayFiltros) {
+                <button type="button" class="btn btn-primary btn-sm mt-5 gap-2 rounded-xl" (click)="limpiarFiltros()">
+                  <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i>
+                  Limpiar filtros
+                </button>
+                }
+
+              </div>
+            </td>
+          </tr>
+          }
+          }
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ================================================= -->
+    <!-- PAGINACIÓN -->
+    <!-- ================================================= -->
+    @if (!isLoading && !errorListado && totalItems > 0) {
+    <footer class="flex flex-col gap-4 border-t border-base-300
+               bg-base-200/50 px-4 py-4 sm:px-5
+               lg:flex-row lg:items-center lg:justify-between">
+
+      <div class="text-center sm:text-left">
+        <h2 class="font-semibold text-base-content">
+          Incidencias registradas
+        </h2>
+
+        <p class="mt-0.5 text-sm text-base-content/55">
+          Mostrando {{ inicioRegistro }}–{{ finRegistro }}
+          de {{ totalItems }}
+          {{ totalItems === 1 ? 'incidencia' : 'incidencias' }}
+        </p>
+      </div>
+
+      <div class="flex w-full flex-col items-center gap-3
+                 text-sm text-base-content/70
+                 sm:w-auto sm:flex-row">
+        <span class="whitespace-nowrap">
+          Página
+          <strong class="text-base-content">{{ currentPage }}</strong>
+          de
+          <strong class="text-base-content">{{ totalPages }}</strong>
+        </span>
+
+        <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+
+          <button type="button" class="btn btn-sm w-full gap-2 rounded-lg sm:w-auto" [disabled]="isLoading || page <= 1"
+            (click)="cambiarPagina(page - 1)">
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+            Anterior
+          </button>
+
+          <button type="button" class="btn btn-sm w-full gap-2 rounded-lg sm:w-auto" [disabled]="
+                isLoading ||
+                totalPages === 0 ||
+                page >= totalPages
+              " (click)="cambiarPagina(page + 1)">
+            Siguiente
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+
+        </div>
+      </div>
+
+    </footer>
+    }
+
+  </section>
+</div>

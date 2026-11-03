@@ -1,0 +1,162 @@
+<div class="fixed inset-0 z-100
+         flex items-center justify-center
+         bg-black/50 p-4" (click)="cerrarDesdeInterfaz()">
+  <section role="dialog" aria-modal="true" aria-labelledby="titulo-detalle-notificacion"
+    [attr.aria-busy]="isLoading || operando" class="max-h-[90vh] w-full max-w-2xl
+           overflow-y-auto rounded-2xl
+           bg-base-100 shadow-2xl" (click)="$event.stopPropagation()">
+    <!-- ENCABEZADO -->
+    <header class="flex items-center justify-between
+             gap-4 border-b border-base-300 p-5">
+      <h2 id="titulo-detalle-notificacion" class="text-lg font-bold">
+        Detalle de notificación
+      </h2>
+
+      <button type="button" class="btn btn-ghost btn-sm btn-square" aria-label="Cerrar detalle" [disabled]="operando"
+        (click)="cerrarDesdeInterfaz()">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <div class="p-5">
+      @if (isLoading) {
+      <div class="py-10 text-center" role="status">
+        <span class="loading loading-spinner loading-md"></span>
+
+        <p class="mt-3 text-sm text-base-content/60">
+          Consultando notificación…
+        </p>
+      </div>
+      } @else if (errorMessage) {
+      <div role="alert" class="alert alert-error">
+        <span>
+          {{ errorMessage }}
+        </span>
+
+        <button type="button" class="btn btn-sm" (click)="getNotificacion()">
+          Reintentar
+        </button>
+      </div>
+      } @else if (notificacion; as item) {
+      <!-- ESTADOS -->
+      <div class="mb-4 flex flex-wrap gap-2">
+        <span class="badge badge-outline">
+          {{ item.notificacion.tipo_notificacion }}
+        </span>
+
+        <span class="badge badge-outline">
+          {{ item.notificacion.prioridad }}
+        </span>
+
+        <span class="badge" [class.badge-success]="item.leida" [class.badge-primary]="!item.leida">
+          {{ item.leida ? 'Leída' : 'Sin leer' }}
+        </span>
+
+        @if (item.archivada) {
+        <span class="badge badge-ghost">
+          Archivada
+        </span>
+        }
+      </div>
+
+      <!-- CONTENIDO -->
+      <h3 class="wrap-break-word text-xl font-bold">
+        {{ item.notificacion.titulo }}
+      </h3>
+
+      <p class="mt-2 text-xs text-base-content/50">
+        {{
+        item.notificacion.created_at
+        | date:'dd/MM/yyyy HH:mm'
+        }}
+      </p>
+
+      <p class="mt-5 whitespace-pre-wrap wrap-break-word text-sm leading-relaxed">{{ item.notificacion.mensaje }}</p>
+
+      <!-- INFORMACIÓN DE LECTURA Y ARCHIVO -->
+      <dl class="mt-6 grid gap-4 rounded-xl
+                 bg-base-200 p-4 text-sm sm:grid-cols-2">
+        <div>
+          <dt class="text-xs text-base-content/50">
+            Fecha de lectura
+          </dt>
+
+          <dd class="mt-1">
+            @if (item.fecha_leida) {
+            {{
+            item.fecha_leida
+            | date:'dd/MM/yyyy HH:mm'
+            }}
+            } @else {
+            Pendiente
+            }
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-xs text-base-content/50">
+            Fecha de archivo
+          </dt>
+
+          <dd class="mt-1">
+            @if (item.fecha_archivada) {
+            {{
+            item.fecha_archivada
+            | date:'dd/MM/yyyy HH:mm'
+            }}
+            } @else {
+            Sin archivar
+            }
+          </dd>
+        </div>
+      </dl>
+
+      @if (isReading) {
+      <p role="status" class="mt-4 text-sm text-base-content/60">
+        <span class="loading loading-spinner loading-xs mr-2"></span>
+
+        Confirmando lectura…
+      </p>
+      }
+
+      @if (errorAccion) {
+      <div role="alert" class="alert alert-warning mt-4">
+        {{ errorAccion }}
+      </div>
+      }
+      }
+    </div>
+
+    <!-- ACCIONES -->
+    <footer class="flex flex-wrap justify-end gap-2
+             border-t border-base-300 p-5">
+      <button type="button" class="btn btn-ghost btn-sm" [disabled]="operando" (click)="cerrarDesdeInterfaz()">
+        Cerrar
+      </button>
+
+      @if (!isLoading && notificacion; as item) {
+      @if (!item.leida) {
+      <button type="button" class="btn btn-primary btn-sm" [disabled]="operando" (click)="marcarLeida()">
+        @if (isReading) {
+        <span class="loading loading-spinner loading-xs"></span>
+        }
+
+        Marcar como leída
+      </button>
+      }
+
+      @if (!item.archivada) {
+      <button type="button" class="btn btn-outline btn-sm" [disabled]="operando" (click)="archivar()">
+        @if (isArchiving) {
+        <span class="loading loading-spinner loading-xs"></span>
+        } @else {
+        <i class="fa-solid fa-box-archive" aria-hidden="true"></i>
+        }
+
+        Archivar
+      </button>
+      }
+      }
+    </footer>
+  </section>
+</div>

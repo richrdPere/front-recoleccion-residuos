@@ -1,0 +1,223 @@
+<div class="relative">
+  <!-- BOTÓN DE LA CAMPANA -->
+  <button type="button" class="btn btn-square btn-ghost btn-sm sm:btn-md" aria-label="Abrir notificaciones"
+    aria-controls="panel-notificaciones" [attr.aria-expanded]="abierto" (click)="alternar()">
+    <span class="indicator">
+      @if (estado.totalNoLeidas > 0) {
+      <span class="indicator-item badge badge-error badge-sm" aria-live="polite" aria-atomic="true">
+        {{
+        estado.totalNoLeidas > 99
+        ? '99+'
+        : estado.totalNoLeidas
+        }}
+      </span>
+      }
+
+      <i class="fa-regular fa-bell text-lg" aria-hidden="true"></i>
+    </span>
+  </button>
+
+  <!-- VISTA PREVIA -->
+  @if (abierto) {
+  <section id="panel-notificaciones" aria-label="Notificaciones recientes" [attr.aria-busy]="estado.isLoading" class="absolute right-0 z-50 mt-3
+             w-[min(24rem,calc(100vw-2rem))]
+             rounded-2xl border border-base-300
+             bg-base-100 shadow-xl">
+    <!-- ENCABEZADO -->
+    <div class="flex items-center justify-between
+               gap-3 border-b border-base-300 p-4">
+      <div>
+        <h2 class="font-bold">
+          Notificaciones
+        </h2>
+
+        <p class="mt-1 text-xs text-base-content/60">
+          {{ estado.totalNoLeidas }} sin leer
+        </p>
+      </div>
+
+      <button type="button" class="btn btn-ghost btn-sm btn-square" aria-label="Actualizar notificaciones"
+        [disabled]="estado.isLoading" (click)="actualizar()">
+        @if (estado.isLoading) {
+        <span class="loading loading-spinner loading-xs"></span>
+        } @else {
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+        }
+      </button>
+    </div>
+
+    <!-- ERROR -->
+    @if (estado.errorMessage) {
+    <div role="alert" class="mx-3 mt-3 rounded-xl
+                 bg-warning/15 p-3 text-sm">
+      <p>
+        {{ estado.errorMessage }}
+      </p>
+
+      <button type="button" class="btn btn-ghost btn-xs mt-2" [disabled]="estado.isLoading" (click)="actualizar()">
+        Reintentar
+      </button>
+    </div>
+    }
+
+    <!-- CARGA INICIAL -->
+    @if (
+    estado.isLoading &&
+    estado.avisosRecientes.length === 0
+    ) {
+    <div role="status" class="flex items-center justify-center gap-3 p-8">
+      <span class="loading loading-spinner loading-sm"></span>
+
+      <span class="text-sm text-base-content/60">
+        Cargando avisos…
+      </span>
+    </div>
+    } @else if (estado.avisosRecientes.length > 0) {
+    <!-- LISTA DE AVISOS -->
+    <div class="max-h-96 overflow-y-auto p-2">
+      @for (
+      item of estado.avisosRecientes;
+      track item.id_notificacion_usuario
+      ) {
+      <button type="button" class="mb-1 flex w-full gap-3 rounded-xl
+                     p-3 text-left transition-colors
+                     hover:bg-base-200" [class.bg-primary/5]="!item.leida" (click)="abrirAviso(item)">
+        <!-- ICONO -->
+        <span class="flex size-10 shrink-0
+                       items-center justify-center
+                       rounded-full bg-base-200">
+          <i class="fa-regular fa-bell" aria-hidden="true"></i>
+        </span>
+
+        <!-- CONTENIDO -->
+        <span class="min-w-0 flex-1">
+          <span class="flex items-start justify-between gap-2">
+            <span class="line-clamp-2 text-sm font-semibold">
+              {{ item.notificacion.titulo }}
+            </span>
+
+            @if (!item.leida) {
+            <span class="mt-1 size-2 shrink-0
+                             rounded-full bg-primary" aria-label="Sin leer"></span>
+            }
+          </span>
+
+          <span class="mt-1 block line-clamp-2
+                         text-xs text-base-content/65">
+            {{ item.notificacion.mensaje }}
+          </span>
+
+          <span class="mt-2 block text-xs text-base-content/45">
+            {{
+            item.notificacion.created_at
+            | date:'dd/MM/yyyy HH:mm'
+            }}
+          </span>
+        </span>
+      </button>
+      }
+    </div>
+    } @else if (!estado.errorMessage) {
+    <!-- SIN AVISOS -->
+    <div class="px-4 py-8 text-center">
+      <div class="mx-auto flex size-12
+                   items-center justify-center
+                   rounded-full bg-base-200">
+        <i class="fa-regular fa-bell-slash
+                     text-base-content/40" aria-hidden="true"></i>
+      </div>
+
+      <p class="mt-3 text-sm font-medium">
+        No tienes avisos recientes
+      </p>
+
+      <p class="mt-1 text-xs text-base-content/55">
+        Tus notificaciones aparecerán aquí.
+      </p>
+    </div>
+    }
+
+    <!-- NAVEGACIÓN -->
+    <div class="border-t border-base-300 p-3">
+      <button type="button" class="btn btn-ghost btn-sm w-full" (click)="verTodas()">
+        Ver todas las notificaciones
+
+        <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
+      </button>
+    </div>
+  </section>
+  }
+</div>
+
+<!-- MENSAJE COMPLETO -->
+@if (seleccionada; as item) {
+<div class="fixed inset-0 z-100
+           flex items-center justify-center
+           bg-black/50 p-4" (click)="cerrarDetalle()">
+  <section role="dialog" aria-modal="true" aria-labelledby="titulo-aviso" class="max-h-[85vh] w-full max-w-lg
+             overflow-y-auto rounded-2xl
+             bg-base-100 p-5 shadow-2xl" (click)="$event.stopPropagation()" (keydown.escape)="cerrarDetalle()">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <p class="text-xs font-medium uppercase
+                   tracking-wide text-base-content/55">
+          {{ item.notificacion.tipo_notificacion }}
+        </p>
+
+        <h2 id="titulo-aviso" class="mt-2 wrap-break-word text-lg font-bold">
+          {{ item.notificacion.titulo }}
+        </h2>
+      </div>
+
+      <button type="button" autofocus class="btn btn-ghost btn-sm btn-square shrink-0" aria-label="Cerrar aviso"
+        (click)="cerrarDetalle()">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <p class="mt-2 text-xs text-base-content/50">
+      {{
+      item.notificacion.created_at
+      | date:'dd/MM/yyyy HH:mm'
+      }}
+    </p>
+
+    <p class="mt-5 whitespace-pre-wrap wrap-break-word text-sm leading-relaxed">{{ item.notificacion.mensaje }}</p>
+
+    <!-- ESTADO DE LECTURA -->
+    <div class="mt-5 text-xs text-base-content/60" aria-live="polite">
+      @if (marcandoLectura) {
+      <span class="loading loading-spinner loading-xs mr-1"></span>
+
+      Confirmando lectura…
+      } @else if (item.leida) {
+      <i class="fa-solid fa-check mr-1 text-success" aria-hidden="true"></i>
+
+      Leída
+      }
+    </div>
+
+    @if (errorLectura) {
+    <div role="alert" class="mt-3 rounded-xl bg-warning/15 p-3 text-sm">
+      <p>
+        {{ errorLectura }}
+      </p>
+
+      <button type="button" class="btn btn-ghost btn-xs mt-2" (click)="marcarSeleccionadaComoLeida()">
+        Reintentar lectura
+      </button>
+    </div>
+    }
+
+    <div class="mt-6 flex flex-wrap justify-end gap-2">
+      <button type="button" class="btn btn-ghost btn-sm" (click)="cerrarDetalle()">
+        Cerrar
+      </button>
+
+      <button type="button" class="btn btn-primary btn-sm" (click)="verTodas()">
+        Ir a mi bandeja
+      </button>
+    </div>
+  </section>
+</div>
+}
