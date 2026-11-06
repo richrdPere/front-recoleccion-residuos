@@ -1,1 +1,27 @@
-<p>public-last-update works!</p>
+<div class="flex flex-wrap items-center gap-2 text-xs">
+      <i
+        class="fa-regular fa-clock text-base-content/50"
+        aria-hidden="true"
+      ></i>
+
+      @if (fechaValida; as actualizacion) {
+        <span class="text-base-content/60">
+          Última ubicación recibida
+          {{ actualizacion | date: 'dd/MM/yyyy HH:mm:ss' : '-0500' }}
+          · hora de Perú
+        </span>
+
+        @if (desactualizada) {
+          <span
+            class="rounded-full bg-warning/10 px-2 py-1
+                   font-semibold text-warning"
+          >
+            Ubicación desactualizada
+          </span>
+        }
+      } @else {
+        <span class="text-base-content/60">
+          Sin fecha de ubicación disponible
+        </span>
+      }
+    </div>

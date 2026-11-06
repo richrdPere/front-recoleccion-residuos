@@ -1,12 +1,16 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  Input,
+} from '@angular/core';
 
 @Component({
   selector: 'app-public-loading',
-  imports: [],
+  standalone: true,
   templateUrl: './public-loading.component.html',
-  styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PublicLoadingComponent {
-
+  @Input() titulo = 'Consultando información';
+  @Input() mensaje = 'Estamos obteniendo los datos del servicio de recolección.';
 }

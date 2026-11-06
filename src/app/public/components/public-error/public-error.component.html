@@ -1,1 +1,42 @@
-<p>public-error works!</p>
+<section
+      role="alert"
+      class="rounded-3xl border border-error/20
+             bg-base-100 p-8 shadow-sm sm:p-12"
+    >
+      <div class="mx-auto max-w-md text-center">
+        <div
+          class="mx-auto flex size-16 items-center justify-center
+                 rounded-2xl bg-error/10 text-2xl text-error"
+        >
+          <i
+            class="fa-solid fa-triangle-exclamation"
+            aria-hidden="true"
+          ></i>
+        </div>
+
+        <h2 class="mt-5 text-xl font-bold">
+          {{ titulo }}
+        </h2>
+
+        <p class="mt-3 text-sm leading-6 text-base-content/65">
+          {{ mensaje }}
+        </p>
+
+        @if (permitirReintento) {
+          <button
+            type="button"
+            class="btn btn-primary mt-6"
+            [disabled]="reintentando"
+            (click)="reintentar.emit()"
+          >
+            @if (reintentando) {
+              <span class="loading loading-spinner loading-xs"></span>
+            } @else {
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            }
+
+            {{ reintentando ? 'Consultando…' : 'Reintentar' }}
+          </button>
+        }
+      </div>
+    </section>

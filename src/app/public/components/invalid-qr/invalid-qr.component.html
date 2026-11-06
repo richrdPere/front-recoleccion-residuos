@@ -1,1 +1,27 @@
-<p>invalid-qr works!</p>
+<section
+      role="alert"
+      class="rounded-3xl border border-base-300
+             bg-base-100 p-8 shadow-sm sm:p-12"
+    >
+      <div class="mx-auto max-w-md text-center">
+        <div
+          class="mx-auto flex size-16 items-center justify-center
+                 rounded-2xl bg-warning/10 text-2xl text-warning"
+        >
+          <i class="fa-solid fa-qrcode" aria-hidden="true"></i>
+        </div>
+
+        <h2 class="mt-5 text-xl font-bold">
+          {{ contenido.titulo }}
+        </h2>
+
+        <p class="mt-3 text-sm leading-6 text-base-content/65">
+          {{ mensaje || contenido.mensaje }}
+        </p>
+
+        <a routerLink="/publico" class="btn btn-primary mt-6">
+          <i class="fa-solid fa-house" aria-hidden="true"></i>
+          Ir al inicio
+        </a>
+      </div>
+    </section>

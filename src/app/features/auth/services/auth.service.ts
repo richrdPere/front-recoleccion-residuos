@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable, Subject, catchError, defer, finalize, firstValueFrom, map, of, shareReplay, takeUntil, tap, throwError } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { BehaviorSubject, Observable, Subject, catchError, defer, finalize, firstValueFrom, map, of, shareReplay, takeUntil, tap, throwError, timeout } from 'rxjs';
 import { JwtHelperService } from '@auth0/angular-jwt';
 
 // Environment
@@ -120,7 +120,7 @@ export class AuthService {
     return this.http.post<LogoutResponse>(
       this.API_LOGOUT,
       {
-        refreshToken,
+        refresh_token: refreshToken,
       },
       {
         headers
@@ -173,131 +173,264 @@ export class AuthService {
   // 4. RENOVAR TOKENS
   // *********************************************************
   refreshToken(): Observable<RefreshTokenResponse> {
-    if (this.refreshRequest$)
+    if (this.refreshRequest$) {
       return this.refreshRequest$;
+    }
 
     const version = this.versionSesion;
 
-    const request$: Observable<RefreshTokenResponse> = defer(() => {
-      if (version !== this.versionSesion) {
-        return throwError(() => new Error('La sesión cambió antes de renovarse.'));
-      }
-
-      const refreshToken = this.authStorage.getRefreshToken();
-
-      if (!refreshToken) {
-        return throwError(() => new Error('No existe un refresh token disponible.'));
-      }
-      return this.http.post<RefreshTokenResponse>(
-        this.API_REFRESH,
-        {
-          refresh_token: refreshToken
-        },
-        {
-          headers: HttpServiceHelper.getHeaders()
-        },
-      );
-    }).pipe(
-      // Logout cancela la renovación; una respuesta tardía no restaura la sesión.
-      takeUntil(this.sesionCerrada$),
-      tap((response) => {
+    const request$: Observable<RefreshTokenResponse> =
+      defer(() => {
         if (version !== this.versionSesion) {
-          throw new Error('La sesión cambió durante la renovación.');
+          return throwError(
+            () => new Error(
+              'La sesión cambió antes de renovarse.',
+            ),
+          );
         }
 
-        if (!response.success || !response.data?.access_token || !response.data?.refresh_token) {
-          throw new Error('El servidor no devolvió una renovación válida.');
+        const refreshToken =
+          this.authStorage.getRefreshToken();
+
+        if (!refreshToken) {
+          return throwError(
+            () => new HttpErrorResponse({
+              status: 401,
+
+              error: {
+                message:
+                  'No existe un refresh token disponible.',
+              },
+            }),
+          );
         }
 
-        const {
-          access_token,
-          refresh_token,
-          expires_in,
-          refresh_expires_in
-        } = response.data;
+        return this.http.post<RefreshTokenResponse>(
+          this.API_REFRESH,
 
-        const payload = this.decodeAccessToken(access_token);
+          {
+            refresh_token: refreshToken,
+          },
 
-        if (!payload || !Number.isFinite(payload.exp) || !payload.session_id) {
-          throw new Error('El token renovado no contiene una sesión válida.');
-        }
+          {
+            headers:
+              HttpServiceHelper.getHeaders(),
+          },
+        );
+      }).pipe(
+        timeout(15000),
 
-        this.authStorage.saveTokens(access_token, refresh_token, {
-          accessToken: expires_in,
-          refreshToken: refresh_expires_in,
-        });
-        this.updateStoredSession(access_token);
-        this.tokensActualizadosSubject.next();
-      }),
+        // Una sesión cerrada cancela la renovación anterior.
+        takeUntil(this.sesionCerrada$),
 
-      // Conservar la sesión ante fallos de red; cerrar ante rechazo definitivo.
-      tap({
-        error: (error: unknown) => {
-          const status = (error as { status?: number } | null)?.status;
-
-          if (version === this.versionSesion && (status === 401 || status === 403)) {
-            this.closeLocalSession();
+        tap((response) => {
+          if (version !== this.versionSesion) {
+            throw new Error(
+              'La sesión cambió durante la renovación.',
+            );
           }
-        }
-      }),
 
-      catchError((error) => HttpServiceHelper.handleError(error, 'No se pudo renovar la sesión.')),
-      finalize(() => {
-        if (this.refreshRequest$ === request$) this.refreshRequest$ = null;
-      }),
-      shareReplay({ bufferSize: 1, refCount: false }),
-    );
+          const data = response.data;
+
+          if (
+            !response.success ||
+            !data?.access_token ||
+            !data?.refresh_token
+          ) {
+            throw new HttpErrorResponse({
+              status: 401,
+
+              error: {
+                message:
+                  'El servidor devolvió una renovación inválida.',
+              },
+            });
+          }
+
+          const payload = this.decodeAccessToken(
+            data.access_token,
+          );
+
+          const sesion =
+            this.authStorage.getSession();
+
+          const usuario =
+            this.getCurrentUser();
+
+          if (
+            !payload ||
+            payload.token_type !== 'access' ||
+            !Number.isFinite(payload.exp) ||
+            payload.exp * 1000 <= Date.now() ||
+            !payload.session_id ||
+            !sesion ||
+            !usuario ||
+            payload.session_id !== sesion.sessionId ||
+            String(payload.id_usuario) !==
+            String(usuario.id_usuario)
+          ) {
+            throw new HttpErrorResponse({
+              status: 401,
+
+              error: {
+                message:
+                  'El token renovado no corresponde a la sesión actual.',
+              },
+            });
+          }
+
+          this.authStorage.saveTokens(
+            data.access_token,
+            data.refresh_token,
+
+            {
+              accessToken: data.expires_in,
+              refreshToken:
+                data.refresh_expires_in,
+            },
+          );
+
+          this.updateStoredSession(
+            data.access_token,
+          );
+
+          this.tokensActualizadosSubject.next();
+        }),
+
+        tap({
+          error: (error: unknown) => {
+            const status =
+              error instanceof HttpErrorResponse
+                ? error.status
+                : 0;
+
+            if (
+              version === this.versionSesion &&
+              (status === 401 || status === 403)
+            ) {
+              this.closeLocalSession();
+            }
+          },
+        }),
+
+        // Mantener el error HTTP original para que el
+        // interceptor pueda distinguir red, 401 y 403.
+        finalize(() => {
+          if (this.refreshRequest$ === request$) {
+            this.refreshRequest$ = null;
+          }
+        }),
+
+        shareReplay({
+          bufferSize: 1,
+          refCount: false,
+        }),
+      );
 
     this.refreshRequest$ = request$;
+
     return request$;
-
-    // const refreshToken = this.authStorage.getRefreshToken();
-
-    // if (!refreshToken) {
-    //   throw new Error(
-    //     'No existe un refresh token disponible.',
-    //   );
-    // }
-
-    // return this.http
-    //   .post<RefreshTokenResponse>(
-    //     this.API_REFRESH,
-    //     {
-    //       refresh_token: refreshToken,
-    //     },
-    //     {
-    //       headers: HttpServiceHelper.getHeaders(),
-    //     },
-    //   )
-    //   .pipe(
-    //     tap((response) => {
-    //       const {
-    //         access_token,
-    //         refresh_token,
-    //         expires_in,
-    //         refresh_expires_in,
-    //       } = response.data;
-
-    //       this.authStorage.saveTokens(
-    //         access_token,
-    //         refresh_token,
-    //         {
-    //           accessToken: expires_in,
-    //           refreshToken: refresh_expires_in,
-    //         },
-    //       );
-
-    //       this.updateStoredSession(access_token);
-    //     }),
-
-    //     catchError((error) =>
-    //       HttpServiceHelper.handleError(
-    //         error,
-    //         'No se pudo renovar la sesión.',
-    //       ),
-    //     ),
-    //   );
   }
+  // refreshToken(): Observable<RefreshTokenResponse> {
+  //   if (this.refreshRequest$)
+  //     return this.refreshRequest$;
+
+  //   const version = this.versionSesion;
+
+  //   const request$: Observable<RefreshTokenResponse> = defer(() => {
+  //     if (version !== this.versionSesion) {
+  //       return throwError(() => new Error('La sesión cambió antes de renovarse.'));
+  //     }
+
+  //     const refreshToken = this.authStorage.getRefreshToken();
+
+  //     if (!refreshToken) {
+  //       //return throwError(() => new Error('No existe un refresh token disponible.'));
+  //       return throwError(
+  //         () => new HttpErrorResponse({
+  //           status: 401,
+
+  //           error: {
+  //             message: 'No existe un refresh token disponible.',
+  //           },
+  //         }),
+  //       );
+  //     }
+  //     return this.http.post<RefreshTokenResponse>(
+  //       this.API_REFRESH,
+  //       {
+  //         refresh_token: refreshToken
+  //       },
+  //       {
+  //         headers: HttpServiceHelper.getHeaders()
+  //       },
+  //     );
+  //   }).pipe(
+  //     timeout(15000),
+
+  //     // Logout cancela la renovación; una respuesta tardía no restaura la sesión.
+  //     // Una sesión cerrada cancela la renovación anterior.
+  //     takeUntil(this.sesionCerrada$),
+
+  //     tap((response) => {
+  //       if (version !== this.versionSesion) {
+  //         throw new Error('La sesión cambió durante la renovación.');
+  //       }
+
+  //       const data = response.data;
+
+  //       if (!response.success || !data?.access_token || !data?.refresh_token) {
+  //         // throw new Error('El servidor no devolvió una renovación válida.');
+  //         throw new HttpErrorResponse({
+  //           status: 401,
+  //           error: {
+  //             message: 'El servidor devolvió una renovación inválida.',
+  //           },
+  //         });
+  //       }
+
+  //       const {
+  //         access_token,
+  //         refresh_token,
+  //         expires_in,
+  //         refresh_expires_in
+  //       } = response.data;
+
+  //       const payload = this.decodeAccessToken(access_token);
+
+  //       if (!payload || !Number.isFinite(payload.exp) || !payload.session_id) {
+  //         throw new Error('El token renovado no contiene una sesión válida.');
+  //       }
+
+  //       this.authStorage.saveTokens(access_token, refresh_token, {
+  //         accessToken: expires_in,
+  //         refreshToken: refresh_expires_in,
+  //       });
+  //       this.updateStoredSession(access_token);
+  //       this.tokensActualizadosSubject.next();
+  //     }),
+
+  //     // Conservar la sesión ante fallos de red; cerrar ante rechazo definitivo.
+  //     tap({
+  //       error: (error: unknown) => {
+  //         const status = (error as { status?: number } | null)?.status;
+
+  //         if (version === this.versionSesion && (status === 401 || status === 403)) {
+  //           this.closeLocalSession();
+  //         }
+  //       }
+  //     }),
+
+  //     catchError((error) => HttpServiceHelper.handleError(error, 'No se pudo renovar la sesión.')),
+  //     finalize(() => {
+  //       if (this.refreshRequest$ === request$) this.refreshRequest$ = null;
+  //     }),
+  //     shareReplay({ bufferSize: 1, refCount: false }),
+  //   );
+
+  //   this.refreshRequest$ = request$;
+  //   return request$;
+  // }
 
   /** Devuelve el token vigente y reutiliza refreshToken() si debe renovarse. */
   getAccessTokenForSocket(forzarRenovacion = false): Promise<string | null> {
@@ -653,6 +786,14 @@ export class AuthService {
 
   getCurrentRoles(): string[] {
     return this.authStorage.getRoles();
+  }
+
+  getSessionVersion(): number {
+    return this.versionSesion;
+  }
+
+  isRefreshingSession(): boolean {
+    return this.refreshRequest$ !== null;
   }
 
   // =========================================================

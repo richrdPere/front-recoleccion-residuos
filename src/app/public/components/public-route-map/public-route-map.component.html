@@ -1,0 +1,13 @@
+ <div class="overflow-hidden rounded-2xl border border-base-300">
+      <div
+        #contenedor
+        class="h-80 w-full sm:h-96"
+        aria-label="Mapa público de recolección"
+      ></div>
+
+      @if (error()) {
+        <p role="alert" class="p-4 text-sm text-error">
+          {{ error() }}
+        </p>
+      }
+    </div>

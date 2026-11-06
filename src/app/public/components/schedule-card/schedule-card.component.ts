@@ -1,12 +1,23 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  Input,
+} from '@angular/core';
+
+export interface HorarioPublicoVista {
+  id: string;
+  dias: string;
+  horaInicio: string;
+  horaFin: string;
+  detalle?: string;
+}
 
 @Component({
   selector: 'app-schedule-card',
-  imports: [],
+  standalone: true,
   templateUrl: './schedule-card.component.html',
-  styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScheduleCardComponent {
-
+  @Input() horarios: readonly HorarioPublicoVista[] = [];
 }

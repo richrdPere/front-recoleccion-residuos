@@ -156,15 +156,17 @@
 
       <nav class="mx-auto w-full max-w-360" aria-label="Navegación pública móvil">
 
-        <ul class="grid grid-cols-1 gap-1
-                   sm:grid-cols-2">
+        <ul class="grid grid-cols-1 gap-1 sm:grid-cols-2">
 
-          @for (
-          item of navigationItems;
-          track item.route
-          ) {
+          @for ( item of navigationItems; track item.route ) {
+
           <li>
-            <a [routerLink]="item.route" routerLinkActive="
+            <a [routerLink]="item.route" queryParamsHandling="preserve" routerLinkActive="bg-primary/10 text-primary"
+              [routerLinkActiveOptions]="{ exact: item.exact ?? false}">
+              <i [class]="item.icon"></i>
+              {{ item.label }}
+            </a>
+            <!-- <a [routerLink]="item.route" routerLinkActive="
                     bg-primary
                     text-primary-content
                     shadow-sm
@@ -186,7 +188,7 @@
               <span class="truncate">
                 {{ item.label }}
               </span>
-            </a>
+            </a> -->
           </li>
           }
         </ul>

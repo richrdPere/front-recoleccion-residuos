@@ -1,1 +1,183 @@
-<p>registro-alertas-page works!</p>
+<div class="mx-auto max-w-3xl px-4 py-7 sm:px-6">
+
+      <app-public-page-header
+        titulo="Registro de avisos"
+        descripcion="Revisa el formulario de registro voluntario y elige los avisos de tu interés."
+        etiqueta="Avisos ciudadanos"
+        icono="fa-regular fa-bell"
+      />
+
+      <p
+        role="note"
+        class="mb-6 rounded-2xl bg-warning/10 p-4 text-sm leading-6"
+      >
+        Formulario de demostración. La suscripción y el permiso
+        de notificaciones del navegador están pendientes de integración.
+      </p>
+
+      <form
+        [formGroup]="form"
+        (ngSubmit)="revisar()"
+        novalidate
+        class="space-y-6 rounded-3xl border border-base-300
+               bg-base-100 p-5 shadow-sm sm:p-7"
+      >
+        <div>
+          <label for="aviso-nombre" class="mb-2 block text-sm font-semibold">
+            Nombre
+          </label>
+
+          <input
+            id="aviso-nombre"
+            type="text"
+            autocomplete="name"
+            maxlength="100"
+            class="input input-bordered w-full"
+            formControlName="nombre"
+            [attr.aria-invalid]="invalido('nombre')"
+          />
+
+          @if (invalido('nombre')) {
+            <p class="mt-1 text-xs text-error">
+              Ingresa un nombre de entre 2 y 100 caracteres.
+            </p>
+          }
+        </div>
+
+        <div>
+          <label for="aviso-celular" class="mb-2 block text-sm font-semibold">
+            Celular
+          </label>
+
+          <input
+            id="aviso-celular"
+            type="tel"
+            inputmode="numeric"
+            autocomplete="tel-national"
+            maxlength="9"
+            placeholder="9XXXXXXXX"
+            class="input input-bordered w-full"
+            formControlName="celular"
+            [attr.aria-invalid]="invalido('celular')"
+          />
+
+          @if (invalido('celular')) {
+            <p class="mt-1 text-xs text-error">
+              Ingresa un celular peruano de 9 dígitos que comience con 9.
+            </p>
+          }
+        </div>
+
+        <div>
+          <label for="aviso-ruta" class="mb-2 block text-sm font-semibold">
+            Ruta de tu sector
+          </label>
+
+          <select
+            id="aviso-ruta"
+            class="select select-bordered w-full"
+            formControlName="idRuta"
+            [attr.aria-invalid]="invalido('idRuta')"
+          >
+            <option value="">Selecciona una ruta</option>
+
+            @for (ruta of rutas; track ruta.idRuta) {
+              <option [value]="ruta.idRuta">
+                {{ ruta.sector }} · {{ ruta.nombre }}
+              </option>
+            }
+          </select>
+
+          @if (invalido('idRuta')) {
+            <p class="mt-1 text-xs text-error">
+              Selecciona una ruta.
+            </p>
+          }
+        </div>
+
+        <fieldset class="space-y-4 rounded-2xl bg-base-200 p-4">
+          <legend class="px-1 text-sm font-bold">
+            Preferencias de avisos
+          </legend>
+
+          <label class="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              class="checkbox checkbox-primary checkbox-sm mt-1"
+              formControlName="inicio"
+            />
+
+            <span>
+              <span class="block text-sm font-semibold">
+                Inicio de recorrido
+              </span>
+              <span class="mt-1 block text-xs text-base-content/60">
+                Avisos cuando comience el servicio de la ruta.
+              </span>
+            </span>
+          </label>
+
+          <label class="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              class="checkbox checkbox-primary checkbox-sm mt-1"
+              formControlName="cambios"
+            />
+
+            <span class="text-sm">
+              Cambios de horario y cancelaciones
+            </span>
+          </label>
+
+          <label class="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              class="checkbox checkbox-primary checkbox-sm mt-1"
+              formControlName="incidencias"
+            />
+
+            <span class="text-sm">
+              Incidencias públicas que afecten el servicio
+            </span>
+          </label>
+        </fieldset>
+
+        <div>
+          <label class="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              class="checkbox checkbox-primary checkbox-sm mt-1"
+              formControlName="acepta"
+              [attr.aria-invalid]="invalido('acepta')"
+            />
+
+            <span class="text-sm leading-6">
+              He leído el
+              <a routerLink="/privacidad" class="link link-primary">
+                aviso de privacidad de demostración
+              </a>
+              para revisar este formulario.
+            </span>
+          </label>
+
+          @if (invalido('acepta')) {
+            <p class="mt-2 text-xs text-error">
+              Confirma la lectura del aviso para revisar el formulario.
+            </p>
+          }
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full sm:w-auto">
+          Revisar preferencias
+        </button>
+
+        @if (mensaje()) {
+          <p
+            role="status"
+            class="rounded-2xl bg-info/10 p-4 text-sm leading-6"
+          >
+            {{ mensaje() }}
+          </p>
+        }
+      </form>
+    </div>

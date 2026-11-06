@@ -1,1 +1,77 @@
-<p>privacidad-page works!</p>
+<div class="mx-auto max-w-3xl px-4 py-7 sm:px-6">
+
+      <app-public-page-header
+        titulo="Privacidad y uso de datos"
+        descripcion="Información sobre los formularios y la consulta pública."
+        etiqueta="Información ciudadana"
+        icono="fa-solid fa-shield-halved"
+      />
+
+      <div
+        role="note"
+        class="mb-6 rounded-2xl bg-warning/10 p-4 text-sm leading-6"
+      >
+        Borrador de interfaz. El aviso institucional definitivo
+        está pendiente de aprobación y publicación.
+      </div>
+
+      <article
+        class="space-y-7 rounded-3xl border border-base-300
+               bg-base-100 p-6 shadow-sm sm:p-8"
+      >
+        <section>
+          <h2 class="text-lg font-bold">
+            Consulta pública
+          </h2>
+
+          <p class="mt-3 text-sm leading-7 text-base-content/70">
+            La consulta está diseñada para mostrar sectores, rutas,
+            horarios y la ubicación aproximada del vehículo durante
+            un recorrido autorizado.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-lg font-bold">
+            Formularios de demostración
+          </h2>
+
+          <p class="mt-3 text-sm leading-7 text-base-content/70">
+            En esta versión, los formularios permiten revisar
+            campos y preferencias dentro de la página.
+            Su conexión con el servicio municipal está pendiente.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-lg font-bold">
+            Registro voluntario de avisos
+          </h2>
+
+          <p class="mt-3 text-sm leading-7 text-base-content/70">
+            El registro propuesto contempla nombre, celular,
+            sector o ruta y preferencias de avisos.
+            Antes de habilitarlo se publicará la finalidad del
+            tratamiento y la información institucional correspondiente.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-lg font-bold">
+            Información pendiente de completar
+          </h2>
+
+          <ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-base-content/70">
+            <li>Identificación y contacto del responsable del tratamiento.</li>
+            <li>Finalidades y condiciones del registro de ciudadanos.</li>
+            <li>Plazos de conservación de la información.</li>
+            <li>Canales para gestionar preferencias y solicitudes.</li>
+            <li>Información sobre proveedores y almacenamiento.</li>
+          </ul>
+        </section>
+
+        <a routerLink="/publico" class="btn btn-outline">
+          Volver al inicio
+        </a>
+      </article>
+    </div>

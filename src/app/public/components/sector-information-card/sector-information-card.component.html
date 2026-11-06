@@ -1,1 +1,70 @@
-<p>sector-information-card works!</p>
+<section
+      aria-label="Información del sector"
+      class="rounded-3xl border border-base-300
+             bg-base-100 p-5 shadow-sm sm:p-6"
+    >
+      <div class="flex items-start gap-4">
+        <div
+          class="flex size-12 shrink-0 items-center justify-center
+                 rounded-2xl bg-success/10 text-xl text-success"
+        >
+          <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+        </div>
+
+        <div class="min-w-0 flex-1">
+          <p
+            class="text-xs font-semibold uppercase
+                   tracking-wider text-base-content/50"
+          >
+            Sector
+          </p>
+
+          <h2 class="mt-1 wrap-break-word text-xl font-bold">
+            {{ nombre }}
+          </h2>
+
+          @if (descripcion) {
+            <p class="mt-2 text-sm leading-6 text-base-content/65">
+              {{ descripcion }}
+            </p>
+          }
+        </div>
+      </div>
+
+      <div class="mt-5 border-t border-base-200 pt-5">
+        @if (rutas.length > 0) {
+          <label class="block">
+            <span class="mb-2 block text-sm font-semibold">
+              Ruta de recolección
+            </span>
+
+            <select
+              class="select select-bordered w-full"
+              [disabled]="cargando"
+              [value]="idRutaSeleccionada ?? ''"
+              (change)="seleccionar($event)"
+            >
+              <option value="" disabled>
+                Selecciona una ruta
+              </option>
+
+              @for (ruta of rutas; track ruta.idRuta) {
+                <option [value]="ruta.idRuta">
+                  {{ ruta.nombre }} · {{ ruta.codigo }}
+                </option>
+              }
+            </select>
+          </label>
+
+          @if (rutas.length > 1) {
+            <p class="mt-2 text-xs leading-5 text-base-content/55">
+              Selecciona la ruta que corresponde a tu ubicación.
+            </p>
+          }
+        } @else {
+          <p class="text-sm text-base-content/60">
+            Este sector todavía no tiene rutas disponibles para consulta.
+          </p>
+        }
+      </div>
+    </section>

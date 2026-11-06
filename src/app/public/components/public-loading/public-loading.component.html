@@ -1,1 +1,31 @@
-<p>public-loading works!</p>
+<section
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      class="rounded-3xl border border-base-300
+             bg-base-100 p-8 shadow-sm sm:p-12"
+    >
+      <div class="mx-auto max-w-sm text-center">
+        <span
+          class="loading loading-spinner loading-lg text-primary"
+          aria-hidden="true"
+        ></span>
+
+        <h2 class="mt-4 text-lg font-bold">
+          {{ titulo }}
+        </h2>
+
+        <p class="mt-2 text-sm leading-6 text-base-content/60">
+          {{ mensaje }}
+        </p>
+      </div>
+
+      <div
+        class="mx-auto mt-8 max-w-xl space-y-3"
+        aria-hidden="true"
+      >
+        <div class="skeleton h-4 w-2/3"></div>
+        <div class="skeleton h-4 w-full"></div>
+        <div class="skeleton h-32 w-full rounded-2xl"></div>
+      </div>
+    </section>

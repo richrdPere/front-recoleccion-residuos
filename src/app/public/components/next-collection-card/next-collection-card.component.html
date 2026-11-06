@@ -1,1 +1,57 @@
-<p>next-collection-card works!</p>
+<section
+      aria-label="Próximo servicio programado"
+      class="rounded-3xl border border-primary/20
+             bg-base-100 p-5 shadow-sm sm:p-6"
+    >
+      <div class="flex items-center gap-3">
+        <div
+          class="flex size-10 shrink-0 items-center justify-center
+                 rounded-xl bg-primary/10 text-primary"
+        >
+          <i
+            class="fa-regular fa-calendar-check"
+            aria-hidden="true"
+          ></i>
+        </div>
+
+        <h2 class="font-bold">
+          Próximo servicio programado
+        </h2>
+      </div>
+
+      @if (periodoLabel) {
+        <p class="mt-3 text-xs text-base-content/55">
+          {{ periodoLabel }}
+        </p>
+      }
+
+      @if (servicio; as item) {
+        <div class="mt-5">
+          <span
+            class="inline-flex rounded-full px-3 py-1
+                   text-xs font-semibold"
+            [class]="estadoClase"
+          >
+            {{ estadoLabel }}
+          </span>
+
+          <p class="mt-4 text-lg font-bold">
+            {{ item.fechaLabel }}
+          </p>
+
+          <p
+            class="mt-2 flex items-center gap-2
+                   text-sm text-base-content/70"
+          >
+            <i class="fa-regular fa-clock" aria-hidden="true"></i>
+            {{ item.horaInicio }} – {{ item.horaFin }}
+          </p>
+        </div>
+      } @else {
+        <div class="mt-5 rounded-2xl bg-base-200 p-4">
+          <p class="text-sm leading-6 text-base-content/65">
+            No hay servicios programados en el periodo consultado.
+          </p>
+        </div>
+      }
+    </section>

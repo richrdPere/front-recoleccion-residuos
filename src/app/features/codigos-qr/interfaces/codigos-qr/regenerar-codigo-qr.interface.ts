@@ -6,6 +6,7 @@ import { EstadoQr } from "./update-estado-codigo-qr.interface";
 // *********************************************************
 export interface RegenerarCodigoQrRequest {
   motivo: string;
+  confirmar_reemplazo: true;
 }
 
 // *********************************************************

@@ -1,1 +1,263 @@
-<p>consulta-qr-page works!</p>
+<div class="mx-auto max-w-6xl space-y-6 px-4 py-8">
+
+  <header>
+    <p class="text-sm font-semibold text-primary">
+      Municipalidad Provincial de Calca
+    </p>
+
+    <h1 class="mt-2 text-2xl font-bold sm:text-3xl">
+      Consulta tu servicio de recolección
+    </h1>
+
+    <p class="mt-2 text-base-content/65">
+      Consulta el sector, los horarios y el avance del vehículo
+      desde tu navegador.
+    </p>
+  </header>
+
+  <form class="flex flex-col gap-3 sm:flex-row" (submit)="$event.preventDefault(); abrir()">
+    <label class="sr-only" for="enlace-qr">
+      Enlace o token QR
+    </label>
+
+    <input id="enlace-qr" class="input input-bordered w-full" placeholder="Pega el enlace del QR" autocomplete="off"
+      [value]="entrada()" (input)="entrada.set($any($event.target).value)" />
+
+    <button type="submit" class="btn btn-primary">
+      Consultar
+    </button>
+  </form>
+
+  @if (error()) {
+  <div role="alert" class="alert alert-warning">
+    <span>{{ error() }}</span>
+  </div>
+  }
+
+  @if (cargando() && !datos()) {
+  <div role="status" class="flex items-center gap-3 py-8">
+    <span class="loading loading-spinner text-primary"></span>
+    <span>Consultando información del servicio...</span>
+  </div>
+  }
+
+  @if (!token()) {
+  <section class="rounded-2xl border border-base-300 bg-base-100 p-6">
+    <h2 class="font-bold">Escanea el QR de tu sector</h2>
+
+    <p class="mt-2 text-base-content/65">
+      También puedes pegar su enlace en el campo superior.
+      No necesitas iniciar sesión ni instalar una aplicación.
+    </p>
+  </section>
+  }
+
+  @if (datos(); as datos) {
+  <section class="rounded-2xl border border-base-300 bg-base-100 p-6">
+
+    <div class="flex flex-wrap items-center gap-2 text-sm">
+      <span class="badge badge-success badge-outline">
+        QR vigente
+      </span>
+
+      <span class="text-base-content/60">
+        La disponibilidad del vehículo se muestra por separado.
+      </span>
+    </div>
+
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <p class="text-sm text-base-content/60">
+          Sector
+        </p>
+
+        <h2 class="text-xl font-bold">
+          {{ datos.sector }}
+        </h2>
+
+        <p class="mt-2 font-medium">
+          {{ datos.titulo }}
+        </p>
+
+        @if (datos.descripcion) {
+        <p class="mt-1 text-sm text-base-content/65">
+          {{ datos.descripcion }}
+        </p>
+        }
+      </div>
+
+      <button type="button" class="btn btn-outline btn-sm" [disabled]="cargando()" (click)="actualizar()">
+        @if (cargando()) {
+        <span class="loading loading-spinner loading-xs"></span>
+        }
+
+        Actualizar
+      </button>
+    </div>
+
+    <div class="mt-4 flex flex-wrap gap-2">
+      <a routerLink="/cronogramas" [queryParams]="{ qr: token() }" class="btn btn-ghost btn-sm">
+        Cronogramas
+      </a>
+
+      <a routerLink="/rutas" [queryParams]="{ qr: token() }" class="btn btn-ghost btn-sm">
+        Estado y ubicación
+      </a>
+    </div>
+  </section>
+
+  @if (datos.rutas.length > 1) {
+  <div>
+    <label for="ruta-publica" class="mb-2 block font-medium">
+      Ruta del sector
+    </label>
+
+    <select id="ruta-publica" class="select select-bordered w-full" [value]="idRuta()"
+      (change)="seleccionarRuta($any($event.target).value)">
+      @for (item of datos.rutas; track item.ruta.id_ruta) {
+      <option [value]="item.ruta.id_ruta">
+        {{ item.ruta.codigo }} — {{ item.ruta.nombre }}
+      </option>
+      }
+    </select>
+  </div>
+  }
+
+  @if (ruta(); as item) {
+  <div class="grid gap-6 lg:grid-cols-2">
+
+    <section class="rounded-2xl border border-base-300 bg-base-100 p-6">
+      <p class="text-sm text-base-content/60">
+        {{ item.ruta.codigo }}
+      </p>
+
+      <h2 class="mt-1 text-xl font-bold">
+        {{ item.ruta.nombre }}
+      </h2>
+
+      <span class="badge badge-outline mt-4">
+        {{ item.estado.codigo }}
+      </span>
+
+      <p class="mt-3 text-sm leading-6">
+        {{ item.estado.mensaje }}
+      </p>
+
+      @if (item.estado.programacion; as programacion) {
+      <div class="mt-4 space-y-1 text-sm text-base-content/70">
+        <p>
+          Programación: {{ programacion.fecha_programada }}
+        </p>
+
+        <p>
+          {{ programacion.hora_inicio.slice(0, 5) }}
+          –
+          {{ programacion.hora_fin.slice(0, 5) }}
+        </p>
+
+        <p>Turno: {{ programacion.turno }}</p>
+      </div>
+      }
+    </section>
+
+    <section class="rounded-2xl border border-base-300 bg-base-100 p-6">
+      <h2 class="text-lg font-bold">
+        Próxima recolección según horario
+      </h2>
+
+      @if (item.proxima_recoleccion; as proxima) {
+      <p class="mt-3 font-semibold">
+        {{ proxima.dia_semana }} · {{ proxima.fecha }}
+      </p>
+
+      <p class="mt-2 text-sm">
+        {{ proxima.hora_inicio.slice(0, 5) }}
+        –
+        {{ proxima.hora_fin.slice(0, 5) }}
+      </p>
+      } @else {
+      <p class="mt-3 text-sm text-base-content/65">
+        No hay un horario próximo disponible.
+      </p>
+      }
+    </section>
+  </div>
+
+  <section class="rounded-2xl border border-base-300 bg-base-100 p-6">
+    <h2 class="text-lg font-bold">
+      Horarios de recolección
+    </h2>
+
+    <div class="mt-4 overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Día</th>
+            <th>Horario</th>
+            <th>Frecuencia</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (horario of item.horarios; track $index) {
+          <tr>
+            <td>{{ horario.dia_semana }}</td>
+
+            <td>
+              {{ horario.hora_inicio.slice(0, 5) }}
+              –
+              {{ horario.hora_fin.slice(0, 5) }}
+            </td>
+
+            <td>{{ horario.frecuencia }}</td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="3">
+              No hay horarios publicados para esta ruta.
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-bold">
+      Ubicación aproximada del vehículo
+    </h2>
+
+    <p class="text-sm text-base-content/65" aria-live="polite">
+      {{ mensajeUbicacion() }}
+    </p>
+
+    <app-public-route-map [ruta]="item.ruta" [ubicacion]="ubicacion()" />
+
+    @if (item.ubicacion.ultima_actualizacion) {
+    <p class="text-xs text-base-content/60">
+      Último GPS:
+      {{
+      item.ubicacion.ultima_actualizacion
+      | date:'dd/MM/yyyy HH:mm:ss':'-0500'
+      }}
+    </p>
+    }
+  </section>
+  } @else {
+  <div class="alert">
+    No hay rutas activas publicadas para este sector.
+  </div>
+  }
+
+  <p class="text-xs text-base-content/55">
+    Consulta actualizada:
+    {{
+    datos.actualizado
+    | date:'dd/MM/yyyy HH:mm:ss':'-0500'
+    }}.
+    La información se consulta cada 15 segundos mientras
+    esta página está visible.
+  </p>
+  }
+</div>

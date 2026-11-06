@@ -1,1 +1,184 @@
-<p>reportar-problema-page works!</p>
+<div class="mx-auto max-w-3xl px-4 py-7 sm:px-6">
+
+      <app-public-page-header
+        titulo="Reportar un problema"
+        descripcion="Describe lo ocurrido para preparar un reporte del servicio."
+        etiqueta="Atención ciudadana"
+        icono="fa-solid fa-comment-dots"
+      />
+
+      <p
+        role="note"
+        class="mb-6 rounded-2xl bg-warning/10 p-4 text-sm leading-6"
+      >
+        Formulario de demostración. Los datos se usan para una vista
+        previa en esta pantalla. El envío municipal está pendiente
+        de integración.
+      </p>
+
+      <form
+        [formGroup]="form"
+        (ngSubmit)="previsualizar()"
+        novalidate
+        class="space-y-5 rounded-3xl border border-base-300
+               bg-base-100 p-5 shadow-sm sm:p-7"
+      >
+        <div>
+          <label for="reporte-ruta" class="mb-2 block text-sm font-semibold">
+            Ruta
+          </label>
+
+          <select
+            id="reporte-ruta"
+            class="select select-bordered w-full"
+            formControlName="idRuta"
+            [attr.aria-invalid]="invalido('idRuta')"
+          >
+            <option value="">Selecciona una ruta</option>
+
+            @for (ruta of rutas; track ruta.idRuta) {
+              <option [value]="ruta.idRuta">
+                {{ ruta.nombre }}
+              </option>
+            }
+          </select>
+
+          @if (invalido('idRuta')) {
+            <p class="mt-1 text-xs text-error">
+              Selecciona una ruta.
+            </p>
+          }
+        </div>
+
+        <div>
+          <label for="reporte-tipo" class="mb-2 block text-sm font-semibold">
+            Tipo de problema
+          </label>
+
+          <select
+            id="reporte-tipo"
+            class="select select-bordered w-full"
+            formControlName="tipo"
+            [attr.aria-invalid]="invalido('tipo')"
+          >
+            <option value="">Selecciona una opción</option>
+
+            @for (tipo of tipos; track tipo) {
+              <option [value]="tipo">{{ tipo }}</option>
+            }
+          </select>
+
+          @if (invalido('tipo')) {
+            <p class="mt-1 text-xs text-error">
+              Selecciona el tipo de problema.
+            </p>
+          }
+        </div>
+
+        <div>
+          <label
+            for="reporte-referencia"
+            class="mb-2 block text-sm font-semibold"
+          >
+            Lugar o referencia
+          </label>
+
+          <input
+            id="reporte-referencia"
+            type="text"
+            maxlength="200"
+            class="input input-bordered w-full"
+            placeholder="Calle, cuadra o punto de referencia"
+            formControlName="referencia"
+            [attr.aria-invalid]="invalido('referencia')"
+          />
+
+          @if (invalido('referencia')) {
+            <p class="mt-1 text-xs text-error">
+              Ingresa una referencia de entre 5 y 200 caracteres.
+            </p>
+          }
+        </div>
+
+        <div>
+          <label
+            for="reporte-descripcion"
+            class="mb-2 block text-sm font-semibold"
+          >
+            ¿Qué ocurrió?
+          </label>
+
+          <textarea
+            id="reporte-descripcion"
+            rows="5"
+            maxlength="1500"
+            class="textarea textarea-bordered w-full"
+            placeholder="Describe el problema y cuándo ocurrió."
+            formControlName="descripcion"
+            [attr.aria-invalid]="invalido('descripcion')"
+          ></textarea>
+
+          <div class="mt-1 flex justify-between gap-3 text-xs">
+            <span class="text-base-content/55">
+              Evita incluir datos personales de otras personas.
+            </span>
+
+            <span class="shrink-0 text-base-content/50">
+              {{ form.controls.descripcion.value.length }}/1500
+            </span>
+          </div>
+
+          @if (invalido('descripcion')) {
+            <p class="mt-1 text-xs text-error">
+              Ingresa una descripción de entre 15 y 1500 caracteres.
+            </p>
+          }
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full sm:w-auto">
+          <i class="fa-regular fa-eye" aria-hidden="true"></i>
+          Revisar reporte
+        </button>
+      </form>
+
+      @if (vistaPrevia(); as reporte) {
+        <section
+          aria-label="Vista previa del reporte"
+          aria-live="polite"
+          class="mt-6 rounded-3xl border border-primary/20 bg-base-100 p-6"
+        >
+          <h2 class="text-lg font-bold">
+            Vista previa
+          </h2>
+
+          <dl class="mt-4 space-y-4 text-sm">
+            <div>
+              <dt class="font-semibold">Ruta</dt>
+              <dd class="mt-1">{{ reporte.ruta }}</dd>
+            </div>
+
+            <div>
+              <dt class="font-semibold">Tipo</dt>
+              <dd class="mt-1">{{ reporte.tipo }}</dd>
+            </div>
+
+            <div>
+              <dt class="font-semibold">Referencia</dt>
+              <dd class="mt-1 wrap-break-word">{{ reporte.referencia }}</dd>
+            </div>
+
+            <div>
+              <dt class="font-semibold">Descripción</dt>
+              <dd class="mt-1 whitespace-pre-wrap wrap-break-word">
+                {{ reporte.descripcion }}
+              </dd>
+            </div>
+          </dl>
+
+          <p class="mt-5 rounded-xl bg-warning/10 p-3 text-sm leading-6">
+            Vista previa preparada. El envío al municipio estará
+            disponible después de conectar este formulario.
+          </p>
+        </section>
+      }
+    </div>

@@ -198,7 +198,32 @@ export class CodigosQrService {
   // *********************************************************
   // 6. REGENERAR CÓDIGO QR
   // *********************************************************
-  regenerarCodigoQr(
+  // regenerarCodigoQr(
+  //   idCodigoQr: number,
+  //   request: RegenerarCodigoQrRequest,
+  // ): Observable<RegenerarCodigoQrResponse> {
+  //   const headers = this.getJsonHeaders().set(
+  //     'x-client-origin',
+  //     'WEB',
+  //   );
+
+  //   return this.http
+  //     .patch<RegenerarCodigoQrResponse>(
+  //       `${this.API_REGENERAR_CODIGO_QR}${idCodigoQr}/regenerar`,
+  //       request,
+  //       { headers },
+  //     )
+  //     .pipe(
+  //       catchError((error) =>
+  //         HttpServiceHelper.handleError(
+  //           error,
+  //           'No se pudo regenerar el código QR.',
+  //         ),
+  //       ),
+  //     );
+  // }
+
+  reemplazarCodigoQr(
     idCodigoQr: number,
     request: RegenerarCodigoQrRequest,
   ): Observable<RegenerarCodigoQrResponse> {
@@ -208,8 +233,8 @@ export class CodigosQrService {
     );
 
     return this.http
-      .post<RegenerarCodigoQrResponse>(
-        `${this.API_REGENERAR_CODIGO_QR}${idCodigoQr}/regenerar`,
+      .patch<RegenerarCodigoQrResponse>(
+        `${this.API_BASE}/${idCodigoQr}/reemplazar`,
         request,
         { headers },
       )
@@ -217,10 +242,21 @@ export class CodigosQrService {
         catchError((error) =>
           HttpServiceHelper.handleError(
             error,
-            'No se pudo regenerar el código QR.',
+            'No se pudo reemplazar el código QR.',
           ),
         ),
       );
+  }
+
+  // Alias para llamadas existentes.
+  regenerarCodigoQr(
+    idCodigoQr: number,
+    request: RegenerarCodigoQrRequest,
+  ): Observable<RegenerarCodigoQrResponse> {
+    return this.reemplazarCodigoQr(
+      idCodigoQr,
+      request,
+    );
   }
 
   // *********************************************************

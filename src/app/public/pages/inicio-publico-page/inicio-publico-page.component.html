@@ -1,1 +1,133 @@
-<p>inicio-publico-page works!</p>
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+
+      <section
+        class="overflow-hidden rounded-3xl border border-base-300
+               bg-base-100 p-6 shadow-sm sm:p-10"
+      >
+        <div class="grid items-center gap-8 lg:grid-cols-2">
+          <div>
+            <span
+              class="inline-flex rounded-full bg-success/10
+                     px-3 py-2 text-xs font-semibold text-success"
+            >
+              Municipalidad Provincial de Calca
+            </span>
+
+            <h1
+              class="mt-5 text-3xl font-bold leading-tight
+                     tracking-tight sm:text-4xl"
+            >
+              Consulta la recolección de residuos en tu sector
+            </h1>
+
+            <p class="mt-4 max-w-xl text-sm leading-7 text-base-content/65">
+              Encuentra horarios, revisa los servicios programados
+              y consulta el seguimiento del vehículo desde tu navegador.
+            </p>
+
+            <div class="mt-7 flex flex-wrap gap-3">
+              <a routerLink="/consulta" class="btn btn-primary">
+                <i class="fa-solid fa-qrcode" aria-hidden="true"></i>
+                Consultar mi sector
+              </a>
+
+              <a routerLink="/cronogramas" class="btn btn-outline">
+                Ver cronogramas
+              </a>
+            </div>
+          </div>
+
+          <div class="rounded-3xl bg-primary/5 p-6 sm:p-8">
+            <div
+              class="mx-auto flex size-24 items-center justify-center
+                     rounded-3xl bg-base-100 text-5xl text-primary shadow-sm"
+            >
+              <i class="fa-solid fa-qrcode" aria-hidden="true"></i>
+            </div>
+
+            <h2 class="mt-6 text-center text-xl font-bold">
+              Escanea y consulta
+            </h2>
+
+            <p
+              class="mx-auto mt-3 max-w-sm text-center
+                     text-sm leading-6 text-base-content/65"
+            >
+              Usa la cámara de tu teléfono para abrir el enlace
+              del código QR colocado en tu sector.
+            </p>
+
+            <p class="mt-5 text-center text-xs text-base-content/50">
+              Consulta pública desde el navegador
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-label="Servicios de consulta" class="mt-8">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          @for (item of accesos; track item.ruta) {
+            <a
+              [routerLink]="item.ruta"
+              class="group rounded-2xl border border-base-300
+                     bg-base-100 p-5 shadow-sm transition-colors
+                     hover:border-primary focus-visible:outline focus-visible:outline-primary"
+            >
+              <div
+                class="flex size-11 items-center justify-center
+                       rounded-xl bg-primary/10 text-lg text-primary"
+              >
+                <i [class]="item.icono" aria-hidden="true"></i>
+              </div>
+
+              <h2 class="mt-4 font-bold">
+                {{ item.titulo }}
+              </h2>
+
+              <p class="mt-2 text-sm leading-6 text-base-content/60">
+                {{ item.descripcion }}
+              </p>
+
+              <span
+                class="mt-4 inline-flex items-center gap-2
+                       text-sm font-semibold text-primary"
+              >
+                Consultar
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              </span>
+            </a>
+          }
+        </div>
+      </section>
+
+      <section
+        class="mt-8 flex flex-col gap-5 rounded-3xl
+               border border-base-300 bg-base-100 p-6 sm:flex-row
+               sm:items-center sm:justify-between"
+      >
+        <div>
+          <h2 class="text-lg font-bold">
+            Avisos del servicio
+          </h2>
+
+          <p class="mt-2 text-sm leading-6 text-base-content/65">
+            Revisa el formulario de registro voluntario y las
+            preferencias disponibles.
+          </p>
+        </div>
+
+        <a routerLink="/registro-alertas" class="btn btn-outline shrink-0">
+          <i class="fa-regular fa-bell" aria-hidden="true"></i>
+          Registro de avisos
+        </a>
+      </section>
+
+      <div
+        role="note"
+        class="mt-6 rounded-2xl bg-warning/10 p-4
+               text-sm leading-6 text-base-content/70"
+      >
+        Vista de demostración. Las consultas y formularios
+        están pendientes de conexión con los servicios municipales.
+      </div>
+    </div>

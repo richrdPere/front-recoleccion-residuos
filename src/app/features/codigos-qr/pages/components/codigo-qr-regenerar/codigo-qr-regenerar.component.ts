@@ -45,6 +45,10 @@ export class CodigoQrRegenerarComponent implements OnChanges, OnDestroy {
   ) {
     this.regenerarForm = this.fb.nonNullable.group({
       motivo: ['', Validators.required],
+      confirmar_reemplazo: [
+        false,
+        Validators.requiredTrue,
+      ],
     });
   }
 
@@ -54,6 +58,7 @@ export class CodigoQrRegenerarComponent implements OnChanges, OnDestroy {
 
       this.regenerarForm.reset({
         motivo: '',
+        confirmar_reemplazo: false,
       });
 
       this.errorMensaje = '';
@@ -94,13 +99,14 @@ export class CodigoQrRegenerarComponent implements OnChanges, OnDestroy {
 
     const request: RegenerarCodigoQrRequest = {
       motivo,
+      confirmar_reemplazo: true,
     };
 
     this.isSaving = true;
     this.cdr.markForCheck();
 
     this.consultaRegeneracion = this.codigosQrService
-      .regenerarCodigoQr(this.idCodigoQr, request)
+      .reemplazarCodigoQr(this.idCodigoQr, request)
       .pipe(
         finalize(() => {
           this.isSaving = false;
@@ -117,9 +123,9 @@ export class CodigoQrRegenerarComponent implements OnChanges, OnDestroy {
 
           void Swal.fire({
             icon: 'success',
-            title: 'Código QR regenerado',
+            title: 'Código QR reemplazado',
             text: response.message ||
-              'Se generó el nuevo código QR correctamente.',
+              'Se creó un nuevo enlace y se revocó el anterior. Descarga la nueva imagen para su distribución.',
             timer: 2000,
             showConfirmButton: false,
           });
@@ -187,7 +193,7 @@ export class CodigoQrRegenerarComponent implements OnChanges, OnDestroy {
     return mensajePorDefecto;
   }
 
-   setModalWidth(
+  setModalWidth(
     size: 'sm' | 'md' | 'lg' | 'xl' | 'full',
   ): void {
     const clases = {

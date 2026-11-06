@@ -1,1 +1,85 @@
-<p>cronograma-publicos-page works!</p>
+<div class="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
+
+      <app-public-page-header
+        titulo="Cronogramas de recolección"
+        descripcion="Consulta las referencias habituales y las programaciones de cada mes."
+        etiqueta="Horarios y programación"
+        icono="fa-regular fa-calendar"
+      />
+
+      <p
+        role="note"
+        class="mb-6 rounded-2xl bg-warning/10 p-4 text-sm leading-6"
+      >
+        Datos de demostración. Hay servicios de ejemplo en noviembre de 2026.
+      </p>
+
+      <app-sector-information-card
+        [nombre]="ruta().sector"
+        [rutas]="rutas"
+        [idRutaSeleccionada]="idRuta()"
+        (rutaSeleccionada)="idRuta.set($event)"
+      />
+
+      <div class="mt-6 grid items-start gap-6 lg:grid-cols-3">
+        <aside>
+          <app-schedule-card [horarios]="ruta().horarios" />
+        </aside>
+
+        <section
+          aria-label="Programación mensual"
+          class="rounded-3xl border border-base-300
+                 bg-base-100 p-5 shadow-sm sm:p-6 lg:col-span-2"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-lg font-bold">
+                Servicios programados
+              </h2>
+
+              <p class="mt-1 text-sm text-base-content/60">
+                {{ mesLabel() }}
+              </p>
+            </div>
+
+            <label class="block">
+              <span class="mb-1 block text-xs font-semibold">
+                Mes de consulta
+              </span>
+
+              <input
+                type="month"
+                class="input input-bordered w-full"
+                min="2000-01"
+                max="2100-12"
+                [value]="mes()"
+                (change)="seleccionarMes($event)"
+              />
+            </label>
+          </div>
+
+          <div class="mt-6 space-y-4">
+            @for (servicio of serviciosMes(); track servicio.id) {
+              <app-next-collection-card
+                [servicio]="servicio"
+                [periodoLabel]="mesLabel()"
+              />
+            } @empty {
+              <div
+                class="rounded-2xl bg-base-200 px-5 py-10 text-center"
+                role="status"
+              >
+                <i
+                  class="fa-regular fa-calendar text-3xl text-base-content/35"
+                  aria-hidden="true"
+                ></i>
+
+                <p class="mt-4 text-sm leading-6 text-base-content/65">
+                  No hay servicios programados en el periodo consultado.
+                </p>
+              </div>
+            }
+          </div>
+        </section>
+      </div>
+    </div>
