@@ -1,0 +1,87 @@
+<section class="rounded-2xl border border-base-300 bg-base-100 p-5 shadow-sm"
+  aria-labelledby="reportes-cantidades-titulo" [attr.aria-busy]="cargando">
+  <div class="mb-5 flex items-start gap-3">
+    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <i class="fa-solid fa-recycle" aria-hidden="true"></i>
+    </div>
+
+    <div>
+      <h2 id="reportes-cantidades-titulo" class="text-lg font-semibold">
+        Residuos recolectados
+      </h2>
+
+      <p class="mt-1 text-sm text-base-content/60">
+        Cantidades finales registradas por recorrido,
+        agrupadas por unidad de medida.
+      </p>
+    </div>
+  </div>
+
+  @if (cargando) {
+  <div class="flex items-center justify-center gap-3 py-8" role="status">
+    <span class="loading loading-spinner text-primary"></span>
+
+    <span class="text-sm text-base-content/60">
+      Cargando cantidades...
+    </span>
+  </div>
+  } @else if (cantidades.length > 0) {
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    @for (cantidad of cantidades; track $index) {
+    <article class="rounded-xl border border-base-300 bg-base-200/40 p-4">
+      <div class="flex items-center justify-between gap-3">
+        <h3 class="text-sm font-medium text-base-content/70">
+          {{ nombreUnidad(cantidad.unidad_medida) }}
+        </h3>
+
+        <i class="fa-solid text-primary" [class.fa-weight-hanging]="!esVolumen(cantidad.unidad_medida)"
+          [class.fa-droplet]="esVolumen(cantidad.unidad_medida)" aria-hidden="true"></i>
+      </div>
+
+      <div class="mt-3 flex flex-wrap items-baseline gap-2">
+        <!-- Se conserva el decimal recibido del backend. -->
+        <span class="text-2xl font-bold tabular-nums break-all">
+          {{ cantidad.cantidad_total }}
+        </span>
+
+        <span class="text-sm font-medium text-base-content/60">
+          {{ simboloUnidad(cantidad.unidad_medida) }}
+        </span>
+      </div>
+
+      <p class="mt-3 text-sm text-base-content/60">
+        {{ cantidad.recorridos | number:'1.0-0' }}
+
+        {{
+        cantidad.recorridos === 1
+        ? 'recorrido con resultado registrado'
+        : 'recorridos con resultado registrado'
+        }}
+      </p>
+    </article>
+    }
+  </div>
+
+  <p class="mt-4 flex items-start gap-2 text-sm text-base-content/60">
+    <i class="fa-solid fa-circle-info mt-0.5" aria-hidden="true"></i>
+
+    <span>
+      Las cantidades se presentan por unidad.
+      No se suman ni se convierten entre unidades diferentes.
+    </span>
+  </p>
+  } @else {
+  <div class="rounded-xl border border-dashed border-base-300 px-5 py-8 text-center">
+    <i class="fa-solid fa-weight-hanging mb-3 text-3xl text-base-content/30" aria-hidden="true"></i>
+
+    <p class="font-medium">
+      No hay cantidades registradas para los filtros aplicados.
+    </p>
+
+    <p class="mt-2 text-sm text-base-content/60">
+      Los recorridos sin resultado final registrado
+      no aportan una cantidad a estos totales.
+    </p>
+  </div>
+  }
+</section>

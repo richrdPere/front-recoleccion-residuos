@@ -1,0 +1,100 @@
+<section class="rounded-2xl border border-base-300 bg-base-100 p-5 shadow-sm" aria-label="Opciones de exportación"
+  [attr.aria-busy]="exportando">
+  <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div>
+      <h3 class="font-semibold">
+        Exportar reporte
+      </h3>
+
+      <p class="mt-1 text-sm text-base-content/60">
+        La exportación incluye todos los registros que cumplen
+        los filtros aplicados, según los límites del formato.
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <!-- COLUMNAS -->
+      @if (mostrarColumnas) {
+      <details class="relative">
+        <summary class="btn btn-outline" [class.btn-disabled]="bloqueado" [attr.aria-disabled]="bloqueado">
+          <i class="fa-solid fa-table-columns" aria-hidden="true"></i>
+
+          Columnas
+          ({{ cantidadSeleccionadas }}/{{ columnas.length }})
+        </summary>
+
+        <div
+          class="absolute left-0 z-20 mt-2 w-72 rounded-xl border border-base-300 bg-base-100 p-3 shadow-xl sm:left-auto sm:right-0">
+          <div class="mb-3 flex items-center justify-between gap-2 border-b border-base-300 pb-3">
+            <button type="button" class="btn btn-xs btn-ghost" [disabled]="bloqueado || columnas.length === 0"
+              (click)="seleccionarTodas(true)">
+              Todas
+            </button>
+
+            <button type="button" class="btn btn-xs btn-ghost" [disabled]="bloqueado || columnas.length === 0"
+              (click)="seleccionarTodas(false)">
+              Ninguna
+            </button>
+          </div>
+
+          <div class="max-h-72 space-y-1 overflow-y-auto">
+            @for (columna of columnas; track columna.key) {
+            <label class="flex cursor-pointer items-start gap-3 rounded-lg px-2 py-2 hover:bg-base-200">
+              <input type="checkbox" class="checkbox checkbox-primary checkbox-sm mt-0.5" [disabled]="bloqueado"
+                [ngModel]="columna.seleccionada" [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="cambiarColumna(columna.key, $event)" />
+
+              <span class="text-sm">
+                {{ tituloColumna(columna) }}
+              </span>
+            </label>
+            } @empty {
+            <p class="p-2 text-sm text-base-content/60">
+              No hay columnas disponibles.
+            </p>
+            }
+          </div>
+        </div>
+      </details>
+      }
+
+      <!-- FORMATO -->
+      <div class="form-control">
+        <label class="label" for="reporte-exportacion-formato">
+          <span class="label-text">Formato</span>
+        </label>
+
+        <select id="reporte-exportacion-formato" class="select select-bordered w-full sm:w-44" [disabled]="bloqueado"
+          [ngModel]="formato" [ngModelOptions]="{ standalone: true }" (ngModelChange)="cambiarFormato($event)">
+          @for (opcion of formatos; track opcion.value) {
+          <option [ngValue]="opcion.value">
+            {{ opcion.label }}
+          </option>
+          }
+        </select>
+      </div>
+
+      <!-- EXPORTAR -->
+      <button type="button" class="btn btn-primary" [disabled]="descargaDeshabilitada" (click)="solicitarExportacion()">
+        @if (exportando) {
+        <span class="loading loading-spinner loading-sm"></span>
+        Generando...
+        } @else {
+        <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
+
+        Exportar
+        }
+      </button>
+    </div>
+  </div>
+
+  @if (filtrosModificados) {
+  <p class="mt-4 text-sm text-warning" role="status">
+    Aplica los filtros pendientes antes de exportar.
+  </p>
+  } @else if (sinColumnas) {
+  <p class="mt-4 text-sm text-warning" role="status">
+    Selecciona al menos una columna para exportar.
+  </p>
+  }
+</section>

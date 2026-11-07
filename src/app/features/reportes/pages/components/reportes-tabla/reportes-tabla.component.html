@@ -1,0 +1,77 @@
+<section class="overflow-hidden rounded-xl border border-base-300 bg-base-100" [attr.aria-busy]="cargando">
+  @if (cargando) {
+  <div class="flex min-h-48 flex-col items-center justify-center gap-3 p-8" role="status">
+    <span class="loading loading-spinner loading-lg text-primary"></span>
+
+    <p class="text-sm text-base-content/60">
+      Cargando registros...
+    </p>
+  </div>
+  } @else if (columnas.length === 0) {
+  <div class="flex min-h-48 flex-col items-center justify-center gap-3 p-8 text-center">
+    <i class="fa-solid fa-table-columns text-3xl text-base-content/30" aria-hidden="true"></i>
+
+    <p class="font-medium">
+      No hay columnas seleccionadas
+    </p>
+
+    <p class="text-sm text-base-content/60">
+      Selecciona al menos una columna para visualizar los registros.
+    </p>
+  </div>
+  } @else {
+  <div class="overflow-x-auto" tabindex="0" role="region" [attr.aria-label]="titulo">
+    <table class="table table-zebra w-full">
+      <caption class="sr-only">
+        {{ titulo }}
+      </caption>
+
+      <thead class="bg-base-200">
+        <tr>
+          @for (columna of columnas; track columna.key) {
+          <th scope="col" class="whitespace-nowrap">
+            {{ tituloColumna(columna) }}
+          </th>
+          }
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (fila of items; track $index) {
+        <tr class="hover">
+          @for (columna of columnas; track columna.key) {
+          <td class="align-top">
+            @if (columna.key === 'estado') {
+            <span class="badge badge-outline whitespace-nowrap">
+              {{ formatearCelda(fila, columna.key) }}
+            </span>
+            } @else {
+            <span class="block max-w-md whitespace-pre-wrap wrap-break-word">
+              {{ formatearCelda(fila, columna.key) }}
+            </span>
+            }
+          </td>
+          }
+        </tr>
+        } @empty {
+        <tr>
+          <td [attr.colspan]="columnas.length" class="py-12 text-center">
+            <div class="flex flex-col items-center justify-center gap-3">
+              <i class="fa-solid fa-inbox text-3xl text-base-content/30" aria-hidden="true"></i>
+
+              <p class="font-medium">
+                No se encontraron registros
+              </p>
+
+              <p class="text-sm text-base-content/60">
+                Prueba con otro período o ajusta los filtros.
+              </p>
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</section>

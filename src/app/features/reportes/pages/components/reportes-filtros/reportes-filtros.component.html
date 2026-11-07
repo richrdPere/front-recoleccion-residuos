@@ -1,0 +1,303 @@
+<section class="rounded-2xl border border-base-300 bg-base-100 p-5 shadow-sm" aria-labelledby="reportes-filtros-titulo">
+  <div class="mb-5 flex items-center gap-3">
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <i class="fa-solid fa-filter" aria-hidden="true"></i>
+    </div>
+
+    <div>
+      <h2 id="reportes-filtros-titulo" class="text-lg font-semibold">
+        Filtros del reporte
+      </h2>
+
+      <p class="text-sm text-base-content/60">
+        Selecciona el reporte y el período de consulta.
+      </p>
+    </div>
+  </div>
+
+  @if (erroresCatalogos.length > 0) {
+  <div class="alert alert-warning mb-5" role="alert">
+    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+
+    <div>
+      @for (error of erroresCatalogos; track $index) {
+      <p>{{ error }}</p>
+      }
+    </div>
+
+    <button type="button" class="btn btn-sm btn-ghost" [disabled]="catalogosCargando || bloqueado"
+      (click)="recargarCatalogos.emit()">
+      Reintentar
+    </button>
+  </div>
+  }
+
+  <form #formulario="ngForm" (ngSubmit)="solicitarConsulta(formulario.valid === true)">
+    <fieldset [disabled]="bloqueado">
+      <legend class="sr-only">
+        Parámetros del reporte
+      </legend>
+
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+
+        <!-- TIPO DE REPORTE -->
+        <div class="form-control md:col-span-2">
+          <label class="label" for="reporte-tipo">
+            <span class="label-text">Tipo de reporte</span>
+          </label>
+
+          <select id="reporte-tipo" name="tipoReporte" class="select select-bordered w-full" required
+            [ngModel]="filtros.tipoReporte" (ngModelChange)="cambiarTipo($event)">
+            @for (reporte of reportes; track reporte.value) {
+            <option [ngValue]="reporte.value">
+              {{ reporte.label }}
+            </option>
+            }
+          </select>
+        </div>
+
+        <!-- FECHA INICIO -->
+        <div class="form-control">
+          <label class="label" for="reporte-fecha-inicio">
+            <span class="label-text">Fecha de inicio</span>
+          </label>
+
+          <input id="reporte-fecha-inicio" name="fechaInicio" type="date" required class="input input-bordered w-full"
+            [max]="filtros.fechaFin || null" [ngModel]="filtros.fechaInicio"
+            (ngModelChange)="actualizar('fechaInicio', $event)" />
+        </div>
+
+        <!-- FECHA FIN -->
+        <div class="form-control">
+          <label class="label" for="reporte-fecha-fin">
+            <span class="label-text">Fecha de fin</span>
+          </label>
+
+          <input id="reporte-fecha-fin" name="fechaFin" type="date" required class="input input-bordered w-full"
+            [min]="filtros.fechaInicio || null" [ngModel]="filtros.fechaFin"
+            (ngModelChange)="actualizar('fechaFin', $event)" />
+        </div>
+
+        @if (admiteZonaRutaTurno) {
+
+        <!-- ZONA -->
+        <div class="form-control">
+          <label class="label" for="reporte-zona">
+            <span class="label-text">Zona</span>
+          </label>
+
+          <select id="reporte-zona" name="zonaBusqueda" class="select select-bordered w-full"
+            [disabled]="catalogosCargando || bloqueado" [ngModel]="filtros.zonaBusqueda"
+            (ngModelChange)="cambiarZona($event)">
+            <option [ngValue]="null">Todas las zonas</option>
+
+            @for (zona of zonas; track zona.id) {
+            <option [ngValue]="zona.id">
+              {{ zona.nombre }}
+            </option>
+            }
+          </select>
+        </div>
+
+        <!-- RUTA -->
+        <div class="form-control">
+          <label class="label" for="reporte-ruta">
+            <span class="label-text">Ruta</span>
+          </label>
+
+          <select id="reporte-ruta" name="rutaBusqueda" class="select select-bordered w-full"
+            [disabled]="catalogosCargando || bloqueado" [ngModel]="filtros.rutaBusqueda"
+            (ngModelChange)="cambiarRuta($event)">
+            <option [ngValue]="null">Todas las rutas</option>
+
+            @for (ruta of rutasDisponibles; track ruta.id) {
+            <option [ngValue]="ruta.id">
+              {{ ruta.nombre }}
+            </option>
+            }
+          </select>
+        </div>
+
+        <!-- TURNO -->
+        <div class="form-control">
+          <label class="label" for="reporte-turno">
+            <span class="label-text">Turno</span>
+          </label>
+
+          <select id="reporte-turno" name="turnoBusqueda" class="select select-bordered w-full"
+            [ngModel]="filtros.turnoBusqueda" (ngModelChange)="actualizar('turnoBusqueda', $event)">
+            <option value="">Todos los turnos</option>
+
+            @for (turno of turnos; track turno) {
+            <option [value]="turno">
+              {{ etiqueta(turno) }}
+            </option>
+            }
+          </select>
+        </div>
+        }
+
+        <!-- VEHÍCULO -->
+        <div class="form-control">
+          <label class="label" for="reporte-vehiculo">
+            <span class="label-text">Vehículo</span>
+          </label>
+
+          <select id="reporte-vehiculo" name="vehiculoBusqueda" class="select select-bordered w-full"
+            [disabled]="catalogosCargando || bloqueado" [ngModel]="filtros.vehiculoBusqueda"
+            (ngModelChange)="actualizar('vehiculoBusqueda', $event)">
+            <option [ngValue]="null">Todos los vehículos</option>
+
+            @for (vehiculo of vehiculos; track vehiculo.id) {
+            <option [ngValue]="vehiculo.id">
+              {{ vehiculo.nombre }}
+            </option>
+            }
+          </select>
+        </div>
+
+        <!-- ESTADO -->
+        @if (estadosDisponibles.length > 0) {
+        <div class="form-control">
+          <label class="label" for="reporte-estado">
+            <span class="label-text">Estado</span>
+          </label>
+
+          <select id="reporte-estado" name="estadoBusqueda" class="select select-bordered w-full"
+            [ngModel]="filtros.estadoBusqueda" (ngModelChange)="actualizar('estadoBusqueda', $event)">
+            <option value="">Todos los estados</option>
+
+            @for (estado of estadosDisponibles; track estado) {
+            <option [value]="estado">
+              {{ etiqueta(estado) }}
+            </option>
+            }
+          </select>
+        </div>
+        }
+
+        <!-- UNIDAD DE MEDIDA -->
+        @if (filtros.tipoReporte === 'RECOLECCIONES') {
+        <div class="form-control">
+          <label class="label" for="reporte-unidad">
+            <span class="label-text">Unidad de medida</span>
+          </label>
+
+          <select id="reporte-unidad" name="unidadBusqueda" class="select select-bordered w-full"
+            [ngModel]="filtros.unidadBusqueda" (ngModelChange)="actualizar('unidadBusqueda', $event)">
+            <option value="">Todas las unidades</option>
+
+            @for (unidad of unidades; track unidad) {
+            <option [value]="unidad">
+              {{ etiqueta(unidad) }}
+            </option>
+            }
+          </select>
+        </div>
+        }
+
+        <!-- TIPO DE MANTENIMIENTO -->
+        @if (filtros.tipoReporte === 'MANTENIMIENTOS') {
+        <div class="form-control">
+          <label class="label" for="reporte-mantenimiento">
+            <span class="label-text">Tipo de mantenimiento</span>
+          </label>
+
+          <select id="reporte-mantenimiento" name="tipoMantenimientoBusqueda" class="select select-bordered w-full"
+            [ngModel]="filtros.tipoMantenimientoBusqueda"
+            (ngModelChange)="actualizar('tipoMantenimientoBusqueda', $event)">
+            <option value="">Todos los tipos</option>
+
+            @for (tipo of tiposMantenimiento; track tipo) {
+            <option [value]="tipo">
+              {{ etiqueta(tipo) }}
+            </option>
+            }
+          </select>
+        </div>
+        }
+
+        @if (esIncidencia) {
+
+        <!-- TIPO DE INCIDENCIA -->
+        <div class="form-control">
+          <label class="label" for="reporte-incidencia-tipo">
+            <span class="label-text">Tipo de incidencia</span>
+          </label>
+
+          <select id="reporte-incidencia-tipo" name="tipoIncidenciaBusqueda" class="select select-bordered w-full"
+            [ngModel]="filtros.tipoIncidenciaBusqueda" (ngModelChange)="actualizar('tipoIncidenciaBusqueda', $event)">
+            <option value="">Todos los tipos</option>
+
+            @for (tipo of tiposIncidencia; track tipo) {
+            <option [value]="tipo">
+              {{ etiqueta(tipo) }}
+            </option>
+            }
+          </select>
+        </div>
+
+        <!-- PRIORIDAD -->
+        <div class="form-control">
+          <label class="label" for="reporte-prioridad">
+            <span class="label-text">Prioridad</span>
+          </label>
+
+          <select id="reporte-prioridad" name="prioridadBusqueda" class="select select-bordered w-full"
+            [ngModel]="filtros.prioridadBusqueda" (ngModelChange)="actualizar('prioridadBusqueda', $event)">
+            <option value="">Todas las prioridades</option>
+
+            @for (prioridad of prioridades; track prioridad) {
+            <option [value]="prioridad">
+              {{ etiqueta(prioridad) }}
+            </option>
+            }
+          </select>
+        </div>
+
+        <!-- ORIGEN -->
+        <div class="form-control">
+          <label class="label" for="reporte-origen">
+            <span class="label-text">Origen</span>
+          </label>
+
+          <select id="reporte-origen" name="origenBusqueda" class="select select-bordered w-full"
+            [ngModel]="filtros.origenBusqueda" (ngModelChange)="actualizar('origenBusqueda', $event)">
+            <option value="">Todos los orígenes</option>
+
+            @for (origen of origenesDisponibles; track origen) {
+            <option [value]="origen">
+              {{ etiqueta(origen) }}
+            </option>
+            }
+          </select>
+        </div>
+        }
+      </div>
+
+      <div
+        class="mt-5 flex flex-col gap-3 border-t border-base-300 pt-5 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-sm text-base-content/60">
+          El período máximo de consulta es de 366 días.
+        </p>
+
+        <div class="flex flex-wrap gap-2">
+          <button type="button" class="btn btn-ghost" (click)="solicitarRestablecer()">
+            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+            Restablecer
+          </button>
+
+          <button type="submit" class="btn btn-primary" [disabled]="formulario.invalid || bloqueado">
+            @if (cargando) {
+            <span class="loading loading-spinner loading-sm"></span>
+            } @else {
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            }
+
+            Consultar
+          </button>
+        </div>
+      </div>
+    </fieldset>
+  </form>
+</section>

@@ -1,1 +1,153 @@
-<p>reportes-page works!</p>
+<div class="mx-auto w-full max-w-500 space-y-5">
+
+  <!-- ENCABEZADO -->
+  <header class="flex items-center gap-3">
+    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"
+      aria-hidden="true">
+      <i class="fa-solid fa-chart-column text-2xl"></i>
+    </div>
+
+    <div>
+      <h1 class="text-2xl font-bold text-base-content">
+        Reportes
+      </h1>
+
+      <p class="mt-1 text-sm text-base-content/60">
+        Consulta los resultados de la operación y exporta
+        la información del período.
+      </p>
+    </div>
+  </header>
+
+  <!-- FILTROS -->
+  <reportes-filtros [filtros]="filtros" [zonas]="zonas" [rutas]="rutas" [vehiculos]="vehiculos" [cargando]="isLoading"
+    [exportando]="exportando" [catalogosCargando]="catalogosCargando" [erroresCatalogos]="erroresCatalogos"
+    (filtrosChange)="actualizarFiltros($event)" (consultar)="aplicarFiltros()" (restablecer)="limpiarFiltros()"
+    (recargarCatalogos)="cargarCatalogos()" />
+
+  <!-- Los errores de catálogos ya se muestran en el hijo. -->
+
+  @if (filtrosModificados && vista) {
+  <div class="alert alert-info" role="status">
+    <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+
+    <span>
+      Hay filtros sin aplicar. Presiona Consultar para
+      actualizar el reporte.
+    </span>
+  </div>
+  }
+
+  @if (errorConsulta) {
+  <div class="alert alert-error" role="alert">
+    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+
+    <span>{{ errorConsulta }}</span>
+  </div>
+  }
+
+  <!-- CARGA -->
+  @if (isLoading) {
+  <div class="flex min-h-40 items-center justify-center gap-3 rounded-2xl border border-base-300 bg-base-100"
+    role="status">
+    <span class="loading loading-spinner text-primary"></span>
+    Consultando reporte...
+  </div>
+
+  } @else if (vista; as datos) {
+
+  <!-- RESUMEN -->
+  <reportes-resumen [tarjetas]="datos.tarjetas" />
+
+  <!-- CANTIDADES -->
+  @if (mostrarCantidades) {
+  <reportes-cantidades [cantidades]="datos.cantidades" />
+  }
+
+  <!-- CONTEXTO DE LOS RESULTADOS -->
+  <section class="rounded-2xl border border-base-300 bg-base-100 p-5" aria-label="Información del reporte consultado">
+    <h2 class="text-lg font-semibold">
+      {{ tituloReporte }}
+    </h2>
+
+    @if (solicitudAplicada; as consulta) {
+    <p class="mt-1 text-sm text-base-content/60">
+      Período consultado:
+      {{ consulta.filtros.fecha_inicio }}
+      al
+      {{ consulta.filtros.fecha_fin }}
+    </p>
+    }
+
+    <p class="mt-3 text-sm text-base-content/70">
+      {{ datos.nota }}
+    </p>
+
+    <p class="mt-1 text-xs text-base-content/60">
+      Generado:
+      {{ datos.generado | date:'dd/MM/yyyy HH:mm':'-0500' }}
+      (Perú).
+    </p>
+  </section>
+
+  <!-- EXPORTACIÓN -->
+  <reportes-exportacion [columnas]="columnas" [formato]="formatoExportacion"
+    [mostrarColumnas]="datos.pagination !== null" [exportando]="exportando" [puedeExportar]="puedeExportar"
+    [filtrosModificados]="filtrosModificados" (columnasChange)="actualizarColumnas($event)"
+    (formatoChange)="formatoExportacion = $event" (exportar)="exportar()" />
+
+  @if (datos.pagination) {
+
+  <!-- TABLA -->
+  <reportes-tabla [columnas]="columnasVisibles" [items]="datos.items" [titulo]="tituloReporte" />
+
+  <!-- PAGINACIÓN -->
+  <nav
+    class="flex flex-col gap-3 rounded-2xl border border-base-300 bg-base-100 p-4 sm:flex-row sm:items-center sm:justify-between"
+    aria-label="Paginación del reporte">
+    <div class="flex flex-wrap items-center gap-3 text-sm text-base-content/60">
+      <span>
+        {{ desde }}–{{ hasta }}
+        de {{ totalItems }} registros
+      </span>
+
+      <label for="reporte-limite" class="sr-only">
+        Registros por página
+      </label>
+
+      <select id="reporte-limite" class="select select-bordered select-sm w-24" [ngModel]="limit"
+        (ngModelChange)="cambiarLimite($event)" [disabled]="exportando || filtrosModificados">
+        @for (tamano of pageSizeOptions; track tamano) {
+        <option [ngValue]="tamano">
+          {{ tamano }}
+        </option>
+        }
+      </select>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button type="button" class="btn btn-sm btn-outline" [disabled]="page <= 1 || exportando || filtrosModificados"
+        (click)="cambiarPagina(page - 1)">
+        Anterior
+      </button>
+
+      <span class="px-2 text-sm">
+        Página {{ totalPages ? page : 0 }}
+        de {{ totalPages }}
+      </span>
+
+      <button type="button" class="btn btn-sm btn-outline"
+        [disabled]="page >= totalPages || exportando || filtrosModificados" (click)="cambiarPagina(page + 1)">
+        Siguiente
+      </button>
+    </div>
+  </nav>
+  }
+
+  } @else if (!errorConsulta) {
+  <div class="rounded-2xl border border-dashed border-base-300 bg-base-100 p-10 text-center text-base-content/60">
+    Selecciona el reporte y presiona Consultar.
+  </div>
+  }
+
+</div>
