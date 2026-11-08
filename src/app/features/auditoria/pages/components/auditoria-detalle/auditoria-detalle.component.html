@@ -1,0 +1,287 @@
+<dialog #modal class="modal" aria-label="Detalle del evento de auditoría" (cancel)="solicitarCierre($event)">
+  <div class="modal-box w-11/12 max-w-5xl p-0">
+
+    <!-- ENCABEZADO -->
+    <header class="flex items-center justify-between gap-4 border-b border-base-300 p-5">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+        </div>
+
+        <div>
+          <h2 class="text-lg font-bold">
+            Detalle del evento
+          </h2>
+
+          @if (datos && !cargando && !error) {
+          <p class="text-sm text-base-content/60">
+            Evento #{{ datos.evento.id_auditoria }}
+          </p>
+          }
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-circle btn-ghost btn-sm" aria-label="Cerrar detalle" autofocus
+        (click)="solicitarCierre()">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <!-- CONTENIDO -->
+    <div class="space-y-5 p-5" [attr.aria-busy]="cargando">
+
+      @if (cargando) {
+      <div class="flex min-h-48 items-center justify-center gap-3" role="status">
+        <span class="loading loading-spinner text-primary"></span>
+        Cargando evento...
+      </div>
+
+      } @else if (error) {
+      <div class="alert alert-error" role="alert">
+        <span>{{ error }}</span>
+
+        <button type="button" class="btn btn-sm btn-ghost" (click)="reintentar.emit()">
+          Reintentar
+        </button>
+      </div>
+
+      } @else if (datos; as detalle) {
+
+      @if (detalle.metadata.alcance === 'METADATOS_OPERATIVOS') {
+      <div class="alert alert-info" role="status">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+
+        <span>
+          Tu permiso permite consultar los metadatos operativos.
+          Los cambios y el contexto restringido no están disponibles.
+        </span>
+      </div>
+      }
+
+      <!-- INFORMACIÓN GENERAL -->
+      <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+        <div>
+          <dt class="text-sm text-base-content/60">Módulo</dt>
+          <dd class="mt-1 font-medium">
+            {{ etiqueta(detalle.evento.modulo) }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm text-base-content/60">Acción</dt>
+          <dd class="mt-1 font-medium">
+            {{ etiqueta(detalle.evento.accion) }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm text-base-content/60">Resultado</dt>
+          <dd class="mt-1">
+            <span class="badge" [ngClass]="claseResultado(detalle.evento.resultado)">
+              {{ etiqueta(detalle.evento.resultado) }}
+            </span>
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm text-base-content/60">Tipo de actor</dt>
+          <dd class="mt-1">
+            {{ etiqueta(detalle.evento.tipo_actor) }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm text-base-content/60">Usuario (ID)</dt>
+          <dd class="mt-1">
+            {{ detalle.evento.id_usuario ?? 'No aplica' }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm text-base-content/60">Origen</dt>
+          <dd class="mt-1">
+            {{ etiqueta(detalle.evento.origen) }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm text-base-content/60">Tipo de entidad</dt>
+          <dd class="mt-1">
+            {{ etiqueta(detalle.evento.tipo_entidad) }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm text-base-content/60">Entidad (ID)</dt>
+          <dd class="mt-1 break-all">
+            {{ detalle.evento.id_entidad ?? 'No aplica' }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm text-base-content/60">
+            Fecha del servidor · Perú
+          </dt>
+          <dd class="mt-1">
+            {{
+            detalle.evento.fecha_servidor
+            | date:'dd/MM/yyyy HH:mm:ss':'-0500'
+            }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm text-base-content/60">
+            Fecha del dispositivo · Perú
+          </dt>
+          <dd class="mt-1">
+            @if (detalle.evento.fecha_dispositivo) {
+            {{
+            detalle.evento.fecha_dispositivo
+            | date:'dd/MM/yyyy HH:mm:ss':'-0500'
+            }}
+            } @else {
+            Sin registrar
+            }
+          </dd>
+        </div>
+      </dl>
+
+      <!-- IDENTIFICADORES TÉCNICOS -->
+      <section class="rounded-xl bg-base-200/60 p-4">
+        <h3 class="mb-3 font-semibold">
+          Identificadores de seguimiento
+        </h3>
+
+        <dl class="space-y-3 text-sm">
+          <div>
+            <dt class="text-base-content/60">Clave del evento</dt>
+            <dd class="mt-1 break-all font-mono">
+              {{ detalle.evento.clave_evento }}
+            </dd>
+          </div>
+
+          <div>
+            <dt class="text-base-content/60">Solicitud</dt>
+            <dd class="mt-1 break-all font-mono">
+              {{ detalle.evento.request_id ?? 'Sin registrar' }}
+            </dd>
+          </div>
+
+          <div>
+            <dt class="text-base-content/60">Operación</dt>
+            <dd class="mt-1 break-all font-mono">
+              {{ detalle.evento.clave_operacion ?? 'Sin registrar' }}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- CAMPOS EXCLUSIVOS DEL ACCESO COMPLETO -->
+      @if (eventoCompleto; as completo) {
+
+      <section>
+        <h3 class="mb-3 font-semibold">
+          Contexto del evento
+        </h3>
+
+        <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <dt class="text-sm text-base-content/60">Roles del actor</dt>
+            <dd class="mt-1">
+              {{ completo.roles_actor.join(', ') || 'Sin roles' }}
+            </dd>
+          </div>
+
+          <div>
+            <dt class="text-sm text-base-content/60">Código de resultado</dt>
+            <dd class="mt-1 break-all">
+              {{ completo.codigo_resultado ?? 'Sin registrar' }}
+            </dd>
+          </div>
+
+          <div>
+            <dt class="text-sm text-base-content/60">Dirección IP</dt>
+            <dd class="mt-1 break-all">
+              {{ completo.ip ?? 'Sin registrar' }}
+            </dd>
+          </div>
+
+          <div>
+            <dt class="text-sm text-base-content/60">Navegador o cliente</dt>
+            <dd class="mt-1 break-all">
+              {{ completo.user_agent ?? 'Sin registrar' }}
+            </dd>
+          </div>
+
+          <div class="sm:col-span-2">
+            <dt class="text-sm text-base-content/60">Motivo</dt>
+            <dd class="mt-1 whitespace-pre-wrap wrap-break-word">
+              {{ completo.motivo ?? 'Sin registrar' }}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section>
+        <h3 class="mb-3 font-semibold">
+          Cambios registrados
+        </h3>
+
+        @if (cambios.length > 0) {
+        <div class="overflow-x-auto rounded-xl border border-base-300">
+          <table class="table table-zebra">
+            <caption class="sr-only">
+              Valores anteriores y posteriores del evento
+            </caption>
+
+            <thead class="bg-base-200">
+              <tr>
+                <th scope="col">Campo</th>
+                <th scope="col">Anterior</th>
+                <th scope="col">Posterior</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (cambio of cambios; track cambio.campo) {
+              <tr>
+                <td class="align-top font-medium">
+                  {{ etiqueta(cambio.campo) }}
+                </td>
+
+                <td class="max-w-sm whitespace-pre-wrap wrap-break-word align-top">
+                  {{ formatearValor(cambio.anterior) }}
+                </td>
+
+                <td class="max-w-sm whitespace-pre-wrap wrap-break-word align-top">
+                  {{ formatearValor(cambio.posterior) }}
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        } @else {
+        <p class="rounded-xl bg-base-200 p-4 text-sm text-base-content/60">
+          Este evento no contiene diferencias de campos registradas.
+        </p>
+        }
+      </section>
+      }
+
+      } @else {
+      <p class="py-8 text-center text-base-content/60">
+        No hay un evento seleccionado.
+      </p>
+      }
+    </div>
+
+    <footer class="flex justify-end border-t border-base-300 p-4">
+      <button type="button" class="btn" (click)="solicitarCierre()">
+        Cerrar
+      </button>
+    </footer>
+  </div>
+</dialog>

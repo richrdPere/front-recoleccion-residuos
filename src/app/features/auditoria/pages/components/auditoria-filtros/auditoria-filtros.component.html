@@ -1,0 +1,238 @@
+<section class="rounded-2xl border border-base-300 bg-base-100 p-5 shadow-sm" aria-label="Filtros de auditoría">
+  <div class="mb-5 flex items-center gap-3">
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <i class="fa-solid fa-filter" aria-hidden="true"></i>
+    </div>
+
+    <div>
+      <h2 class="text-lg font-semibold">
+        Filtros de auditoría
+      </h2>
+
+      <p class="text-sm text-base-content/60">
+        Consulta las acciones registradas durante un período.
+      </p>
+    </div>
+  </div>
+
+  <form #formulario="ngForm" (ngSubmit)="solicitarConsulta(formulario.valid === true)">
+    <fieldset [disabled]="cargando">
+      <legend class="sr-only">
+        Parámetros de consulta
+      </legend>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+        <!-- FECHA INICIO -->
+        <div class="form-control">
+          <label class="label" for="auditoria-fecha-inicio">
+            <span class="label-text">Fecha de inicio</span>
+          </label>
+
+          <input id="auditoria-fecha-inicio" name="fechaInicio" type="date" required class="input input-bordered w-full"
+            [max]="filtros.fecha_fin || null" [ngModel]="filtros.fecha_inicio"
+            (ngModelChange)="actualizar('fecha_inicio', $event)" />
+        </div>
+
+        <!-- FECHA FIN -->
+        <div class="form-control">
+          <label class="label" for="auditoria-fecha-fin">
+            <span class="label-text">Fecha de fin</span>
+          </label>
+
+          <input id="auditoria-fecha-fin" name="fechaFin" type="date" required class="input input-bordered w-full"
+            [min]="filtros.fecha_inicio || null" [ngModel]="filtros.fecha_fin"
+            (ngModelChange)="actualizar('fecha_fin', $event)" />
+        </div>
+
+        <!-- RESULTADO -->
+        <div class="form-control">
+          <label class="label" for="auditoria-resultado">
+            <span class="label-text">Resultado</span>
+          </label>
+
+          <select id="auditoria-resultado" name="resultado" class="select select-bordered w-full"
+            [ngModel]="filtros.resultado ?? null" (ngModelChange)="actualizar('resultado', $event)">
+            <option [ngValue]="null">Todos los resultados</option>
+
+            @for (resultado of resultados; track resultado) {
+            <option [ngValue]="resultado">
+              {{ etiqueta(resultado) }}
+            </option>
+            }
+          </select>
+        </div>
+
+        <!-- TIPO DE ACTOR -->
+        <div class="form-control">
+          <label class="label" for="auditoria-tipo-actor">
+            <span class="label-text">Tipo de actor</span>
+          </label>
+
+          <select id="auditoria-tipo-actor" name="tipoActor" class="select select-bordered w-full"
+            [ngModel]="filtros.tipo_actor ?? null" (ngModelChange)="actualizar('tipo_actor', $event)">
+            <option [ngValue]="null">Todos los actores</option>
+
+            @for (tipo of tiposActor; track tipo) {
+            <option [ngValue]="tipo">
+              {{ etiqueta(tipo) }}
+            </option>
+            }
+          </select>
+        </div>
+
+        <!-- MÓDULO -->
+        <div class="form-control">
+          <label class="label" for="auditoria-modulo">
+            <span class="label-text">Módulo</span>
+          </label>
+
+          <input id="auditoria-modulo" name="modulo" type="text" maxlength="60" pattern="[A-Z][A-Z0-9_]*"
+            placeholder="Ej.: RECORRIDOS" class="input input-bordered w-full" [ngModel]="filtros.modulo ?? ''"
+            (ngModelChange)="actualizarTexto('modulo', $event)" />
+        </div>
+
+        <!-- ACCIÓN -->
+        <div class="form-control">
+          <label class="label" for="auditoria-accion">
+            <span class="label-text">Acción</span>
+          </label>
+
+          <input id="auditoria-accion" name="accion" type="text" maxlength="80" pattern="[A-Z][A-Z0-9_]*"
+            placeholder="Ej.: FINALIZAR" class="input input-bordered w-full" [ngModel]="filtros.accion ?? ''"
+            (ngModelChange)="actualizarTexto('accion', $event)" />
+        </div>
+
+        <!-- USUARIO -->
+        <div class="form-control">
+          <label class="label" for="auditoria-usuario">
+            <span class="label-text">Usuario (ID)</span>
+          </label>
+
+          <input id="auditoria-usuario" name="idUsuario" type="text" inputmode="numeric" pattern="[1-9][0-9]*"
+            maxlength="19" placeholder="Ej.: 18" class="input input-bordered w-full"
+            [ngModel]="filtros.id_usuario ?? ''" (ngModelChange)="actualizarTexto('id_usuario', $event)" />
+        </div>
+
+        <!-- ORIGEN -->
+        <div class="form-control">
+          <label class="label" for="auditoria-origen">
+            <span class="label-text">Origen</span>
+          </label>
+
+          <select id="auditoria-origen" name="origen" class="select select-bordered w-full"
+            [ngModel]="filtros.origen ?? null" (ngModelChange)="actualizar('origen', $event)">
+            <option [ngValue]="null">Todos los orígenes</option>
+
+            @for (origen of origenes; track origen) {
+            <option [ngValue]="origen">
+              {{ etiqueta(origen) }}
+            </option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- FILTROS ADICIONALES -->
+      <details class="mt-5 rounded-xl border border-base-300">
+        <summary class="cursor-pointer px-4 py-3 font-medium">
+          Entidad e identificadores de seguimiento
+        </summary>
+
+        <div class="grid grid-cols-1 gap-4 border-t border-base-300 p-4 sm:grid-cols-2">
+          <div class="form-control">
+            <label class="label" for="auditoria-tipo-entidad">
+              <span class="label-text">Tipo de entidad</span>
+            </label>
+
+            <input id="auditoria-tipo-entidad" name="tipoEntidad" type="text" maxlength="80" pattern="[A-Z][A-Z0-9_]*"
+              placeholder="Ej.: RECORRIDO" class="input input-bordered w-full" [ngModel]="filtros.tipo_entidad ?? ''"
+              (ngModelChange)="actualizarTexto('tipo_entidad', $event)" />
+          </div>
+
+          <div class="form-control">
+            <label class="label" for="auditoria-id-entidad">
+              <span class="label-text">Entidad (ID)</span>
+            </label>
+
+            <input id="auditoria-id-entidad" name="idEntidad" type="text" maxlength="128" placeholder="Ej.: 12"
+              class="input input-bordered w-full" [ngModel]="filtros.id_entidad ?? ''"
+              (ngModelChange)="actualizarTexto('id_entidad', $event)" />
+          </div>
+
+          <div class="form-control">
+            <label class="label" for="auditoria-request">
+              <span class="label-text">Identificador de solicitud</span>
+            </label>
+
+            <input id="auditoria-request" name="requestId" type="text" maxlength="128"
+              class="input input-bordered w-full" [ngModel]="filtros.request_id ?? ''"
+              (ngModelChange)="actualizarTexto('request_id', $event)" />
+          </div>
+
+          <div class="form-control">
+            <label class="label" for="auditoria-operacion">
+              <span class="label-text">Clave de operación</span>
+            </label>
+
+            <input id="auditoria-operacion" name="claveOperacion" type="text" maxlength="128"
+              class="input input-bordered w-full" [ngModel]="filtros.clave_operacion ?? ''"
+              (ngModelChange)="actualizarTexto('clave_operacion', $event)" />
+          </div>
+        </div>
+      </details>
+
+      <div class="mt-5 flex flex-col gap-4 border-t border-base-300 pt-5 sm:flex-row sm:items-end sm:justify-between">
+        <div class="form-control">
+          <label class="label" for="auditoria-orden">
+            <span class="label-text">Orden</span>
+          </label>
+
+          <select id="auditoria-orden" name="orden" class="select select-bordered w-full"
+            [ngModel]="filtros.sort_order ?? 'DESC'" (ngModelChange)="actualizar('sort_order', $event)">
+            @for (orden of ordenes; track orden.value) {
+            <option [ngValue]="orden.value">
+              {{ orden.label }}
+            </option>
+            }
+          </select>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button type="button" class="btn btn-ghost" (click)="solicitarRestablecer()">
+            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+            Restablecer
+          </button>
+
+          <button type="submit" class="btn btn-primary" [disabled]="formulario.invalid || cargando">
+            @if (cargando) {
+            <span class="loading loading-spinner loading-sm"></span>
+            } @else {
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            }
+
+            Consultar
+          </button>
+        </div>
+      </div>
+
+      <p class="mt-3 text-xs text-base-content/60">
+        Fechas de Perú. Período máximo: 366 días.
+        Los filtros de texto se consultan por coincidencia exacta.
+      </p>
+
+      @if (formulario.submitted && formulario.invalid) {
+      <p class="mt-3 text-sm text-error" role="alert">
+        Revisa las fechas y los formatos de los filtros.
+        Los códigos utilizan letras mayúsculas, números y guiones bajos.
+      </p>
+      }
+
+      @if (errorValidacion) {
+      <p class="mt-3 text-sm text-error" role="alert">
+        {{ errorValidacion }}
+      </p>
+      }
+    </fieldset>
+  </form>
+</section>

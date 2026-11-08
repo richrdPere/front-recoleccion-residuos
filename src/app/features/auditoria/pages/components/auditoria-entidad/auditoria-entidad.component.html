@@ -1,0 +1,244 @@
+<dialog #modal class="modal" aria-label="Historial de auditoría de una entidad" (cancel)="solicitarCierre($event)">
+  <div class="modal-box w-11/12 max-w-6xl p-0">
+
+    <!-- ENCABEZADO -->
+    <header class="flex items-center justify-between gap-4 border-b border-base-300 p-5">
+      <div>
+        <h2 class="text-lg font-bold">
+          Historial de la entidad
+        </h2>
+
+        @if (entidad) {
+        <p class="mt-1 text-sm text-base-content/60">
+          {{ etiqueta(entidad.tipoEntidad) }}
+          · ID {{ entidad.idEntidad }}
+        </p>
+        }
+      </div>
+
+      <button type="button" class="btn btn-circle btn-ghost btn-sm" aria-label="Cerrar historial" autofocus
+        (click)="solicitarCierre()">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <div class="space-y-4 p-5">
+
+      <!-- FILTROS -->
+      <form #formulario="ngForm" (ngSubmit)="solicitarConsulta(formulario.valid === true)">
+        <fieldset class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5" [disabled]="cargando">
+          <legend class="sr-only">
+            Filtros del historial de auditoría
+          </legend>
+
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Desde</span>
+
+              <input name="fechaInicioEntidad" type="date" required class="input input-bordered w-full"
+                [max]="filtros.fecha_fin || null" [ngModel]="filtros.fecha_inicio"
+                (ngModelChange)="actualizarFiltro('fecha_inicio', $event)" />
+            </label>
+          </div>
+
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Hasta</span>
+
+              <input name="fechaFinEntidad" type="date" required class="input input-bordered w-full"
+                [min]="filtros.fecha_inicio || null" [ngModel]="filtros.fecha_fin"
+                (ngModelChange)="actualizarFiltro('fecha_fin', $event)" />
+            </label>
+          </div>
+
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Resultado</span>
+
+              <select name="resultadoEntidad" class="select select-bordered w-full"
+                [ngModel]="filtros.resultado ?? null" (ngModelChange)="actualizarFiltro('resultado', $event)">
+                <option [ngValue]="null">Todos</option>
+
+                @for (resultado of resultados; track resultado) {
+                <option [ngValue]="resultado">
+                  {{ etiqueta(resultado) }}
+                </option>
+                }
+              </select>
+            </label>
+          </div>
+
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Registros por página</span>
+
+              <select name="limiteEntidad" class="select select-bordered w-full" [ngModel]="filtros.limit ?? 20"
+                (ngModelChange)="actualizarFiltro('limit', $event)">
+                @for (limite of limites; track limite) {
+                <option [ngValue]="limite">
+                  {{ limite }}
+                </option>
+                }
+              </select>
+            </label>
+          </div>
+
+          <div class="flex items-end">
+            <button type="submit" class="btn btn-primary w-full"
+              [disabled]="formulario.invalid || cargando || !entidad">
+              <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+              Consultar
+            </button>
+          </div>
+        </fieldset>
+      </form>
+
+      @if (filtrosModificados && datos) {
+      <div class="alert alert-info text-sm" role="status">
+        Hay filtros pendientes. Presiona Consultar para aplicarlos.
+      </div>
+      }
+
+      @if (datos && !cargando && !error) {
+      <p class="text-xs text-base-content/60">
+        Período consultado:
+        {{ datos.filtros_aplicados.fecha_inicio }}
+        al {{ datos.filtros_aplicados.fecha_fin }}.
+        Horas mostradas en Perú.
+      </p>
+
+      @if (datos.metadata.alcance === 'METADATOS_OPERATIVOS') {
+      <p class="text-sm text-base-content/60">
+        Se muestran únicamente eventos operativos autorizados.
+      </p>
+      }
+      }
+
+      <!-- ESTADOS Y TABLA -->
+      <div [attr.aria-busy]="cargando">
+        @if (cargando) {
+        <div class="flex min-h-48 items-center justify-center gap-3" role="status">
+          <span class="loading loading-spinner text-primary"></span>
+          Consultando historial...
+        </div>
+
+        } @else if (error) {
+        <div class="alert alert-error" role="alert">
+          <span>{{ error }}</span>
+        </div>
+
+        } @else if (datos; as historial) {
+
+        <div class="overflow-x-auto rounded-xl border border-base-300">
+          <table class="table table-zebra">
+            <caption class="sr-only">
+              Eventos de auditoría de la entidad seleccionada
+            </caption>
+
+            <thead class="bg-base-200">
+              <tr>
+                <th scope="col">Evento</th>
+                <th scope="col">Fecha · Perú</th>
+                <th scope="col">Actor</th>
+                <th scope="col">Módulo</th>
+                <th scope="col">Acción</th>
+                <th scope="col">Resultado</th>
+                <th scope="col" class="text-right">Detalle</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (evento of historial.items; track evento.id_auditoria) {
+              <tr class="hover">
+                <td>{{ evento.id_auditoria }}</td>
+
+                <td class="whitespace-nowrap">
+                  {{
+                  evento.fecha_servidor
+                  | date:'dd/MM/yyyy HH:mm:ss':'-0500'
+                  }}
+                </td>
+
+                <td>
+                  <p>{{ etiqueta(evento.tipo_actor) }}</p>
+
+                  @if (evento.id_usuario !== null) {
+                  <p class="text-xs text-base-content/60">
+                    Usuario #{{ evento.id_usuario }}
+                  </p>
+                  }
+                </td>
+
+                <td>{{ etiqueta(evento.modulo) }}</td>
+                <td>{{ etiqueta(evento.accion) }}</td>
+
+                <td>
+                  <span class="badge whitespace-nowrap" [ngClass]="claseResultado(evento.resultado)">
+                    {{ etiqueta(evento.resultado) }}
+                  </span>
+                </td>
+
+                <td class="text-right">
+                  <button type="button" class="btn btn-sm btn-ghost"
+                    [attr.aria-label]="'Ver evento ' + evento.id_auditoria"
+                    (click)="verDetalle.emit(evento.id_auditoria)">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                    Ver
+                  </button>
+                </td>
+              </tr>
+              } @empty {
+              <tr>
+                <td colspan="7" class="py-10 text-center text-base-content/60">
+                  No hay eventos visibles para esta entidad
+                  y los filtros aplicados.
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- PAGINACIÓN -->
+        <nav class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+          aria-label="Paginación del historial de entidad">
+          <span class="text-sm text-base-content/60">
+            {{ desde }}–{{ hasta }}
+            de {{ historial.pagination.total }} eventos
+          </span>
+
+          <div class="flex items-center gap-2">
+            <button type="button" class="btn btn-sm btn-outline"
+              [disabled]="filtrosModificados || !historial.pagination.has_previous_page"
+              (click)="solicitarPagina(historial.pagination.page - 1)">
+              Anterior
+            </button>
+
+            <span class="text-sm">
+              {{ historial.pagination.total_pages ? historial.pagination.page : 0 }}
+              / {{ historial.pagination.total_pages }}
+            </span>
+
+            <button type="button" class="btn btn-sm btn-outline"
+              [disabled]="filtrosModificados || !historial.pagination.has_next_page"
+              (click)="solicitarPagina(historial.pagination.page + 1)">
+              Siguiente
+            </button>
+          </div>
+        </nav>
+
+        } @else {
+        <p class="py-8 text-center text-base-content/60">
+          Selecciona el período y consulta el historial.
+        </p>
+        }
+      </div>
+    </div>
+
+    <footer class="flex justify-end border-t border-base-300 p-4">
+      <button type="button" class="btn" (click)="solicitarCierre()">
+        Cerrar
+      </button>
+    </footer>
+  </div>
+</dialog>

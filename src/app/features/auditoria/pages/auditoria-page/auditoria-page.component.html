@@ -1,1 +1,172 @@
-<p>auditoria-page works!</p>
+<div class="mx-auto w-full max-w-500 space-y-5">
+
+  <!-- ENCABEZADO -->
+  <header class="flex items-center gap-3">
+    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"
+      aria-hidden="true">
+      <i class="fa-solid fa-shield-halved text-2xl"></i>
+    </div>
+
+    <div>
+      <h1 class="text-2xl font-bold text-base-content">
+        Auditoría
+      </h1>
+
+      <p class="mt-1 text-sm text-base-content/60">
+        Consulta las acciones registradas y los cambios
+        realizados en el sistema.
+      </p>
+    </div>
+  </header>
+
+  <!-- FILTROS -->
+  <auditoria-filtros [filtros]="filtros" [cargando]="isLoading" (filtrosChange)="actualizarFiltros($event)"
+    (consultar)="consultarAuditoria($event)" (restablecer)="limpiarFiltros()" />
+
+  <!-- FILTROS PENDIENTES -->
+  @if (filtrosModificados && datos) {
+  <div class="alert alert-info" role="status">
+    <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+
+    <span>
+      Hay filtros sin aplicar. Presiona Consultar para
+      actualizar los resultados.
+    </span>
+  </div>
+  }
+
+  <!-- ERROR -->
+  @if (errorConsulta) {
+  <div class="alert alert-error" role="alert">
+    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+
+    <span>{{ errorConsulta }}</span>
+
+    <button type="button" class="btn btn-sm btn-ghost" [disabled]="isLoading" (click)="reintentarListado()">
+      Reintentar
+    </button>
+  </div>
+  }
+
+  <!-- RESULTADOS -->
+  @if (isLoading) {
+
+  <auditoria-tabla [items]="[]" [cargando]="true" />
+
+  } @else if (datos; as resultado) {
+
+  <!-- INFORMACIÓN DE LA CONSULTA -->
+  <section class="rounded-2xl border border-base-300 bg-base-100 p-5 shadow-sm" aria-label="Información de la consulta">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h2 class="text-lg font-semibold">
+          Eventos registrados
+        </h2>
+
+        <p class="mt-1 text-sm text-base-content/60">
+          Período consultado:
+          {{ resultado.filtros_aplicados.fecha_inicio }}
+          al {{ resultado.filtros_aplicados.fecha_fin }}.
+        </p>
+
+        <p class="mt-1 text-xs text-base-content/60">
+          Generado:
+          {{
+          resultado.metadata.generado_en
+          | date:'dd/MM/yyyy HH:mm:ss':'-0500'
+          }}
+          · Perú.
+        </p>
+      </div>
+
+      <div class="rounded-xl bg-primary/10 px-4 py-3">
+        <p class="text-xs text-base-content/60">
+          Total filtrado
+        </p>
+
+        <p class="text-2xl font-bold text-primary">
+          {{ totalItems | number:'1.0-0' }}
+        </p>
+      </div>
+    </div>
+
+    @if (resultado.metadata.alcance === 'METADATOS_OPERATIVOS') {
+    <p class="mt-4 text-sm text-base-content/60">
+      Tu acceso permite consultar metadatos de los módulos
+      operativos autorizados.
+    </p>
+    }
+  </section>
+
+  <!-- TABLA -->
+  <auditoria-tabla [items]="resultado.items" [deshabilitado]="detalleAbierto || entidadAbierta"
+    (verDetalle)="abrirDetalle($event)" (verEntidad)="abrirEntidad($event)" />
+
+  <!-- PAGINACIÓN -->
+  <nav
+    class="flex flex-col gap-4 rounded-2xl border border-base-300 bg-base-100 p-4 sm:flex-row sm:items-center sm:justify-between"
+    aria-label="Paginación de auditoría">
+    <div class="flex flex-wrap items-center gap-3 text-sm text-base-content/60">
+      <span>
+        {{ desde }}–{{ hasta }}
+        de {{ totalItems }} eventos
+      </span>
+
+      <label for="auditoria-limite" class="sr-only">
+        Eventos por página
+      </label>
+
+      <select id="auditoria-limite" class="select select-bordered select-sm w-24" [ngModel]="limiteActual"
+        (ngModelChange)="cambiarLimite($event)" [disabled]="filtrosModificados || detalleAbierto || entidadAbierta">
+        @for (limite of pageSizeOptions; track limite) {
+        <option [ngValue]="limite">
+          {{ limite }}
+        </option>
+        }
+      </select>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button type="button" class="btn btn-sm btn-outline" [disabled]="
+            !resultado.pagination.has_previous_page ||
+            filtrosModificados ||
+            detalleAbierto ||
+            entidadAbierta
+          " (click)="cambiarPagina(paginaActual - 1)">
+        Anterior
+      </button>
+
+      <span class="px-2 text-sm">
+        Página {{ totalPages ? paginaActual : 0 }}
+        de {{ totalPages }}
+      </span>
+
+      <button type="button" class="btn btn-sm btn-outline" [disabled]="
+            !resultado.pagination.has_next_page ||
+            filtrosModificados ||
+            detalleAbierto ||
+            entidadAbierta
+          " (click)="cambiarPagina(paginaActual + 1)">
+        Siguiente
+      </button>
+    </div>
+  </nav>
+
+  } @else if (!errorConsulta) {
+  <div class="rounded-2xl border border-dashed border-base-300 bg-base-100 p-10 text-center text-base-content/60">
+    Selecciona un período y presiona Consultar.
+  </div>
+  }
+
+</div>
+
+<!-- HISTORIAL DE ENTIDAD -->
+<auditoria-entidad [abierto]="entidadAbierta" [entidad]="entidadSeleccionada" [filtros]="filtrosEntidad"
+  [datos]="historialEntidad" [cargando]="cargandoEntidad" [error]="errorEntidad"
+  [filtrosModificados]="filtrosEntidadModificados" (cerrar)="cerrarEntidad()"
+  (filtrosChange)="actualizarFiltrosEntidad($event)" (consultar)="consultarEntidad($event)"
+  (cambiarPagina)="cambiarPaginaEntidad($event)" (verDetalle)="abrirDetalle($event)" />
+
+<!-- DETALLE DEL EVENTO -->
+<auditoria-detalle [abierto]="detalleAbierto" [datos]="detalle" [cargando]="cargandoDetalle" [error]="errorDetalle"
+  (cerrar)="cerrarDetalle()" (reintentar)="reintentarDetalle()" />

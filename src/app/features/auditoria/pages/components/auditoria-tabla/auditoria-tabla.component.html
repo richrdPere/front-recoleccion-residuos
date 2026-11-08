@@ -1,0 +1,134 @@
+<section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm" [attr.aria-busy]="cargando">
+  @if (cargando) {
+  <div class="flex min-h-48 items-center justify-center gap-3 p-8" role="status">
+    <span class="loading loading-spinner text-primary"></span>
+    Cargando eventos...
+  </div>
+  } @else {
+  <div class="overflow-x-auto" tabindex="0" role="region" [attr.aria-label]="titulo">
+    <table class="table table-zebra w-full">
+      <caption class="sr-only">
+        {{ titulo }}
+      </caption>
+
+      <thead class="bg-base-200">
+        <tr>
+          <th scope="col">Evento</th>
+          <th scope="col">Fecha · Perú</th>
+          <th scope="col">Actor</th>
+          <th scope="col">Módulo</th>
+          <th scope="col">Acción</th>
+
+          @if (mostrarEntidad) {
+          <th scope="col">Entidad</th>
+          }
+
+          <th scope="col">Resultado</th>
+          <th scope="col">Origen</th>
+          <th scope="col" class="text-right">Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (evento of items; track evento.id_auditoria) {
+        <tr class="hover">
+
+          <td class="align-top font-medium">
+            #{{ evento.id_auditoria }}
+          </td>
+
+          <td class="whitespace-nowrap align-top">
+            {{
+            evento.fecha_servidor
+            | date:'dd/MM/yyyy HH:mm:ss':'-0500'
+            }}
+          </td>
+
+          <td class="align-top">
+            <p>{{ etiqueta(evento.tipo_actor) }}</p>
+
+            @if (evento.id_usuario !== null) {
+            <p class="mt-1 text-xs text-base-content/60">
+              Usuario #{{ evento.id_usuario }}
+            </p>
+            }
+          </td>
+
+          <td class="align-top">
+            {{ etiqueta(evento.modulo) }}
+          </td>
+
+          <td class="min-w-36 max-w-64 whitespace-normal align-top">
+            {{ etiqueta(evento.accion) }}
+          </td>
+
+          @if (mostrarEntidad) {
+          <td class="max-w-64 align-top">
+            @if (evento.tipo_entidad) {
+            <p>{{ etiqueta(evento.tipo_entidad) }}</p>
+
+            @if (evento.id_entidad !== null) {
+            <p class="mt-1 break-all text-xs text-base-content/60">
+              ID {{ evento.id_entidad }}
+            </p>
+            }
+            } @else {
+            <span class="text-base-content/50">
+              No aplica
+            </span>
+            }
+          </td>
+          }
+
+          <td class="align-top">
+            <span class="badge whitespace-nowrap" [ngClass]="claseResultado(evento.resultado)">
+              {{ etiqueta(evento.resultado) }}
+            </span>
+          </td>
+
+          <td class="align-top">
+            {{ etiqueta(evento.origen) }}
+          </td>
+
+          <td class="align-top">
+            <div class="flex justify-end gap-2">
+              <button type="button" class="btn btn-ghost btn-sm" [disabled]="deshabilitado"
+                [attr.aria-label]="'Ver detalle del evento ' + evento.id_auditoria" (click)="abrirDetalle(evento)">
+                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                Detalle
+              </button>
+
+              @if (mostrarEntidad && tieneEntidad(evento)) {
+              <button type="button" class="btn btn-outline btn-sm" [disabled]="deshabilitado"
+                [attr.aria-label]="'Ver historial de ' + evento.tipo_entidad + ' ' + evento.id_entidad"
+                (click)="abrirEntidad(evento)">
+                <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                Historial
+              </button>
+              }
+            </div>
+          </td>
+
+        </tr>
+        } @empty {
+        <tr>
+          <td [attr.colspan]="mostrarEntidad ? 9 : 8" class="py-12 text-center">
+            <div class="flex flex-col items-center gap-3">
+              <i class="fa-solid fa-inbox text-3xl text-base-content/30" aria-hidden="true"></i>
+
+              <p class="font-medium">
+                No se encontraron eventos
+              </p>
+
+              <p class="text-sm text-base-content/60">
+                No hay eventos visibles para los filtros aplicados.
+              </p>
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</section>
