@@ -43,6 +43,33 @@
         </button>
       </div>
       } @else if (recoleccion; as datos) {
+
+      <section class="mb-4 rounded-xl border border-base-300 p-4">
+        <h3 class="font-semibold">Resultado del punto</h3>
+
+        <span class="badge badge-outline mt-2" [class.badge-success]="datos.resultado_atencion === 'ATENDIDO'"
+          [class.badge-error]="datos.resultado_atencion === 'OMITIDO'">
+          {{ datos.resultado_atencion }}
+        </span>
+
+        @if (datos.resultado_atencion === 'OMITIDO') {
+        <p class="mt-3 font-medium">
+          {{ motivoOmision(datos.motivo_omision) }}
+        </p>
+
+        <p class="mt-1 whitespace-pre-wrap">
+          {{ datos.observacion }}
+        </p>
+        }
+
+        @if (datos.estado_recoleccion === 'ANULADA') {
+        <p class="mt-3 text-error">
+          Este registro fue anulado y no cuenta en el progreso.
+        </p>
+        }
+      </section>
+
+
       <!-- INFORMACIÓN GENERAL -->
       <section class="rounded-xl border border-base-300 p-4">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">

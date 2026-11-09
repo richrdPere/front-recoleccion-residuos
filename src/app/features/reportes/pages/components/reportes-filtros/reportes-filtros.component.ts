@@ -156,6 +156,7 @@ export class ReportesFiltrosComponent {
     ],
     ATENCION_PUNTOS: [
       'ATENDIDO',
+      'OMITIDO',
       'PENDIENTE',
     ],
     INCIDENCIAS: [

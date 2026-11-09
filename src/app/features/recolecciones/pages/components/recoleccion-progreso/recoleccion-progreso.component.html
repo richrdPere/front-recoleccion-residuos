@@ -1,202 +1,163 @@
-<section class="space-y-5 rounded-xl border border-base-300
-         bg-base-100 p-5" aria-labelledby="recoleccion-progreso-titulo" [attr.aria-busy]="isLoading">
-  <!-- ENCABEZADO -->
-  <header class="flex flex-wrap items-start justify-between gap-3">
-    <div>
-      <h2 id="recoleccion-progreso-titulo" class="text-lg font-bold">
-        <i class="fa-solid fa-route mr-2 text-primary" aria-hidden="true"></i>
-        Progreso del recorrido
-      </h2>
+<section
+  class="space-y-4 rounded-xl border border-base-300 bg-base-100 p-5"
+  [attr.aria-busy]="isLoading"
+  aria-label="Progreso del recorrido"
+>
+  <header class="flex items-center justify-between gap-3">
+    <h2 class="text-lg font-bold">
+      Progreso del recorrido
+    </h2>
 
-      <p class="mt-1 text-sm text-base-content/60">
-        Atención de puntos y avance de la ruta.
-      </p>
-    </div>
-
-    <button type="button" class="btn btn-sm btn-outline" [disabled]="idRecorrido === null || isLoading"
-      (click)="getRecorridoProgreso()">
-      <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+    <button
+      type="button"
+      class="btn btn-sm btn-outline"
+      [disabled]="idRecorrido === null || isLoading"
+      (click)="getRecorridoProgreso()"
+    >
       Actualizar
     </button>
   </header>
 
   @if (isLoading) {
-  <!-- LOADING -->
-  <div role="status">
-    <p class="sr-only">Cargando progreso del recorrido...</p>
-
-    <div class="skeleton mb-4 h-5 w-1/3"></div>
-    <div class="skeleton mb-5 h-8 w-full"></div>
-
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-      @for (item of [1, 2, 3]; track item) {
-      <div class="skeleton h-24 w-full"></div>
-      }
-    </div>
-  </div>
+    <p role="status">Consultando progreso...</p>
   } @else if (errorCarga) {
-  <!-- ERROR -->
-  <div class="alert alert-error" role="alert">
-    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
-
-    <span>{{ errorCarga }}</span>
-
-    <button type="button" class="btn btn-sm" (click)="getRecorridoProgreso()">
-      Reintentar
-    </button>
-  </div>
+    <div class="alert alert-error" role="alert">
+      {{ errorCarga }}
+    </div>
   } @else if (progreso; as datos) {
-  <!-- ESTADO DE LA RUTA -->
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <span class="text-sm text-base-content/60">
-      Recorrido #{{ datos.id_recorrido }}
-    </span>
-
-    <span class="badge badge-outline h-auto py-2" [ngClass]="
-          datos.ruta_completada
-            ? 'badge-success'
-            : 'badge-warning'
-        ">
-      {{
-      datos.ruta_completada
-      ? 'Ruta completada'
-      : 'Ruta pendiente de completar'
-      }}
-    </span>
-  </div>
-
-  <!-- AVANCE GENERAL -->
-  <div class="rounded-xl border border-base-300 p-4">
-    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-      <h3 class="text-sm font-semibold">Avance general</h3>
-
-      <span class="text-xl font-bold text-primary">
-        {{ datos.porcentaje_progreso | number:'1.0-2' }}%
-      </span>
-    </div>
-
-    <progress class="progress progress-primary w-full" [value]="porcentajeVisual" max="100"
-      aria-label="Porcentaje de progreso del recorrido"></progress>
-
-    <p class="mt-2 text-xs text-base-content/60">
-      {{ datos.puntos_atendidos | number:'1.0-0' }}
-      de
-      {{ datos.total_puntos | number:'1.0-0' }}
-      puntos atendidos
-    </p>
-  </div>
-
-  <!-- PUNTOS GENERALES -->
-  <dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-    <div class="rounded-xl border border-base-300 bg-base-200/40 p-4">
-      <dt class="text-sm text-base-content/60">
-        Total de puntos
-      </dt>
-
-      <dd class="mt-2 text-2xl font-bold">
-        {{ datos.total_puntos | number:'1.0-0' }}
-      </dd>
-    </div>
-
-    <div class="rounded-xl border border-base-300 bg-base-200/40 p-4">
-      <dt class="text-sm text-base-content/60">
-        Atendidos
-      </dt>
-
-      <dd class="mt-2 text-2xl font-bold text-success">
-        {{ datos.puntos_atendidos | number:'1.0-0' }}
-      </dd>
-    </div>
-
-    <div class="rounded-xl border border-base-300 bg-base-200/40 p-4">
-      <dt class="text-sm text-base-content/60">
-        Pendientes
-      </dt>
-
-      <dd class="mt-2 text-2xl font-bold text-warning">
-        {{ datos.puntos_pendientes | number:'1.0-0' }}
-      </dd>
-    </div>
-  </dl>
-
-  <!-- PUNTOS OBLIGATORIOS -->
-  <div class="border-t border-base-300 pt-4">
-    <h3 class="mb-3 text-sm font-semibold">
-      <i class="fa-solid fa-list-check mr-2" aria-hidden="true"></i>
-      Puntos obligatorios
-    </h3>
-
-    <dl class="grid grid-cols-3 gap-3">
-      <div>
-        <dt class="text-xs text-base-content/60">Total</dt>
-
-        <dd class="mt-1 text-xl font-semibold">
-          {{ datos.puntos_obligatorios | number:'1.0-0' }}
+    <dl class="grid grid-cols-2 gap-3">
+      <div class="rounded-xl bg-base-200 p-3">
+        <dt>Total de puntos</dt>
+        <dd class="text-2xl font-bold">
+          {{ datos.total_puntos }}
         </dd>
       </div>
 
-      <div>
-        <dt class="text-xs text-base-content/60">Atendidos</dt>
-
-        <dd class="mt-1 text-xl font-semibold text-success">
-          {{ datos.obligatorios_atendidos | number:'1.0-0' }}
+      <div class="rounded-xl bg-success/10 p-3">
+        <dt>Atendidos</dt>
+        <dd class="text-2xl font-bold text-success">
+          {{ datos.puntos_atendidos }}
         </dd>
       </div>
 
-      <div>
-        <dt class="text-xs text-base-content/60">Pendientes</dt>
+      <div class="rounded-xl bg-error/10 p-3">
+        <dt>Omitidos</dt>
+        <dd class="text-2xl font-bold text-error">
+          {{ datos.puntos_omitidos }}
+        </dd>
+      </div>
 
-        <dd class="mt-1 text-xl font-semibold text-warning">
-          {{ datos.obligatorios_pendientes | number:'1.0-0' }}
+      <div class="rounded-xl bg-warning/10 p-3">
+        <dt>Pendientes</dt>
+        <dd class="text-2xl font-bold text-warning">
+          {{ datos.puntos_pendientes }}
         </dd>
       </div>
     </dl>
-  </div>
 
-  <!-- CANTIDADES POR UNIDAD -->
-  <div class="border-t border-base-300 pt-4">
-    <h3 class="mb-3 text-sm font-semibold">
-      <i class="fa-solid fa-scale-balanced mr-2" aria-hidden="true"></i>
-      Cantidades recolectadas por unidad
-    </h3>
+    <div>
+      <p class="font-medium">
+        Atención efectiva:
+        {{ datos.porcentaje_atencion | number:'1.0-2' }} %
+      </p>
 
-    <div class="overflow-x-auto rounded-xl border border-base-300">
-      <table class="table table-sm">
-        <caption class="sr-only">
-          Cantidades recolectadas durante el recorrido
-        </caption>
-
-        <thead class="bg-base-200">
-          <tr>
-            <th scope="col">Unidad</th>
-            <th scope="col" class="text-right">Cantidad</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          @for (cantidad of cantidadesPorUnidad; track cantidad.unidad) {
-          <tr class="hover">
-            <td>{{ cantidad.unidad }}</td>
-
-            <td class="text-right font-semibold">
-              {{ cantidad.cantidad | number:'1.0-2' }}
-            </td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="2" class="py-6 text-center text-base-content/60">
-              Sin cantidades registradas.
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
+      <progress
+        class="progress progress-success w-full"
+        [value]="datos.porcentaje_atencion"
+        max="100"
+        aria-label="Porcentaje de puntos atendidos"
+      ></progress>
     </div>
-  </div>
+
+    <div>
+      <p class="font-medium">
+        Gestión de puntos:
+        {{ datos.porcentaje_gestion | number:'1.0-2' }} %
+      </p>
+
+      <progress
+        class="progress progress-info w-full"
+        [value]="datos.porcentaje_gestion"
+        max="100"
+        aria-label="Porcentaje de puntos atendidos u omitidos"
+      ></progress>
+
+      <p class="text-xs text-base-content/60">
+        La gestión incluye las omisiones. Una omisión no cuenta
+        como atención realizada.
+      </p>
+    </div>
+
+    <div class="border-t border-base-300 pt-4">
+      <h3 class="font-semibold">Puntos obligatorios</h3>
+
+      <p class="mt-2 text-sm">
+        {{ datos.obligatorios_atendidos }} atendidos ·
+        {{ datos.obligatorios_omitidos }} omitidos ·
+        {{ datos.obligatorios_pendientes }} pendientes
+      </p>
+
+      <p class="text-sm">
+        {{ datos.obligatorios_no_atendidos }}
+        obligatorios sin atención efectiva.
+      </p>
+
+      <p class="mt-2 text-sm">
+        Progreso de atención de obligatorios:
+        {{ datos.porcentaje_progreso | number:'1.0-2' }} %
+      </p>
+
+      <p class="text-xs text-base-content/60">
+        Si no existen puntos obligatorios, este porcentaje
+        utiliza todos los puntos de recolección.
+      </p>
+    </div>
+
+    <div class="border-t border-base-300 pt-4">
+      <h3 class="font-semibold">
+        Cantidades registradas por punto
+      </h3>
+
+      @for (
+        item of datos.cantidades_por_punto | keyvalue;
+        track item.key
+      ) {
+        <p class="text-sm">
+          {{ item.value | number:'1.0-3' }} {{ item.key }}
+        </p>
+      } @empty {
+        <p class="text-sm text-base-content/60">
+          Sin cantidades registradas por punto.
+        </p>
+      }
+    </div>
+
+    <div class="border-t border-base-300 pt-4">
+      <h3 class="font-semibold">
+        Resultado final del recorrido
+      </h3>
+
+      @if (datos.resultado_final_pendiente) {
+        <p class="text-sm text-warning">
+          Pendiente de registro.
+        </p>
+      } @else {
+        @for (cantidad of cantidadesPorUnidad; track cantidad.unidad) {
+          <p class="text-sm">
+            {{ cantidad.cantidad | number:'1.0-3' }}
+            {{ cantidad.unidad }}
+          </p>
+        }
+      }
+
+      <p class="mt-2 text-xs text-base-content/60">
+        El resultado final y las cantidades por punto se presentan
+        por separado; no se suman entre sí.
+      </p>
+    </div>
   } @else {
-  <div class="rounded-xl border border-dashed border-base-300
-             p-8 text-center text-sm text-base-content/60">
-    Selecciona un recorrido para consultar su progreso.
-  </div>
+    <p class="text-sm text-base-content/60">
+      Selecciona un recorrido.
+    </p>
   }
 </section>

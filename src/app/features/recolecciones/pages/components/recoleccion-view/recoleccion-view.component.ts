@@ -195,6 +195,20 @@ export class RecoleccionViewComponent
       : 'No se pudo obtener el detalle de la recolección.';
   }
 
+  motivoOmision(value: string | null | undefined): string {
+    const motivos: Record<string, string> = {
+      ACCESO_BLOQUEADO: 'Acceso bloqueado',
+      PUNTO_INACCESIBLE: 'Punto inaccesible',
+      RIESGO_SEGURIDAD: 'Riesgo de seguridad',
+      AVERIA_VEHICULO: 'Avería del vehículo',
+      OTRO: 'Otro motivo',
+    };
+
+    return value
+      ? motivos[value] ?? value.replace(/_/g, ' ')
+      : 'Sin motivo registrado';
+  }
+
   // ================================
   // Modales methods
   // ================================

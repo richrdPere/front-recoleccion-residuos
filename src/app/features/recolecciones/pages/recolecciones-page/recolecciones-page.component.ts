@@ -1,6 +1,7 @@
-import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { CommonModule, DOCUMENT } from '@angular/common';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Subscription, timer } from 'rxjs';
 
 // Interfaces
 import { PuntoRecorridoRecoleccion } from '../../interfaces';
@@ -30,7 +31,7 @@ import { RecoleccionAnularComponent } from '../components/recoleccion-anular/rec
   styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RecoleccionesPageComponent {
+export class RecoleccionesPageComponent implements OnInit, OnDestroy {
 
   // ================================
   // Selección del recorrido
@@ -42,6 +43,11 @@ export class RecoleccionesPageComponent {
 
   // Actualización de puntos, progreso y capacidad
   actualizacionRecolecciones = 0;
+
+  private readonly document = inject(DOCUMENT);
+
+  private refrescoAutomatico?: Subscription;
+
 
   // ================================
   // Evidencias
@@ -65,6 +71,28 @@ export class RecoleccionesPageComponent {
   constructor(
     private cdr: ChangeDetectorRef,
   ) { }
+
+  ngOnInit(): void {
+    this.refrescoAutomatico = timer(
+      30_000,
+      30_000,
+    ).subscribe(() => {
+      if (
+        this.document.visibilityState !== 'visible' ||
+        this.recorrido_id === null ||
+        this.mostrarModalView ||
+        this.mostrarModalAnular
+      ) {
+        return;
+      }
+
+      this.actualizarRecolecciones();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.refrescoAutomatico?.unsubscribe();
+  }
 
   // ================================
   // Methods

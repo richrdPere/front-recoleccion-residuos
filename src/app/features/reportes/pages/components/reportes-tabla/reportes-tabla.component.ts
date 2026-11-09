@@ -89,6 +89,21 @@ export class ReportesTablaComponent {
 
     vehiculo_operativo: 'Vehículo operativo',
     costo_total: 'Costo total',
+
+    puntos_omitidos: 'Puntos omitidos',
+    puntos_pendientes: 'Puntos pendientes',
+
+    porcentaje_atencion: 'Atención efectiva (%)',
+    porcentaje_gestion: 'Gestión de puntos (%)',
+
+    responsable: 'Responsable',
+    motivo_omision: 'Motivo de omisión',
+
+    precision_gps: 'Precisión GPS (m)',
+    distancia_punto_metros: 'Distancia al punto (m)',
+    dentro_radio_permitido: 'Dentro del radio',
+
+    observacion: 'Observación',
   };
 
   tituloColumna(columna: ReporteTablaColumna): string {
@@ -138,6 +153,40 @@ export class ReportesTablaComponent {
         'Operativo',
         'No operativo',
       );
+    }
+
+    if (key === 'dentro_radio_permitido') {
+      return this.formatearIndicador(
+        valor,
+        'Sí',
+        'No',
+      );
+    }
+
+    if (
+      key === 'porcentaje_atencion' ||
+      key === 'porcentaje_gestion'
+    ) {
+      const porcentaje = Number(valor);
+
+      return Number.isFinite(porcentaje)
+        ? `${porcentaje.toLocaleString('es-PE', {
+          maximumFractionDigits: 2,
+        })} %`
+        : String(valor);
+    }
+
+    if (key === 'motivo_omision') {
+      const motivos: Record<string, string> = {
+        ACCESO_BLOQUEADO: 'Acceso bloqueado',
+        PUNTO_INACCESIBLE: 'Punto inaccesible',
+        RIESGO_SEGURIDAD: 'Riesgo de seguridad',
+        AVERIA_VEHICULO: 'Avería del vehículo',
+        OTRO: 'Otro motivo',
+      };
+
+      return motivos[String(valor)] ??
+        String(valor).replace(/_/g, ' ');
     }
 
     const camposEtiqueta = [

@@ -1,4 +1,4 @@
-import {  Component,  Input} from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // *********************************************************
@@ -76,6 +76,7 @@ export class ReportesResumenComponent {
       case 'EN_MANTENIMIENTO':
         return 'badge-warning badge-outline';
 
+      case 'OMITIDO':
       case 'CANCELADA':
       case 'CANCELADO':
       case 'RECHAZADA':

@@ -86,6 +86,16 @@ export interface ReporteAtencionItem {
   latitud: string | number | null;
   longitud: string | number | null;
 
+  responsable: string | null;
+
+  precision_gps: string | number | null;
+
+  distancia_punto_metros: string | number | null;
+
+  dentro_radio_permitido: boolean | 0 | 1 | null;
+
+  motivo_omision: string | null;
+
   observacion: string | null;
 }
 

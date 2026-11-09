@@ -1,1 +1,363 @@
-<p>recorridos-page works!</p>
+<div class="space-y-6 p-4">
+  <h1 class="text-2xl font-bold">Historial de recorridos</h1>
+
+  <form
+    class="grid gap-3 rounded-xl border border-base-300 p-4 md:grid-cols-3"
+    (ngSubmit)="buscar()"
+  >
+    <label class="form-control">
+      <span>Desde</span>
+      <input
+        type="date"
+        name="desde"
+        class="input input-bordered"
+        [(ngModel)]="fechaInicio"
+        required
+      />
+    </label>
+
+    <label class="form-control">
+      <span>Hasta</span>
+      <input
+        type="date"
+        name="hasta"
+        class="input input-bordered"
+        [(ngModel)]="fechaFin"
+        required
+      />
+    </label>
+
+    <label class="form-control">
+      <span>Estado</span>
+      <select
+        name="estado"
+        class="select select-bordered"
+        [(ngModel)]="estado"
+      >
+        <option value="">Todos</option>
+        <option value="FINALIZADO">Finalizados</option>
+        <option value="CANCELADO">Cancelados</option>
+        <option value="EN_CURSO">En curso</option>
+        <option value="PAUSADO">Pausados</option>
+      </select>
+    </label>
+
+    <label class="form-control">
+      <span>Zona (ID opcional)</span>
+      <input
+        type="number"
+        min="1"
+        name="zona"
+        class="input input-bordered"
+        [(ngModel)]="idZona"
+      />
+    </label>
+
+    <label class="form-control">
+      <span>Ruta (ID opcional)</span>
+      <input
+        type="number"
+        min="1"
+        name="ruta"
+        class="input input-bordered"
+        [(ngModel)]="idRuta"
+      />
+    </label>
+
+    <label class="form-control">
+      <span>Vehículo (ID opcional)</span>
+      <input
+        type="number"
+        min="1"
+        name="vehiculo"
+        class="input input-bordered"
+        [(ngModel)]="idVehiculo"
+      />
+    </label>
+
+    <button class="btn btn-primary" [disabled]="cargando()">
+      Consultar
+    </button>
+  </form>
+
+  @if (error()) {
+    <p class="text-error" role="alert">{{ error() }}</p>
+  }
+
+  @if (listado(); as lista) {
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Recorrido</th>
+            <th>Ruta / zona</th>
+            <th>Vehículo</th>
+            <th>Inicio</th>
+            <th>Estado</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (item of lista.items; track item.id_recorrido) {
+            <tr>
+              <td>#{{ item.id_recorrido }}</td>
+              <td>{{ item.ruta }} / {{ item.zona }}</td>
+              <td>{{ item.placa }}</td>
+              <td>
+                {{ item.fecha_inicio | date:'dd/MM/yyyy HH:mm':'-0500' }}
+              </td>
+              <td>{{ item.estado }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="btn btn-sm"
+                  (click)="ver(item.id_recorrido)"
+                >
+                  Abrir
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">No hay recorridos con estos filtros.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        class="btn btn-sm"
+        [disabled]="cargando() || lista.pagination.page <= 1"
+        (click)="buscar(lista.pagination.page - 1)"
+      >
+        Anterior
+      </button>
+
+      <span>
+        Página {{ lista.pagination.page }}
+        de {{ lista.pagination.total_pages || 1 }}
+      </span>
+
+      <button
+        type="button"
+        class="btn btn-sm"
+        [disabled]="
+          cargando() ||
+          lista.pagination.page >= lista.pagination.total_pages
+        "
+        (click)="buscar(lista.pagination.page + 1)"
+      >
+        Siguiente
+      </button>
+    </div>
+  }
+
+  @if (cargandoDetalle()) {
+    <p role="status">Cargando detalle y trazado...</p>
+  }
+
+  @if (errorDetalle()) {
+    <p class="text-error" role="alert">{{ errorDetalle() }}</p>
+  }
+
+  @if (detalle(); as d) {
+    <section class="space-y-5 rounded-xl border border-base-300 p-5">
+      <header class="flex items-center justify-between gap-3">
+        <h2 class="text-xl font-bold">
+          Recorrido #{{ d.recorrido.id_recorrido }}
+        </h2>
+
+        <button
+          type="button"
+          class="btn btn-sm"
+          (click)="ver(d.recorrido.id_recorrido)"
+        >
+          Actualizar detalle
+        </button>
+      </header>
+
+      <p>
+        {{ d.programacion.ruta?.nombre }}
+        · {{ d.programacion.ruta?.zona?.nombre }}
+        · {{ d.programacion.vehiculo?.placa }}
+        · {{ d.recorrido.estado_recorrido }}
+      </p>
+
+      @if (d.recorrido.motivo_cancelacion) {
+        <p class="text-error">
+          Cancelación: {{ d.recorrido.motivo_cancelacion }}
+        </p>
+      }
+
+      <p>
+        Inicio:
+        {{ d.recorrido.fecha_hora_inicio | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
+        · Cierre:
+        {{
+          (d.recorrido.fecha_hora_finalizacion
+            | date:'dd/MM/yyyy HH:mm:ss':'-0500') || 'Sin cierre'
+        }}
+      </p>
+
+      <div class="grid gap-3 md:grid-cols-3">
+        <p>Total: {{ duracion(d.tiempos.total_segundos) }}</p>
+        <p>Pausado: {{ duracion(d.tiempos.pausa_segundos) }}</p>
+        <p>
+          Operación:
+          {{ duracion(d.tiempos.operacion_segundos) }}
+        </p>
+      </div>
+
+      <p class="text-sm text-base-content/60">
+        El tiempo de operación excluye las pausas registradas.
+        En recorridos activos, los tiempos son provisionales.
+      </p>
+
+      @for (aviso of d.tiempos.advertencias; track $index) {
+        <p class="text-warning">{{ aviso }}</p>
+      }
+
+      <h3 class="font-bold">Equipo según asignaciones</h3>
+
+      @for (persona of d.equipo; track persona.id_personal) {
+        <p>
+          {{ persona.funcion }}
+          · {{ persona.usuario || ('Personal #' + persona.id_personal) }}
+          · {{ persona.estado_asignacion }}
+        </p>
+      }
+
+      <h3 class="font-bold">Trazado GPS registrado</h3>
+
+      @if (errorTrazado()) {
+        <p class="text-error">{{ errorTrazado() }}</p>
+      }
+
+      @if (trazado(); as gps) {
+        @if (gps.muestras_validas > 0) {
+          <historial-mapa [geojson]="gps.geojson" />
+        } @else {
+          <p>No hay posiciones válidas para dibujar el trazado.</p>
+        }
+
+        <p class="text-sm">
+          {{ gps.muestras_validas }} muestras válidas de
+          {{ gps.muestras_cargadas }} recibidas.
+          {{ gps.muestras_descartadas }} excluidas de la visualización.
+        </p>
+
+        <p class="text-sm text-base-content/60">
+          La línea se interrumpe ante muestras inválidas o huecos
+          mayores de {{ gps.corte_por_hueco_segundos }} segundos.
+          Pueden faltar datos pendientes de sincronización.
+        </p>
+      }
+
+      <h3 class="font-bold">Atención de puntos</h3>
+
+      <p>
+        {{ d.resumen_puntos.atendidos }} atendidos ·
+        {{ d.resumen_puntos.omitidos }} omitidos ·
+        {{ d.resumen_puntos.pendientes }} pendientes
+      </p>
+
+      <div class="overflow-x-auto">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Punto</th>
+              <th>Estado</th>
+              <th>Responsable</th>
+              <th>Motivo / observación</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (punto of d.puntos; track punto.id_ruta_punto) {
+              <tr>
+                <td>{{ punto.orden }}. {{ punto.nombre }}</td>
+                <td>{{ punto.estado_atencion }}</td>
+                <td>{{ punto.recoleccion?.usuario_registro?.username }}</td>
+                <td>
+                  {{ punto.recoleccion?.motivo_omision }}
+                  {{ punto.recoleccion?.observacion }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="font-bold">Pausas registradas</h3>
+
+      @for (pausa of d.tiempos.pausas; track $index) {
+        <p>
+          {{ pausa.inicio | date:'HH:mm:ss':'-0500' }}
+          →
+          {{ pausa.fin | date:'HH:mm:ss':'-0500' }}
+          · {{ duracion(pausa.duracion_segundos) }}
+          {{ pausa.abierta ? '(abierta al consultar)' : '' }}
+        </p>
+      } @empty {
+        <p>Sin pausas registradas.</p>
+      }
+
+      <h3 class="font-bold">Eventos</h3>
+
+      @for (evento of d.eventos; track evento.id_recorrido_evento) {
+        <p>
+          {{ evento.fecha_evento | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
+          · {{ evento.tipo_evento }}
+          · {{ evento.usuario?.username }}
+          · {{ evento.observacion }}
+        </p>
+      }
+
+      <h3 class="font-bold">Incidencias</h3>
+      <p class="text-sm">{{ d.nota_incidencias }}</p>
+
+      @for (incidencia of d.incidencias; track incidencia.id_incidencia) {
+        <article class="rounded-lg border border-base-300 p-3">
+          <p class="font-semibold">
+            #{{ incidencia.id_incidencia }} {{ incidencia.titulo }}
+          </p>
+
+          <p>
+            {{ incidencia.tipo }}
+            · {{ incidencia.prioridad }}
+            · {{ incidencia.estado_incidencia }}
+          </p>
+
+          <p>{{ incidencia.descripcion }}</p>
+        </article>
+      } @empty {
+        <p>Sin incidencias visibles para este recorrido.</p>
+      }
+
+      <h3 class="font-bold">Resultado final de residuos</h3>
+
+      @if (d.recorrido.resultado_final; as resultado) {
+        <p class="text-lg font-semibold">
+          {{ resultado.cantidad_total | number:'1.0-3' }}
+          {{ resultado.unidad_medida }}
+        </p>
+
+        <p>{{ resultado.observacion }}</p>
+
+        @if (resultado.vehiculo) {
+          <p>Vehículo en la medición: {{ resultado.vehiculo.placa }}</p>
+        }
+
+        @if (resultado.capacidad; as capacidad) {
+          <p>Evaluación de carga al cierre: {{ capacidad.porcentaje }} %</p>
+        }
+      } @else {
+        <p>Resultado final pendiente o no registrado.</p>
+      }
+    </section>
+  }
+</div>

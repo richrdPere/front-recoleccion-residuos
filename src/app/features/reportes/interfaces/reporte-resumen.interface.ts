@@ -49,6 +49,7 @@ export type ReporteEstadoRecorrido =
 
 export type ReporteEstadoAtencion =
   | 'ATENDIDO'
+  | 'OMITIDO'
   | 'PENDIENTE';
 
 export type ReporteEstadoIncidencia =

@@ -70,6 +70,12 @@ export interface ReporteRecorridoItem {
   /** Los DECIMAL de MySQL pueden llegar como string. */
   distancia_recorrida_metros: string | number | null;
 
+  puntos_omitidos: number;
+  puntos_pendientes: number;
+
+  porcentaje_atencion: string | number;
+  porcentaje_gestion: string | number;
+
   id_usuario_inicio: number;
   id_usuario_finalizacion: number | null;
 

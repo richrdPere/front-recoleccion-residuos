@@ -30,7 +30,7 @@ export interface PuntoRecorridoData {
   updated_at: string;
   deleted_at: string | null;
 
-  estado_atencion: 'ATENDIDO' | 'PENDIENTE';
+  estado_atencion: 'ATENDIDO' | 'OMITIDO' | 'PENDIENTE';
   recoleccion: PuntoRecorridoRecoleccion | null;
 }
 
@@ -62,6 +62,14 @@ export interface PuntoRecorridoRecoleccion {
   motivo_anulacion: string | null;
   fecha_anulacion: string | null;
   id_usuario_anulacion: number | null;
+
+  resultado_atencion: 'ATENDIDO' | 'OMITIDO';
+
+  motivo_omision: string | null;
+  usuario_registro?: {
+    id_usuario: number;
+    username: string;
+  } | null;
 
   created_at: string;
   updated_at: string;

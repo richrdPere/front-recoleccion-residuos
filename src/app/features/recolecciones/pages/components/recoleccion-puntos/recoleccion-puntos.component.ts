@@ -55,12 +55,16 @@ export class RecoleccionPuntosComponent implements OnChanges, OnDestroy {
   searchTimeout?: ReturnType<typeof setTimeout>;
 
   readonly tiposPunto: PuntoRecorridoData['tipo_punto'][] = [
-    'INICIO',
     'RECOLECCION',
-    'DESCARGA',
-    'FINAL',
-    'REFERENCIA',
   ];
+
+  // readonly tiposPunto: PuntoRecorridoData['tipo_punto'][] = [
+  //   'INICIO',
+  //   'RECOLECCION',
+  //   'DESCARGA',
+  //   'FINAL',
+  //   'REFERENCIA',
+  // ];
 
   // Paginado local
   page = 1;
@@ -327,5 +331,19 @@ export class RecoleccionPuntosComponent implements OnChanges, OnDestroy {
     return typeof mensaje === 'string' && mensaje.trim()
       ? mensaje
       : 'No se pudieron obtener los puntos del recorrido.';
+  }
+
+  motivoOmision(value: string | null | undefined): string {
+    const motivos: Record<string, string> = {
+      ACCESO_BLOQUEADO: 'Acceso bloqueado',
+      PUNTO_INACCESIBLE: 'Punto inaccesible',
+      RIESGO_SEGURIDAD: 'Riesgo de seguridad',
+      AVERIA_VEHICULO: 'Avería del vehículo',
+      OTRO: 'Otro motivo',
+    };
+
+    return value
+      ? motivos[value] ?? value.replace(/_/g, ' ')
+      : 'Sin motivo registrado';
   }
 }
