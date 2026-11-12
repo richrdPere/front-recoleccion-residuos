@@ -1,5 +1,6 @@
 import { CodigoQrData, TipoRecursoQr } from "./create-codigo-qr.interface";
 import { EstadoQr } from "./update-estado-codigo-qr.interface";
+import type { Polygon } from 'geojson';
 
 // *********************************************************
 // QUERY PARAMS
@@ -32,6 +33,28 @@ export interface CodigosQrPaginadoData {
 }
 
 // *********************************************************
+// ZONA
+// *********************************************************
+export interface CodigoQrListadoZona {
+  id_zona: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string | null;
+  color: string;
+
+  poligono_geojson: Polygon | null;
+
+  centro_latitud: string | number | null;
+  centro_longitud: string | number | null;
+
+  estado: boolean;
+
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+// *********************************************************
 // CÓDIGO QR DEL LISTADO
 // *********************************************************
 export interface CodigoQrListadoItem extends CodigoQrData {
@@ -41,7 +64,7 @@ export interface CodigoQrListadoItem extends CodigoQrData {
   deleted_at: string | null;
 
   // Pendiente de tipar cuando compartas una zona no nula.
-  zona: Record<string, unknown> | null;
+  zona: CodigoQrListadoZona | null;
 
   ruta: CodigoQrListadoRuta | null;
   usuario_creacion: CodigoQrListadoUsuario | null;

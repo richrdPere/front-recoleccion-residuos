@@ -5,11 +5,18 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { finalize, Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 
+// Directives
+import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directive';
+
 // Service
 import { CodigosQrService } from '../../services/codigos-qr.service';
+import { ZonasServices } from 'src/app/features/zonas/services/zonas.service';
+import { RutasServices } from 'src/app/features/rutas/services/rutas.service';
 
 // Interfaces
 import { CodigoQrListadoItem, GetCodigosQrPaginadoParams, RegenerarCodigoQrData } from '../../interfaces/codigos-qr';
+import { ZonaData } from 'src/app/features/zonas/interfaces';
+import { RutaActivaData, RutaPorZonaData } from 'src/app/features/rutas/interfaces/rutas';
 
 // Componentes
 import { CodigoQrFormComponent } from '../components/codigo-qr-form/codigo-qr-form.component';
@@ -17,17 +24,17 @@ import { CodigoQrImagenComponent } from '../components/codigo-qr-imagen/codigo-q
 import { CodigoQrRegenerarComponent } from '../components/codigo-qr-regenerar/codigo-qr-regenerar.component';
 import { CodigoQrViewComponent } from '../components/codigo-qr-view/codigo-qr-view.component';
 
-
 @Component({
   selector: 'app-codigos-qr-page',
   imports: [
     CommonModule,
     FormsModule,
+    UppercaseDirective,
     CodigoQrFormComponent,
     CodigoQrImagenComponent,
     CodigoQrRegenerarComponent,
     CodigoQrViewComponent
-],
+  ],
   templateUrl: './codigos-qr-page.component.html',
   styles: ``,
 })
@@ -38,6 +45,7 @@ export class CodigosQrPageComponent implements OnInit, OnDestroy {
 
   isLoading = true;
   mostrarModal = false;
+  mostrarTodosEstados = false;
 
   // Imagen QR
   mostrarModalImagen = false;
@@ -54,16 +62,30 @@ export class CodigosQrPageComponent implements OnInit, OnDestroy {
   errorMensaje = '';
   errorDescarga = '';
 
+  // Selectores
+  zonasDisponibles: ZonaData[] = [];
+  rutasActivas: RutaActivaData[] = [];
+  // rutasDisponibles: RutaPorZonaData[] = [];
+
+  isLoadingZonas = false;
+  isLoadingRutas = false;
+
+  errorZonas = '';
+  errorRutas = '';
+
+  cargandoRutasActivas = false;
+  errorRutasActivas: string | null = null;
+
   // Search
   searchBusqueda = '';
-  idZona: number | null = null;
-  idRuta: number | null = null;
+  idZonaBusqueda: number | null = null;
+  idRutaBusqueda: number | null = null;
 
   searchTimeout: ReturnType<typeof setTimeout> | undefined;
 
   // Paginado
   page = 1;
-  limit = 10;
+  limit = 5;
   totalItems = 0;
   totalPages = 0;
   currentPage = 1;
@@ -80,13 +102,20 @@ export class CodigosQrPageComponent implements OnInit, OnDestroy {
   private consultaListado?: Subscription;
   private readonly suscripcionesDescargas = new Subscription();
 
+  private readonly suscripciones = new Subscription();
+  private consultaRutas?: Subscription;
+
   constructor(
     private readonly codigosQrService: CodigosQrService,
+    private readonly zonaService: ZonasServices,
+    private readonly rutaService: RutasServices,
     private readonly cdr: ChangeDetectorRef,
   ) { }
 
   ngOnInit(): void {
     this.cargarCodigosQr();
+    this.cargarZonas();
+    this.getRutasActivas();
   }
 
   ngOnDestroy(): void {
@@ -106,8 +135,15 @@ export class CodigosQrPageComponent implements OnInit, OnDestroy {
 
     const params: GetCodigosQrPaginadoParams = {
       ...this.filtrosAplicados,
+
+      estado_qr: this.mostrarTodosEstados
+        ? undefined
+        : 'ACTIVO',
+
       page: this.page,
       limit: this.limit,
+
+
     };
 
     this.isLoading = true;
@@ -125,8 +161,7 @@ export class CodigosQrPageComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           if (!response.success) {
-            this.errorMensaje = response.message ||
-              'No se pudieron obtener los códigos QR.';
+            this.errorMensaje = response.message || 'No se pudieron obtener los códigos QR.';
 
             this.limpiarListado();
             return;
@@ -171,6 +206,117 @@ export class CodigosQrPageComponent implements OnInit, OnDestroy {
           this.limpiarListado();
         },
       });
+  }
+
+  cargarZonas(): void {
+    if (this.isLoadingZonas) {
+      return;
+    }
+
+    this.isLoadingZonas = true;
+    this.errorZonas = '';
+
+    const suscripcion = this.zonaService
+      .getZonasActivas()
+      .pipe(
+        finalize(() => {
+          this.isLoadingZonas = false;
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          if (!response.success) {
+            this.zonasDisponibles = [];
+            this.errorZonas = response.message ||
+              'No se pudieron cargar las zonas activas.';
+            return;
+          }
+
+          this.zonasDisponibles = this.normalizarListado<ZonaData>(
+            response.data,
+          );
+        },
+
+        error: (error: unknown) => {
+          this.zonasDisponibles = [];
+
+          this.errorZonas = this.obtenerMensajeError(
+            error,
+            'No se pudieron cargar las zonas activas.',
+          );
+        },
+      });
+
+    this.suscripciones.add(suscripcion);
+  }
+
+  get rutasDisponibles(): RutaActivaData[] {
+    const opciones: RutaActivaData[] = this.rutasActivas.filter(
+      r => r.estado && r.estado_ruta === 'ACTIVA' && !r.deleted_at
+    );
+
+    return opciones;
+  }
+
+  getRutasActivas(): void {
+    if (this.cargandoRutasActivas) {
+      return;
+    }
+
+    this.cargandoRutasActivas = true;
+    this.errorRutasActivas = null;
+
+    this.rutaService.getRutasActivas()
+      .pipe(
+
+        finalize(() => {
+          this.cargandoRutasActivas = false;
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          if (!response.success) {
+            this.rutasActivas = [];
+            this.errorRutasActivas = response.message || 'No se pudieron obtener las rutas activas.';
+
+            return;
+          }
+
+          this.rutasActivas = response.data ?? [];
+        },
+
+        error: (error: unknown) => {
+          this.rutasActivas = [];
+
+          const err = error as {
+            error?: { message?: string } | string;
+            message?: string;
+          } | null;
+
+          const mensajeBackend =
+            typeof err?.error === 'string'
+              ? err.error
+              : err?.error?.message;
+
+          this.errorRutasActivas =
+            mensajeBackend ||
+            err?.message ||
+            'Ocurrió un error al cargar las rutas activas.';
+        },
+      });
+  }
+
+  onMostrarTodosEstadosChange(event: Event): void {
+    const checkbox = event.target as HTMLInputElement;
+
+    this.mostrarTodosEstados = checkbox.checked;
+
+    this.page = 1;
+    this.currentPage = 1;
+
+    this.cargarCodigosQr();
   }
 
   // - Descargar imagen QR
@@ -231,7 +377,6 @@ export class CodigosQrPageComponent implements OnInit, OnDestroy {
 
     this.suscripcionesDescargas.add(suscripcion);
   }
-
 
   // ================================
   // Modales methods
@@ -297,11 +442,40 @@ export class CodigosQrPageComponent implements OnInit, OnDestroy {
   // Helpers methods
   // ================================
 
+  getTipoRecursoBadge(tipo: string): string {
+    switch (tipo) {
+      case 'RUTA':
+        return 'badge-primary';
+
+      case 'ZONA':
+        return 'badge-info';
+
+      default:
+        return 'badge-neutral';
+    }
+  }
+
+  getEstadoQrBadge(estado: string): string {
+    switch (estado) {
+      case 'ACTIVO':
+        return 'badge-success';
+
+      case 'INACTIVO':
+        return 'badge-warning';
+
+      case 'REVOCADO':
+        return 'badge-error';
+
+      default:
+        return 'badge-neutral';
+    }
+  }
+
   get hayFiltros(): boolean {
     return Boolean(
       this.searchBusqueda.trim() ||
-      this.idZona !== null ||
-      this.idRuta !== null,
+      this.idZonaBusqueda !== null ||
+      this.idRutaBusqueda !== null,
     );
   }
 
@@ -343,8 +517,8 @@ export class CodigosQrPageComponent implements OnInit, OnDestroy {
 
     this.filtrosAplicados = {
       search: this.searchBusqueda.trim() || undefined,
-      id_zona: this.idZona ?? undefined,
-      id_ruta: this.idRuta ?? undefined,
+      id_zona: this.idZonaBusqueda ?? undefined,
+      id_ruta: this.idRutaBusqueda ?? undefined,
     };
 
     this.page = 1;
@@ -385,12 +559,14 @@ export class CodigosQrPageComponent implements OnInit, OnDestroy {
     clearTimeout(this.searchTimeout);
 
     this.searchBusqueda = '';
-    this.idZona = null;
-    this.idRuta = null;
+    this.idZonaBusqueda = null;
+    this.idRutaBusqueda = null;
 
     this.filtrosAplicados = {};
     this.page = 1;
     this.currentPage = 1;
+
+    this.mostrarTodosEstados = false;
 
     this.cargarCodigosQr();
   }
@@ -448,4 +624,13 @@ export class CodigosQrPageComponent implements OnInit, OnDestroy {
     return mensajePorDefecto;
   }
 
+  private normalizarListado<T>(
+    data: T | T[] | null | undefined,
+  ): T[] {
+    if (data === null || data === undefined) {
+      return [];
+    }
+
+    return Array.isArray(data) ? data : [data];
+  }
 }

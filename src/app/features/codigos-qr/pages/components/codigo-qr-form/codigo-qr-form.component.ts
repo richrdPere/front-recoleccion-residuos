@@ -4,6 +4,9 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize, Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 
+// Directives
+import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directive';
+
 // Services
 import { CodigosQrService } from '../../../services/codigos-qr.service';
 import { ZonasServices } from 'src/app/features/zonas/services/zonas.service';
@@ -20,6 +23,7 @@ import { RutaPorZonaData } from 'src/app/features/rutas/interfaces/rutas';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    UppercaseDirective,
   ],
   templateUrl: './codigo-qr-form.component.html',
   styles: ``,
@@ -245,7 +249,7 @@ export class CodigoQrFormComponent implements OnInit, OnDestroy {
       titulo,
       descripcion: valores.descripcion.trim(),
       fecha_expiracion: fechaExpiracion,
-      observacion: valores.observacion.trim(),
+      observacion: 'Código QR creado para la consulta pública del servicio de recolección.',
     };
 
     let request: CrearCodigoQrRequest;
@@ -311,6 +315,13 @@ export class CodigoQrFormComponent implements OnInit, OnDestroy {
             error,
             'No se pudo crear el código QR.',
           );
+
+          void Swal.fire({
+            icon: 'error',
+            title: 'No se pudo crear el código QR',
+            text: this.errorMensaje,
+            confirmButtonText: 'Aceptar',
+          });
         },
       });
 
@@ -320,6 +331,33 @@ export class CodigoQrFormComponent implements OnInit, OnDestroy {
   // ================================
   // Helpers methods
   // ================================
+  esRequerido(campo: string): boolean {
+    return (
+      this.codigoQrForm
+        .get(campo)
+        ?.hasValidator(Validators.required) ?? false
+    );
+  }
+
+  campoCompleto(campo: string): boolean {
+    const control = this.codigoQrForm.get(campo);
+
+    if (!control || !control.valid) {
+      return false;
+    }
+
+    const valor = control.value;
+
+    if (typeof valor === 'string') {
+      return valor.trim().length > 0;
+    }
+
+    if (Array.isArray(valor)) {
+      return valor.length > 0;
+    }
+
+    return valor !== null && valor !== undefined;
+  }
 
   get esRuta(): boolean {
     return this.codigoQrForm.controls.tipo_recurso.value === 'RUTA';
@@ -386,39 +424,64 @@ export class CodigoQrFormComponent implements OnInit, OnDestroy {
     error: unknown,
     mensajePorDefecto: string,
   ): string {
-    if (typeof error === 'string') {
-      return error.trim() || mensajePorDefecto;
-    }
+    const textoValido = (valor: unknown): string | null =>
+      typeof valor === 'string' && valor.trim()
+        ? valor.trim()
+        : null;
 
-    if (typeof error === 'object' && error !== null) {
-      if ('error' in error) {
-        const body = error.error;
-
-        if (
-          typeof body === 'object' &&
-          body !== null &&
-          'message' in body &&
-          typeof body.message === 'string' &&
-          body.message.trim()
-        ) {
-          return body.message;
-        }
-
-        if (typeof body === 'string' && body.trim()) {
-          return body;
-        }
+    const obtenerMessage = (valor: unknown): string | null => {
+      if (!valor || typeof valor !== 'object') {
+        return null;
       }
 
-      if (
-        'message' in error &&
-        typeof error.message === 'string' &&
-        error.message.trim()
-      ) {
-        return error.message;
-      }
+      return textoValido(
+        (valor as { message?: unknown }).message,
+      );
+    };
+
+    const mensajeDirecto = textoValido(error);
+
+    if (mensajeDirecto) {
+      return mensajeDirecto;
     }
 
-    return mensajePorDefecto;
+    if (!error || typeof error !== 'object') {
+      return mensajePorDefecto;
+    }
+
+    const objeto = error as {
+      details?: unknown;
+      error?: unknown;
+      message?: unknown;
+    };
+
+    return obtenerMessage(objeto.details) ??
+      obtenerMessage(objeto.error) ??
+      textoValido(objeto.message) ??
+      textoValido(objeto.error) ??
+      mensajePorDefecto;
+  }
+
+  seleccionarTipoRecurso(
+    tipo: 'ZONA' | 'RUTA',
+    event: Event,
+  ): void {
+    const checkbox = event.target as HTMLInputElement;
+
+    // Siempre debe permanecer una opción seleccionada.
+    checkbox.checked = true;
+
+    const control = this.codigoQrForm.controls.tipo_recurso;
+
+    if (control.value === tipo) {
+      return;
+    }
+
+    control.setValue(tipo);
+    control.markAsDirty();
+    control.markAsTouched();
+
+    this.onTipoRecursoChange();
   }
 
   // ================================

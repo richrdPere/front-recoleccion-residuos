@@ -87,33 +87,43 @@
               Zonas
             </label>
 
-            <input id="qr-zona" name="idZona" type="number" min="1" step="1" class="input input-bordered w-full"
-              placeholder="Todas las zonas" [(ngModel)]="idZona" />
-
-            <!-- <select id="filtro-tipo" class="select select-bordered h-11 min-h-11
+            <select id="filtro-tipo" class="select select-bordered h-11 min-h-11
                   w-full min-w-0 rounded-xl bg-base-200
                   pl-4 pr-10 transition-colors
                   focus:border-primary focus:outline-none
-                  focus:ring-2 focus:ring-primary/30" [ngClass]="rolBusqueda ? 'border-primary' : 'border-base-500'"
-              [(ngModel)]="rolBusqueda" (ngModelChange)="onSearchChange()">
-              <option value="">Todos los roles</option>
+                  focus:ring-2 focus:ring-primary/30" [ngClass]="idZonaBusqueda ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="idZonaBusqueda" (ngModelChange)="onSearchChange()">
+              <option [ngValue]="null">Todas las zonas</option>
 
-              @for (opcion of rolesDisponibles; track opcion.id_rol) {
-              <option [value]="opcion.id_rol">
-                {{ opcion.nombre }}
+              @for (zona of zonasDisponibles; track zona.id_zona) {
+              <option [value]="zona.id_zona">
+                {{ zona.codigo }} — {{ zona.nombre }}
               </option>
               }
-            </select> -->
+            </select>
           </div>
 
           <!-- Ruta -->
-          <div class="space-y-2">
-            <label for="qr-ruta" class="block text-sm font-medium">
-              ID de ruta
+          <div class="min-w-0">
+            <label for="recorridos-ruta" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Rutas
             </label>
 
-            <input id="qr-ruta" name="idRuta" type="number" min="1" step="1" class="input input-bordered w-full"
-              placeholder="Todas las rutas" [(ngModel)]="idRuta" />
+            <select id="recorridos-ruta" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [ngClass]="idRutaBusqueda ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="idRutaBusqueda" (ngModelChange)="onFiltroChange()">
+              <option [ngValue]="null">Todas las rutas</option>
+              <!-- <option value="">Seleccionar ruta</option> -->
+
+              @for (ruta of rutasDisponibles; track ruta.id_ruta) {
+              <option [ngValue]="ruta.id_ruta">
+                {{ ruta.codigo }} — {{ ruta.nombre }}
+              </option>
+              }
+            </select>
           </div>
 
           <!-- Limpiar -->
@@ -123,8 +133,8 @@
                    w-full gap-2 rounded-xl
                    xl:w-auto xl:min-w-28" [disabled]="
                    !searchBusqueda &&
-              !idZona &&
-              !idRuta
+              !idZonaBusqueda &&
+              !idRutaBusqueda
             " (click)="limpiarFiltros()">
               <i class="fa-solid fa-eraser" aria-hidden="true"></i>
               Limpiar
@@ -192,22 +202,18 @@
     aria-label="Codigos QR registrados">
 
     <!-- Cabecera de tabla -->
-    <div class="flex flex-col gap-4 border-b border-base-300 px-4 py-4
-           sm:flex-row sm:items-center sm:justify-between sm:px-5">
+    <div
+      class="flex flex-col gap-4 border-b border-base-300 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
 
-      <!-- Total -->
-      <div class="flex w-full items-center
-                 justify-between gap-3
-                 text-sm text-base-content/70
-                 sm:w-auto sm:justify-start">
-        <label for="usuarios-page-size" class="whitespace-nowrap">
+      <!-- Tamaño de página -->
+      <div class="flex flex-wrap items-center gap-2 text-sm text-base-content/70">
+        <label for="qr-page-size" class="whitespace-nowrap">
           Mostrar
         </label>
 
-        <select id="usuarios-page-size" class="select select-bordered select-sm
-         w-16 min-w-16 shrink-0 pl-3 pr-8" [(ngModel)]="limit" (change)="cambiarLimite()">
-
-          @for ( size of pageSizeOptions; track size ) {
+        <select id="qr-page-size" class="select select-bordered select-sm w-20 shrink-0" [(ngModel)]="limit"
+          [disabled]="isLoading" (change)="cambiarLimite()">
+          @for (size of pageSizeOptions; track size) {
           <option [ngValue]="size">
             {{ size }}
           </option>
@@ -219,18 +225,36 @@
         </span>
       </div>
 
-      <!-- Botón crear -->
-      <div class="flex w-full items-center
-                 justify-end sm:w-auto">
+      <!-- Acciones -->
+      <div class="flex min-w-0 flex-col gap-3
+           sm:flex-row sm:items-center sm:justify-between
+           lg:justify-end lg:gap-5">
+        <!-- Switch de estados -->
+        <label for="qr-mostrar-todos" class="flex min-w-0 cursor-pointer items-center gap-3
+             rounded-xl bg-base-200/60 px-3 py-2.5" [class.cursor-not-allowed]="isLoading"
+          [class.opacity-60]="isLoading">
+          <input id="qr-mostrar-todos" type="checkbox" role="switch" class="toggle toggle-primary toggle-sm shrink-0"
+            [checked]="mostrarTodosEstados" [disabled]="isLoading" aria-describedby="qr-estados-ayuda"
+            (change)="onMostrarTodosEstadosChange($event)" />
 
+          <span class="min-w-0">
+            <span class="block text-sm font-semibold">
+              Mostrar todos los estados
+            </span>
+
+            <span id="qr-estados-ayuda" class="block text-xs text-base-content/60">
+              {{ mostrarTodosEstados ? 'Activos, inactivos y revocados' : 'Solo códigos activos' }}
+            </span>
+          </span>
+        </label>
+
+        <!-- Crear código QR -->
         <button type="button" class="btn btn-primary
                   min-h-10 w-full gap-2
                   rounded-xl border-none
                 hover:text-white bg-info hover:bg-primary
                   sm:w-auto sm:min-w-36" (click)="abrirModal()">
-
-          <i class="fa-solid fa-plus"></i>
-
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
           Código QR
         </button>
       </div>
@@ -239,14 +263,17 @@
     <!-- Tabla -->
     <div class="overflow-x-auto">
       <table class="table min-w-240">
-
-        <thead class="bg-base-200">
-          <tr>
-            <th scope="col">ID</th>
+        <thead class="bg-base-300/90">
+          <tr class="text-xs uppercase
+                     tracking-wide
+                     text-base-content/60">
+            <th class="w-14 text-center" scope="col">N.°</th>
+            <th scope="col">Titulo</th>
             <th scope="col">Recurso</th>
-            <th scope="col">Ruta asociada</th>
+            <th scope="col">Ruta / Zona</th>
             <th scope="col">Estado</th>
-            <th scope="col">Creado por</th>
+            <!-- <th scope="col">Creado por</th> -->
+            <th scope="col">Fecha generación</th>
             <th scope="col" class="text-center"> Acciones </th>
           </tr>
         </thead>
@@ -258,6 +285,11 @@
           <tr aria-hidden="true">
 
             <!-- Numeración paginada -->
+            <td>
+              <div class="skeleton mx-auto h-4 w-8"></div>
+            </td>
+
+            <!-- Titulo -->
             <td>
               <div class="skeleton mx-auto h-4 w-8"></div>
             </td>
@@ -274,7 +306,7 @@
               </div>
             </td>
 
-            <!-- Ruta -->
+            <!-- Ruta o zona -->
             <td>
               <div class="space-y-2">
                 <div class="skeleton h-3 w-10"></div>
@@ -291,24 +323,25 @@
             </td>
 
             <!-- Usuario -->
-            <td>
+            <!-- <td>
               <div class="space-y-2">
                 <div class="skeleton h-6 w-28"></div>
                 <div class="skeleton h-6 w-24"></div>
               </div>
-            </td>
+            </td> -->
 
+            <!-- Fecha generación -->
             <td>
               <div class="skeleton mx-auto h-6 w-20"></div>
             </td>
 
-            <td>
+            <!-- <td>
               <div class="skeleton h-4 w-32"></div>
             </td>
 
             <td>
               <div class="skeleton h-4 w-32"></div>
-            </td>
+            </td> -->
 
             <!-- Acciones -->
             <td>
@@ -336,57 +369,107 @@
               {{ ((page - 1) * limit) + i + 1 }}
             </td>
 
+            <!-- Titulo -->
+            <td class="text-base-content/60">
+              {{ codigo.titulo}}
+            </td>
+
             <!-- Tipo de recurso -->
             <td>
-              <span class="badge badge-outline">
+              <span class="badge badge-outline" [ngClass]="getTipoRecursoBadge(codigo.tipo_recurso)">
                 {{ codigo.tipo_recurso }}
               </span>
             </td>
 
-            <!-- Ruta -->
+            <!-- Ruta o zona asociada -->
             <td>
+              @if (codigo.tipo_recurso === 'RUTA') {
               @if (codigo.ruta; as ruta) {
               <div class="font-medium">
                 {{ ruta.nombre }}
               </div>
 
-              <div class="text-xs text-base-content/60">
-                {{ ruta.codigo }}
-                · Zona #{{ ruta.id_zona }}
+              <div class="mt-1 text-xs text-base-content/60">
+                {{ ruta.codigo }} · Zona #{{ ruta.id_zona }}
               </div>
               } @else {
-              <span class="text-base-content/50">
-                Sin ruta asociada
+              <span class="text-sm text-base-content/50">
+                Ruta no disponible
+              </span>
+              }
+              } @else if (codigo.tipo_recurso === 'ZONA') {
+              @if (codigo.zona; as zona) {
+              <div class="font-medium">
+                {{ zona.nombre }}
+              </div>
+
+              <div class="mt-1 text-xs text-base-content/60">
+                {{ zona.codigo }} · Zona #{{ zona.id_zona }}
+              </div>
+              } @else {
+              <span class="text-sm text-base-content/50">
+                Zona no disponible
+              </span>
+              }
+              } @else {
+              <span class="text-sm text-base-content/50">
+                Recurso no disponible
               </span>
               }
             </td>
 
             <!-- Estado -->
             <td>
-              <span class="badge badge-outline">
-                {{ codigo.estado_qr }}
-              </span>
+              <div class="flex flex-col items-start gap-2">
 
-              @if (codigo.fecha_revocacion) {
-              <div class="mt-1 text-xs text-base-content/60">
-                Revocado:
-                {{ codigo.fecha_revocacion | date: 'dd/MM/yyyy HH:mm' }}
+                <span class="badge badge-outline gap-1.5" [ngClass]="getEstadoQrBadge(codigo.estado_qr)">
+                  <i class="fa-solid" [ngClass]="{
+          'fa-circle-check': codigo.estado_qr === 'ACTIVO',
+          'fa-circle-pause': codigo.estado_qr === 'INACTIVO',
+          'fa-ban': codigo.estado_qr === 'REVOCADO'
+                  }" aria-hidden="true"></i>
+
+                  {{ codigo.estado_qr }}
+                </span>
+
+                @if (codigo.estado_qr === 'REVOCADO') {
+                @if (codigo.fecha_revocacion || codigo.motivo_revocacion) {
+                <div class="max-w-xs space-y-1 border-l-2 border-error/30 pl-2">
+
+                  @if (codigo.fecha_revocacion) {
+                  <p class="text-xs text-base-content/60">
+                    <span class="font-semibold">Revocado:</span>
+                    {{
+                    codigo.fecha_revocacion
+                    | date:'dd/MM/yyyy HH:mm':'-0500'
+                    }}
+                  </p>
+                  }
+
+                  @if (codigo.motivo_revocacion) {
+                  <p class="whitespace-normal wrap-break-word text-xs leading-5 text-base-content/70">
+                    {{ codigo.motivo_revocacion }}
+                  </p>
+                  }
+
+                </div>
+                }
+                }
+
               </div>
-              }
-
-              @if (codigo.motivo_revocacion) {
-              <p class="mt-1 max-w-xs text-xs text-base-content/60">
-                {{ codigo.motivo_revocacion }}
-              </p>
-              }
             </td>
 
             <!-- Usuario -->
-            <td>
+            <!-- <td>
               {{
               codigo.usuario_creacion?.username
               ?? 'No disponible'
               }}
+            </td> -->
+
+            <!-- Fecha generación -->
+            <td>
+              {{ codigo.fecha_generacion | date: 'dd/MM/yyyy' }}
             </td>
 
             <!-- Acciones -->
@@ -543,8 +626,8 @@
     <div class="mx-auto flex h-20 w-20 items-center justify-center
              rounded-full transition-colors" [ngClass]="
         searchBusqueda.trim() ||
-        idZona ||
-        idRuta
+        idZonaBusqueda ||
+        idRutaBusqueda
           ? 'bg-secondary/10 text-secondary'
           : 'bg-primary/10 text-primary'
       ">
@@ -552,7 +635,7 @@
     </div>
 
     <h2 class="mt-5 text-lg font-bold">
-      @if ( searchBusqueda.trim() || idZona || idRuta ) {
+      @if ( searchBusqueda.trim() || idZonaBusqueda || idRutaBusqueda ) {
       No se encontraron códigos qr
       } @else {
       Aún no tienes códigos qr registrados
@@ -560,7 +643,7 @@
     </h2>
 
     <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-base-content/55">
-      @if ( searchBusqueda.trim() || idZona || idRuta ) {
+      @if ( searchBusqueda.trim() || idZonaBusqueda || idRutaBusqueda ) {
       No hay códigos qr disponibles que coincidan con los filtros seleccionados.
       Prueba con otros criterios de búsqueda.
       } @else {
@@ -570,7 +653,7 @@
 
     <!-- Acciones -->
     <div class="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-      @if ( searchBusqueda || idZona || idRuta ) {
+      @if ( searchBusqueda || idZonaBusqueda || idRutaBusqueda ) {
       <button type="button" class="btn btn-secondary btn-sm mt-5" (click)="limpiarFiltros()">
         <!-- <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i> -->
         <i class="fa-solid fa-eraser" aria-hidden="true"></i>

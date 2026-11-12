@@ -198,6 +198,7 @@ export class RecorridosPageComponent implements OnInit, OnDestroy {
   // ==========================================================
   // LISTADO
   // ==========================================================
+
   // ==========================================================
   // OBTENER RUTAS ACTIVAS
   // ==========================================================
@@ -251,7 +252,6 @@ export class RecorridosPageComponent implements OnInit, OnDestroy {
   }
 
   getRecorridosPaginated(): void {
-
 
     // --------------------------------------------------------
     // 3. CONSTRUIR FILTROS TIPADOS

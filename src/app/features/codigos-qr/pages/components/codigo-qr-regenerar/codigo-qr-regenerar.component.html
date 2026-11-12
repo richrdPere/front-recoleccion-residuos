@@ -113,7 +113,8 @@
                 aria-describedby="qr-regenerar-motivo-ayuda qr-regenerar-motivo-error"
                 [class.textarea-success]="campoCompleto('motivo')"
                 [attr.aria-invalid]="regenerarForm.controls.motivo.touched && regenerarForm.controls.motivo.invalid"
-                [class.textarea-error]="regenerarForm.controls.motivo.touched && regenerarForm.controls.motivo.invalid"></textarea>
+                [class.textarea-error]="regenerarForm.controls.motivo.touched && regenerarForm.controls.motivo.invalid"
+                appUppercase></textarea>
 
               <div id="qr-regenerar-motivo-error">
                 @if (
@@ -130,6 +131,32 @@
                 <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
                 <span>Ejemplo: reemplazo del material impreso o renovación
                   del código distribuido.</span>
+              </div>
+            </div>
+
+            <!-- CONFIRMACIÓN DEL REEMPLAZO -->
+            <div class="mt-5 rounded-xl border border-warning/40 bg-warning/10 p-4">
+              <label for="qr-confirmar-reemplazo" class="flex cursor-pointer items-start gap-3">
+                <input id="qr-confirmar-reemplazo" type="checkbox" class="checkbox checkbox-warning mt-0.5 shrink-0"
+                  formControlName="confirmar_reemplazo" aria-describedby="qr-confirmar-reemplazo-error"
+                  [attr.aria-invalid]="regenerarForm.controls.confirmar_reemplazo.touched && regenerarForm.controls.confirmar_reemplazo.invalid" />
+
+                <span class="text-sm leading-6">
+                  Confirmo que deseo reemplazar este código QR.
+                  El enlace anterior será revocado y dejará de funcionar.
+                  Deberé distribuir la nueva imagen.
+                </span>
+              </label>
+
+              <div id="qr-confirmar-reemplazo-error" aria-live="polite">
+                @if (
+                regenerarForm.controls.confirmar_reemplazo.touched &&
+                regenerarForm.controls.confirmar_reemplazo.invalid
+                ) {
+                <p class="mt-2 text-xs text-error">
+                  Debes confirmar el reemplazo para continuar.
+                </p>
+                }
               </div>
             </div>
           </fieldset>

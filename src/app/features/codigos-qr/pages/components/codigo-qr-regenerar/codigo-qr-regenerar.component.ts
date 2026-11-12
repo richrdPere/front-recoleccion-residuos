@@ -4,6 +4,9 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize, Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 
+// Directives
+import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directive';
+
 // Service
 import { CodigosQrService } from '../../../services/codigos-qr.service';
 
@@ -15,6 +18,7 @@ import { RegenerarCodigoQrData, RegenerarCodigoQrRequest } from '../../../interf
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    UppercaseDirective,
   ],
   templateUrl: './codigo-qr-regenerar.component.html',
   styles: ``,
