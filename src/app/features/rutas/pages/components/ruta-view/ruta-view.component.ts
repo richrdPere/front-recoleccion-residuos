@@ -58,6 +58,86 @@ export class RutasViewComponent implements OnChanges, OnDestroy {
   ) { }
 
   // ============================================================
+  // PESTAÑAS
+  // ============================================================
+  readonly pestanas = [
+    {
+      id: 'general',
+      etiqueta: 'General',
+      icono: 'fa-solid fa-circle-info',
+    },
+    {
+      id: 'version',
+      etiqueta: 'Versión',
+      icono: 'fa-solid fa-code-branch',
+    },
+    {
+      id: 'puntos',
+      etiqueta: 'Puntos',
+      icono: 'fa-solid fa-location-dot',
+    },
+    {
+      id: 'horarios',
+      etiqueta: 'Horarios',
+      icono: 'fa-solid fa-calendar-days',
+    },
+  ] as const;
+
+  pestanaActiva:
+    | 'general'
+    | 'version'
+    | 'puntos'
+    | 'horarios' = 'general';
+
+  // Navegación mediante flechas, Inicio y Fin.
+  navegarPestanas(
+    event: KeyboardEvent,
+    indiceActual: number,
+  ): void {
+    let nuevoIndice: number;
+
+    switch (event.key) {
+      case 'ArrowRight':
+        nuevoIndice =
+          (indiceActual + 1) % this.pestanas.length;
+        break;
+
+      case 'ArrowLeft':
+        nuevoIndice =
+          (indiceActual - 1 + this.pestanas.length) %
+          this.pestanas.length;
+        break;
+
+      case 'Home':
+        nuevoIndice = 0;
+        break;
+
+      case 'End':
+        nuevoIndice = this.pestanas.length - 1;
+        break;
+
+      default:
+        return;
+    }
+
+    event.preventDefault();
+
+    this.pestanaActiva =
+      this.pestanas[nuevoIndice].id;
+
+    const boton =
+      event.currentTarget as HTMLButtonElement;
+
+    const botones =
+      boton.parentElement
+        ?.querySelectorAll<HTMLButtonElement>(
+          '[role="tab"]',
+        );
+
+    botones?.[nuevoIndice]?.focus();
+  }
+
+  // ============================================================
   // CICLO DE VIDA
   // ============================================================
 
@@ -309,10 +389,13 @@ export class RutasViewComponent implements OnChanges, OnDestroy {
   }
 
   private limpiarDatos(): void {
-    this.ruta = null;
-    this.errorCarga = null;
-    this.camposZona = [];
-    this.camposVersion = [];
-    this.horariosDetalle = [];
+  this.ruta = null;
+  this.errorCarga = null;
+
+  this.camposZona = [];
+  this.camposVersion = [];
+  this.horariosDetalle = [];
+
+  this.pestanaActiva = 'general';
   }
 }

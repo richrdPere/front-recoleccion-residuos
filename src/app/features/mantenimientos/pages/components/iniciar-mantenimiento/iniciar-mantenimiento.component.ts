@@ -9,19 +9,7 @@ import Swal from 'sweetalert2';
 import { MantenimientoService } from '../../../services/mantenimiento.service';
 
 // Interface
-// import {
-//   MantenimientoDetalleData,
-// } from '../../interfaces/create-mantenimiento.interface';
-
-
-
-// import {
-//   IniciarMantenimientoRequest,
-// } from '../../interfaces/iniciar-mantenimiento.interface';
 import { IniciarMantenimientoRequest, MantenimientoDetalleData, MantenimientoPaginadoItem } from '../../../interfaces';
-
-
-
 
 // *********************************************************
 // UTILIDADES Y VALIDADORES
@@ -100,10 +88,6 @@ const fechaLocalOpcionalValida: ValidatorFn = (
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class IniciarMantenimientoComponent implements OnChanges {
-  // private readonly fb = inject(FormBuilder);
-  // private readonly mantenimientoService = inject(MantenimientosService);
-  // private readonly cdr = inject(ChangeDetectorRef);
-  // private readonly destroyRef = inject(DestroyRef);
 
   // ============================================================
   // INPUTS / OUTPUTS
@@ -149,10 +133,7 @@ export class IniciarMantenimientoComponent implements OnChanges {
   // CICLO DE VIDA
   // ============================================================
   ngOnChanges(changes: SimpleChanges): void {
-    if (
-      changes['mostrarModal'] ||
-      changes['mantenimientoSeleccionado']
-    ) {
+    if (changes['mostrarModal'] || changes['mantenimientoSeleccionado']) {
       if (this.isLoading) {
         return;
       }
@@ -174,20 +155,19 @@ export class IniciarMantenimientoComponent implements OnChanges {
     });
   }
 
-  // readonly formInicio = this.fb.group({
-  //   kilometraje_ingreso: this.fb.control<number | string | null>(
-  //     null,
-  //     [kilometrajeValido],
-  //   ),
-  //   fecha_fin_programada: this.fb.nonNullable.control(
-  //     '',
-  //     [fechaLocalOpcionalValida],
-  //   ),
-  // });
-
   private resetFormulario(): void {
+
+    const valor = this.mantenimientoSeleccionado?.vehiculo?.kilometraje;
+    const kilometraje = valor == null || String(valor).trim() === ''
+      ? null
+      : Number(valor);
+
     this.formInicio.reset({
-      kilometraje_ingreso: null,
+      kilometraje_ingreso: kilometraje !== null &&
+        Number.isFinite(kilometraje) &&
+        kilometraje >= 0
+        ? kilometraje
+        : null,
       fecha_fin_programada: 'PREVENTIVO',
     });
   }

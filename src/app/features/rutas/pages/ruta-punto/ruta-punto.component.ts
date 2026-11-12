@@ -147,27 +147,14 @@ export class RutaPuntoComponent implements OnChanges, OnDestroy {
       : 1;
 
     if (tipo === 'INICIO') this.ordenSugerido = 1;
-    else if (tipo === 'FINAL') this.ordenSugerido += 1000;
+    else if (tipo === 'FINAL') this.ordenSugerido += 100;
     else {
       this.ordenSugerido = (this.puntos.find(p => p.tipo_punto === 'INICIO')?.orden ?? 0) + 1;
       while (this.puntos.some(p => p.orden === this.ordenSugerido)) this.ordenSugerido++;
     }
     this.mostrarModal = true;
   }
-  // abrirNuevoPunto(): void {
-  //   if (this.idRutaVersion === null || this.isSaving) {
-  //     return;
-  //   }
 
-  //   this.modoEdicion = false;
-  //   this.puntoSeleccionado = null;
-
-  //   this.ordenSugerido = this.puntos.length
-  //     ? Math.max(...this.puntos.map((punto) => punto.orden)) + 1
-  //     : 1;
-
-  //   this.mostrarModal = true;
-  // }
 
   abrirEditarPunto(punto: RutaPuntoData): void {
     if (this.isSaving) {
@@ -323,7 +310,8 @@ export class RutaPuntoComponent implements OnChanges, OnDestroy {
     const request: ReorderRutaPuntosRequest = {
       puntos: nuevoOrden.map((item, posicion) => ({
         id_ruta_punto: item.id_ruta_punto,
-        orden: (posicion + 1) * 1000,
+        // orden: (posicion + 1) * 1000,
+        orden: (posicion + 1),
       })),
     };
 

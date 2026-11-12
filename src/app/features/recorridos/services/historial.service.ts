@@ -1,191 +1,127 @@
-import {  Injectable,  inject} from '@angular/core';
-import {  HttpClient,  HttpParams} from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { catchError, Observable } from 'rxjs';
 
-import type {
-  FeatureCollection,
-} from 'geojson';
+// Environment
+import { environment } from 'src/environments/environment';
 
-import {
-  environment,
-} from 'src/environments/environment';
+// Service
+import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 
-import type {
-  ApiResponse,
-} from 'src/app/core/models/api-response.model';
+// Helper
+import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
-import type {
-  PuntoRecorridoData,
-} from '../../recolecciones/interfaces';
-
-export interface HistorialFila {
-  id_recorrido: number;
-  ruta: string | null;
-  zona: string | null;
-  placa: string | null;
-  estado: string;
-  fecha_inicio: string;
-  fecha_fin: string | null;
-}
-
-export interface HistorialListado {
-  items: HistorialFila[];
-
-  pagination: {
-    page: number;
-    total_pages: number;
-    total: number;
-  };
-}
-
-export interface HistorialDetalle {
-  recorrido: {
-    id_recorrido: number;
-    estado_recorrido: string;
-
-    fecha_hora_inicio: string;
-    fecha_hora_finalizacion: string | null;
-
-    kilometraje_inicio: string | number | null;
-    kilometraje_final: string | number | null;
-
-    distancia_recorrida_metros: string | number | null;
-    motivo_cancelacion: string | null;
-
-    resultado_final: {
-      cantidad_total: number;
-      unidad_medida: string;
-      observacion: string;
-
-      vehiculo?: {
-        placa: string;
-      } | null;
-
-      capacidad?: {
-        porcentaje: number;
-      } | null;
-    } | null;
-  };
-
-  programacion: {
-    fecha_programada: string;
-    turno: string;
-
-    ruta: {
-      nombre: string;
-      zona: {
-        nombre: string;
-      } | null;
-    } | null;
-
-    vehiculo: {
-      placa: string;
-    } | null;
-  };
-
-  equipo: {
-    id_personal: number;
-    funcion: string;
-    estado_asignacion: string;
-    usuario: string | null;
-  }[];
-
-  tiempos: {
-    total_segundos: number | null;
-    pausa_segundos: number | null;
-    operacion_segundos: number | null;
-
-    pausas: {
-      inicio: string;
-      fin: string;
-      duracion_segundos: number;
-      abierta: boolean;
-    }[];
-
-    advertencias: string[];
-  };
-
-  eventos: {
-    id_recorrido_evento: number;
-    tipo_evento: string;
-    fecha_evento: string;
-    observacion: string | null;
-
-    usuario: {
-      username: string;
-    } | null;
-  }[];
-
-  puntos: PuntoRecorridoData[];
-
-  resumen_puntos: {
-    total: number;
-    atendidos: number;
-    omitidos: number;
-    pendientes: number;
-  };
-
-  incidencias: {
-    id_incidencia: number;
-    titulo: string;
-    descripcion: string;
-    tipo: string;
-    prioridad: string;
-    estado_incidencia: string;
-    fecha_reporte: string;
-  }[];
-
-  generado_en: string;
-  nota_incidencias: string;
-}
-
-export interface HistorialTrazado {
-  geojson: FeatureCollection;
-
-  total_en_servidor: number;
-  muestras_cargadas: number;
-  muestras_validas: number;
-  muestras_descartadas: number;
-
-  corte_por_hueco_segundos: number;
-  sincronizacion_dispositivos_verificada: boolean;
-}
+// Interfaces
+import { GetHistorialDetalleResponse, GetHistorialListadoFilters, GetHistorialListadoResponse, GetHistorialTrazadoResponse } from '../interfaces/historial';
 
 @Injectable({
   providedIn: 'root',
 })
 export class HistorialService {
-  private readonly http = inject(HttpClient);
 
-  private readonly base =
-    environment.apiUrl.replace(/\/+$/, '') +
-    '/recorridos/historial';
+  // *********************************************************
+  // ENDPOINTS
+  // *********************************************************
+  private readonly API_BASE = environment.apiUrl + 'recorridos';
 
-  listar(
-    filtros: Record<string, string | number>,
-  ) {
-    let params = new HttpParams();
+  private readonly API_GET_HISTORIAL_LISTADO: string = this.API_BASE + '/historial';
+  private readonly API_GET_HISTORIAL_DETALLE: string = this.API_BASE + '/historial/';
+  private readonly API_GET_HISTORIAL_TRAZADO: string = this.API_BASE + '/historial/';
 
-    for (const [key, value] of Object.entries(filtros)) {
-      if (value !== '') {
-        params = params.set(key, String(value));
-      }
-    }
+  constructor(
+    private readonly http: HttpClient,
+    private readonly authStorage: AuthStorageService
+  ) { }
 
-    return this.http.get<ApiResponse<HistorialListado>>(
-      this.base,
-      { params },
+  // *********************************************************
+  // 1. OBTENER LISTADO DEL HISTORIAL
+  // *********************************************************
+  getHistorialListado(
+    filters: GetHistorialListadoFilters,
+  ): Observable<GetHistorialListadoResponse> {
+    const headers = this.getJsonHeaders().set(
+      'x-client-origin',
+      'WEB',
     );
+
+    const params = HttpServiceHelper.buildParams(
+      filters,
+    );
+
+    return this.http
+      .get<GetHistorialListadoResponse>(
+        this.API_GET_HISTORIAL_LISTADO,
+        { params, headers },
+      )
+      .pipe(
+        catchError((error: unknown) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo obtener el listado de recorridos.',
+          ),
+        ),
+      );
   }
 
-  detalle(id: number) {
-    return this.http.get<ApiResponse<HistorialDetalle>>(
-      `${this.base}/${id}`,
+  // *********************************************************
+  // 2. OBTENER DETALLE DEL HISTORIAL
+  // *********************************************************
+  getHistorialDetalle(
+    idRecorrido: number,
+  ): Observable<GetHistorialDetalleResponse> {
+    const headers = this.getJsonHeaders().set(
+      'x-client-origin',
+      'WEB',
     );
+
+    return this.http
+      .get<GetHistorialDetalleResponse>(
+        `${this.API_GET_HISTORIAL_DETALLE}${idRecorrido}`,
+        { headers },
+      )
+      .pipe(
+        catchError((error: unknown) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo obtener el detalle del historial.',
+          ),
+        ),
+      );
   }
 
-  trazado(id: number) {
-    return this.http.get<ApiResponse<HistorialTrazado>>(
-      `${this.base}/${id}/trazado`,
+  // *********************************************************
+  // 3. OBTENER DETALLE DEL HISTORIAL
+  // *********************************************************
+  getHistorialTrazado(
+    idRecorrido: number,
+  ): Observable<GetHistorialTrazadoResponse> {
+    const headers = this.getJsonHeaders().set(
+      'x-client-origin',
+      'WEB',
     );
+
+    return this.http
+      .get<GetHistorialTrazadoResponse>(
+        `${this.API_GET_HISTORIAL_TRAZADO}${idRecorrido}/trazado`,
+        { headers },
+      )
+      .pipe(
+        catchError((error: unknown) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudo obtener el trazado GPS del recorrido.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // MÉTODOS PRIVADOS
+  // *********************************************************
+  private getJsonHeaders(): HttpHeaders {
+    return HttpServiceHelper.getHeaders({
+      token:
+        this.authStorage.getAccessToken(),
+    });
   }
 }

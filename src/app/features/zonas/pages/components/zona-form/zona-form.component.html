@@ -230,8 +230,7 @@
               <!-- ============================================= -->
               <!-- DERECHA: MAPA -->
               <!-- ============================================= -->
-              <section class="min-w-0 space-y-4 rounded-xl
-            border border-base-300 p-4 lg:sticky lg:top-0">
+              <section class="min-w-0 space-y-4 rounded-xl border border-base-300 p-4 lg:sticky lg:top-0">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                   <h3 class="flex items-center gap-2 font-semibold">
                     <i class="fa-solid fa-draw-polygon text-primary" aria-hidden="true"></i>
@@ -239,11 +238,8 @@
                     <span class="text-error">*</span>
                   </h3>
 
-                  <span class="badge badge-soft" [class.badge-success]="
-                formZona.get('poligono_geojson')?.valid
-              " [class.badge-warning]="
-                !formZona.get('poligono_geojson')?.valid
-              ">
+                  <span class="badge badge-soft" [class.badge-success]="formZona.get('poligono_geojson')?.valid"
+                    [class.badge-warning]="!formZona.get('poligono_geojson')?.valid">
                     {{
                     formZona.get('poligono_geojson')?.valid
                     ? 'Polígono definido'
@@ -259,13 +255,12 @@
                   con la papelera.
                 </p>
 
-                <div class="h-80 overflow-hidden rounded-xl
-              border border-base-300 sm:h-96
-              lg:h-[clamp(320px,50vh,560px)]">
-                  <mapa-base class="block h-full w-full" [habilitarEdicionZona]="true" [poligonoEditable]="
-                formZona.get('poligono_geojson')?.value
-              " [mostrarZonas]="false" [mostrarRuta]="false" [mostrarPuntos]="false"
-                    (poligonoCambiado)="recibirPoligono($event)" (mapaError)="mostrarErrorMapa($event)"></mapa-base>
+                <div
+                  class="h-80 overflow-hidden rounded-xl border border-base-300 sm:h-96 lg:h-[clamp(320px,50vh,560px)]">
+                  <mapa-base class="block h-full w-full" [habilitarEdicionZona]="true"
+                    [poligonoEditable]="formZona.get('poligono_geojson')?.value" [mostrarZonas]="false"
+                    [mostrarRuta]="false" [mostrarPuntos]="false" (poligonoCambiado)="recibirPoligono($event)"
+                    (mapaError)="mostrarErrorMapa($event)"></mapa-base>
                 </div>
 
                 @if (campoInvalido('poligono_geojson')) {
@@ -286,10 +281,8 @@
         <!-- ================================================= -->
         <!-- FOOTER -->
         <!-- ================================================= -->
-        <footer class="flex shrink-0 justify-center border-t
-      border-base-300 bg-base-100 px-5 py-4 sm:px-6">
-          <div class="flex w-full flex-col-reverse gap-3
-        sm:w-auto sm:flex-row sm:gap-5">
+        <footer class="flex shrink-0 justify-center border-t border-base-300 bg-base-100 px-5 py-4 sm:px-6">
+          <div class="flex w-full flex-col-reverse gap-3 sm:w-auto sm:flex-row sm:gap-5">
             <button type="button" class="btn btn-error" [disabled]="isLoading" (click)="cerrarModal()">
               Cancelar
             </button>

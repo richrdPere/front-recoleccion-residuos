@@ -76,10 +76,10 @@ export class VehiculosPageComponent implements OnInit {
         value: 'CAMION_COMPACTADOR',
         label: 'CAMIÓN COMPACTADOR',
       },
-      {
-        value: 'CAMION_BARANDA',
-        label: 'CAMIÓN BARANDA',
-      },
+      // {
+      //   value: 'CAMION_BARANDA',
+      //   label: 'CAMIÓN BARANDA',
+      // },
       {
         value: 'CAMION_VOLQUETE',
         label: 'CAMIÓN VOLQUETE',
@@ -88,10 +88,10 @@ export class VehiculosPageComponent implements OnInit {
         value: 'MOTOFURGON',
         label: 'MOTOFURGÓN',
       },
-      {
-        value: 'OTRO',
-        label: 'OTRO',
-      },
+      // {
+      //   value: 'OTRO',
+      //   label: 'OTRO',
+      // },
     ];
 
   readonly estadosOperativos: {
@@ -378,6 +378,13 @@ export class VehiculosPageComponent implements OnInit {
     );
   }
 
+  fotoVehiculoUrl(
+    ruta: string | null,
+  ): string | null {
+    return this.vehiculosService
+      .resolverFotoUrl(ruta);
+  }
+
   getIconoUnidad(
     tipo: string | null | undefined,
   ): string {
@@ -439,7 +446,7 @@ export class VehiculosPageComponent implements OnInit {
       CAMION_BARANDA: {
         icon: 'fa-truck-pickup',
         label: 'BARANDA',
-        class: 'badge-primary',
+        class: 'badge-accent',
       },
       CAMION_VOLQUETE: {
         icon: 'fa-truck-moving',
@@ -449,7 +456,7 @@ export class VehiculosPageComponent implements OnInit {
       MOTOFURGON: {
         icon: 'fa-motorcycle',
         label: 'MOTOFURGÓN',
-        class: 'badge-accent',
+        class: 'badge-primary',
       },
       OTRO: {
         icon: 'fa-car-side',

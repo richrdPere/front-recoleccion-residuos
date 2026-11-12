@@ -26,6 +26,8 @@ export interface CreateVehiculoRequest {
 
   observacion?: string | null;
   estado?: boolean;
+
+
 }
 
 // ============================================================

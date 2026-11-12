@@ -141,8 +141,6 @@ export class RutaVersionesComponent implements OnChanges, OnDestroy {
 
           const versiones = response.data ?? [];
 
-          console.log("VERSIONES: ", versiones);
-
           this.versiones.set(versiones);
 
           const indiceAnterior = versiones.findIndex(
@@ -329,21 +327,16 @@ export class RutaVersionesComponent implements OnChanges, OnDestroy {
           });
         },
         error: (error: unknown) => {
-          const err = error as {
-            error?: { message?: string } | string;
-            message?: string;
-          };
+          const mensaje = this.obtenerMensajeError(error);
 
-          const mensaje =
-            typeof err?.error === 'string'
-              ? err.error
-              : err?.error?.message;
+          // Conservar el estado confirmado de la versión.
+          checkbox.checked = version.vigente;
 
           void Swal.fire({
             icon: 'error',
             title: 'No se pudo activar la versión',
-            text: mensaje || err?.message ||
-              'Ocurrió un error al activar la versión.',
+            text: mensaje,
+            confirmButtonText: 'Aceptar',
           });
         },
       });
@@ -368,39 +361,45 @@ export class RutaVersionesComponent implements OnChanges, OnDestroy {
   }
 
   private obtenerMensajeError(error: unknown): string {
-    if (typeof error === 'string' && error.trim()) {
-      return error;
+    const textoValido = (valor: unknown): string | null =>
+      typeof valor === 'string' && valor.trim()
+        ? valor.trim()
+        : null;
+
+    const leerMensaje = (valor: unknown): string | null => {
+      if (!valor || typeof valor !== 'object') {
+        return null;
+      }
+
+      return textoValido(
+        (valor as { message?: unknown }).message,
+      );
+    };
+
+    const mensajeDirecto = textoValido(error);
+
+    if (mensajeDirecto) {
+      return mensajeDirecto;
     }
 
     if (error && typeof error === 'object') {
       const objeto = error as {
         message?: unknown;
-        error?: {
-          message?: unknown;
-        } | string;
+        error?: unknown;
+        details?: unknown;
       };
 
-      const mensajeBackend =
-        typeof objeto.error === 'string'
-          ? objeto.error
-          : objeto.error?.message;
+      const mensaje =
+        leerMensaje(objeto.details) ??
+        leerMensaje(objeto.error) ??
+        textoValido(objeto.message);
 
-      if (
-        typeof mensajeBackend === 'string' &&
-        mensajeBackend.trim()
-      ) {
-        return mensajeBackend;
-      }
-
-      if (
-        typeof objeto.message === 'string' &&
-        objeto.message.trim()
-      ) {
-        return objeto.message;
+      if (mensaje) {
+        return mensaje;
       }
     }
 
-    return 'No se pudieron obtener las versiones de la ruta.';
+    return 'No se pudo activar la versión de la ruta.';
   }
 
   contarPuntosHabilitados(puntos: RutaPuntoData[]): number {

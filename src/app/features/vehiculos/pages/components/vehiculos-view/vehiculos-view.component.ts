@@ -288,6 +288,13 @@ export class VehiculosViewComponent implements OnChanges, OnDestroy {
     };
   }
 
+  fotoVehiculoUrl(
+    ruta: string | null,
+  ): string | null {
+    return this.vehiculosService
+      .resolverFotoUrl(ruta);
+  }
+
   // ============================================================
   // MODAL
   // ============================================================

@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges, inject, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize } from 'rxjs';
+import { finalize, of, switchMap, throwError } from 'rxjs';
 import Swal from 'sweetalert2';
 
 // Directives
@@ -108,7 +108,7 @@ function opcionPermitida(
   styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class VehiculosFormComponent implements OnChanges {
+export class VehiculosFormComponent implements OnChanges, OnDestroy {
 
 
   // ============================================================
@@ -135,6 +135,17 @@ export class VehiculosFormComponent implements OnChanges {
   readonly anioMinimo = 1900;
   readonly anioMaximo = new Date().getFullYear() + 1;
 
+  // Fotos variables
+  fotoActual: string | null = null;
+  nuevaFoto: File | null = null;
+
+  vistaPreviaFoto: string | null = null;
+  fotoError: string | null = null;
+
+  quitarFotoAlGuardar = false;
+
+  private readonly maxFotoBytes = 5 * 1024 * 1024;
+
   // ============================================================
   // SELECTORES
   // ============================================================
@@ -146,10 +157,10 @@ export class VehiculosFormComponent implements OnChanges {
         value: 'CAMION_COMPACTADOR',
         label: 'CAMIÓN COMPACTADOR',
       },
-      {
-        value: 'CAMION_BARANDA',
-        label: 'CAMIÓN BARANDA',
-      },
+      // {
+      //   value: 'CAMION_BARANDA',
+      //   label: 'CAMIÓN BARANDA',
+      // },
       {
         value: 'CAMION_VOLQUETE',
         label: 'CAMIÓN VOLQUETE',
@@ -158,10 +169,10 @@ export class VehiculosFormComponent implements OnChanges {
         value: 'MOTOFURGON',
         label: 'MOTOFURGÓN',
       },
-      {
-        value: 'OTRO',
-        label: 'OTRO',
-      },
+      // {
+      //   value: 'OTRO',
+      //   label: 'OTRO',
+      // },
     ];
 
   readonly unidadesCapacidad: {
@@ -198,11 +209,14 @@ export class VehiculosFormComponent implements OnChanges {
         value: 'EN_MANTENIMIENTO',
         label: 'EN MANTENIMIENTO',
       },
-      // {
-      //   value: 'FUERA_DE_SERVICIO',
-      //   label: 'Fuera de servicio',
-      // },
+      {
+        value: 'FUERA_DE_SERVICIO',
+        label: 'FUERA DE SERVICIO',
+      },
     ];
+
+  @ViewChild('fotoInput')
+  private fotoInput?: ElementRef<HTMLInputElement>;
 
   // ============================================================
   // CONSTRUCTOR
@@ -249,6 +263,10 @@ export class VehiculosFormComponent implements OnChanges {
     this.setModalWidth('lg');
   }
 
+  ngOnDestroy(): void {
+    this.limpiarSeleccionFoto();
+  }
+
   // ============================================================
   // FORMULARIO
   // ============================================================
@@ -272,6 +290,8 @@ export class VehiculosFormComponent implements OnChanges {
   }
 
   private resetearFormulario(): void {
+    this.prepararFoto();
+
     this.formVehiculo.reset({
       id_vehiculo: null,
       codigo: '',
@@ -291,6 +311,10 @@ export class VehiculosFormComponent implements OnChanges {
   }
 
   private cargarVehiculo(vehiculo: VehiculoData): void {
+    this.prepararFoto(
+      vehiculo.foto_url ?? null,
+    );
+
     this.formVehiculo.reset({
       id_vehiculo: vehiculo.id_vehiculo,
       codigo: vehiculo.codigo,
@@ -319,27 +343,42 @@ export class VehiculosFormComponent implements OnChanges {
 
     this.normalizarCamposTexto();
 
-    if (this.formVehiculo.invalid) {
+    if (
+      this.formVehiculo.invalid ||
+      this.fotoError
+    ) {
       this.formVehiculo.markAllAsTouched();
       return;
     }
 
-    const form = this.formVehiculo.getRawValue();
+    const form =
+      this.formVehiculo.getRawValue();
 
-    // Evita crear por accidente cuando se esperaba editar.
+    const id = Number(
+      form.id_vehiculo,
+    );
+
+    const tieneId = Number.isSafeInteger(id) && id > 0;
+
     if (
       this.modoEdicion &&
-      (!Number.isInteger(Number(form.id_vehiculo)) ||
-        Number(form.id_vehiculo) <= 0)
+      !tieneId
     ) {
       void Swal.fire({
         icon: 'error',
-        title: 'No se pudo identificar el vehículo',
-        text: 'Selecciona nuevamente el vehículo que deseas editar.',
+        title: 'Vehículo no identificado',
+        text:
+          'Selecciona nuevamente el vehículo que deseas editar.',
       });
 
       return;
     }
+
+    /*
+     * Si una creación anterior guardó los datos pero falló
+     * la foto, ya tendremos ID y actualizaremos ese vehículo.
+     */
+    const esEdicion = this.modoEdicion || tieneId;
 
     const payload: CreateVehiculoRequest = {
       codigo: form.codigo,
@@ -355,67 +394,137 @@ export class VehiculosFormComponent implements OnChanges {
       estado_operativo: form.estado_operativo,
       observacion: form.observacion || null,
       estado: form.estado === true,
+
     };
 
-    const esEdicion = this.modoEdicion;
+    const fotoPendiente = this.nuevaFoto;
+    const eliminarPendiente = this.quitarFotoAlGuardar;
+
+    let datosGuardados = false;
 
     const solicitud$ = esEdicion
       ? this.vehiculosService.updateVehiculo(
-        Number(form.id_vehiculo),
+        id,
         payload,
       )
-      : this.vehiculosService.createVehiculo(payload);
+      : this.vehiculosService.createVehiculo(
+        payload,
+      );
 
     this.isLoading = true;
 
     solicitud$
       .pipe(
-        takeUntilDestroyed(this.destroyRef),
+        switchMap(response => {
+          if (
+            !response.success ||
+            !response.data
+          ) {
+            return throwError(
+              () => new Error(
+                response.message ||
+                'No se pudo guardar el vehículo.',
+              ),
+            );
+          }
+
+          datosGuardados = true;
+
+          const vehiculo = response.data;
+
+          /*
+           * Conservar el ID incluso si la siguiente
+           * petición, correspondiente a la foto, falla.
+           */
+          this.formVehiculo.patchValue({
+            id_vehiculo: vehiculo.id_vehiculo,
+          });
+
+          this.fotoActual = vehiculo.foto_url;
+
+          if (fotoPendiente) {
+            return this.vehiculosService
+              .subirFotoVehiculo(
+                vehiculo.id_vehiculo,
+                fotoPendiente,
+              );
+          }
+
+          if (eliminarPendiente) {
+            return this.vehiculosService
+              .eliminarFotoVehiculo(
+                vehiculo.id_vehiculo,
+              );
+          }
+
+          return of(response);
+        }),
+
+        takeUntilDestroyed(
+          this.destroyRef,
+        ),
+
         finalize(() => {
           this.isLoading = false;
           this.cdr.markForCheck();
         }),
       )
       .subscribe({
-        next: (response) => {
+        next: response => {
           if (!response.success) {
+            this.vehiculoCreado.emit();
+
             void Swal.fire({
-              icon: 'error',
-              title: esEdicion
-                ? 'No se pudo actualizar el vehículo'
-                : 'No se pudo crear el vehículo',
-              text: response.message || 'La operación no fue completada.',
+              icon: 'warning',
+              title: 'Revisa la fotografía',
+              text:
+                response.message ||
+                'Los datos se guardaron, pero la fotografía requiere revisión.',
             });
 
             return;
           }
 
-          // Permite cerrar después de guardar correctamente.
           this.isLoading = false;
+
+          this.vehiculoCreado.emit();
+          this.cerrarModal();
 
           void Swal.fire({
             icon: 'success',
             title: esEdicion
-              ? 'Vehículo actualizado correctamente'
-              : 'Vehículo creado correctamente',
+              ? 'Vehículo actualizado'
+              : 'Vehículo registrado',
+            text:
+              'La información fue guardada correctamente.',
           });
-
-          this.vehiculoCreado.emit();
-          this.cerrarModal();
         },
 
-        error: (err) => {
-          const mensaje = err?.error?.message ?? err?.message;
+        error: error => {
+          const mensaje = error?.error?.message ??
+            error?.message ??
+            'No se pudo completar la operación.';
+
+          if (datosGuardados) {
+            /*
+             * Actualiza el listado porque el vehículo
+             * ya existe aunque su foto no se haya guardado.
+             */
+            this.vehiculoCreado.emit();
+          }
 
           void Swal.fire({
-            icon: 'error',
-            title: esEdicion
-              ? 'Error al actualizar vehículo'
-              : 'Error al crear vehículo',
-            text:
-              typeof mensaje === 'string' && mensaje.trim()
-                ? mensaje
-                : 'No se pudo guardar el vehículo. Intenta nuevamente.',
+            icon: datosGuardados
+              ? 'warning'
+              : 'error',
+
+            title: datosGuardados
+              ? 'Datos guardados y fotografía pendiente'
+              : 'No se pudo guardar el vehículo',
+
+            text: datosGuardados
+              ? `${mensaje} Puedes corregir la foto y volver a guardar; no se creará otro vehículo.`
+              : mensaje,
           });
         },
       });
@@ -579,6 +688,118 @@ export class VehiculosFormComponent implements OnChanges {
   }
 
   // ============================================================
+  // FOTO - HELPERS
+  // ============================================================
+
+  get fotoMostrada(): string | null {
+    if (this.vistaPreviaFoto) {
+      return this.vistaPreviaFoto;
+    }
+
+    if (this.quitarFotoAlGuardar) {
+      return null;
+    }
+
+    return this.vehiculosService.resolverFotoUrl(
+      this.fotoActual,
+    );
+  }
+
+  seleccionarFoto(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    const archivo = input.files?.[0];
+
+    // Permite seleccionar nuevamente el mismo archivo.
+    input.value = '';
+
+    if (!archivo || this.isLoading) {
+      return;
+    }
+
+    this.limpiarSeleccionFoto();
+    this.quitarFotoAlGuardar = false;
+
+    const nombreValido = /\.(jpe?g|png)$/i.test(archivo.name);
+
+    const tipoValido = [
+      'image/jpeg',
+      'image/png',
+    ].includes(archivo.type);
+
+    if (!nombreValido || !tipoValido) {
+      this.fotoError =
+        'Selecciona una imagen JPG, JPEG o PNG.';
+
+      this.cdr.markForCheck();
+      return;
+    }
+
+    if (archivo.size === 0 || archivo.size > this.maxFotoBytes) {
+      this.fotoError = 'La fotografía debe tener contenido y no superar 5 MB.';
+
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.nuevaFoto = archivo;
+
+    this.vistaPreviaFoto =
+      URL.createObjectURL(archivo);
+
+    this.cdr.markForCheck();
+  }
+
+  quitarFoto(): void {
+    if (this.isLoading) {
+      return;
+    }
+
+    this.limpiarSeleccionFoto();
+
+    this.quitarFotoAlGuardar =
+      this.fotoActual !== null;
+
+    this.cdr.markForCheck();
+  }
+
+  restaurarFoto(): void {
+    if (this.isLoading) {
+      return;
+    }
+
+    this.limpiarSeleccionFoto();
+    this.quitarFotoAlGuardar = false;
+
+    this.cdr.markForCheck();
+  }
+
+  private limpiarSeleccionFoto(): void {
+    if (this.vistaPreviaFoto) {
+      URL.revokeObjectURL(
+        this.vistaPreviaFoto,
+      );
+    }
+
+    this.vistaPreviaFoto = null;
+    this.nuevaFoto = null;
+    this.fotoError = null;
+
+    if (this.fotoInput) {
+      this.fotoInput.nativeElement.value = '';
+    }
+  }
+
+  private prepararFoto(
+    ruta: string | null = null,
+  ): void {
+    this.limpiarSeleccionFoto();
+
+    this.fotoActual = ruta;
+    this.quitarFotoAlGuardar = false;
+  }
+
+  // ============================================================
   // HELPERS
   // ============================================================
   get tituloModal(): string {
@@ -615,6 +836,12 @@ export class VehiculosFormComponent implements OnChanges {
     }
   }
 
+  get estadoOperativo(): string {
+    const estado_operativo = this.formVehiculo.get('estado_operativo')?.value;
+
+    return estado_operativo;
+  }
+
   setModalWidth(
     size: 'sm' | 'md' | 'lg' | 'xl' | 'full',
   ): void {
@@ -636,5 +863,6 @@ export class VehiculosFormComponent implements OnChanges {
 
     this.resetearFormulario();
     this.modalCerrado.emit();
+    this.cdr.markForCheck();
   }
 }

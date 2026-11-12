@@ -14,7 +14,7 @@ import { VehiculosService } from 'src/app/features/vehiculos/services/vehiculos.
 
 // Interfaces
 import { EstadoMantenimiento, MantenimientoDetalleData, MantenimientoIdentificador, MantenimientoPaginadoItem, MantenimientosPaginadosFilters, TipoMantenimiento, VehiculoExpedienteData } from '../../../interfaces';
-import { VehiculoSelectorItem } from 'src/app/features/vehiculos/models';
+import { TipoVehiculo, VehiculoSelectorItem } from 'src/app/features/vehiculos/models';
 
 // Componentes
 import { MantenimientoFormComponent } from '../mantenimiento-form/mantenimiento-form.component';
@@ -319,6 +319,13 @@ export class MantenimientoListadoComponent implements OnInit, OnChanges, OnDestr
       });
   }
 
+  fotoVehiculoUrl(
+    ruta: string | null,
+  ): string | null {
+    return this.vehiculosService
+      .resolverFotoUrl(ruta);
+  }
+
   tieneVehiculoSeleccionado(): boolean {
     return (
       this.vehiculo_id !== null &&
@@ -362,6 +369,50 @@ export class MantenimientoListadoComponent implements OnInit, OnChanges, OnDestr
         },
       });
   }
+
+  getTipoVehiculo(tipo: TipoVehiculo): {
+    icon: string;
+    label: string;
+    class: string;
+  } {
+    const tipos: Record<
+      TipoVehiculo,
+      { icon: string; label: string; class: string }
+    > = {
+      CAMION_COMPACTADOR: {
+        icon: 'fa-truck',
+        label: 'COMPACTADOR',
+        class: 'badge-info',
+      },
+      CAMION_BARANDA: {
+        icon: 'fa-truck-pickup',
+        label: 'BARANDA',
+        class: 'badge-accent',
+      },
+      CAMION_VOLQUETE: {
+        icon: 'fa-truck-moving',
+        label: 'VOLQUETE',
+        class: 'badge-success',
+      },
+      MOTOFURGON: {
+        icon: 'fa-motorcycle',
+        label: 'MOTOFURGÓN',
+        class: 'badge-primary',
+      },
+      OTRO: {
+        icon: 'fa-car-side',
+        label: 'OTRO',
+        class: 'badge-error',
+      },
+    };
+
+    return tipos[tipo] ?? {
+      icon: 'fa-truck',
+      label: 'NO ESPECIFICADO',
+      class: 'badge-neutral',
+    };
+  }
+
 
   // *********************************************************
   // 5. FILTROS

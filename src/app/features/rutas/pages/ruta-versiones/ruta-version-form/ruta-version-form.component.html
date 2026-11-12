@@ -82,12 +82,12 @@
       <form [formGroup]="form" (ngSubmit)="guardar()" class="flex min-h-0 flex-1 flex-col" novalidate>
         <!-- CONTENIDO CON SCROLL -->
         <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
-          @if (error(); as mensaje) {
+          <!-- @if (error(); as mensaje) {
           <div class="alert alert-error mb-5" role="alert">
             <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
             <span>{{ mensaje }}</span>
           </div>
-          }
+          } -->
 
           <fieldset class="min-w-0" [disabled]="guardando()">
             <legend class="sr-only">

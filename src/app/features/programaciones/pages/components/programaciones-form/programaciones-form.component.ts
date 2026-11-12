@@ -434,7 +434,10 @@ export class ProgramacionesFormComponent implements OnChanges {
   // ============================================================
 
   get rutasDisponibles(): ProgramacionRutaOption[] {
-    const opciones: ProgramacionRutaOption[] = this.rutasActivas.filter(r => r.estado && r.estado_ruta === 'ACTIVA' && !r.deleted_at);
+    const opciones: ProgramacionRutaOption[] = this.rutasActivas.filter(
+      r => r.estado && r.estado_ruta === 'ACTIVA' && !r.deleted_at
+    );
+
     const actual = this.modoEdicion ? this.programacionSeleccionada : null;
     return actual && !opciones.some(r => r.id_ruta === actual.id_ruta) ? [actual.ruta, ...opciones] : opciones;
   }

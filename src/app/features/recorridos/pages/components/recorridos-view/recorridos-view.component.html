@@ -1,0 +1,826 @@
+@if (mostrarModal) {
+<div class="modal modal-open">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-3 sm:p-4" role="dialog"
+    aria-modal="true" aria-labelledby="recorrido-info-title" aria-describedby="recorrido-info-description"
+    [attr.aria-busy]="loading" (click)="cerrarModal()">
+    <section class="relative flex max-h-[92vh] w-full flex-col overflow-hidden
+             rounded-2xl border border-base-300 bg-base-100 shadow-2xl" [ngClass]="modalWidthClass"
+      (click)="$event.stopPropagation()">
+
+      <!-- ================================================= -->
+      <!-- ENCABEZADO -->
+      <!-- ================================================= -->
+      <header class="flex shrink-0 items-start justify-between gap-4
+               border-b border-base-300 bg-base-200/50 px-5 py-4 sm:px-6">
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center
+                   rounded-xl bg-primary/10 text-primary">
+            <i class="fa-solid fa-route text-lg" aria-hidden="true"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 id="recorrido-info-title" class="text-lg font-bold sm:text-xl">
+              Información del recorrido
+            </h2>
+
+            <p id="recorrido-info-description" class="mt-0.5 text-sm text-base-content/60">
+              Ejecución, equipo, atenciones, trazado y resultados.
+            </p>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-ghost btn-circle btn-sm shrink-0"
+          aria-label="Cerrar información del recorrido" (click)="cerrarModal()">
+          <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <!-- ================================================= -->
+      <!-- PESTAÑAS FIJAS -->
+      <!-- ================================================= -->
+      @if (!loading && !errorCarga && detalle) {
+      <div class="shrink-0 border-b border-base-300 px-3 py-3 sm:px-6">
+        <div role="tablist" aria-label="Secciones del recorrido" aria-orientation="horizontal"
+          class="flex gap-2 overflow-x-auto rounded-xl bg-base-200/60 p-1.5">
+          @for (
+          pestana of pestanas;
+          track pestana.id;
+          let indice = $index
+          ) {
+          <button type="button" role="tab" class="flex min-h-11 shrink-0 items-center justify-center gap-2
+                   whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium
+                   transition-colors focus-visible:outline-2
+                   focus-visible:outline-offset-2 focus-visible:outline-primary" [id]="'recorrido-tab-' + pestana.id"
+            [attr.aria-controls]="'recorrido-panel-' + pestana.id" [attr.aria-selected]="pestanaActiva === pestana.id"
+            [attr.tabindex]="pestanaActiva === pestana.id ? 0 : -1" [class.bg-primary]="pestanaActiva === pestana.id"
+            [class.text-primary-content]="pestanaActiva === pestana.id"
+            [class.hover:bg-base-300]="pestanaActiva !== pestana.id" (click)="seleccionarPestana(pestana.id)"
+            (keydown)="navegarPestanas($event, indice)">
+            <i [class]="pestana.icono" aria-hidden="true"></i>
+            <span>{{ pestana.etiqueta }}</span>
+          </button>
+          }
+        </div>
+      </div>
+      }
+
+      <!-- ================================================= -->
+      <!-- CONTENIDO -->
+      <!-- ================================================= -->
+      <div #contenidoModal class="min-h-0 flex-1 overflow-y-auto overscroll-contain
+               px-5 py-5 sm:px-6 sm:py-6">
+
+        <!-- CARGANDO -->
+        @if (loading) {
+        <div class="space-y-5" role="status" aria-live="polite">
+          <span class="sr-only">Cargando información del recorrido.</span>
+
+          <div class="flex gap-4 rounded-2xl border border-base-300 p-5" aria-hidden="true">
+            <div class="skeleton h-14 w-14 shrink-0 rounded-xl"></div>
+
+            <div class="min-w-0 flex-1 space-y-3">
+              <div class="skeleton h-6 w-48 max-w-full"></div>
+              <div class="skeleton h-4 w-64 max-w-full"></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+            @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+            <div class="rounded-xl border border-base-300 p-4">
+              <div class="skeleton mb-3 h-3 w-24"></div>
+              <div class="skeleton h-5 w-32 max-w-full"></div>
+            </div>
+            }
+          </div>
+        </div>
+
+        <!-- ERROR GENERAL -->
+        } @else if (errorCarga) {
+        <div class="flex min-h-64 flex-col items-center justify-center text-center" role="alert">
+          <i class="fa-solid fa-triangle-exclamation mb-4 text-3xl text-error" aria-hidden="true"></i>
+
+          <h3 class="font-semibold">No se pudo cargar el recorrido</h3>
+
+          <p class="mt-2 max-w-md text-sm text-base-content/60">
+            {{ errorCarga }}
+          </p>
+
+          <button type="button" class="btn btn-primary btn-sm mt-4" (click)="cargarDatosRecorrido()">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            Reintentar
+          </button>
+        </div>
+
+        <!-- DETALLE -->
+        } @else if (detalle; as d) {
+        <div class="space-y-5">
+
+          <!-- RESUMEN COMÚN -->
+          <div class="flex flex-col gap-4 rounded-2xl border border-base-300
+                   bg-base-200/40 p-4 sm:flex-row sm:items-center sm:p-5">
+            <div class="min-w-0 flex-1">
+              <h3 class="text-lg font-bold">
+                Recorrido #{{ d.recorrido.id_recorrido }}
+              </h3>
+
+              <p class="mt-1 wrap-break-word text-sm text-base-content/60">
+                {{ d.programacion.ruta?.nombre || 'Ruta no disponible' }}
+                · {{ d.programacion.vehiculo?.placa || 'Sin placa disponible' }}
+              </p>
+            </div>
+
+            <span class="badge badge-soft self-start whitespace-nowrap sm:self-center"
+              [ngClass]="obtenerEstado(d.recorrido.estado_recorrido).class">
+              {{ obtenerEstado(d.recorrido.estado_recorrido).label }}
+            </span>
+          </div>
+
+          <!-- ============================================= -->
+          <!-- RESUMEN -->
+          <!-- ============================================= -->
+          <section id="recorrido-panel-resumen" role="tabpanel" aria-labelledby="recorrido-tab-resumen" tabindex="0"
+            [hidden]="pestanaActiva !== 'resumen'" class="space-y-5 rounded-xl focus-visible:outline-2
+                   focus-visible:outline-primary">
+            <h3 class="font-semibold">Programación y ejecución</h3>
+
+            <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Programación</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  #{{ d.programacion.id_programacion }}
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Fecha programada</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  {{ d.programacion.fecha_programada | date:'dd/MM/yyyy' }}
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Turno</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  {{ formatearTexto(d.programacion.turno) }}
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Ruta</dt>
+                <dd class="mt-2 wrap-break-word text-sm font-semibold">
+                  {{ d.programacion.ruta?.nombre || 'No disponible' }}
+                </dd>
+                <dd class="mt-1 font-mono text-xs text-base-content/55">
+                  {{ d.programacion.ruta?.codigo }}
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Zona</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  {{ d.programacion.ruta?.zona?.nombre || 'No disponible' }}
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Vehículo</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  {{ d.programacion.vehiculo?.placa || 'No disponible' }}
+                </dd>
+                <dd class="mt-1 font-mono text-xs text-base-content/55">
+                  {{ d.programacion.vehiculo?.codigo }}
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Inicio real · hora de Perú</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  {{ d.recorrido.fecha_hora_inicio | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Cierre · hora de Perú</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  {{
+                  (d.recorrido.fecha_hora_finalizacion
+                  | date:'dd/MM/yyyy HH:mm:ss':'-0500')
+                  || 'Sin cierre registrado'
+                  }}
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Versión de ruta asignada · ID</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  #{{ d.programacion.id_ruta_version }}
+                </dd>
+              </div>
+            </dl>
+
+            <!-- TIEMPOS -->
+            <section class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="font-semibold">Tiempos del recorrido</h3>
+
+              <dl class="grid grid-cols-1 gap-3 lg:grid-cols-3">
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">Tiempo total</dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    {{ duracion(d.tiempos.total_segundos) }}
+                  </dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">Tiempo pausado</dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    {{ duracion(d.tiempos.pausa_segundos) }}
+                  </dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">Tiempo de operación</dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    {{ duracion(d.tiempos.operacion_segundos) }}
+                  </dd>
+                </div>
+              </dl>
+
+              <p class="text-xs text-base-content/55">
+                El tiempo de operación excluye las pausas registradas.
+                En recorridos activos, los tiempos son provisionales.
+              </p>
+
+              @for (aviso of d.tiempos.advertencias; track $index) {
+              <p class="rounded-xl bg-warning/10 p-3 text-sm text-warning">
+                {{ aviso }}
+              </p>
+              }
+            </section>
+
+            <!-- KILOMETRAJE -->
+            <section class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="font-semibold">Kilometraje y distancia</h3>
+
+              <dl class="grid grid-cols-1 gap-3 lg:grid-cols-3">
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">Kilometraje inicial</dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    @if (d.recorrido.kilometraje_inicio != null) {
+                    {{ d.recorrido.kilometraje_inicio | number:'1.2-2' }} km
+                    } @else {
+                    No registrado
+                    }
+                  </dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">Kilometraje final</dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    @if (d.recorrido.kilometraje_final != null) {
+                    {{ d.recorrido.kilometraje_final | number:'1.2-2' }} km
+                    } @else {
+                    No registrado
+                    }
+                  </dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">Distancia registrada</dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    @if (d.recorrido.distancia_recorrida_metros != null) {
+                    {{ d.recorrido.distancia_recorrida_metros | number:'1.0-2' }} m
+                    } @else {
+                    No registrada
+                    }
+                  </dd>
+                </div>
+              </dl>
+            </section>
+
+            @if (d.recorrido.estado_recorrido === 'CANCELADO' || d.recorrido.motivo_cancelacion) {
+            <section class="rounded-xl border border-error/30 bg-error/5 p-4">
+              <h3 class="font-semibold text-error">Cancelación del recorrido</h3>
+              <p class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ d.recorrido.motivo_cancelacion || 'Sin
+                motivo registrado.' }}</p>
+            </section>
+            }
+          </section>
+
+          <!-- ============================================= -->
+          <!-- EQUIPO -->
+          <!-- ============================================= -->
+          <section id="recorrido-panel-equipo" role="tabpanel" aria-labelledby="recorrido-tab-equipo" tabindex="0"
+            [hidden]="pestanaActiva !== 'equipo'" class="space-y-3 rounded-xl focus-visible:outline-2
+                   focus-visible:outline-primary">
+            <h3 class="font-semibold">Equipo según asignaciones</h3>
+
+            <div class="overflow-x-auto rounded-xl border border-base-300">
+              <table class="table min-w-150">
+                <caption class="sr-only">Equipo del recorrido</caption>
+                <thead class="bg-base-200">
+                  <tr>
+                    <th scope="col">Personal</th>
+                    <th scope="col">Usuario</th>
+                    <th scope="col">Función</th>
+                    <th scope="col">Estado de asignación</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  @for (persona of d.equipo; track persona.id_personal) {
+                  <tr class="hover:bg-base-200/40">
+                    <td>#{{ persona.id_personal }}</td>
+                    <td>{{ persona.usuario || 'No disponible' }}</td>
+                    <td>{{ formatearTexto(persona.funcion) }}</td>
+                    <td>
+                      <span class="badge badge-soft" [ngClass]="obtenerEstado(persona.estado_asignacion).class">
+                        {{ obtenerEstado(persona.estado_asignacion).label }}
+                      </span>
+                    </td>
+                  </tr>
+                  } @empty {
+                  <tr>
+                    <td colspan="4" class="py-8 text-center text-base-content/55">
+                      No hay integrantes disponibles para este recorrido.
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- ============================================= -->
+          <!-- ATENCIONES -->
+          <!-- ============================================= -->
+          <section id="recorrido-panel-puntos" role="tabpanel" aria-labelledby="recorrido-tab-puntos" tabindex="0"
+            [hidden]="pestanaActiva !== 'puntos'" class="space-y-4 rounded-xl focus-visible:outline-2
+                   focus-visible:outline-primary">
+            <h3 class="font-semibold">Atención de puntos</h3>
+
+            <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              @for (
+              resumen of [
+              { etiqueta: 'Total', valor: d.resumen_puntos.total },
+              { etiqueta: 'Atendidos', valor: d.resumen_puntos.atendidos },
+              { etiqueta: 'Omitidos', valor: d.resumen_puntos.omitidos },
+              { etiqueta: 'Pendientes', valor: d.resumen_puntos.pendientes }
+              ];
+              track resumen.etiqueta
+              ) {
+              <div class="rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">{{ resumen.etiqueta }}</p>
+                <p class="mt-2 text-xl font-bold">{{ resumen.valor }}</p>
+              </div>
+              }
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-base-300">
+              <table class="table min-w-200">
+                <caption class="sr-only">Atenciones de los puntos del recorrido</caption>
+
+                <thead class="bg-base-200">
+                  <tr>
+                    <th scope="col">Orden</th>
+                    <th scope="col">Punto</th>
+                    <th scope="col">Atención</th>
+                    <th scope="col">Responsable</th>
+                    <th scope="col">Motivo / observación</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  @for (punto of d.puntos; track punto.id_ruta_punto) {
+                  <tr class="hover:bg-base-200/40">
+                    <td>{{ punto.orden }}</td>
+
+                    <td>
+                      <p class="font-medium">{{ punto.nombre }}</p>
+                      <p class="mt-1 font-mono text-xs text-base-content/55">
+                        {{ punto.codigo }}
+                      </p>
+                      @if (punto.obligatorio) {
+                      <span class="badge badge-sm badge-outline mt-2">
+                        Obligatorio
+                      </span>
+                      }
+                    </td>
+
+                    <td>
+                      <span class="badge badge-soft" [ngClass]="obtenerEstado(punto.estado_atencion).class">
+                        {{ obtenerEstado(punto.estado_atencion).label }}
+                      </span>
+                    </td>
+
+                    <td>
+                      {{ punto.recoleccion?.usuario_registro?.username || 'Sin registro' }}
+                    </td>
+
+                    <td class="max-w-80 text-sm">
+                      @if (punto.recoleccion?.motivo_omision) {
+                      <p class="whitespace-pre-wrap wrap-break-word">{{ punto.recoleccion?.motivo_omision }}</p>
+                      }
+
+                      @if (punto.recoleccion?.observacion) {
+                      <p class="mt-1 whitespace-pre-wrap wrap-break-word text-base-content/65">{{
+                        punto.recoleccion?.observacion }}</p>
+                      }
+
+                      @if (!punto.recoleccion?.motivo_omision && !punto.recoleccion?.observacion) {
+                      <span class="text-base-content/45">Sin observaciones</span>
+                      }
+                    </td>
+                  </tr>
+                  } @empty {
+                  <tr>
+                    <td colspan="5" class="py-8 text-center text-base-content/55">
+                      No hay puntos disponibles.
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- ============================================= -->
+          <!-- TRAZADO -->
+          <!-- ============================================= -->
+          <section id="recorrido-panel-trazado" role="tabpanel" aria-labelledby="recorrido-tab-trazado" tabindex="0"
+            [hidden]="pestanaActiva !== 'trazado'" class="space-y-4 rounded-xl focus-visible:outline-2
+                   focus-visible:outline-primary" [attr.aria-busy]="loadingTrazado">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <h3 class="font-semibold">Trazado GPS registrado</h3>
+
+              <button type="button" class="btn btn-outline btn-sm" [disabled]="loadingTrazado"
+                (click)="cargarTrazado()">
+                <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                Actualizar trazado
+              </button>
+            </div>
+
+            @if (loadingTrazado) {
+            <div role="status" aria-live="polite">
+              <span class="sr-only">Cargando trazado GPS.</span>
+              <div class="skeleton h-80 w-full rounded-xl" aria-hidden="true"></div>
+            </div>
+
+            } @else if (errorTrazado) {
+            <div class="rounded-xl border border-error/30 bg-error/5 p-5" role="alert">
+              <p class="text-sm text-error">{{ errorTrazado }}</p>
+
+              <button type="button" class="btn btn-sm mt-3" (click)="cargarTrazado()">
+                Reintentar
+              </button>
+            </div>
+
+            } @else if (trazado; as gps) {
+
+            <!-- Montar el mapa solo cuando su pestaña es visible. -->
+            @if (pestanaActiva === 'trazado' && gps.muestras_validas > 0) {
+            <historial-mapa [geojson]="gps.geojson" />
+            } @else if (gps.muestras_validas === 0) {
+            <div class="rounded-xl border border-dashed border-base-300 p-8 text-center">
+              <i class="fa-solid fa-map-location-dot mb-3 text-2xl text-base-content/30" aria-hidden="true"></i>
+              <p class="text-sm text-base-content/60">
+                No hay posiciones válidas para dibujar el trazado.
+              </p>
+            </div>
+            }
+
+            <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              @for (
+              muestra of [
+              { etiqueta: 'En servidor', valor: gps.total_en_servidor },
+              { etiqueta: 'Cargadas', valor: gps.muestras_cargadas },
+              { etiqueta: 'Válidas', valor: gps.muestras_validas },
+              { etiqueta: 'Descartadas', valor: gps.muestras_descartadas }
+              ];
+              track muestra.etiqueta
+              ) {
+              <div class="rounded-xl border border-base-300 p-4">
+                <p class="text-xs text-base-content/55">{{ muestra.etiqueta }}</p>
+                <p class="mt-2 text-xl font-bold">{{ muestra.valor }}</p>
+              </div>
+              }
+            </div>
+
+            <p class="text-xs text-base-content/60">
+              La línea se interrumpe ante muestras inválidas o separaciones
+              mayores de {{ gps.corte_por_hueco_segundos }} segundos.
+            </p>
+
+            @if (!gps.sincronizacion_dispositivos_verificada) {
+            <p class="rounded-xl bg-warning/10 p-3 text-sm">
+              No se ha verificado la sincronización de los dispositivos.
+              Pueden existir posiciones pendientes de envío.
+            </p>
+            }
+            }
+          </section>
+
+          <!-- ============================================= -->
+          <!-- EVENTOS Y PAUSAS -->
+          <!-- ============================================= -->
+          <section id="recorrido-panel-eventos" role="tabpanel" aria-labelledby="recorrido-tab-eventos" tabindex="0"
+            [hidden]="pestanaActiva !== 'eventos'" class="space-y-5 rounded-xl focus-visible:outline-2
+                   focus-visible:outline-primary">
+            <section class="space-y-3">
+              <h3 class="font-semibold">Eventos del recorrido</h3>
+
+              <p class="text-xs text-base-content/55">
+                Fechas y horas mostradas en hora de Perú.
+              </p>
+
+              @for (evento of d.eventos; track evento.id_recorrido_evento) {
+              <article class="rounded-xl border border-base-300 p-4">
+                <div class="flex flex-col gap-2 sm:flex-row sm:justify-between">
+                  <h4 class="text-sm font-semibold">
+                    {{ obtenerEvento(evento.tipo_evento) }}
+                  </h4>
+
+                  <time class="text-xs text-base-content/55" [attr.datetime]="evento.fecha_evento">
+                    {{ evento.fecha_evento | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
+                  </time>
+                </div>
+
+                <p class="mt-2 text-xs text-base-content/60">
+                  Responsable: {{ evento.usuario?.username || 'No disponible' }}
+                </p>
+
+                @if (evento.observacion) {
+                <p class="mt-3 whitespace-pre-wrap wrap-break-word text-sm">{{ evento.observacion }}</p>
+                }
+
+                @if (evento.latitud != null && evento.longitud != null) {
+                <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-base-content/55">
+                  <span>Lat.: {{ evento.latitud }}</span>
+                  <span>Long.: {{ evento.longitud }}</span>
+
+                  @if (evento.precision_gps != null) {
+                  <span>
+                    Precisión: {{ evento.precision_gps | number:'1.0-2' }} m
+                  </span>
+                  }
+                </div>
+                }
+              </article>
+              } @empty {
+              <p class="rounded-xl border border-dashed border-base-300 p-5 text-sm text-base-content/55">
+                No hay eventos registrados.
+              </p>
+              }
+            </section>
+
+            <section class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="font-semibold">Pausas registradas</h3>
+
+              @for (pausa of d.tiempos.pausas; track $index) {
+              <article class="rounded-xl border border-base-300 p-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <p class="text-sm font-semibold">
+                    {{ duracion(pausa.duracion_segundos) }}
+                  </p>
+
+                  @if (pausa.abierta) {
+                  <span class="badge badge-warning badge-soft">
+                    Abierta al consultar
+                  </span>
+                  }
+                </div>
+
+                <p class="mt-2 text-xs text-base-content/60">
+                  Desde {{ pausa.inicio | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
+                  hasta {{ pausa.fin | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
+                </p>
+              </article>
+              } @empty {
+              <p class="rounded-xl border border-dashed border-base-300 p-5 text-sm text-base-content/55">
+                Sin pausas registradas.
+              </p>
+              }
+            </section>
+          </section>
+
+          <!-- ============================================= -->
+          <!-- INCIDENCIAS -->
+          <!-- ============================================= -->
+          <section id="recorrido-panel-incidencias" role="tabpanel" aria-labelledby="recorrido-tab-incidencias"
+            tabindex="0" [hidden]="pestanaActiva !== 'incidencias'" class="space-y-3 rounded-xl focus-visible:outline-2
+                   focus-visible:outline-primary">
+            <h3 class="font-semibold">Incidencias del recorrido</h3>
+
+            <p class="text-xs text-base-content/55">
+              {{ d.nota_incidencias }}
+            </p>
+
+            @for (incidencia of d.incidencias; track incidencia.id_incidencia) {
+            <article class="rounded-xl border border-base-300 p-4">
+              <h4 class="wrap-break-word text-sm font-semibold">
+                #{{ incidencia.id_incidencia }} · {{ incidencia.titulo }}
+              </h4>
+
+              <div class="mt-3 flex flex-wrap gap-2">
+                <span class="badge badge-outline">
+                  {{ formatearTexto(incidencia.tipo) }}
+                </span>
+
+                <span class="badge badge-outline">
+                  {{ formatearTexto(incidencia.prioridad) }}
+                </span>
+
+                <span class="badge badge-soft">
+                  {{ formatearTexto(incidencia.estado_incidencia) }}
+                </span>
+              </div>
+
+              <p class="mt-3 whitespace-pre-wrap wrap-break-word text-sm">{{ incidencia.descripcion }}</p>
+
+              <p class="mt-3 text-xs text-base-content/55">
+                Reportada:
+                {{ incidencia.fecha_reporte | date:'dd/MM/yyyy HH:mm':'-0500' }}
+              </p>
+
+              @if (incidencia.fecha_resolucion) {
+              <p class="mt-1 text-xs text-base-content/55">
+                Resuelta:
+                {{ incidencia.fecha_resolucion | date:'dd/MM/yyyy HH:mm':'-0500' }}
+              </p>
+              }
+            </article>
+            } @empty {
+            <div class="rounded-xl border border-dashed border-base-300 p-8 text-center">
+              <i class="fa-solid fa-clipboard-check mb-3 text-2xl text-base-content/30" aria-hidden="true"></i>
+
+              <p class="text-sm text-base-content/55">
+                No hay incidencias visibles para este recorrido.
+              </p>
+            </div>
+            }
+          </section>
+
+          <!-- ============================================= -->
+          <!-- RESULTADO FINAL -->
+          <!-- ============================================= -->
+          <section id="recorrido-panel-resultado" role="tabpanel" aria-labelledby="recorrido-tab-resultado" tabindex="0"
+            [hidden]="pestanaActiva !== 'resultado'" class="space-y-4 rounded-xl focus-visible:outline-2
+                   focus-visible:outline-primary">
+            <h3 class="font-semibold">Resultado final de residuos</h3>
+
+            @if (d.recorrido.resultado_final; as resultado) {
+            <div class="rounded-2xl border border-primary/20 bg-primary/5 p-5">
+              <p class="text-xs text-base-content/60">Cantidad total registrada</p>
+
+              <p class="mt-2 text-2xl font-bold text-primary">
+                {{ resultado.cantidad_total | number:'1.0-3' }}
+                <span class="text-base">{{ resultado.unidad_medida }}</span>
+              </p>
+            </div>
+
+            <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Usuario que registró el resultado</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  #{{ resultado.id_usuario }}
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Vehículo en la medición</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  {{ resultado.vehiculo?.placa || 'No disponible' }}
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Fecha del dispositivo · hora de Perú</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  {{ resultado.fecha_dispositivo | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <dt class="text-xs text-base-content/55">Recepción en servidor · hora de Perú</dt>
+                <dd class="mt-2 text-sm font-semibold">
+                  {{ resultado.fecha_recepcion | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
+                </dd>
+              </div>
+            </dl>
+
+            <div class="rounded-xl border border-base-300 p-4">
+              <p class="text-xs text-base-content/55">Observaciones</p>
+              <p class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ resultado.observacion || 'Sin observaciones
+                registradas.' }}</p>
+            </div>
+
+            @if (resultado.capacidad; as capacidad) {
+            <section class="space-y-3 border-t border-base-300 pt-5">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <h3 class="font-semibold">Evaluación de carga al cierre</h3>
+
+                <span class="badge badge-soft" [class.badge-error]="capacidad.estado === 'SOBRECARGA'"
+                  [class.badge-warning]="capacidad.estado === 'ADVERTENCIA' || capacidad.estado === 'COMPLETO'"
+                  [class.badge-success]="capacidad.estado === 'NORMAL'">
+                  {{ formatearTexto(capacidad.estado) }}
+                </span>
+              </div>
+
+              <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">Porcentaje de capacidad</dt>
+                  <dd class="mt-2 text-lg font-bold">
+                    {{ capacidad.porcentaje | number:'1.0-2' }} %
+                  </dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">Capacidad máxima utilizada</dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    {{ capacidad.capacidad_maxima | number:'1.0-3' }}
+                    {{ capacidad.unidad_capacidad }}
+                  </dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">Cantidad equivalente en la unidad del vehículo</dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    {{ capacidad.cantidad_acumulada | number:'1.0-3' }}
+                    {{ capacidad.unidad_capacidad }}
+                  </dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">Capacidad restante</dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    {{ capacidad.capacidad_restante | number:'1.0-3' }}
+                    {{ capacidad.unidad_capacidad }}
+                  </dd>
+                </div>
+              </dl>
+
+              @if (capacidad.existe_sobrecarga) {
+              <p class="rounded-xl border border-error/30 bg-error/5 p-4 text-sm text-error">
+                Exceso registrado:
+                {{ capacidad.cantidad_excedida | number:'1.0-3' }}
+                {{ capacidad.unidad_capacidad }}.
+              </p>
+              }
+            </section>
+            } @else {
+            <p class="rounded-xl bg-base-200 p-4 text-sm text-base-content/60">
+              No hay una evaluación de capacidad disponible para este resultado.
+            </p>
+            }
+
+            } @else {
+            <div class="rounded-xl border border-dashed border-base-300 p-8 text-center">
+              <i class="fa-solid fa-scale-balanced mb-3 text-2xl text-base-content/30" aria-hidden="true"></i>
+
+              <h4 class="text-sm font-semibold">Sin resultado final registrado</h4>
+
+              <p class="mt-2 text-sm text-base-content/55">
+                El recorrido no tiene una medición final de residuos disponible.
+              </p>
+            </div>
+            }
+          </section>
+
+          <!-- FECHA DE CONSULTA -->
+          <p class="border-t border-base-300 pt-4 text-xs text-base-content/45">
+            Información consultada el
+            {{ d.generado_en | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
+            · hora de Perú.
+          </p>
+        </div>
+
+        } @else {
+        <div class="flex min-h-64 flex-col items-center justify-center text-center">
+          <i class="fa-solid fa-route mb-4 text-3xl text-base-content/30" aria-hidden="true"></i>
+
+          <h3 class="font-semibold">No hay información disponible</h3>
+          <p class="mt-2 text-sm text-base-content/55">
+            No se encontraron datos del recorrido seleccionado.
+          </p>
+        </div>
+        }
+      </div>
+
+      <!-- ================================================= -->
+      <!-- PIE DEL MODAL -->
+      <!-- ================================================= -->
+      <footer class="flex shrink-0 flex-col-reverse gap-3 border-t border-base-300
+               px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <p class="flex items-center gap-2 text-xs text-base-content/50">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          Detalle histórico del recorrido.
+        </p>
+
+        <button type="button" class="btn btn-accent min-w-28" (click)="cerrarModal()">
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
+          Cerrar
+        </button>
+      </footer>
+    </section>
+  </div>
+</div>
+}

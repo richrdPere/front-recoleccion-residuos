@@ -76,11 +76,7 @@ export class ZonaViewComponent implements OnChanges, OnDestroy {
 
     const idZona = this.zona_id;
 
-    if (
-      idZona === null ||
-      !Number.isInteger(idZona) ||
-      idZona <= 0
-    ) {
+    if (idZona === null || !Number.isInteger(idZona) || idZona <= 0) {
       this.errorCarga = 'Selecciona una zona válida.';
       this.cdr.markForCheck();
       return;
@@ -152,6 +148,11 @@ export class ZonaViewComponent implements OnChanges, OnDestroy {
       ? mensaje
       : 'Ocurrió un error al cargar la información de la zona.';
   }
+
+  getCodigo() {
+    return this.zona?.codigo
+  }
+
 
   // ============================================================
   // MODAL

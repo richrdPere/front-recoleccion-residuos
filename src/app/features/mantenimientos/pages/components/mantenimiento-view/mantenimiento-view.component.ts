@@ -117,6 +117,80 @@ export class MantenimientoViewComponent implements OnChanges, OnDestroy {
   }
 
   // ============================================================
+  // PESTAÑAS
+  // ============================================================
+  readonly pestanas = [
+    {
+      id: 'general',
+      etiqueta: 'General',
+      icono: 'fa-solid fa-circle-info',
+    },
+    {
+      id: 'intervencion',
+      etiqueta: 'Intervención',
+      icono: 'fa-solid fa-screwdriver-wrench',
+    },
+    {
+      id: 'responsables',
+      etiqueta: 'Responsables',
+      icono: 'fa-solid fa-users',
+    },
+    {
+      id: 'historial',
+      etiqueta: 'Historial',
+      icono: 'fa-solid fa-clock-rotate-left',
+    },
+  ] as const;
+
+  pestanaActiva:
+    | 'general'
+    | 'intervencion'
+    | 'responsables'
+    | 'historial' = 'general';
+
+  // Navegación con flechas, Inicio y Fin.
+  navegarPestanas(
+    event: KeyboardEvent,
+    indiceActual: number,
+  ): void {
+    let nuevoIndice: number;
+
+    switch (event.key) {
+      case 'ArrowRight':
+        nuevoIndice = (indiceActual + 1) % this.pestanas.length;
+        break;
+
+      case 'ArrowLeft':
+        nuevoIndice = (indiceActual - 1 + this.pestanas.length) % this.pestanas.length;
+        break;
+
+      case 'Home':
+        nuevoIndice = 0;
+        break;
+
+      case 'End':
+        nuevoIndice = this.pestanas.length - 1;
+        break;
+
+      default:
+        return;
+    }
+
+    event.preventDefault();
+
+    this.pestanaActiva = this.pestanas[nuevoIndice].id;
+
+    const boton = event.currentTarget as HTMLButtonElement;
+
+    const botones = boton.parentElement
+      ?.querySelectorAll<HTMLButtonElement>(
+        '[role="tab"]',
+      );
+
+    botones?.[nuevoIndice]?.focus();
+  }
+
+  // ============================================================
   // MANEJO DE ERRORES
   // ============================================================
   private mostrarError(mensaje: string): void {
@@ -191,5 +265,6 @@ export class MantenimientoViewComponent implements OnChanges, OnDestroy {
   private limpiarDatos(): void {
     this.mantenimiento = null;
     this.errorCarga = null;
+    this.pestanaActiva = 'general';
   }
 }

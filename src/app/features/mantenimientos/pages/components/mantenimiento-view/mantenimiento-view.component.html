@@ -2,49 +2,49 @@
 <div class="modal modal-open">
 
   <!-- ===================================================== -->
-  <!-- MODAL: INFORMACIÓN DEL MANTENIMIENTO -->
+  <!-- MODAL -->
   <!-- ===================================================== -->
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" role="dialog" aria-modal="true"
-    aria-labelledby="usuario-info-title" [attr.aria-busy]="loading" (click)="cerrarModal()">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-3 sm:p-4" role="dialog"
+    aria-modal="true" aria-labelledby="mantenimiento-info-title" aria-describedby="mantenimiento-info-description"
+    [attr.aria-busy]="loading" (click)="cerrarModal()">
+    <section class="relative flex max-h-[92vh] w-full flex-col overflow-hidden
+             rounded-2xl border border-base-300 bg-base-100 shadow-2xl" [ngClass]="modalWidthClass"
+      (click)="$event.stopPropagation()">
 
-    <section class="relative flex max-h-[92vh] w-full flex-col
-               overflow-hidden rounded-2xl border border-base-300
-               bg-base-100 shadow-2xl" [ngClass]="modalWidthClass" (click)="$event.stopPropagation()">
-
-      <!-- ===================================================== -->
-      <!-- HEADER MODAL -->
-      <!-- ===================================================== -->
+      <!-- ================================================= -->
+      <!-- ENCABEZADO -->
+      <!-- ================================================= -->
       <header class="flex shrink-0 items-start justify-between gap-4
-                 border-b border-base-300 bg-base-200/50
-                 px-5 py-4 sm:px-6">
+               border-b border-base-300 bg-base-200/50
+               px-5 py-4 sm:px-6">
         <div class="flex min-w-0 items-center gap-3">
           <div class="flex h-11 w-11 shrink-0 items-center justify-center
-                     rounded-xl bg-primary/10 text-primary">
-            <i class="fa-solid fa-user text-lg" aria-hidden="true"></i>
+                   rounded-xl bg-primary/10 text-primary">
+            <i class="fa-solid fa-screwdriver-wrench text-lg" aria-hidden="true"></i>
           </div>
 
           <div class="min-w-0">
-            <h2 id="usuario-info-title" class="truncate text-lg font-bold text-base-content sm:text-xl">
+            <h2 id="mantenimiento-info-title" class="text-lg font-bold text-base-content sm:text-xl">
               Información del mantenimiento
             </h2>
 
-            <p class="mt-0.5 text-sm text-base-content/60">
-              Datos personales, cuenta y roles asignados.
+            <p id="mantenimiento-info-description" class="mt-0.5 text-sm text-base-content/60">
+              Consulta la orden, su intervención y los cambios registrados.
             </p>
           </div>
         </div>
 
-        <button type="button" class="btn btn-ghost btn-circle btn-sm shrink-0" aria-label="Cerrar modal" title="Cerrar"
-          (click)="cerrarModal()">
+        <button type="button" class="btn btn-ghost btn-circle btn-sm shrink-0"
+          aria-label="Cerrar información del mantenimiento" title="Cerrar" (click)="cerrarModal()">
           <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
         </button>
       </header>
 
-      <!-- ===================================================== -->
-      <!-- CONTENIDO CON SCROLL -->
-      <!-- ===================================================== -->
+      <!-- ================================================= -->
+      <!-- CONTENIDO -->
+      <!-- ================================================= -->
       <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain
-                 px-5 py-5 sm:px-6 sm:py-6">
+               px-5 py-5 sm:px-6 sm:py-6">
 
         <!-- CARGANDO -->
         @if (loading) {
@@ -53,32 +53,29 @@
             Cargando información del mantenimiento.
           </span>
 
-          <div class="flex flex-col gap-4 rounded-2xl border
-                       border-base-300 bg-base-200/40 p-5
-                       sm:flex-row sm:items-center" aria-hidden="true">
-            <div class="skeleton h-16 w-16 rounded-2xl"></div>
+          <div class="flex items-center gap-4 rounded-2xl
+                   border border-base-300 bg-base-200/40 p-5" aria-hidden="true">
+            <div class="skeleton h-14 w-14 shrink-0 rounded-xl"></div>
 
-            <div class="flex-1 space-y-3">
-              <div class="skeleton h-6 w-40"></div>
-              <div class="skeleton h-4 w-64 max-w-full"></div>
+            <div class="min-w-0 flex-1 space-y-3">
+              <div class="skeleton h-5 w-48 max-w-full"></div>
+              <div class="skeleton h-4 w-32 max-w-full"></div>
             </div>
-
-            <div class="skeleton h-7 w-28 rounded-full"></div>
           </div>
 
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3" aria-hidden="true">
-            @for (item of [1, 2, 3, 4, 5, 6]; track item) {
-            <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-hidden="true">
+            @for (item of [1, 2, 3, 4]; track item) {
+            <div class="skeleton h-10 rounded-xl"></div>
+            }
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2" aria-hidden="true">
+            @for (item of [1, 2, 3, 4]; track item) {
+            <div class="rounded-xl border border-base-300 p-4">
               <div class="skeleton mb-3 h-3 w-24"></div>
               <div class="skeleton h-5 w-36 max-w-full"></div>
             </div>
             }
-          </div>
-
-          <div class="rounded-xl border border-base-300 bg-base-100 p-4" aria-hidden="true">
-            <div class="skeleton mb-3 h-3 w-28"></div>
-            <div class="skeleton h-4 w-full"></div>
-            <div class="skeleton mt-2 h-4 w-3/4"></div>
           </div>
         </div>
 
@@ -86,11 +83,11 @@
         } @else if (errorCarga) {
         <div class="flex min-h-64 flex-col items-center justify-center text-center" role="alert">
           <div class="mb-4 flex h-16 w-16 items-center justify-center
-                       rounded-full bg-error/10 text-error">
+                   rounded-full bg-error/10 text-error">
             <i class="fa-solid fa-triangle-exclamation text-2xl" aria-hidden="true"></i>
           </div>
 
-          <h3 class="font-semibold text-base-content">
+          <h3 class="font-semibold">
             No se pudo cargar el mantenimiento
           </h3>
 
@@ -106,17 +103,16 @@
 
         <!-- INFORMACIÓN -->
         } @else if (mantenimiento; as detalle) {
-        <div class="space-y-6">
+        <div class="space-y-5">
 
-          <!-- ================================================= -->
-          <!-- RESUMEN DE LA ORDEN -->
-          <!-- ================================================= -->
+          <!-- ============================================= -->
+          <!-- RESUMEN -->
+          <!-- ============================================= -->
           <div class="flex flex-col gap-4 rounded-2xl border border-base-300
-              bg-base-200/40 p-5 sm:flex-row sm:items-center">
-
-            <div class="flex h-14 w-14 shrink-0 items-center justify-center
-                rounded-xl bg-primary/10 text-primary">
-              <i class="fa-solid fa-screwdriver-wrench text-2xl" aria-hidden="true"></i>
+                   bg-base-200/40 p-4 sm:flex-row sm:items-center sm:p-5">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center
+                     rounded-xl bg-primary/10 text-primary">
+              <i class="fa-solid fa-screwdriver-wrench text-xl" aria-hidden="true"></i>
             </div>
 
             <div class="min-w-0 flex-1">
@@ -125,15 +121,20 @@
               </h3>
 
               <p class="mt-1 text-sm text-base-content/60">
-                {{ detalle.vehiculo.codigo }} · {{ detalle.vehiculo.placa }}
+                {{ detalle.vehiculo.codigo }} ·
+                {{ detalle.vehiculo.placa }}
               </p>
 
               <span class="badge badge-outline mt-2">
-                {{ detalle.tipo_mantenimiento === 'PREVENTIVO' ? 'Preventivo' : 'Correctivo' }}
+                {{
+                detalle.tipo_mantenimiento === 'PREVENTIVO'
+                ? 'Preventivo'
+                : 'Correctivo'
+                }}
               </span>
             </div>
 
-            <span class="badge badge-soft whitespace-nowrap"
+            <span class="badge badge-soft shrink-0 self-start whitespace-nowrap sm:self-center"
               [class.badge-info]="detalle.estado_mantenimiento === 'PROGRAMADO'"
               [class.badge-warning]="detalle.estado_mantenimiento === 'EN_PROCESO'"
               [class.badge-success]="detalle.estado_mantenimiento === 'FINALIZADO'"
@@ -147,252 +148,362 @@
             </span>
           </div>
 
-          <!-- ================================================= -->
-          <!-- VEHÍCULO -->
-          <!-- ================================================= -->
-          <section class="space-y-3">
-            <h3 class="flex items-center gap-2 text-base font-semibold">
-              <i class="fa-solid fa-truck text-primary" aria-hidden="true"></i>
-              Vehículo
-            </h3>
+          <!-- ============================================= -->
+          <!-- PESTAÑAS -->
+          <!-- ============================================= -->
+          <div class="sticky top-0 z-10 grid grid-cols-2 gap-2
+                   rounded-xl border border-base-300 bg-base-100 p-2
+                   shadow-sm sm:grid-cols-4" role="tablist" aria-label="Secciones del mantenimiento"
+            aria-orientation="horizontal">
+            @for (pestana of pestanas; track pestana.id; let indice = $index) {
+            <button type="button" role="tab" class="flex min-h-11 min-w-0 items-center justify-center
+                     gap-2 rounded-lg px-3 py-2 text-sm font-medium
+                     transition-colors
+                     focus-visible:outline-2 focus-visible:outline-offset-2
+                     focus-visible:outline-primary" [id]="'mantenimiento-tab-' + pestana.id"
+              [attr.aria-controls]="'mantenimiento-panel-' + pestana.id"
+              [attr.aria-selected]="pestanaActiva === pestana.id"
+              [attr.tabindex]="pestanaActiva === pestana.id ? 0 : -1" [class.bg-primary]="pestanaActiva === pestana.id"
+              [class.text-primary-content]="pestanaActiva === pestana.id"
+              [class.text-base-content]="pestanaActiva !== pestana.id"
+              [class.hover:bg-base-200]="pestanaActiva !== pestana.id" (click)="pestanaActiva = pestana.id"
+              (keydown)="navegarPestanas($event, indice)">
+              <i [class]="pestana.icono" aria-hidden="true"></i>
 
-            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-              <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs text-base-content/55">Código y placa</dt>
-                <dd class="mt-2 text-sm font-semibold">
-                  {{ detalle.vehiculo.codigo }}
-                </dd>
-                <dd class="mt-1 text-sm text-base-content/65">
-                  {{ detalle.vehiculo.placa }}
-                </dd>
-              </div>
+              <span>{{ pestana.etiqueta }}</span>
 
-              <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs text-base-content/55">Marca y modelo</dt>
-                <dd class="mt-2 text-sm font-semibold">
-                  {{ detalle.vehiculo.marca }} {{ detalle.vehiculo.modelo }}
-                </dd>
-              </div>
+              @if (pestana.id === 'historial') {
+              <span class="rounded-full bg-current/10 px-1.5 text-xs">
+                {{ detalle.historial.length }}
+              </span>
+              }
+            </button>
+            }
+          </div>
 
-              <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs text-base-content/55">Kilometraje actual</dt>
-                <dd class="mt-2 text-sm font-semibold">
-                  {{ detalle.vehiculo.kilometraje | number: '1.2-2' }} km
-                </dd>
-              </div>
+          <!-- ============================================= -->
+          <!-- GENERAL -->
+          <!-- ============================================= -->
+          <section id="mantenimiento-panel-general" role="tabpanel" aria-labelledby="mantenimiento-tab-general"
+            tabindex="0" [hidden]="pestanaActiva !== 'general'" class="space-y-5 rounded-xl
+                   focus-visible:outline-2 focus-visible:outline-primary">
 
-              <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs text-base-content/55">Estado operativo actual</dt>
-                <dd class="mt-2">
-                  <span class="badge badge-soft"
-                    [class.badge-success]="detalle.vehiculo.estado_operativo === 'DISPONIBLE'" [class.badge-info]="
-              detalle.vehiculo.estado_operativo === 'ASIGNADO' ||
-              detalle.vehiculo.estado_operativo === 'EN_RUTA'
-            " [class.badge-warning]="detalle.vehiculo.estado_operativo === 'EN_MANTENIMIENTO'"
-                    [class.badge-error]="detalle.vehiculo.estado_operativo === 'FUERA_DE_SERVICIO'">
-                    @switch (detalle.vehiculo.estado_operativo) {
-                    @case ('DISPONIBLE') { Disponible }
-                    @case ('ASIGNADO') { Asignado }
-                    @case ('EN_RUTA') { En ruta }
-                    @case ('EN_MANTENIMIENTO') { En mantenimiento }
-                    @case ('FUERA_DE_SERVICIO') { Fuera de servicio }
+            <!-- VEHÍCULO -->
+            <section class="space-y-3">
+              <h3 class="flex items-center gap-2 font-semibold">
+                <i class="fa-solid fa-truck text-primary" aria-hidden="true"></i>
+                Vehículo
+              </h3>
+
+              <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">
+                    Código y placa
+                  </dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    {{ detalle.vehiculo.codigo }}
+                  </dd>
+                  <dd class="mt-1 text-sm text-base-content/65">
+                    {{ detalle.vehiculo.placa }}
+                  </dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">
+                    Marca y modelo
+                  </dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    {{ detalle.vehiculo.marca }}
+                    {{ detalle.vehiculo.modelo }}
+                  </dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">
+                    Kilometraje actual
+                  </dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    {{ detalle.vehiculo.kilometraje | number: '1.2-2' }} km
+                  </dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">
+                    Estado operativo actual
+                  </dt>
+
+                  <dd class="mt-2">
+                    <span class="badge badge-soft"
+                      [class.badge-success]="detalle.vehiculo.estado_operativo === 'DISPONIBLE'" [class.badge-info]="
+                        detalle.vehiculo.estado_operativo === 'ASIGNADO' ||
+                        detalle.vehiculo.estado_operativo === 'EN_RUTA'
+                      " [class.badge-warning]="detalle.vehiculo.estado_operativo === 'EN_MANTENIMIENTO'"
+                      [class.badge-error]="detalle.vehiculo.estado_operativo === 'FUERA_DE_SERVICIO'">
+                      @switch (detalle.vehiculo.estado_operativo) {
+                      @case ('DISPONIBLE') { Disponible }
+                      @case ('ASIGNADO') { Asignado }
+                      @case ('EN_RUTA') { En ruta }
+                      @case ('EN_MANTENIMIENTO') { En mantenimiento }
+                      @case ('FUERA_DE_SERVICIO') { Fuera de servicio }
+                      }
+                    </span>
+                  </dd>
+                </div>
+              </dl>
+            </section>
+
+            <!-- PROGRAMACIÓN -->
+            <section class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="flex items-center gap-2 font-semibold">
+                <i class="fa-regular fa-calendar-days text-primary" aria-hidden="true"></i>
+                Programación y ejecución
+              </h3>
+
+              <p class="text-xs text-base-content/55">
+                Fechas y horas mostradas en hora de Perú.
+              </p>
+
+              <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">
+                    Inicio programado
+                  </dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    {{ detalle.fecha_inicio_programada | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
+                  </dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">
+                    Fin programado
+                  </dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    @if (detalle.fecha_fin_programada) {
+                    {{ detalle.fecha_fin_programada | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
+                    } @else {
+                    <span class="font-normal italic text-base-content/45">
+                      Sin fecha programada
+                    </span>
                     }
-                  </span>
-                </dd>
-              </div>
-
-              <!-- <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs text-base-content/55">Estado administrativo del vehículo</dt>
-                <dd class="mt-2">
-                  <span class="badge badge-soft" [class.badge-success]="detalle.vehiculo.estado"
-                    [class.badge-error]="!detalle.vehiculo.estado">
-                    {{ detalle.vehiculo.estado ? 'Activo' : 'Inactivo' }}
-                  </span>
-                </dd>
-              </div> -->
-            </dl>
-          </section>
-
-          <!-- ================================================= -->
-          <!-- PROGRAMACIÓN Y EJECUCIÓN -->
-          <!-- ================================================= -->
-          <section class="space-y-3 border-t border-base-300 pt-5">
-            <h3 class="flex items-center gap-2 text-base font-semibold">
-              <i class="fa-regular fa-calendar-days text-primary" aria-hidden="true"></i>
-              Programación y ejecución
-            </h3>
-
-            <p class="text-xs text-base-content/55">
-              Fechas y horas mostradas en hora de Perú.
-            </p>
-
-            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs text-base-content/55">Inicio programado</dt>
-                <dd class="mt-2 text-sm font-semibold">
-                  {{ detalle.fecha_inicio_programada | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
-                </dd>
-              </div>
-
-              <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs text-base-content/55">Fin programado</dt>
-                <dd class="mt-2 text-sm font-semibold">
-                  {{ detalle.fecha_fin_programada | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
-                </dd>
-              </div>
-
-              <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs text-base-content/55">Inicio real</dt>
-                <dd class="mt-2 text-sm font-semibold">
-                  @if (detalle.fecha_inicio_real) {
-                  {{ detalle.fecha_inicio_real | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
-                  } @else {
-                  <span class="font-normal italic text-base-content/45">
-                    Sin inicio registrado
-                  </span>
-                  }
-                </dd>
-              </div>
-
-              <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs text-base-content/55">Fin real</dt>
-                <dd class="mt-2 text-sm font-semibold">
-                  @if (detalle.fecha_fin_real) {
-                  {{ detalle.fecha_fin_real | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
-                  } @else {
-                  <span class="font-normal italic text-base-content/45">
-                    Sin finalización registrada
-                  </span>
-                  }
-                </dd>
-              </div>
-            </dl>
-          </section>
-
-          <!-- ================================================= -->
-          <!-- INFORMACIÓN TÉCNICA -->
-          <!-- ================================================= -->
-          <section class="space-y-3 border-t border-base-300 pt-5">
-            <h3 class="flex items-center gap-2 text-base font-semibold">
-              <i class="fa-solid fa-toolbox text-primary" aria-hidden="true"></i>
-              Información técnica
-            </h3>
-
-            <dl class="space-y-4">
-              <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs font-medium text-base-content/55">Motivo</dt>
-                <dd class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ detalle.motivo }}</dd>
-              </div>
-
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div class="rounded-xl border border-base-300 p-4">
-                  <dt class="text-xs text-base-content/55">Taller</dt>
-                  <dd class="mt-2 wrap-break-word text-sm font-semibold">
-                    {{ detalle.taller ?? 'No registrado' }}
                   </dd>
                 </div>
 
                 <div class="rounded-xl border border-base-300 p-4">
-                  <dt class="text-xs text-base-content/55">Responsable técnico</dt>
-                  <dd class="mt-2 wrap-break-word text-sm font-semibold">
-                    {{ detalle.responsable_tecnico ?? 'No registrado' }}
+                  <dt class="text-xs text-base-content/55">
+                    Inicio real
+                  </dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    @if (detalle.fecha_inicio_real) {
+                    {{ detalle.fecha_inicio_real | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
+                    } @else {
+                    <span class="font-normal italic text-base-content/45">
+                      Sin inicio registrado
+                    </span>
+                    }
                   </dd>
                 </div>
-              </div>
 
-              <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs font-medium text-base-content/55">Diagnóstico</dt>
-                <dd class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ detalle.diagnostico ?? 'Sin diagnóstico
-                  registrado.' }}</dd>
-              </div>
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">
+                    Fin real
+                  </dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    @if (detalle.fecha_fin_real) {
+                    {{ detalle.fecha_fin_real | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
+                    } @else {
+                    <span class="font-normal italic text-base-content/45">
+                      Sin finalización registrada
+                    </span>
+                    }
+                  </dd>
+                </div>
+              </dl>
+            </section>
 
-              <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs font-medium text-base-content/55">Trabajos realizados</dt>
-                <dd class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ detalle.trabajos_realizados ?? 'Sin trabajos
-                  registrados.' }}</dd>
-              </div>
+            <!-- CANCELACIÓN -->
+            @if (detalle.estado_mantenimiento === 'CANCELADO') {
+            <section class="rounded-xl border border-error/30 bg-error/5 p-4">
+              <h3 class="flex items-center gap-2 font-semibold text-error">
+                <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                Motivo de cancelación
+              </h3>
 
-              <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs font-medium text-base-content/55">Observaciones</dt>
-                <dd class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ detalle.observacion ?? 'Sin observaciones.'
-                  }}</dd>
-              </div>
-            </dl>
+              <p class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ detalle.motivo_cancelacion ?? 'Sin motivo
+                registrado.' }}</p>
+
+              @if (detalle.fecha_cancelacion) {
+              <p class="mt-3 text-xs text-base-content/60">
+                Cancelado el
+                {{ detalle.fecha_cancelacion | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
+              </p>
+              }
+            </section>
+            }
           </section>
 
-          <!-- ================================================= -->
-          <!-- COSTO, KILOMETRAJE Y RESULTADO -->
-          <!-- ================================================= -->
-          <section class="space-y-3 border-t border-base-300 pt-5">
-            <h3 class="flex items-center gap-2 text-base font-semibold">
-              <i class="fa-solid fa-clipboard-check text-primary" aria-hidden="true"></i>
-              Resultado de la intervención
-            </h3>
+          <!-- ============================================= -->
+          <!-- INTERVENCIÓN -->
+          <!-- ============================================= -->
+          <section id="mantenimiento-panel-intervencion" role="tabpanel"
+            aria-labelledby="mantenimiento-tab-intervencion" tabindex="0" [hidden]="pestanaActiva !== 'intervencion'"
+            class="space-y-5 rounded-xl
+                   focus-visible:outline-2 focus-visible:outline-primary">
+            <section class="space-y-3">
+              <h3 class="flex items-center gap-2 font-semibold">
+                <i class="fa-solid fa-toolbox text-primary" aria-hidden="true"></i>
+                Información técnica
+              </h3>
 
-            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs text-base-content/55">Kilometraje de ingreso</dt>
-                <dd class="mt-2 text-sm font-semibold">
-                  @if (detalle.kilometraje_ingreso !== null) {
-                  {{ detalle.kilometraje_ingreso | number: '1.2-2' }} km
-                  } @else {
-                  <span class="font-normal italic text-base-content/45">No registrado</span>
-                  }
-                </dd>
-              </div>
+              <dl class="space-y-3">
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs font-medium text-base-content/55">
+                    Motivo
+                  </dt>
+                  <dd class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ detalle.motivo }}</dd>
+                </div>
 
-              <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs text-base-content/55">Kilometraje de salida</dt>
-                <dd class="mt-2 text-sm font-semibold">
-                  @if (detalle.kilometraje_salida !== null) {
-                  {{ detalle.kilometraje_salida | number: '1.2-2' }} km
-                  } @else {
-                  <span class="font-normal italic text-base-content/45">No registrado</span>
-                  }
-                </dd>
-              </div>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div class="rounded-xl border border-base-300 p-4">
+                    <dt class="text-xs text-base-content/55">
+                      Taller
+                    </dt>
+                    <dd class="mt-2 wrap-break-word text-sm font-semibold">
+                      {{ detalle.taller ?? 'No registrado' }}
+                    </dd>
+                  </div>
 
-              <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs text-base-content/55">Costo total</dt>
-                <dd class="mt-2 text-lg font-bold">
-                  @if (detalle.costo_total !== null) {
-                  {{ detalle.costo_total | currency: 'PEN' : 'S/ ' : '1.2-2' }}
-                  } @else {
-                  <span class="text-sm font-normal italic text-base-content/45">
-                    No registrado
-                  </span>
-                  }
-                </dd>
-              </div>
+                  <div class="rounded-xl border border-base-300 p-4">
+                    <dt class="text-xs text-base-content/55">
+                      Responsable técnico
+                    </dt>
+                    <dd class="mt-2 wrap-break-word text-sm font-semibold">
+                      {{ detalle.responsable_tecnico ?? 'No registrado' }}
+                    </dd>
+                  </div>
+                </div>
 
-              <div class="rounded-xl border border-base-300 p-4">
-                <dt class="text-xs text-base-content/55">Condición al finalizar</dt>
-                <dd class="mt-2">
-                  @if (detalle.vehiculo_operativo !== null) {
-                  <span class="badge badge-soft" [class.badge-success]="detalle.vehiculo_operativo"
-                    [class.badge-error]="!detalle.vehiculo_operativo">
-                    {{ detalle.vehiculo_operativo ? 'Quedó operativo' : 'Quedó fuera de servicio' }}
-                  </span>
-                  } @else {
-                  <span class="text-sm italic text-base-content/45">
-                    Sin resultado registrado
-                  </span>
-                  }
-                </dd>
-              </div>
-            </dl>
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs font-medium text-base-content/55">
+                    Diagnóstico
+                  </dt>
+                  <dd class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ detalle.diagnostico ?? 'Sin
+                    diagnóstico registrado.' }}</dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs font-medium text-base-content/55">
+                    Trabajos realizados
+                  </dt>
+                  <dd class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ detalle.trabajos_realizados ?? 'Sin
+                    trabajos registrados.' }}</dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs font-medium text-base-content/55">
+                    Observaciones
+                  </dt>
+                  <dd class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ detalle.observacion ?? 'Sin
+                    observaciones.' }}</dd>
+                </div>
+              </dl>
+            </section>
+
+            <!-- RESULTADO -->
+            <section class="space-y-3 border-t border-base-300 pt-5">
+              <h3 class="flex items-center gap-2 font-semibold">
+                <i class="fa-solid fa-clipboard-check text-primary" aria-hidden="true"></i>
+                Resultado de la intervención
+              </h3>
+
+              <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">
+                    Kilometraje de ingreso
+                  </dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    @if (detalle.kilometraje_ingreso != null) {
+                    {{ detalle.kilometraje_ingreso | number: '1.2-2' }} km
+                    } @else {
+                    <span class="font-normal italic text-base-content/45">
+                      No registrado
+                    </span>
+                    }
+                  </dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">
+                    Kilometraje de salida
+                  </dt>
+                  <dd class="mt-2 text-sm font-semibold">
+                    @if (detalle.kilometraje_salida != null) {
+                    {{ detalle.kilometraje_salida | number: '1.2-2' }} km
+                    } @else {
+                    <span class="font-normal italic text-base-content/45">
+                      No registrado
+                    </span>
+                    }
+                  </dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">
+                    Costo total
+                  </dt>
+                  <dd class="mt-2 text-lg font-bold">
+                    @if (detalle.costo_total != null) {
+                    {{ detalle.costo_total | currency: 'PEN' : 'S/ ' : '1.2-2' }}
+                    } @else {
+                    <span class="text-sm font-normal italic text-base-content/45">
+                      No registrado
+                    </span>
+                    }
+                  </dd>
+                </div>
+
+                <div class="rounded-xl border border-base-300 p-4">
+                  <dt class="text-xs text-base-content/55">
+                    Condición al finalizar
+                  </dt>
+                  <dd class="mt-2">
+                    @if (detalle.vehiculo_operativo != null) {
+                    <span class="badge badge-soft h-auto min-h-6 whitespace-normal"
+                      [class.badge-success]="detalle.vehiculo_operativo"
+                      [class.badge-error]="!detalle.vehiculo_operativo">
+                      {{
+                      detalle.vehiculo_operativo
+                      ? 'Quedó operativo'
+                      : 'Quedó fuera de servicio'
+                      }}
+                    </span>
+                    } @else {
+                    <span class="text-sm italic text-base-content/45">
+                      Sin resultado registrado
+                    </span>
+                    }
+                  </dd>
+                </div>
+              </dl>
+            </section>
           </section>
 
-          <!-- ================================================= -->
-          <!-- RESPONSABLES DE LA ORDEN -->
-          <!-- ================================================= -->
-          <section class="space-y-3 border-t border-base-300 pt-5">
-            <h3 class="flex items-center gap-2 text-base font-semibold">
+          <!-- ============================================= -->
+          <!-- RESPONSABLES -->
+          <!-- ============================================= -->
+          <section id="mantenimiento-panel-responsables" role="tabpanel"
+            aria-labelledby="mantenimiento-tab-responsables" tabindex="0" [hidden]="pestanaActiva !== 'responsables'"
+            class="space-y-3 rounded-xl
+                   focus-visible:outline-2 focus-visible:outline-primary">
+            <h3 class="flex items-center gap-2 font-semibold">
               <i class="fa-solid fa-user-check text-primary" aria-hidden="true"></i>
               Usuarios responsables
             </h3>
 
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <p class="text-xs text-base-content/55">
+              Usuarios que realizaron las acciones de la orden.
+            </p>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
               @for (
               responsable of [
               {
@@ -422,19 +533,20 @@
               ];
               track responsable.etiqueta
               ) {
-              <div class="rounded-xl border border-base-300 p-4">
-                <p class="text-xs text-base-content/55">
+              <article class="rounded-xl border border-base-300 p-4">
+                <h4 class="text-xs font-medium text-base-content/55">
                   {{ responsable.etiqueta }}
-                </p>
+                </h4>
 
                 @if (responsable.usuario; as usuario) {
                 <p class="mt-2 wrap-break-word text-sm font-semibold">
                   {{ usuario.username }}
                 </p>
+
                 <p class="mt-1 wrap-break-word text-xs text-base-content/60">
                   {{ usuario.email_acceso }}
                 </p>
-                } @else if (responsable.id !== null) {
+                } @else if (responsable.id != null) {
                 <p class="mt-2 text-sm">
                   Usuario #{{ responsable.id }}
                 </p>
@@ -445,53 +557,42 @@
                 }
 
                 @if (responsable.fecha) {
-                <p class="mt-2 text-xs text-base-content/55">
+                <p class="mt-3 border-t border-base-300 pt-3 text-xs text-base-content/55">
+                  <i class="fa-regular fa-clock mr-1" aria-hidden="true"></i>
                   {{ responsable.fecha | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
                 </p>
                 }
-              </div>
+              </article>
               }
             </div>
           </section>
 
-          <!-- ================================================= -->
-          <!-- CANCELACIÓN -->
-          <!-- ================================================= -->
-          @if (detalle.estado_mantenimiento === 'CANCELADO') {
-          <section class="rounded-xl border border-error/30 bg-error/5 p-4">
-            <h3 class="flex items-center gap-2 font-semibold text-error">
-              <i class="fa-solid fa-ban" aria-hidden="true"></i>
-              Motivo de cancelación
-            </h3>
-
-            <p class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ detalle.motivo_cancelacion ?? 'Sin motivo
-              registrado.' }}</p>
-
-            @if (detalle.fecha_cancelacion) {
-            <p class="mt-3 text-xs text-base-content/60">
-              Cancelado el
-              {{ detalle.fecha_cancelacion | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
-            </p>
-            }
-          </section>
-          }
-
-          <!-- ================================================= -->
+          <!-- ============================================= -->
           <!-- HISTORIAL -->
-          <!-- ================================================= -->
-          <!-- <section class="space-y-4 border-t border-base-300 pt-5">
-            <h3 class="flex items-center gap-2 text-base font-semibold">
-              <i class="fa-solid fa-clock-rotate-left text-primary" aria-hidden="true"></i>
-              Historial de la orden
-              <span class="badge badge-sm badge-outline">
-                {{ detalle.historial.length }}
-              </span>
-            </h3>
+          <!-- ============================================= -->
+          <section id="mantenimiento-panel-historial" role="tabpanel" aria-labelledby="mantenimiento-tab-historial"
+            tabindex="0" [hidden]="pestanaActiva !== 'historial'" class="space-y-4 rounded-xl
+                   focus-visible:outline-2 focus-visible:outline-primary">
+            <div>
+              <h3 class="flex items-center gap-2 font-semibold">
+                <i class="fa-solid fa-clock-rotate-left text-primary" aria-hidden="true"></i>
+                Historial de la orden
+
+                <span class="badge badge-sm badge-outline">
+                  {{ detalle.historial.length }}
+                </span>
+              </h3>
+
+              <p class="mt-1 text-xs text-base-content/55">
+                Fechas y horas mostradas en hora de Perú.
+              </p>
+            </div>
 
             <div class="space-y-3">
               @for (evento of detalle.historial; track evento.id_historial) {
               <article class="rounded-xl border border-base-300 p-4">
-                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex flex-col gap-2
+                         sm:flex-row sm:items-center sm:justify-between">
                   <h4 class="text-sm font-semibold">
                     @switch (evento.tipo_evento) {
                     @case ('CREACION') { Orden registrada }
@@ -499,10 +600,11 @@
                     @case ('INICIO') { Intervención iniciada }
                     @case ('FINALIZACION') { Intervención finalizada }
                     @case ('CANCELACION') { Orden cancelada }
+                    @default { {{ evento.tipo_evento }} }
                     }
                   </h4>
 
-                  <time class="text-xs text-base-content/55" [attr.datetime]="evento.created_at">
+                  <time class="shrink-0 text-xs text-base-content/55" [attr.datetime]="evento.created_at">
                     {{ evento.created_at | date: 'dd/MM/yyyy HH:mm:ss' : '-0500' }}
                   </time>
                 </div>
@@ -549,12 +651,14 @@
                     Consultar datos registrados en este evento
                   </summary>
 
-                  <div class="grid min-w-0 grid-cols-1 gap-3 border-t border-base-300 p-3">
+                  <div class="grid min-w-0 grid-cols-1 gap-3
+                           border-t border-base-300 p-3">
                     @if (evento.datos_anteriores) {
                     <div class="min-w-0">
                       <p class="mb-2 text-xs font-semibold text-base-content/60">
                         Datos anteriores
                       </p>
+
                       <pre
                         class="max-h-52 overflow-auto rounded-lg bg-base-200 p-3 text-xs">{{ evento.datos_anteriores | json }}</pre>
                     </div>
@@ -565,6 +669,7 @@
                       <p class="mb-2 text-xs font-semibold text-base-content/60">
                         Datos posteriores
                       </p>
+
                       <pre
                         class="max-h-52 overflow-auto rounded-lg bg-base-200 p-3 text-xs">{{ evento.datos_nuevos | json }}</pre>
                     </div>
@@ -573,21 +678,26 @@
                 </details>
                 }
               </article>
+
               } @empty {
-              <div class="rounded-xl border border-dashed border-base-300 p-6 text-center">
+              <div class="rounded-xl border border-dashed
+                       border-base-300 p-6 text-center">
+                <i class="fa-solid fa-clock-rotate-left mb-3 text-2xl text-base-content/30" aria-hidden="true"></i>
+
                 <p class="text-sm text-base-content/55">
                   No hay eventos registrados para esta orden.
                 </p>
               </div>
               }
             </div>
-          </section> -->
+          </section>
 
-          <!-- ================================================= -->
+          <!-- ============================================= -->
           <!-- FECHAS DEL REGISTRO -->
-          <!-- ================================================= -->
+          <!-- ============================================= -->
           <div class="flex flex-col gap-2 border-t border-base-300 pt-4
-              text-xs text-base-content/50 sm:flex-row sm:justify-between">
+                   text-xs text-base-content/50
+                   sm:flex-row sm:justify-between">
             <p>
               Registro:
               {{ detalle.created_at | date: 'dd/MM/yyyy HH:mm:ss' : '-0500' }}
@@ -598,20 +708,19 @@
               {{ detalle.updated_at | date: 'dd/MM/yyyy HH:mm:ss' : '-0500' }}
             </p>
           </div>
-
         </div>
         }
       </div>
 
-      <!-- ===================================================== -->
-      <!-- FOOTER MODAL -->
-      <!-- ===================================================== -->
+      <!-- ================================================= -->
+      <!-- PIE DEL MODAL -->
+      <!-- ================================================= -->
       <footer class="flex shrink-0 flex-col-reverse gap-3
-                 border-t border-base-300 px-5 py-4
-                 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+               border-t border-base-300 px-5 py-4
+               sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div class="flex items-center gap-2 text-xs text-base-content/50">
           <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-          <span>Consulte la información completa del usuario.</span>
+          <span>Detalle de la orden de mantenimiento.</span>
         </div>
 
         <button type="button" class="btn btn-accent min-w-28" (click)="cerrarModal()">

@@ -116,10 +116,7 @@
                       Seleccione fecha y ruta
                     </option>
 
-                    @for (
-                    version of versionesDisponibles;
-                    track version.id_ruta_version
-                    ) {
+                    @for ( version of versionesDisponibles; track version.id_ruta_version ) {
                     <option [ngValue]="version.id_ruta_version">
                       Versión {{ version.numero_version }} {{ mantieneContextoOriginal ? '(guardada)' : '(vigente)' }}
                     </option>
@@ -173,10 +170,7 @@
                     </option>
 
                     @if (disponibilidadLista) {
-                    @for (
-                    vehiculo of vehiculosDisponibles ?? [];
-                    track vehiculo.id_vehiculo
-                    ) {
+                    @for ( vehiculo of vehiculosDisponibles ?? []; track vehiculo.id_vehiculo ) {
                     <option [ngValue]="vehiculo.id_vehiculo">
                       {{ vehiculo.codigo }} — {{ vehiculo.placa }}
                     </option>

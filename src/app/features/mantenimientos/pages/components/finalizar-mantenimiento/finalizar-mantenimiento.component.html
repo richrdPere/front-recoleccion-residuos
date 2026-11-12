@@ -398,8 +398,11 @@
           </fieldset>
 
           <div class="rounded-xl bg-success/10 p-4 text-sm text-base-content/70">
-            Al finalizar se registrarán los resultados y la fecha de cierre
-            de la intervención.
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <span>
+              Al finalizar se registrarán los resultados y la fecha de cierre
+              de la intervención.
+            </span>
           </div>
         </div>
 
@@ -415,7 +418,7 @@
             Cerrar
           </button>
 
-          <button type="submit" class="btn btn-success" [disabled]="isLoading || !puedeFinalizar">
+          <button type="submit" class="btn btn-primary" [disabled]="isLoading || !puedeFinalizar">
 
             @if (isLoading) {
             <span class="loading loading-spinner loading-sm"></span>

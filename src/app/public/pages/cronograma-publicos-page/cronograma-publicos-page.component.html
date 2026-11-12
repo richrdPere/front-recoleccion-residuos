@@ -1,85 +1,366 @@
-<div class="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
+<div class="mx-auto max-w-7xl space-y-6 px-4 py-7 sm:px-6 lg:px-8">
 
-      <app-public-page-header
-        titulo="Cronogramas de recolección"
-        descripcion="Consulta las referencias habituales y las programaciones de cada mes."
-        etiqueta="Horarios y programación"
-        icono="fa-regular fa-calendar"
-      />
+  <app-public-page-header
+    titulo="Cronogramas de recolección"
+    descripcion="Consulta los horarios publicados y la próxima recolección de tu sector."
+    etiqueta="Horarios del servicio"
+    icono="fa-regular fa-calendar"
+  />
 
-      <p
-        role="note"
-        class="mb-6 rounded-2xl bg-warning/10 p-4 text-sm leading-6"
-      >
-        Datos de demostración. Hay servicios de ejemplo en noviembre de 2026.
+  <!-- ================================================= -->
+  <!-- SELECTORES -->
+  <!-- ================================================= -->
+  @if (!tokenPublico) {
+    <section
+      class="rounded-2xl border border-base-300 bg-base-100 p-5 sm:p-6"
+      aria-labelledby="cronograma-filtros"
+    >
+      <h2 id="cronograma-filtros" class="text-lg font-bold">
+        Busca tu ruta
+      </h2>
+
+      <p class="mt-1 text-sm text-base-content/60">
+        Selecciona una zona y luego la ruta que deseas consultar.
       </p>
 
-      <app-sector-information-card
-        [nombre]="ruta().sector"
-        [rutas]="rutas"
-        [idRutaSeleccionada]="idRuta()"
-        (rutaSeleccionada)="idRuta.set($event)"
-      />
+      <div class="mt-5 grid min-w-0 gap-4 md:grid-cols-2">
 
-      <div class="mt-6 grid items-start gap-6 lg:grid-cols-3">
-        <aside>
-          <app-schedule-card [horarios]="ruta().horarios" />
-        </aside>
+        <!-- ZONA -->
+        <div class="min-w-0">
+          <label
+            for="cronograma-zona"
+            class="mb-2 block text-sm font-semibold"
+          >
+            Zona
+          </label>
 
-        <section
-          aria-label="Programación mensual"
-          class="rounded-3xl border border-base-300
-                 bg-base-100 p-5 shadow-sm sm:p-6 lg:col-span-2"
+          <select
+            id="cronograma-zona"
+            class="select select-bordered w-full min-w-0 rounded-xl"
+            [ngModel]="idZona"
+            (ngModelChange)="cambiarZona($event)"
+            [disabled]="cargandoZonas"
+          >
+            <option value="">
+              {{
+                cargandoZonas
+                  ? 'Cargando zonas...'
+                  : 'Selecciona una zona'
+              }}
+            </option>
+
+            @for (zona of zonas; track zona.id_zona) {
+              <option [value]="zona.id_zona">
+                {{ zona.nombre }}
+              </option>
+            }
+          </select>
+
+          @if (errorZonas) {
+            <div class="mt-2 text-sm text-error" role="alert">
+              <p>{{ errorZonas }}</p>
+
+              <button
+                type="button"
+                class="mt-1 underline"
+                (click)="cargarZonas()"
+              >
+                Volver a intentar
+              </button>
+            </div>
+          } @else if (!cargandoZonas && !zonas.length) {
+            <p class="mt-2 text-sm text-base-content/60">
+              No hay zonas publicadas actualmente.
+            </p>
+          }
+        </div>
+
+        <!-- RUTA -->
+        <div class="min-w-0">
+          <label
+            for="cronograma-ruta"
+            class="mb-2 block text-sm font-semibold"
+          >
+            Ruta
+          </label>
+
+          <select
+            id="cronograma-ruta"
+            class="select select-bordered w-full min-w-0 rounded-xl"
+            [ngModel]="idRuta"
+            (ngModelChange)="cambiarRuta($event)"
+            [disabled]="
+              !idZona ||
+              cargandoRutas ||
+              !rutasDisponibles.length
+            "
+          >
+            <option value="">
+              {{
+                cargandoRutas
+                  ? 'Cargando rutas...'
+                  : 'Selecciona una ruta'
+              }}
+            </option>
+
+            @for (ruta of rutasDisponibles; track ruta.id_ruta) {
+              <option [value]="ruta.id_ruta">
+                {{ ruta.codigo }} — {{ ruta.nombre }}
+                {{
+                  ruta.estado_ruta === 'INACTIVA'
+                    ? '(Servicio suspendido)'
+                    : ''
+                }}
+              </option>
+            }
+          </select>
+
+          @if (errorRutas) {
+            <div class="mt-2 text-sm text-error" role="alert">
+              <p>{{ errorRutas }}</p>
+
+              <button
+                type="button"
+                class="mt-1 underline"
+                (click)="cargarRutas()"
+              >
+                Volver a intentar
+              </button>
+            </div>
+          } @else if (
+            idZona &&
+            !cargandoRutas &&
+            !rutasDisponibles.length
+          ) {
+            <p class="mt-2 text-sm text-base-content/60">
+              Esta zona todavía no tiene rutas publicadas.
+            </p>
+          }
+        </div>
+      </div>
+    </section>
+  } @else {
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <span class="badge badge-outline">
+        Cronograma del QR consultado
+      </span>
+
+      <a
+        routerLink="/cronogramas"
+        [queryParams]="{}"
+        class="btn btn-ghost btn-sm"
+      >
+        Consultar otra zona
+      </a>
+    </div>
+  }
+
+  <!-- ================================================= -->
+  <!-- CARGA Y ERRORES -->
+  <!-- ================================================= -->
+  @if (isLoading) {
+    <div
+      class="flex items-center justify-center gap-3 rounded-2xl bg-base-100 p-10"
+      role="status"
+    >
+      <span class="loading loading-spinner text-primary"></span>
+      <span>Consultando cronograma...</span>
+    </div>
+  }
+
+  @if (error) {
+    <div class="alert alert-error" role="alert">
+      <span>{{ error }}</span>
+
+      <button
+        type="button"
+        class="btn btn-sm"
+        [disabled]="isLoading"
+        (click)="consultar()"
+      >
+        Reintentar
+      </button>
+    </div>
+  }
+
+  @if (!tokenPublico && !idRuta && !isLoading) {
+    <div
+      class="rounded-2xl border border-dashed border-base-300 p-8 text-center"
+      role="status"
+    >
+      <i
+        class="fa-regular fa-calendar text-3xl text-base-content/35"
+        aria-hidden="true"
+      ></i>
+
+      <p class="mt-3 text-sm text-base-content/65">
+        Selecciona una ruta para ver sus horarios de recolección.
+      </p>
+    </div>
+  }
+
+  <!-- ================================================= -->
+  <!-- RESULTADOS -->
+  <!-- ================================================= -->
+  @if (datos; as informacion) {
+
+    @if (tokenPublico && informacion.rutas.length > 1) {
+      <div>
+        <label
+          for="cronograma-ruta-qr"
+          class="mb-2 block text-sm font-semibold"
         >
-          <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2 class="text-lg font-bold">
-                Servicios programados
-              </h2>
+          Ruta del sector
+        </label>
 
-              <p class="mt-1 text-sm text-base-content/60">
-                {{ mesLabel() }}
+        <select
+          id="cronograma-ruta-qr"
+          class="select select-bordered w-full rounded-xl"
+          [(ngModel)]="idRutaQr"
+        >
+          @for (opcion of informacion.rutas; track opcion.ruta.id_ruta) {
+            <option [value]="opcion.ruta.id_ruta">
+              {{ opcion.ruta.codigo }} — {{ opcion.ruta.nombre }}
+            </option>
+          }
+        </select>
+      </div>
+    }
+
+    @if (rutaSeleccionada; as item) {
+      <!-- ENCABEZADO DE LA RUTA -->
+      <section class="rounded-2xl border border-base-300 bg-base-100 p-5 sm:p-6">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div class="min-w-0">
+            <p class="text-sm text-base-content/60">
+              {{ item.ruta.zona.nombre }}
+              · {{ item.ruta.codigo }}
+            </p>
+
+            <h2 class="mt-1 text-xl font-bold">
+              {{ item.ruta.nombre }}
+            </h2>
+
+            <p class="mt-3 text-sm leading-6 text-base-content/70">
+              {{ item.estado.mensaje }}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            [disabled]="isLoading"
+            (click)="consultar()"
+          >
+            <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+            Actualizar
+          </button>
+        </div>
+
+        @if (item.estado.codigo === 'SERVICIO_SUSPENDIDO') {
+          <div class="alert alert-warning mt-4" role="status">
+            <span>
+              Los horarios están publicados, pero el servicio de esta
+              ruta se encuentra suspendido.
+            </span>
+          </div>
+        }
+      </section>
+
+      <div class="grid items-start gap-6 lg:grid-cols-2">
+
+        <!-- HORARIOS PUBLICADOS -->
+        <app-schedule-card [horarios]="horariosVista" />
+
+        <!-- PRÓXIMA RECOLECCIÓN -->
+        <section class="rounded-2xl border border-base-300 bg-base-100 p-5 sm:p-6">
+          <h2 class="text-lg font-bold">
+            Próxima recolección según horario
+          </h2>
+
+          @if (item.proxima_recoleccion; as proxima) {
+            <p class="mt-4 text-lg font-semibold">
+              {{ formatearEtiqueta(proxima.dia_semana) }}
+            </p>
+
+            <p class="mt-1 text-base-content/70">
+              {{ proxima.fecha }}
+            </p>
+
+            <div class="mt-4 rounded-xl bg-primary/10 p-4">
+              <p class="text-xl font-bold text-primary">
+                {{ proxima.hora_inicio.slice(0, 5) }}
+                –
+                {{ proxima.hora_fin.slice(0, 5) }}
+              </p>
+
+              <p class="mt-1 text-sm text-base-content/65">
+                Frecuencia:
+                {{ formatearEtiqueta(proxima.frecuencia) }}
               </p>
             </div>
 
-            <label class="block">
-              <span class="mb-1 block text-xs font-semibold">
-                Mes de consulta
-              </span>
+            <p class="mt-4 text-sm leading-6 text-base-content/60">
+              Esta referencia se calcula a partir del horario publicado.
+              Consulta el estado de la ruta para verificar la operación
+              del servicio.
+            </p>
+          } @else {
+            <p class="mt-4 text-sm leading-6 text-base-content/65">
+              No hay una próxima recolección disponible según los
+              horarios publicados.
+            </p>
+          }
 
-              <input
-                type="month"
-                class="input input-bordered w-full"
-                min="2000-01"
-                max="2100-12"
-                [value]="mes()"
-                (change)="seleccionarMes($event)"
-              />
-            </label>
-          </div>
+          <a
+            routerLink="/rutas"
+            [queryParams]="parametrosConsulta"
+            class="btn btn-primary mt-5 w-full sm:w-auto"
+          >
+            <i class="fa-solid fa-truck" aria-hidden="true"></i>
+            Ver estado de la ruta
+          </a>
+        </section>
+      </div>
 
-          <div class="mt-6 space-y-4">
-            @for (servicio of serviciosMes(); track servicio.id) {
-              <app-next-collection-card
-                [servicio]="servicio"
-                [periodoLabel]="mesLabel()"
-              />
-            } @empty {
-              <div
-                class="rounded-2xl bg-base-200 px-5 py-10 text-center"
-                role="status"
-              >
-                <i
-                  class="fa-regular fa-calendar text-3xl text-base-content/35"
-                  aria-hidden="true"
-                ></i>
+      <!-- VIGENCIA DE LOS HORARIOS -->
+      @if (item.horarios.length) {
+        <section class="rounded-2xl border border-base-300 bg-base-100 p-5 sm:p-6">
+          <h2 class="text-lg font-bold">
+            Vigencia de los horarios
+          </h2>
 
-                <p class="mt-4 text-sm leading-6 text-base-content/65">
-                  No hay servicios programados en el periodo consultado.
+          <div class="mt-4 space-y-3">
+            @for (horario of item.horarios; track $index) {
+              <div class="rounded-xl bg-base-200 p-4 text-sm">
+                <p class="font-semibold">
+                  {{ formatearEtiqueta(horario.dia_semana) }}
+                  · {{ horario.hora_inicio.slice(0, 5) }}
+                  – {{ horario.hora_fin.slice(0, 5) }}
+                </p>
+
+                <p class="mt-1 text-base-content/65">
+                  Desde: {{ horario.fecha_inicio || 'No especificado' }}
+                  · Hasta: {{ horario.fecha_fin || 'Sin fecha final' }}
                 </p>
               </div>
             }
           </div>
         </section>
+      }
+
+      <p class="text-xs text-base-content/55">
+        Información actualizada:
+        {{
+          informacion.actualizado
+            | date:'dd/MM/yyyy HH:mm:ss':'-0500'
+        }}.
+        Horarios expresados en hora de Perú.
+      </p>
+    } @else {
+      <div class="alert" role="status">
+        No hay rutas disponibles para el sector consultado.
       </div>
-    </div>
+    }
+  }
+</div>

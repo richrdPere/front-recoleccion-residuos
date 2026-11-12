@@ -250,6 +250,76 @@ export class VehiculosService {
       );
   }
 
+  // *********************************************************
+  // 10. SUBIR FOTO VEHICULO
+  // *********************************************************
+  subirFotoVehiculo(
+    idVehiculo: number,
+    foto: File,
+  ): Observable<GetVehiculoByIdResponse> {
+    const body = new FormData();
+
+    body.append('foto', foto, foto.name);
+
+    const headers = HttpServiceHelper.getMultipartHeaders({
+      token: this.authStorage.getAccessToken(),
+    });
+
+    return this.http.post<GetVehiculoByIdResponse>(
+      `${this.API_BASE}/${idVehiculo}/foto`,
+      body,
+      { headers },
+    );
+  }
+
+  // *********************************************************
+  // 11. ELIMINAR FOTO VEHICULO
+  // *********************************************************
+  eliminarFotoVehiculo(
+    idVehiculo: number,
+  ): Observable<GetVehiculoByIdResponse> {
+    return this.http.delete<GetVehiculoByIdResponse>(
+      `${this.API_BASE}/${idVehiculo}/foto`,
+      {
+        headers: this.getJsonHeaders(),
+      },
+    );
+  }
+
+  // *********************************************************
+  // 12. RESOLVER FOTO VEHICULO
+  // *********************************************************
+  resolverFotoUrl(
+    ruta: string | null | undefined,
+  ): string | null {
+    if (!ruta) {
+      return null;
+    }
+
+    try {
+      const api = new URL(
+        environment.apiUrl,
+        window.location.origin,
+      );
+
+      const foto = new URL(
+        ruta,
+        api.origin,
+      );
+
+      // Solo mostrar fotografías del backend configurado.
+      if (
+        foto.origin !== api.origin ||
+        !foto.pathname.startsWith('/uploads/vehiculos/')
+      ) {
+        return null;
+      }
+
+      return foto.href;
+    } catch {
+      return null;
+    }
+  }
 
   // *********************************************************
   // MÉTODOS PRIVADOS

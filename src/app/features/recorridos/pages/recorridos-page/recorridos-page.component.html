@@ -1,363 +1,538 @@
-<div class="space-y-6 p-4">
-  <h1 class="text-2xl font-bold">Historial de recorridos</h1>
+<!-- ================================================= -->
+<!-- CONTENEDOR DEL RECORRIDOS -->
+<!-- ================================================= -->
+<div class="mx-auto w-full max-w-500">
 
-  <form
-    class="grid gap-3 rounded-xl border border-base-300 p-4 md:grid-cols-3"
-    (ngSubmit)="buscar()"
-  >
-    <label class="form-control">
-      <span>Desde</span>
-      <input
-        type="date"
-        name="desde"
-        class="input input-bordered"
-        [(ngModel)]="fechaInicio"
-        required
-      />
-    </label>
+  <!-- ===================================================== -->
+  <!-- ENCABEZADO -->
+  <!-- ===================================================== -->
+  <header class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
-    <label class="form-control">
-      <span>Hasta</span>
-      <input
-        type="date"
-        name="hasta"
-        class="input input-bordered"
-        [(ngModel)]="fechaFin"
-        required
-      />
-    </label>
+    <div class="flex min-w-0 items-center gap-3">
 
-    <label class="form-control">
-      <span>Estado</span>
-      <select
-        name="estado"
-        class="select select-bordered"
-        [(ngModel)]="estado"
-      >
-        <option value="">Todos</option>
-        <option value="FINALIZADO">Finalizados</option>
-        <option value="CANCELADO">Cancelados</option>
-        <option value="EN_CURSO">En curso</option>
-        <option value="PAUSADO">Pausados</option>
-      </select>
-    </label>
-
-    <label class="form-control">
-      <span>Zona (ID opcional)</span>
-      <input
-        type="number"
-        min="1"
-        name="zona"
-        class="input input-bordered"
-        [(ngModel)]="idZona"
-      />
-    </label>
-
-    <label class="form-control">
-      <span>Ruta (ID opcional)</span>
-      <input
-        type="number"
-        min="1"
-        name="ruta"
-        class="input input-bordered"
-        [(ngModel)]="idRuta"
-      />
-    </label>
-
-    <label class="form-control">
-      <span>Vehículo (ID opcional)</span>
-      <input
-        type="number"
-        min="1"
-        name="vehiculo"
-        class="input input-bordered"
-        [(ngModel)]="idVehiculo"
-      />
-    </label>
-
-    <button class="btn btn-primary" [disabled]="cargando()">
-      Consultar
-    </button>
-  </form>
-
-  @if (error()) {
-    <p class="text-error" role="alert">{{ error() }}</p>
-  }
-
-  @if (listado(); as lista) {
-    <div class="overflow-x-auto">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Recorrido</th>
-            <th>Ruta / zona</th>
-            <th>Vehículo</th>
-            <th>Inicio</th>
-            <th>Estado</th>
-            <th>Detalle</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          @for (item of lista.items; track item.id_recorrido) {
-            <tr>
-              <td>#{{ item.id_recorrido }}</td>
-              <td>{{ item.ruta }} / {{ item.zona }}</td>
-              <td>{{ item.placa }}</td>
-              <td>
-                {{ item.fecha_inicio | date:'dd/MM/yyyy HH:mm':'-0500' }}
-              </td>
-              <td>{{ item.estado }}</td>
-              <td>
-                <button
-                  type="button"
-                  class="btn btn-sm"
-                  (click)="ver(item.id_recorrido)"
-                >
-                  Abrir
-                </button>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="6">No hay recorridos con estos filtros.</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <div class="flex items-center gap-3">
-      <button
-        type="button"
-        class="btn btn-sm"
-        [disabled]="cargando() || lista.pagination.page <= 1"
-        (click)="buscar(lista.pagination.page - 1)"
-      >
-        Anterior
-      </button>
-
-      <span>
-        Página {{ lista.pagination.page }}
-        de {{ lista.pagination.total_pages || 1 }}
-      </span>
-
-      <button
-        type="button"
-        class="btn btn-sm"
-        [disabled]="
-          cargando() ||
-          lista.pagination.page >= lista.pagination.total_pages
-        "
-        (click)="buscar(lista.pagination.page + 1)"
-      >
-        Siguiente
-      </button>
-    </div>
-  }
-
-  @if (cargandoDetalle()) {
-    <p role="status">Cargando detalle y trazado...</p>
-  }
-
-  @if (errorDetalle()) {
-    <p class="text-error" role="alert">{{ errorDetalle() }}</p>
-  }
-
-  @if (detalle(); as d) {
-    <section class="space-y-5 rounded-xl border border-base-300 p-5">
-      <header class="flex items-center justify-between gap-3">
-        <h2 class="text-xl font-bold">
-          Recorrido #{{ d.recorrido.id_recorrido }}
-        </h2>
-
-        <button
-          type="button"
-          class="btn btn-sm"
-          (click)="ver(d.recorrido.id_recorrido)"
-        >
-          Actualizar detalle
-        </button>
-      </header>
-
-      <p>
-        {{ d.programacion.ruta?.nombre }}
-        · {{ d.programacion.ruta?.zona?.nombre }}
-        · {{ d.programacion.vehiculo?.placa }}
-        · {{ d.recorrido.estado_recorrido }}
-      </p>
-
-      @if (d.recorrido.motivo_cancelacion) {
-        <p class="text-error">
-          Cancelación: {{ d.recorrido.motivo_cancelacion }}
-        </p>
-      }
-
-      <p>
-        Inicio:
-        {{ d.recorrido.fecha_hora_inicio | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
-        · Cierre:
-        {{
-          (d.recorrido.fecha_hora_finalizacion
-            | date:'dd/MM/yyyy HH:mm:ss':'-0500') || 'Sin cierre'
-        }}
-      </p>
-
-      <div class="grid gap-3 md:grid-cols-3">
-        <p>Total: {{ duracion(d.tiempos.total_segundos) }}</p>
-        <p>Pausado: {{ duracion(d.tiempos.pausa_segundos) }}</p>
-        <p>
-          Operación:
-          {{ duracion(d.tiempos.operacion_segundos) }}
-        </p>
+      <div class="flex h-12 w-12 shrink-0
+                 items-center justify-center
+                 rounded-2xl bg-primary/10
+                 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-route text-2xl" aria-hidden="true"></i>
       </div>
 
-      <p class="text-sm text-base-content/60">
-        El tiempo de operación excluye las pausas registradas.
-        En recorridos activos, los tiempos son provisionales.
-      </p>
+      <div class="min-w-0">
+        <h1 class="text-2xl font-bold leading-tight text-base-content">
+          Recorridos
+        </h1>
 
-      @for (aviso of d.tiempos.advertencias; track $index) {
-        <p class="text-warning">{{ aviso }}</p>
-      }
-
-      <h3 class="font-bold">Equipo según asignaciones</h3>
-
-      @for (persona of d.equipo; track persona.id_personal) {
-        <p>
-          {{ persona.funcion }}
-          · {{ persona.usuario || ('Personal #' + persona.id_personal) }}
-          · {{ persona.estado_asignacion }}
+        <p class="mt-1 max-w-2xl text-sm leading-relaxed text-base-content/60">
+          Consulta la ejecución, las atenciones y los resultados del servicio.
         </p>
-      }
+      </div>
+    </div>
 
-      <h3 class="font-bold">Trazado GPS registrado</h3>
+    <!-- <button type="button" class="btn btn-outline gap-2 rounded-xl" [disabled]="isLoading"
+      (click)="getRecorridosPaginated()">
+      <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+      Actualizar
+    </button> -->
+  </header>
 
-      @if (errorTrazado()) {
-        <p class="text-error">{{ errorTrazado() }}</p>
-      }
+  <!-- ===================================================== -->
+  <!-- FILTROS -->
+  <!-- ===================================================== -->
+  <section class="mb-6 overflow-hidden rounded-2xl
+         border border-base-300 bg-base-100 shadow-sm">
 
-      @if (trazado(); as gps) {
-        @if (gps.muestras_validas > 0) {
-          <historial-mapa [geojson]="gps.geojson" />
-        } @else {
-          <p>No hay posiciones válidas para dibujar el trazado.</p>
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_170px]">
+
+      <!-- ================================================= -->
+      <!-- CAMPOS DE FILTRO -->
+      <!-- ================================================= -->
+      <div class="min-w-0 p-4 sm:p-5">
+
+        <div class="grid grid-cols-1 items-end gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+          <!-- BUSCAR POR RUTAS -->
+          <div class="min-w-0">
+            <label for="recorridos-ruta" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Rutas
+            </label>
+
+            <select id="recorridos-ruta" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [ngClass]="idRutaBusqueda ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="idRutaBusqueda" (ngModelChange)="onFiltroChange()">
+              <option [ngValue]="null">Seleccionar ruta</option>
+              <!-- <option value="">Seleccionar ruta</option> -->
+
+              @for (ruta of rutasDisponibles; track ruta.id_ruta) {
+              <option [ngValue]="ruta.id_ruta">
+                {{ ruta.codigo }} — {{ ruta.nombre }}
+              </option>
+              }
+            </select>
+          </div>
+
+          <!-- BUSCAR POR ESTADO -->
+          <div class="min-w-0">
+            <label for="recorridos-estado" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Estado
+            </label>
+
+            <select id="recorridos-estado" name="estado" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [ngClass]="estadoBusqueda ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="estadoBusqueda" (ngModelChange)="onFiltroChange()">
+
+              <option value="">Todos los estados</option>
+
+              @for (estado of estadosOperativos; track estado.value) {
+              <option [value]="estado.value">
+                {{ estado.label }}
+              </option>
+              }
+            </select>
+          </div>
+
+          <!-- BUSCAR POR FECHA INICIAL -->
+          <div class="min-w-0">
+            <label for="recorridos-fecha-inicio" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Fecha desde
+            </label>
+
+            <input id="recorridos-fecha-inicio" type="date" name="fechaInicio" class="input input-bordered h-11 min-h-11
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30f"
+              [ngClass]="fechaInicioBusqueda.trim() ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="fechaInicioBusqueda" required (ngModelChange)="onFiltroChange()"
+              [class.input-error]="!!errorFiltros" />
+          </div>
+
+          <!-- BUSCAR POR FECHA FINAL -->
+          <div class="min-w-0">
+            <label for="recorridos-fecha-fin" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Fecha hasta
+            </label>
+
+            <input id="recorridos-fecha-fin" type="date" name="fechaFin" class="input input-bordered h-11 min-h-11
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30f"
+              [ngClass]="fechaFinBusqueda.trim() ? 'border-primary' : 'border-base-500'" [(ngModel)]="fechaFinBusqueda"
+              (ngModelChange)="onFiltroChange()" [class.input-error]="!!errorFiltros" />
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================= -->
+      <!-- ILUSTRACIÓN -->
+      <!-- ================================================= -->
+      <div class="hidden items-center justify-center px-5 lg:flex">
+        <span class="imagen-lupa block h-32 w-32 text-base-content opacity-90" aria-hidden="true"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================== -->
+  <!-- RESULTADOS DEL LISTADO -->
+  <!-- ===================================================== -->
+
+  <section class="space-y-4" aria-labelledby="recorridos-resultados-title" [attr.aria-busy]="isLoading">
+    <h2 id="recorridos-resultados-title" class="sr-only">
+      Resultados del historial
+    </h2>
+
+    <!-- CARGANDO -->
+    @if (isLoading ) {
+    <div class="space-y-4" role="status" aria-live="polite">
+      <span class="sr-only">
+        Consultando historial de recorridos.
+      </span>
+
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3" aria-hidden="true">
+        @for (item of [1, 2, 3]; track item) {
+        <div class="rounded-xl border border-base-300 p-4">
+          <div class="skeleton h-3 w-28"></div>
+          <div class="skeleton mt-3 h-7 w-16"></div>
+        </div>
         }
+      </div>
 
-        <p class="text-sm">
-          {{ gps.muestras_validas }} muestras válidas de
-          {{ gps.muestras_cargadas }} recibidas.
-          {{ gps.muestras_descartadas }} excluidas de la visualización.
-        </p>
+      <div class="space-y-4 rounded-2xl border border-base-300 p-5" aria-hidden="true">
+        @for (item of [1, 2, 3, 4, 5]; track item) {
+        <div class="flex items-center gap-4">
+          <div class="skeleton h-10 w-16 shrink-0 rounded-lg"></div>
 
-        <p class="text-sm text-base-content/60">
-          La línea se interrumpe ante muestras inválidas o huecos
-          mayores de {{ gps.corte_por_hueco_segundos }} segundos.
-          Pueden faltar datos pendientes de sincronización.
-        </p>
-      }
+          <div class="min-w-0 flex-1 space-y-2">
+            <div class="skeleton h-4 w-64 max-w-full"></div>
+            <div class="skeleton h-3 w-40 max-w-full"></div>
+          </div>
 
-      <h3 class="font-bold">Atención de puntos</h3>
+          <div class="skeleton hidden h-7 w-24 rounded-full sm:block"></div>
+        </div>
+        }
+      </div>
+    </div>
 
-      <p>
-        {{ d.resumen_puntos.atendidos }} atendidos ·
-        {{ d.resumen_puntos.omitidos }} omitidos ·
-        {{ d.resumen_puntos.pendientes }} pendientes
+    <!-- ERROR -->
+    } @else if (error) {
+    <div class="flex flex-col items-center justify-center rounded-2xl
+             border border-error/30 bg-error/5 p-8 text-center" role="alert">
+      <div class="mb-4 flex h-14 w-14 items-center justify-center
+               rounded-full bg-error/10 text-error">
+        <i class="fa-solid fa-triangle-exclamation text-xl" aria-hidden="true"></i>
+      </div>
+
+      <h3 class="font-semibold">
+        No se pudo consultar el historial
+      </h3>
+
+      <p class="mt-2 max-w-lg wrap-break-word text-sm text-base-content/65">
+        {{ error }}
       </p>
+
+      <button type="button" class="btn btn-outline btn-sm mt-4 gap-2" (click)="getRecorridosPaginated()">
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+        Reintentar
+      </button>
+    </div>
+
+    <!-- LISTADO -->
+    } @else if (listado; as lista) {
+
+    <!-- RESUMEN DEL CONJUNTO FILTRADO -->
+    <!-- <div class="rounded-2xl border border-base-300 bg-base-100 p-4 sm:p-5">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p class="text-xs text-base-content/55">
+            Recorridos encontrados
+          </p>
+
+          <p class="mt-1 text-3xl font-bold">
+            {{ lista.resumen.total | number:'1.0-0' }}
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          @for (
+          grupo of lista.resumen.por_estado;
+          track grupo.estado
+          ) {
+          <span class="badge badge-soft h-auto min-h-7 gap-2 py-1" [ngClass]="obtenerEstado(grupo.estado).class">
+            {{ obtenerEstado(grupo.estado).label }}
+            <strong>{{ grupo.total | number:'1.0-0' }}</strong>
+          </span>
+          }
+        </div>
+      </div>
+
+      <p class="mt-3 text-xs text-base-content/50">
+        El resumen considera todos los recorridos que cumplen los filtros.
+      </p>
+    </div> -->
+
+    <!-- ===================================================== -->
+    <!-- TABLA DE RECORRIDOS -->
+    <!-- ===================================================== -->
+    <div class="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
+
+      <!-- ===================================================== -->
+      <!-- CABECERA -->
+      <!-- ===================================================== -->
+      <div class="flex flex-col gap-3 border-b border-base-300 px-4 py-4
+               sm:flex-row sm:items-center sm:justify-between sm:px-5">
+
+        <!-- Listado de recorridos -->
+        <div>
+          <h3 class="font-semibold">Listado de recorridos</h3>
+
+          <p class="mt-1 text-xs text-base-content/55">
+            Fechas y horas mostradas.
+          </p>
+        </div>
+
+        <!-- Cantidad por página -->
+        <div class="flex w-full items-center justify-between gap-3
+                 text-sm text-base-content/70
+                 sm:w-auto sm:justify-start">
+          <label for="recorridos-limite" class="text-sm text-base-content/60">
+            Mostrar
+          </label>
+
+          <select id="recorridos-limite" name="limiteRecorridos" class="select select-bordered select-sm w-20"
+            [(ngModel)]="limit" (ngModelChange)="cambiarLimite()" [disabled]="isLoading">
+            @for (opcion of pageSizeOptions; track opcion) {
+            <option [ngValue]="opcion">
+              {{ opcion }}
+            </option>
+            }
+          </select>
+
+          <span class="whitespace-nowrap">
+            ítems por página
+          </span>
+
+          <!-- <span class="text-xs text-base-content/55">
+            {{ totalItems | number:'1.0-0' }} registros
+          </span> -->
+
+
+
+        </div>
+        <!-- <span class="badge badge-outline">
+          {{ recorridos.length }} en esta página
+        </span> -->
+      </div>
 
       <div class="overflow-x-auto">
-        <table class="table table-sm">
-          <thead>
-            <tr>
-              <th>Punto</th>
-              <th>Estado</th>
-              <th>Responsable</th>
-              <th>Motivo / observación</th>
+        <table class="table min-w-300">
+          <caption class="sr-only">
+            Historial de recorridos y acciones disponibles
+          </caption>
+
+          <thead class="bg-base-200">
+            <tr class="text-xs uppercase tracking-wide text-base-content/60">
+              <th class="w-14 text-center"> N.°</th>
+              <th scope="col">Recorrido</th>
+              <th scope="col">Ruta y zona</th>
+              <th scope="col">Vehículo</th>
+              <th scope="col">Inicio y cierre</th>
+              <th scope="col">Duración</th>
+              <th scope="col" class="text-center">Atenciones</th>
+              <th scope="col">Estado</th>
+              <th scope="col" class="text-right">Acciones</th>
             </tr>
           </thead>
 
           <tbody>
-            @for (punto of d.puntos; track punto.id_ruta_punto) {
-              <tr>
-                <td>{{ punto.orden }}. {{ punto.nombre }}</td>
-                <td>{{ punto.estado_atencion }}</td>
-                <td>{{ punto.recoleccion?.usuario_registro?.username }}</td>
-                <td>
-                  {{ punto.recoleccion?.motivo_omision }}
-                  {{ punto.recoleccion?.observacion }}
-                </td>
-              </tr>
+            @for (item of recorridos; track item.id_recorrido; let i = $index ) {
+            <tr class="hover:bg-base-200/40">
+
+              <td class="text-center text-base-content/60">
+                {{ ((currentPage - 1) * limit) + i + 1 }}
+              </td>
+
+              <td>
+                <p class="font-semibold">
+                  #{{ item.id_recorrido }}
+                </p>
+
+                <p class="mt-1 text-xs text-base-content/55">
+                  Prog. #{{ item.id_programacion }}
+                </p>
+              </td>
+
+              <td class="max-w-72">
+                <p class="wrap-break-word text-sm font-medium">
+                  {{ item.ruta || 'Ruta no disponible' }}
+                </p>
+
+                <p class="mt-1 wrap-break-word text-xs text-base-content/55">
+                  {{ item.zona || 'Zona no disponible' }}
+                </p>
+              </td>
+
+              <td>
+                <span class="badge badge-outline whitespace-nowrap font-mono">
+                  {{ item.placa || 'Sin placa' }}
+                </span>
+              </td>
+
+              <td class="whitespace-nowrap">
+                <p class="text-sm">
+                  {{ item.fecha_inicio | date:'dd/MM/yyyy HH:mm':'-0500' }}
+                </p>
+
+                <p class="mt-1 text-xs text-base-content/55">
+                  @if (item.fecha_fin) {
+                  Cierre:
+                  {{ item.fecha_fin | date:'dd/MM/yyyy HH:mm':'-0500' }}
+                  } @else {
+                  Sin cierre registrado
+                  }
+                </p>
+              </td>
+
+              <td class="whitespace-nowrap text-sm">
+                {{ duracion(item.duracion_segundos) }}
+              </td>
+
+              <td class="text-center">
+                <p class="text-sm font-semibold">
+                  {{ item.puntos_atendidos }} / {{ item.puntos_total }}
+                </p>
+
+                <p class="mt-1 text-xs text-base-content/55">
+                  Atendidos
+                </p>
+              </td>
+
+              <td>
+                <span class="badge badge-soft whitespace-nowrap" [ngClass]="obtenerEstado(item.estado).class">
+                  {{ obtenerEstado(item.estado).label }}
+                </span>
+              </td>
+
+              <!-- ============================================= -->
+              <!-- ACCIONES -->
+              <!-- ============================================= -->
+              <td>
+                <div class="flex items-center justify-center gap-1">
+
+                  <!-- Ver recorrido -->
+                  <div class="tooltip tooltip-left" data-tip="Ver detalle del recorrido">
+                    <button type="button" class="btn btn-ghost btn-circle btn-sm" (click)="ver(item.id_recorrido)"
+                      [attr.aria-label]="'Ver detalle del recorrido ' + item.id_recorrido">
+                      <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                    </button>
+                  </div>
+
+                  <!-- Cancelar recorrido -->
+                  @if ( item.estado === 'EN_CURSO' || item.estado === 'PAUSADO' ) {
+                  <div class="tooltip tooltip-left" data-tip="Cancelar recorrido">
+                    <button type="button" class="btn btn-ghost btn-sm gap-2 text-error"
+                      [attr.aria-label]="'Cancelar recorrido ' + item.id_recorrido" (click)="abrirModalCancelar(item)">
+                      <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                    </button>
+                  </div>
+
+                  }
+                </div>
+              </td>
+            </tr>
+
+            } @empty {
+            <tr>
+              <td colspan="8" class="px-5 py-12 text-center">
+                <div class="mx-auto flex max-w-md flex-col items-center">
+                  <div class="mb-4 flex h-16 w-16 items-center justify-center
+                           rounded-full bg-base-200 text-base-content/35">
+                    <i class="fa-solid fa-route text-2xl" aria-hidden="true"></i>
+                  </div>
+
+                  <h4 class="font-semibold">
+                    No se encontraron recorridos
+                  </h4>
+
+                  <p class="mt-2 text-sm text-base-content/60">
+                    No hay resultados para el período y los filtros consultados.
+                    Prueba con otro estado o amplía el rango de fechas.
+                  </p>
+
+                  <button type="button" class="btn btn-outline btn-sm mt-4" (click)="limpiarFiltros()">
+                    Restablecer filtros
+                  </button>
+                </div>
+              </td>
+            </tr>
             }
           </tbody>
         </table>
       </div>
 
-      <h3 class="font-bold">Pausas registradas</h3>
+      <!-- PAGINACIÓN -->
+      @if (totalItems > 0) {
+      <footer class="flex flex-col gap-4 border-t border-base-300
+               bg-base-200/50 px-4 py-4 sm:px-5
+               lg:flex-row lg:items-center lg:justify-between">
 
-      @for (pausa of d.tiempos.pausas; track $index) {
-        <p>
-          {{ pausa.inicio | date:'HH:mm:ss':'-0500' }}
-          →
-          {{ pausa.fin | date:'HH:mm:ss':'-0500' }}
-          · {{ duracion(pausa.duracion_segundos) }}
-          {{ pausa.abierta ? '(abierta al consultar)' : '' }}
-        </p>
-      } @empty {
-        <p>Sin pausas registradas.</p>
-      }
+        <!-- Total de registros -->
+        <div>
+          <h2 class="font-semibold">Recorridos registrados</h2>
 
-      <h3 class="font-bold">Eventos</h3>
-
-      @for (evento of d.eventos; track evento.id_recorrido_evento) {
-        <p>
-          {{ evento.fecha_evento | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
-          · {{ evento.tipo_evento }}
-          · {{ evento.usuario?.username }}
-          · {{ evento.observacion }}
-        </p>
-      }
-
-      <h3 class="font-bold">Incidencias</h3>
-      <p class="text-sm">{{ d.nota_incidencias }}</p>
-
-      @for (incidencia of d.incidencias; track incidencia.id_incidencia) {
-        <article class="rounded-lg border border-base-300 p-3">
-          <p class="font-semibold">
-            #{{ incidencia.id_incidencia }} {{ incidencia.titulo }}
+          <p class="mt-0.5 text-sm text-base-content/55">
+            {{ totalItems }}
+            {{
+            totalItems === 1
+            ? 'recorrido registrado'
+            : 'recorridos registrados'
+            }}
           </p>
+        </div>
 
-          <p>
-            {{ incidencia.tipo }}
-            · {{ incidencia.prioridad }}
-            · {{ incidencia.estado_incidencia }}
-          </p>
+        <!-- <div class="flex flex-wrap items-center gap-3">
+          <label for="recorridos-limite" class="text-sm text-base-content/60">
+            Por página
+          </label>
 
-          <p>{{ incidencia.descripcion }}</p>
-        </article>
-      } @empty {
-        <p>Sin incidencias visibles para este recorrido.</p>
+          <select id="recorridos-limite" name="limiteRecorridos" class="select select-bordered select-sm w-20"
+            [(ngModel)]="limit" (ngModelChange)="cambiarLimite()" [disabled]="isLoading">
+            @for (opcion of pageSizeOptions; track opcion) {
+            <option [ngValue]="opcion">
+              {{ opcion }}
+            </option>
+            }
+          </select>
+
+          <span class="text-xs text-base-content/55">
+            {{ totalItems | number:'1.0-0' }} registros
+          </span>
+        </div> -->
+
+        <!-- Paginated -->
+        <div class="flex flex-col items-center gap-3 sm:flex-row">
+          <span class="whitespace-nowrap text-sm">
+            Página <strong>{{ currentPage }}</strong>
+            de <strong>{{ totalPages }}</strong>
+          </span>
+
+          <div class="flex gap-2">
+            <button type="button" class="btn btn-sm" [disabled]="isLoading || page <= 1"
+              (click)="cambiarPagina(currentPage - 1)">
+              <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              Anterior
+            </button>
+
+            <button type="button" class="btn btn-sm" [disabled]="isLoading || page >= totalPages"
+              (click)="cambiarPagina(currentPage + 1)">
+              Siguiente
+              <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <!-- <nav class="flex flex-wrap items-center justify-between gap-3 sm:justify-end"
+          aria-label="Paginación del historial">
+          <button type="button" class="btn btn-outline btn-sm gap-2"
+            [disabled]="isLoading || !lista.pagination.has_previous_page" (click)="cambiarPagina(currentPage - 1)">
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+            Anterior
+          </button>
+
+          <span class="text-sm text-base-content/65" aria-live="polite">
+            Página
+            <strong>{{ currentPage }}</strong>
+            de
+            <strong>{{ totalPages || 1 }}</strong>
+          </span>
+
+          <button type="button" class="btn btn-outline btn-sm gap-2"
+            [disabled]="isLoading || !lista.pagination.has_next_page" (click)="cambiarPagina(currentPage + 1)">
+            Siguiente
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+        </nav> -->
+      </footer>
       }
+    </div>
+    }
+  </section>
 
-      <h3 class="font-bold">Resultado final de residuos</h3>
-
-      @if (d.recorrido.resultado_final; as resultado) {
-        <p class="text-lg font-semibold">
-          {{ resultado.cantidad_total | number:'1.0-3' }}
-          {{ resultado.unidad_medida }}
-        </p>
-
-        <p>{{ resultado.observacion }}</p>
-
-        @if (resultado.vehiculo) {
-          <p>Vehículo en la medición: {{ resultado.vehiculo.placa }}</p>
-        }
-
-        @if (resultado.capacidad; as capacidad) {
-          <p>Evaluación de carga al cierre: {{ capacidad.porcentaje }} %</p>
-        }
-      } @else {
-        <p>Resultado final pendiente o no registrado.</p>
-      }
-    </section>
-  }
 </div>
+
+<!-- ======================================================= -->
+<!-- MODAL: DETALLE DEL RECORRIDO -->
+<!-- ======================================================= -->
+<recorridos-view [mostrarModal]="mostrarModalView" [recorrido_id]="recorrido_id" (modalCerrado)="cerrarModalInfo()" />
+
+<!-- ======================================================= -->
+<!-- MODAL: CANCELAR RECORRIDO -->
+<!-- ======================================================= -->
+<recorridos-cancelar [mostrarModal]="mostrarModalCancelar" [recorridoSeleccionado]="recorridoCancelarSeleccionado"
+  (modalCerrado)="cerrarModalCancelar()" (recorridoCancelado)="onRecorridoCancelado($event)" />

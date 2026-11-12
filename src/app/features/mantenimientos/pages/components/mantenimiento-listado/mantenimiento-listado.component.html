@@ -4,6 +4,21 @@
 <div class="mx-auto w-full max-w-500">
 
   <!-- ================================================= -->
+  <!-- REGRESAR -->
+  <!-- ================================================= -->
+  <button type="button" class="btn btn-outline btn-info mb-4 w-full gap-2 rounded-xl sm:w-auto"
+    (click)="volverAlListado()">
+    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+
+    <span>Volver a vehículos</span>
+  </button>
+  <!-- <button type="button" class="mb-4 flex items-center gap-2 text-sm
+           text-info hover:underline " (click)="volverAlListado()">
+    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+    Volver a vehiculos
+  </button> -->
+
+  <!-- ================================================= -->
   <!-- ENCABEZADO -->
   <!-- ================================================= -->
   <header class="mb-5 flex flex-col gap-4
@@ -41,11 +56,11 @@
 
     </div>
 
-    <button type="button" class="btn btn-accent shrink-0" aria-label="Volver a las cards de serenos"
+    <!-- <button type="button" class="btn btn-accent shrink-0" aria-label="Volver a las cards de serenos"
       (click)="volverAlListado()">
       <i class="fa-solid fa-arrow-left"></i>
       Volver
-    </button>
+    </button> -->
 
   </header>
 
@@ -65,30 +80,6 @@
                xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
 
           <!-- Buscar por descripción -->
-          <!-- <label class="form-control w-full">
-            <span class="mb-1.5 text-xs font-semibold
-                   uppercase tracking-wide
-                   text-base-content/60">
-              Nombres y Apellidos
-            </span>
-
-            <div class="relative">
-              <i class="fa-solid fa-magnifying-glass
-                     pointer-events-none absolute
-                     left-3.5 top-1/2
-                     -translate-y-1/2
-                     text-base-content/35">
-              </i>
-
-              <input type="text" class="input input-bordered
-                     h-11 w-full rounded-xl
-                     bg-base-100 pl-10 pr-4
-                     focus:outline-none
-                     focus:ring-2
-                     focus:ring-primary/30" placeholder="Buscar por placa" autocomplete="off"
-                [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()" appUppercase />
-            </div>
-          </label> -->
           <div class="min-w-0">
             <label for="filtro-descripcion" class="mb-1.5 block text-xs font-semibold
                    uppercase tracking-wide text-base-content/60">
@@ -186,13 +177,7 @@
       <div class="hidden items-center justify-center px-5 lg:flex">
         <span class="imagen-lupa block h-32 w-32 text-base-content opacity-90" aria-hidden="true"></span>
       </div>
-      <!-- <div class="hidden items-center justify-center border-base-300 px-5 lg:flex">
 
-        <img src="assets/img/search.png" alt="" aria-hidden="true" class="h-32 w-32
-               select-none object-contain
-               opacity-90
-               drop-shadow-sm" draggable="false" />
-      </div> -->
     </div>
   </section>
 
@@ -284,12 +269,13 @@
             <th class="min-w-48">Vehículo</th>
             <th class="min-w-40">Tipo</th>
             <th class="min-w-64">Motivo</th>
-            <th class="min-w-48">Programación</th>
-            <!-- <th class="min-w-52">Ejecución y kilometraje</th> -->
+            <th class="min-w-52">Ejecución y kilometraje</th>
+            <th class="min-w-40 text-center">Estado</th>
             <!-- <th class="min-w-48">Taller y responsable</th> -->
             <th class="min-w-32 text-right">Costo</th>
-            <th class="min-w-40 text-center">Estado</th>
-            <th class="min-w-40">Actualización</th>
+
+            <th class="min-w-48">Programación</th>
+            <!-- <th class="min-w-40">Actualización</th> -->
             <th class="min-w-40 text-center">Acciones</th>
           </tr>
         </thead>
@@ -332,14 +318,6 @@
               </div>
             </td>
 
-            <!-- Programación -->
-            <td>
-              <div class="space-y-2">
-                <div class="skeleton h-4 w-36"></div>
-                <div class="skeleton h-4 w-36"></div>
-              </div>
-            </td>
-
             <!-- Ejecución y kilometraje -->
             <td>
               <div class="space-y-2">
@@ -348,6 +326,12 @@
                 <div class="skeleton h-3 w-24"></div>
               </div>
             </td>
+
+            <!-- Estado -->
+            <td>
+              <div class="skeleton mx-auto h-6 w-28"></div>
+            </td>
+
 
             <!-- Taller y responsable -->
             <!-- <td>
@@ -362,18 +346,21 @@
               <div class="skeleton ml-auto h-4 w-20"></div>
             </td>
 
-            <!-- Estado -->
+            <!-- Programación -->
             <td>
-              <div class="skeleton mx-auto h-6 w-28"></div>
+              <div class="space-y-2">
+                <div class="skeleton h-4 w-36"></div>
+                <div class="skeleton h-4 w-36"></div>
+              </div>
             </td>
 
             <!-- Actualización -->
-            <td>
+            <!-- <td>
               <div class="space-y-2">
                 <div class="skeleton h-4 w-24"></div>
                 <div class="skeleton h-3 w-20"></div>
               </div>
-            </td>
+            </td> -->
 
             <!-- Acciones -->
             <td>
@@ -400,11 +387,23 @@
             <!-- Vehículo -->
             <td>
               <div class="flex items-center gap-3">
-                <div class="flex h-11 w-11 shrink-0 items-center
+                <!-- <div class="flex h-11 w-11 shrink-0 items-center
                          justify-center rounded-xl
                          bg-primary/10 text-primary">
                   <i class="fa-solid fa-truck text-base" aria-hidden="true"></i>
+                </div> -->
+                <!-- Foto o ícono según el tipo de vehículo -->
+                <div
+                  class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10 text-primary">
+                  @if ( fotoVehiculoUrl(mant.vehiculo.foto_url); as foto ) {
+                  <img [src]="foto" [alt]="'Vehículo ' + mant.vehiculo.placa" class="h-full w-full object-cover"
+                    loading="lazy" />
+                  } @else {
+                  <i class="fa-solid text-base" [ngClass]="getTipoVehiculo(mant.vehiculo.tipo_vehiculo).icon"
+                    aria-hidden="true"></i>
+                  }
                 </div>
+
 
                 <div class="min-w-0 max-w-44">
                   <p class="truncate text-sm font-semibold" [title]="mant.vehiculo.placa">
@@ -460,29 +459,8 @@
               </div>
             </td>
 
-            <!-- Fechas programadas: hora de Perú -->
-            <td class="whitespace-nowrap">
-              <div class="space-y-1.5 text-sm">
-                <p>
-                  <span class="text-xs text-base-content/50">
-                    Inicio:
-                  </span>
-
-                  {{ mant.fecha_inicio_programada | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
-                </p>
-
-                <p>
-                  <span class="text-xs text-base-content/50">
-                    Fin:
-                  </span>
-
-                  {{ mant.fecha_fin_programada | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
-                </p>
-              </div>
-            </td>
-
             <!-- Ejecución y kilometraje -->
-            <!-- <td>
+            <td>
               <div class="space-y-1.5">
                 @if (mant.fecha_inicio_real) {
                 <p class="whitespace-nowrap text-xs">
@@ -530,33 +508,6 @@
                 </p>
                 }
               </div>
-            </td> -->
-
-            <!-- Taller y responsable técnico -->
-            <!-- <td>
-              <div class="max-w-48 space-y-1">
-                <p class="truncate text-sm font-medium" [title]="mant.taller ?? 'Taller no registrado'">
-                  {{ mant.taller ?? 'Taller no registrado' }}
-                </p>
-
-                <p class="truncate text-xs text-base-content/55"
-                  [title]="mant.responsable_tecnico ?? 'Responsable no registrado'">
-                  {{ mant.responsable_tecnico ?? 'Responsable no registrado' }}
-                </p>
-              </div>
-            </td> -->
-
-            <!-- Costo: distingue cero de ausencia de registro -->
-            <td class="whitespace-nowrap text-right">
-              @if (mant.costo_total !== null) {
-              <span class="text-sm font-semibold">
-                {{ mant.costo_total | currency: 'PEN' : 'S/ ' : '1.2-2' }}
-              </span>
-              } @else {
-              <span class="text-xs italic text-base-content/45">
-                No registrado
-              </span>
-              }
             </td>
 
             <!-- Estado del mantenimiento -->
@@ -586,23 +537,66 @@
                 }
               </span>
 
-              @if (
-              mant.estado_mantenimiento === 'FINALIZADO' &&
-              mant.vehiculo_operativo !== null
-              ) {
+              @if ( mant.estado_mantenimiento === 'FINALIZADO' && mant.vehiculo_operativo !== null ) {
               <p class="mt-1.5 text-xs" [class.text-success]="mant.vehiculo_operativo"
                 [class.text-error]="!mant.vehiculo_operativo">
-                {{
-                mant.vehiculo_operativo
-                ? 'Quedó operativo'
-                : 'Quedó fuera de servicio'
-                }}
+                {{ mant.vehiculo_operativo ? 'Quedó operativo' : 'Quedó fuera de servicio' }}
               </p>
               }
             </td>
 
+            <!-- Taller y responsable técnico -->
+            <!-- <td>
+              <div class="max-w-48 space-y-1">
+                <p class="truncate text-sm font-medium" [title]="mant.taller ?? 'Taller no registrado'">
+                  {{ mant.taller ?? 'Taller no registrado' }}
+                </p>
+
+                <p class="truncate text-xs text-base-content/55"
+                  [title]="mant.responsable_tecnico ?? 'Responsable no registrado'">
+                  {{ mant.responsable_tecnico ?? 'Responsable no registrado' }}
+                </p>
+              </div>
+            </td> -->
+
+            <!-- Costo: distingue cero de ausencia de registro -->
+            <td class="whitespace-nowrap text-right">
+              @if (mant.costo_total !== null) {
+              <span class="text-sm font-semibold">
+                {{ mant.costo_total | currency: 'PEN' : 'S/ ' : '1.2-2' }}
+              </span>
+              } @else {
+              <span class="text-xs italic text-base-content/45">
+                No registrado
+              </span>
+              }
+            </td>
+
+
+
+            <!-- Fechas programadas: hora de Perú -->
+            <td class="whitespace-nowrap">
+              <div class="space-y-1.5 text-sm">
+                <p>
+                  <span class="text-xs text-base-content/50">
+                    Inicio:
+                  </span>
+
+                  {{ mant.fecha_inicio_programada | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
+                </p>
+
+                <p>
+                  <span class="text-xs text-base-content/50">
+                    Fin:
+                  </span>
+
+                  {{ mant.fecha_fin_programada | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
+                </p>
+              </div>
+            </td>
+
             <!-- Actualización -->
-            <td class="whitespace-nowrap text-sm">
+            <!-- <td class="whitespace-nowrap text-sm">
               <p>
                 {{ mant.updated_at | date: 'dd/MM/yyyy' : '-0500' }}
               </p>
@@ -610,7 +604,7 @@
               <p class="text-xs text-base-content/50">
                 {{ mant.updated_at | date: 'HH:mm' : '-0500' }}
               </p>
-            </td>
+            </td> -->
 
             <!-- Acciones -->
             <td>
@@ -679,7 +673,6 @@
           <!-- ============================================= -->
           <!-- SIN RESULTADOS -->
           <!-- ============================================= -->
-
           <tr>
             <td colspan="11" class="py-16 text-center">
               <div class="mx-auto flex max-w-sm flex-col items-center">
@@ -709,7 +702,6 @@
     <!-- ===================================================== -->
     <!-- PAGINACIÓN -->
     <!-- ===================================================== -->
-
     @if (!isLoading && totalItems > 0) {
     <footer class="flex flex-col gap-4 border-t border-base-300
                bg-base-200/50 px-4 py-4
@@ -718,7 +710,7 @@
       <!-- Resumen -->
       <div class="text-center sm:text-left">
         <h2 class="font-semibold text-base-content">
-          Personal registrado
+          Mantenimientos registrado
         </h2>
 
         <p class="mt-0.5 text-sm text-base-content/55">
@@ -726,8 +718,8 @@
 
           {{
           totalItems === 1
-          ? 'integrante encontrado'
-          : 'integrantes encontrados'
+          ? 'registro encontrado'
+          : 'registros encontrados'
           }}
         </p>
       </div>
@@ -828,8 +820,6 @@
         Nuevo mantenimiento
       </button>
       }
-
-
     </div>
   </section>
   }

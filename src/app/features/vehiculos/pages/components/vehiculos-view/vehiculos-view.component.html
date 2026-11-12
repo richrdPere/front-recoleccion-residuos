@@ -120,12 +120,11 @@
             <div class="flex flex-wrap items-center gap-4">
 
               <!-- Fotografía o ícono -->
-              <div class="flex h-16 w-16 shrink-0 items-center justify-center
-               overflow-hidden rounded-2xl bg-primary/10 text-primary">
-                @if (detalle.foto_url) {
-                <img [src]="detalle.foto_url" [alt]="'Vehículo ' + detalle.placa" class="h-full w-full object-cover" />
+              <div
+                class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-primary/10 text-primary">
+                @if ( fotoVehiculoUrl(detalle.foto_url); as foto ) {
+                <img [src]="foto" [alt]="'Vehículo ' + detalle.placa" class="h-full w-full object-cover" />
                 } @else {
-                <!-- <i class="fa-solid fa-truck " aria-hidden="true"></i> -->
                 <i class="fa-solid text-2xl" [ngClass]="getTipoVehiculo(detalle.tipo_vehiculo).icon"
                   aria-hidden="true"></i>
                 }
@@ -227,16 +226,16 @@
           <!-- ================================================= -->
           <!-- FOTOGRAFÍA COMPLETA -->
           <!-- ================================================= -->
-          @if (detalle.foto_url) {
+          @if ( fotoVehiculoUrl(detalle.foto_url); as foto ) {
           <section>
-            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold">
-              <i class="fa-solid fa-image text-primary" aria-hidden="true"></i>
+            <h4 class="mb-3 text-sm font-semibold">
               Fotografía del vehículo
             </h4>
 
-            <div class="overflow-hidden rounded-xl border border-base-300 bg-base-100 p-3">
-              <img [src]="detalle.foto_url" [alt]="'Fotografía del vehículo ' + detalle.placa"
-                class="mx-auto max-h-64 max-w-full rounded-lg object-contain" loading="lazy" />
+            <div class="overflow-hidden rounded-xl
+             border border-base-300 bg-base-100 p-3">
+              <img [src]="foto" [alt]="'Fotografía del vehículo ' + detalle.placa"
+                class="mx-auto max-h-80 max-w-full rounded-lg object-contain" loading="lazy" />
             </div>
           </section>
           }

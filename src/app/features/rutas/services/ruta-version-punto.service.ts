@@ -96,7 +96,7 @@ export class RutaVersionPuntoService {
     const headers = this.getJsonHeaders();
 
     return this.http
-      .patch<ReorderRutaPuntosResponse>(
+      .put<ReorderRutaPuntosResponse>(
         `${this.API_REORDER_RUTA_PUNTOS}${idRutaVersion}/puntos/orden`,
         request,
         { headers },

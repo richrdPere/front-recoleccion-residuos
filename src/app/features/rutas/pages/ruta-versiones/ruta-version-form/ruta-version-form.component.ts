@@ -352,13 +352,11 @@ export class RutaVersionFormComponent
       return;
     }
 
-    if (
-      esEdicion &&
-      (
-        idVersion === null ||
-        !Number.isSafeInteger(idVersion) ||
-        idVersion <= 0
-      )
+    if (esEdicion && (
+      idVersion === null ||
+      !Number.isSafeInteger(idVersion) ||
+      idVersion <= 0
+    )
     ) {
       this.error.set(
         'El identificador de la versión no es válido.',
@@ -668,33 +666,46 @@ export class RutaVersionFormComponent
   }
 
   private obtenerMensajeError(error: unknown): string {
-    if (typeof error === 'string' && error.trim()) {
-      return error;
+    const textoValido = (valor: unknown): string | null =>
+      typeof valor === 'string' && valor.trim()
+        ? valor.trim()
+        : null;
+
+    const leerMensaje = (valor: unknown): string | null => {
+      if (!valor || typeof valor !== 'object') {
+        return null;
+      }
+
+      return textoValido(
+        (valor as { message?: unknown }).message,
+      );
+    };
+
+    const mensajeDirecto = textoValido(error);
+
+    if (mensajeDirecto) {
+      return mensajeDirecto;
     }
 
     if (error && typeof error === 'object') {
       const objeto = error as {
         message?: unknown;
-        error?: { message?: unknown } | string;
+        error?: unknown;
+        details?: unknown;
       };
 
-      const mensajeBackend =
-        typeof objeto.error === 'string'
-          ? objeto.error
-          : objeto.error?.message;
+      const mensaje =
+        // Error normalizado por tu HttpServiceHelper.
+        leerMensaje(objeto.details) ??
 
-      if (
-        typeof mensajeBackend === 'string' &&
-        mensajeBackend.trim()
-      ) {
-        return mensajeBackend;
-      }
+        // HttpErrorResponse original de Angular.
+        leerMensaje(objeto.error) ??
 
-      if (
-        typeof objeto.message === 'string' &&
-        objeto.message.trim()
-      ) {
-        return objeto.message;
+        // Mensaje principal del error normalizado.
+        textoValido(objeto.message);
+
+      if (mensaje) {
+        return mensaje;
       }
     }
 

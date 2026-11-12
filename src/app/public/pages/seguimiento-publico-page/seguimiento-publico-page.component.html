@@ -1,60 +1,447 @@
-<div class="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
+<div class="mx-auto max-w-7xl space-y-6 px-4 py-7 sm:px-6 lg:px-8">
 
-      <app-public-page-header
-        titulo="Seguimiento de recolección"
-        descripcion="Selecciona una ruta para consultar su estado y la ubicación disponible."
-        etiqueta="Estado del servicio"
-        icono="fa-solid fa-truck"
-      />
+  <app-public-page-header
+    titulo="Estado de rutas"
+    descripcion="Consulta el estado del servicio y la ubicación aproximada del vehículo."
+    etiqueta="Seguimiento de recolección"
+    icono="fa-solid fa-truck"
+  />
 
-      <p
-        role="note"
-        class="mb-6 rounded-2xl bg-warning/10 p-4 text-sm leading-6"
-      >
-        Vista de demostración. El estado y el GPS se conectarán al backend.
+  <!-- ================================================= -->
+  <!-- SELECTORES -->
+  <!-- ================================================= -->
+  @if (!tokenPublico) {
+    <section
+      class="rounded-2xl border border-base-300 bg-base-100 p-5 sm:p-6"
+      aria-labelledby="seguimiento-filtros"
+    >
+      <h2 id="seguimiento-filtros" class="text-lg font-bold">
+        Selecciona tu ruta
+      </h2>
+
+      <p class="mt-1 text-sm text-base-content/60">
+        Busca la zona y la ruta cuyo servicio deseas consultar.
       </p>
 
-      <app-sector-information-card
-        [nombre]="ruta().sector"
-        [rutas]="rutas"
-        [idRutaSeleccionada]="idRuta()"
-        (rutaSeleccionada)="seleccionarRuta($event)"
-      />
+      <div class="mt-5 grid min-w-0 gap-4 md:grid-cols-2">
 
-      <div class="mt-6 grid items-start gap-6 lg:grid-cols-3">
-        <aside class="space-y-6">
-          <app-route-status-card
-            [nombreRuta]="ruta().nombre"
-            estado="SIN_SERVICIO_ACTIVO"
-          />
-
-          <div
-            class="rounded-3xl border border-base-300 bg-base-100 p-5"
+        <!-- ZONA -->
+        <div class="min-w-0">
+          <label
+            for="seguimiento-zona"
+            class="mb-2 block text-sm font-semibold"
           >
-            <h2 class="font-bold">
-              Acerca del seguimiento
-            </h2>
+            Zona
+          </label>
 
-            <p class="mt-3 text-sm leading-6 text-base-content/65">
-              Durante un recorrido activo se mostrará la ubicación
-              aproximada del vehículo y la fecha de su última posición.
+          <select
+            id="seguimiento-zona"
+            class="select select-bordered w-full min-w-0 rounded-xl"
+            [ngModel]="idZona"
+            (ngModelChange)="cambiarZona($event)"
+            [disabled]="cargandoZonas"
+          >
+            <option value="">
+              {{
+                cargandoZonas
+                  ? 'Cargando zonas...'
+                  : 'Selecciona una zona'
+              }}
+            </option>
+
+            @for (zona of zonas; track zona.id_zona) {
+              <option [value]="zona.id_zona">
+                {{ zona.nombre }}
+              </option>
+            }
+          </select>
+
+          @if (errorZonas) {
+            <div class="mt-2 text-sm text-error" role="alert">
+              <p>{{ errorZonas }}</p>
+
+              <button
+                type="button"
+                class="mt-1 underline"
+                (click)="cargarZonas()"
+              >
+                Volver a intentar
+              </button>
+            </div>
+          } @else if (!cargandoZonas && !zonas.length) {
+            <p class="mt-2 text-sm text-base-content/60">
+              No hay zonas publicadas actualmente.
             </p>
+          }
+        </div>
 
-            <p class="mt-3 text-sm leading-6 text-base-content/65">
-              La disponibilidad depende de la conexión y de las
-              posiciones recibidas desde el vehículo.
+        <!-- RUTA -->
+        <div class="min-w-0">
+          <label
+            for="seguimiento-ruta"
+            class="mb-2 block text-sm font-semibold"
+          >
+            Ruta
+          </label>
+
+          <select
+            id="seguimiento-ruta"
+            class="select select-bordered w-full min-w-0 rounded-xl"
+            [ngModel]="idRuta"
+            (ngModelChange)="cambiarRuta($event)"
+            [disabled]="
+              !idZona ||
+              cargandoRutas ||
+              !rutasDisponibles.length
+            "
+          >
+            <option value="">
+              {{
+                cargandoRutas
+                  ? 'Cargando rutas...'
+                  : 'Selecciona una ruta'
+              }}
+            </option>
+
+            @for (ruta of rutasDisponibles; track ruta.id_ruta) {
+              <option [value]="ruta.id_ruta">
+                {{ ruta.codigo }} — {{ ruta.nombre }}
+                {{
+                  ruta.estado_ruta === 'INACTIVA'
+                    ? '(Servicio suspendido)'
+                    : ''
+                }}
+              </option>
+            }
+          </select>
+
+          @if (errorRutas) {
+            <div class="mt-2 text-sm text-error" role="alert">
+              <p>{{ errorRutas }}</p>
+
+              <button
+                type="button"
+                class="mt-1 underline"
+                (click)="cargarRutas()"
+              >
+                Volver a intentar
+              </button>
+            </div>
+          } @else if (
+            idZona &&
+            !cargandoRutas &&
+            !rutasDisponibles.length
+          ) {
+            <p class="mt-2 text-sm text-base-content/60">
+              Esta zona todavía no tiene rutas publicadas.
             </p>
-          </div>
-        </aside>
-
-        <div class="lg:col-span-2">
-          <app-public-location-map
-            [nombreRuta]="ruta().nombre"
-            tituloVacio="Seguimiento pendiente de conexión"
-            mensajeVacio="Este espacio mostrará el mapa de la ruta seleccionada."
-            [mensajeUbicacion]="mensaje()"
-            (actualizar)="actualizar()"
-          />
+          }
         </div>
       </div>
+    </section>
+  } @else {
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <span class="badge badge-outline">
+        Seguimiento del QR consultado
+      </span>
+
+      <a
+        routerLink="/rutas"
+        [queryParams]="{}"
+        class="btn btn-ghost btn-sm"
+      >
+        Consultar otra zona
+      </a>
     </div>
+  }
+
+  <!-- ================================================= -->
+  <!-- CARGA Y ERRORES -->
+  <!-- ================================================= -->
+  @if (isLoading && !datos) {
+    <div
+      class="flex items-center justify-center gap-3 rounded-2xl bg-base-100 p-10"
+      role="status"
+    >
+      <span class="loading loading-spinner text-primary"></span>
+      <span>Consultando estado de la ruta...</span>
+    </div>
+  }
+
+  @if (error) {
+    <div class="alert alert-warning" role="alert">
+      <span>{{ error }}</span>
+
+      <button
+        type="button"
+        class="btn btn-sm"
+        [disabled]="isLoading"
+        (click)="actualizar()"
+      >
+        Reintentar
+      </button>
+    </div>
+  }
+
+  @if (!tokenPublico && !idRuta && !isLoading) {
+    <div
+      class="rounded-2xl border border-dashed border-base-300 p-8 text-center"
+      role="status"
+    >
+      <i
+        class="fa-solid fa-truck text-3xl text-base-content/35"
+        aria-hidden="true"
+      ></i>
+
+      <p class="mt-3 text-sm text-base-content/65">
+        Selecciona una ruta para consultar el estado del servicio.
+      </p>
+    </div>
+  }
+
+  <!-- ================================================= -->
+  <!-- RESULTADOS -->
+  <!-- ================================================= -->
+  @if (datos; as informacion) {
+
+    <!-- Un QR de zona puede contener varias rutas. -->
+    @if (tokenPublico && informacion.rutas.length > 1) {
+      <div>
+        <label
+          for="seguimiento-ruta-qr"
+          class="mb-2 block text-sm font-semibold"
+        >
+          Ruta del sector
+        </label>
+
+        <select
+          id="seguimiento-ruta-qr"
+          class="select select-bordered w-full rounded-xl"
+          [(ngModel)]="idRutaQr"
+        >
+          @for (opcion of informacion.rutas; track opcion.ruta.id_ruta) {
+            <option [value]="opcion.ruta.id_ruta">
+              {{ opcion.ruta.codigo }} — {{ opcion.ruta.nombre }}
+            </option>
+          }
+        </select>
+      </div>
+    }
+
+    @if (rutaSeleccionada; as item) {
+      <section class="rounded-2xl border border-base-300 bg-base-100 p-5 sm:p-6">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div class="min-w-0">
+            <p class="text-sm text-base-content/60">
+              {{ item.ruta.zona.nombre }}
+              · {{ item.ruta.codigo }}
+            </p>
+
+            <h2 class="mt-1 text-xl font-bold">
+              {{ item.ruta.nombre }}
+            </h2>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            [disabled]="isLoading"
+            (click)="actualizar()"
+          >
+            @if (isLoading) {
+              <span class="loading loading-spinner loading-xs"></span>
+            } @else {
+              <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+            }
+
+            Actualizar
+          </button>
+        </div>
+      </section>
+
+      <div class="grid items-start gap-6 lg:grid-cols-3">
+
+        <!-- ================================================= -->
+        <!-- ESTADO Y PROGRAMACIÓN -->
+        <!-- ================================================= -->
+        <aside class="space-y-6">
+
+          <section class="rounded-2xl border border-base-300 bg-base-100 p-5">
+            <h3 class="font-bold">
+              Estado del servicio
+            </h3>
+
+            <span
+              class="badge badge-outline mt-4 h-auto whitespace-normal py-2"
+              [class.badge-success]="item.estado.codigo === 'EN_PROCESO'"
+              [class.badge-warning]="
+                item.estado.codigo === 'DEMORADA' ||
+                item.estado.codigo === 'SERVICIO_SUSPENDIDO'
+              "
+              [class.badge-error]="item.estado.codigo === 'CANCELADA'"
+            >
+              {{ estadoLabel }}
+            </span>
+
+            <p class="mt-4 text-sm leading-6 text-base-content/70">
+              {{ item.estado.mensaje }}
+            </p>
+          </section>
+
+          <section class="rounded-2xl border border-base-300 bg-base-100 p-5">
+            <h3 class="font-bold">
+              Programación informada
+            </h3>
+
+            @if (item.estado.programacion; as programacion) {
+              <dl class="mt-4 space-y-3 text-sm">
+                <div>
+                  <dt class="text-base-content/60">Fecha</dt>
+                  <dd class="mt-1 font-semibold">
+                    {{ programacion.fecha_programada }}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt class="text-base-content/60">Horario programado</dt>
+                  <dd class="mt-1 font-semibold">
+                    {{ programacion.hora_inicio.slice(0, 5) }}
+                    –
+                    {{ programacion.hora_fin.slice(0, 5) }}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt class="text-base-content/60">Turno</dt>
+                  <dd class="mt-1 font-semibold">
+                    {{ formatearEtiqueta(programacion.turno) }}
+                  </dd>
+                </div>
+              </dl>
+            } @else {
+              <p class="mt-3 text-sm leading-6 text-base-content/65">
+                No hay una programación disponible para mostrar.
+                Puedes consultar los horarios publicados.
+              </p>
+            }
+
+            <a
+              routerLink="/cronogramas"
+              [queryParams]="parametrosConsulta"
+              class="btn btn-outline btn-sm mt-5 w-full"
+            >
+              Ver horarios
+            </a>
+          </section>
+
+          @if (item.estado.recorrido; as recorrido) {
+            <section class="rounded-2xl border border-base-300 bg-base-100 p-5">
+              <h3 class="font-bold">
+                Recorrido informado
+              </h3>
+
+              <p class="mt-3 text-sm">
+                {{ formatearEtiqueta(recorrido.estado) }}
+              </p>
+
+              <p class="mt-2 text-sm text-base-content/65">
+                Inicio:
+                {{
+                  recorrido.fecha_hora_inicio
+                    | date:'dd/MM/yyyy HH:mm':'-0500'
+                }}
+              </p>
+
+              @if (recorrido.fecha_hora_finalizacion) {
+                <p class="mt-2 text-sm text-base-content/65">
+                  Finalización:
+                  {{
+                    recorrido.fecha_hora_finalizacion
+                      | date:'dd/MM/yyyy HH:mm':'-0500'
+                  }}
+                </p>
+              }
+            </section>
+          }
+        </aside>
+
+        <!-- ================================================= -->
+        <!-- MAPA -->
+        <!-- ================================================= -->
+        <section class="min-w-0 space-y-4 lg:col-span-2">
+          <div class="rounded-2xl border border-base-300 bg-base-100 p-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <h3 class="text-lg font-bold">
+                Ubicación del vehículo
+              </h3>
+
+              @if (ubicacion) {
+                <span class="badge badge-success badge-outline">
+                  GPS vigente
+                </span>
+              } @else {
+                <span class="badge badge-outline">
+                  Sin ubicación vigente
+                </span>
+              }
+            </div>
+
+            <p
+              class="mt-3 text-sm leading-6 text-base-content/65"
+              aria-live="polite"
+            >
+              {{ mensajeUbicacion }}
+            </p>
+          </div>
+
+          <app-public-route-map
+            [ruta]="item.ruta"
+            [ubicacion]="ubicacion"
+          />
+
+          @if (item.ubicacion.ultima_actualizacion) {
+            <p class="text-xs text-base-content/60">
+              Última posición registrada:
+              {{
+                item.ubicacion.ultima_actualizacion
+                  | date:'dd/MM/yyyy HH:mm:ss':'-0500'
+              }}
+            </p>
+          }
+
+          <div class="rounded-2xl bg-base-100 p-5">
+            <h4 class="text-sm font-semibold">
+              Acerca del seguimiento
+            </h4>
+
+            <p class="mt-2 text-sm leading-6 text-base-content/65">
+              La ubicación es aproximada y depende de las posiciones
+              recibidas desde el vehículo. El marcador se retira
+              cuando la posición pierde vigencia.
+            </p>
+
+            <p class="mt-2 text-sm leading-6 text-base-content/65">
+              La ausencia de GPS no significa necesariamente que
+              el servicio haya sido cancelado. Revisa el estado
+              informado de la ruta.
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <p class="text-xs text-base-content/55">
+        Consulta actualizada:
+        {{
+          informacion.actualizado
+            | date:'dd/MM/yyyy HH:mm:ss':'-0500'
+        }}.
+        Actualización automática cada 15 segundos mientras
+        esta página está visible.
+      </p>
+    } @else {
+      <div class="alert" role="status">
+        No hay rutas disponibles para el sector consultado.
+      </div>
+    }
+  }
+</div>

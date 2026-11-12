@@ -1,4 +1,5 @@
 // Ajusta la ruta al archivo de interfaces anterior.
+import { TipoVehiculo } from '../../vehiculos/models';
 import {
   MantenimientoData,
   MantenimientoIdentificador,
@@ -76,6 +77,9 @@ export interface MantenimientoVehiculoResumen {
   codigo: string;
   placa: string;
   estado_operativo: MantenimientoEstadoOperativoVehiculo;
+  foto_url: string;
+  tipo_vehiculo: TipoVehiculo;
+  kilometraje: number;
 }
 
 // *********************************************************

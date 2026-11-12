@@ -88,17 +88,11 @@ export class FinalizarMantenimientoComponent implements OnChanges {
   // ============================================================
   // INPUTS / OUTPUTS
   // ============================================================
-
   @Input() mostrarModal = false;
+  @Input() mantenimientoSeleccionado: MantenimientoPaginadoItem | null = null;
 
-  @Input()
-  mantenimientoSeleccionado: MantenimientoPaginadoItem | null = null;
-
-  @Output()
-  mantenimientoFinalizado = new EventEmitter<MantenimientoDetalleData>();
-
-  @Output()
-  modalCerrado = new EventEmitter<void>();
+  @Output() mantenimientoFinalizado = new EventEmitter<MantenimientoDetalleData>();
+  @Output() modalCerrado = new EventEmitter<void>();
 
   // ============================================================
   // ESTADO
@@ -142,10 +136,7 @@ export class FinalizarMantenimientoComponent implements OnChanges {
   // ============================================================
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (
-      changes['mostrarModal'] ||
-      changes['mantenimientoSeleccionado']
-    ) {
+    if (changes['mostrarModal'] || changes['mantenimientoSeleccionado']) {
       if (this.isLoading) {
         return;
       }
@@ -199,13 +190,15 @@ export class FinalizarMantenimientoComponent implements OnChanges {
 
   private resetFormulario(): void {
     const mantenimiento = this.mantenimientoSeleccionado;
+    const valor = this.mantenimientoSeleccionado?.vehiculo?.kilometraje;
 
     this.formFinalizacion.reset({
       trabajos_realizados: mantenimiento?.trabajos_realizados ?? '',
       vehiculo_operativo: null,
 
       // Opcional: el backend determina el valor si no se envía.
-      kilometraje_salida: mantenimiento?.kilometraje_salida ?? null,
+      // kilometraje_salida: mantenimiento?.kilometraje_salida ?? null,
+      kilometraje_salida: valor,
 
       diagnostico: mantenimiento?.diagnostico ?? '',
       responsable_tecnico: mantenimiento?.responsable_tecnico ?? '',

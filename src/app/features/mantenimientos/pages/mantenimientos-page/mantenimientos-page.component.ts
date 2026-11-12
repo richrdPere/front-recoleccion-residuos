@@ -520,6 +520,13 @@ export class MantenimientosPageComponent implements OnInit, OnDestroy {
     };
   }
 
+  fotoVehiculoUrl(
+    ruta: string | null,
+  ): string | null {
+    return this.vehiculosService
+      .resolverFotoUrl(ruta);
+  }
+
   obtenerEstadoOperativo(
     estado: ExpedienteEstadoOperativoVehiculo,
   ): {

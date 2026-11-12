@@ -47,6 +47,85 @@ export class ProgramacionesViewComponent implements OnChanges, OnDestroy {
   ) { }
 
   // ============================================================
+  // PESTAÑAS
+  // ============================================================
+  readonly pestanas = [
+    {
+      id: 'general',
+      etiqueta: 'General',
+      icono: 'fa-solid fa-calendar-days',
+    },
+    {
+      id: 'recursos',
+      etiqueta: 'Ruta y vehículo',
+      icono: 'fa-solid fa-route',
+    },
+    {
+      id: 'equipo',
+      etiqueta: 'Equipo',
+      icono: 'fa-solid fa-users',
+    },
+    {
+      id: 'registro',
+      etiqueta: 'Registro',
+      icono: 'fa-solid fa-clock',
+    },
+  ] as const;
+
+  pestanaActiva:
+    | 'general'
+    | 'recursos'
+    | 'equipo'
+    | 'registro' = 'general';
+
+  navegarPestanas(
+    event: KeyboardEvent,
+    indiceActual: number,
+  ): void {
+    let nuevoIndice: number;
+
+    switch (event.key) {
+      case 'ArrowRight':
+        nuevoIndice =
+          (indiceActual + 1) % this.pestanas.length;
+        break;
+
+      case 'ArrowLeft':
+        nuevoIndice =
+          (indiceActual - 1 + this.pestanas.length) %
+          this.pestanas.length;
+        break;
+
+      case 'Home':
+        nuevoIndice = 0;
+        break;
+
+      case 'End':
+        nuevoIndice = this.pestanas.length - 1;
+        break;
+
+      default:
+        return;
+    }
+
+    event.preventDefault();
+
+    this.pestanaActiva =
+      this.pestanas[nuevoIndice].id;
+
+    const boton =
+      event.currentTarget as HTMLButtonElement;
+
+    const botones =
+      boton.parentElement
+        ?.querySelectorAll<HTMLButtonElement>(
+          '[role="tab"]',
+        );
+
+    botones?.[nuevoIndice]?.focus();
+  }
+
+  // ============================================================
   // CICLO DE VIDA
   // ============================================================
 
@@ -249,5 +328,6 @@ export class ProgramacionesViewComponent implements OnChanges, OnDestroy {
   private limpiarDatos(): void {
     this.programacion = null;
     this.errorCarga = null;
+    this.pestanaActiva = 'general';
   }
 }

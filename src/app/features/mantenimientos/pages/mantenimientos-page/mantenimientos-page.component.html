@@ -193,8 +193,6 @@
       </span>
     </div>
 
-
-
     <!-- Total de mantenimientos-->
     <div>
       <h2 class="font-semibold">Mantenimientos por vehículo</h2>
@@ -308,9 +306,9 @@
         <div class="flex h-20 w-20 shrink-0 items-center justify-center
              overflow-hidden rounded-full bg-info/20 text-info
              ring-4 ring-base-100/70">
-          @if (vehiculo.foto_url) {
-          <img [src]="vehiculo.foto_url" [alt]="'Vehículo ' + vehiculo.placa" class="h-full w-full object-cover"
-            loading="lazy" />
+
+          @if ( fotoVehiculoUrl(vehiculo.foto_url); as foto ) {
+          <img [src]="foto" [alt]="'Vehículo ' + vehiculo.placa" class="h-full w-full object-cover" loading="lazy" />
           } @else {
           <i class="fa-solid text-3xl" [ngClass]="tipo.icon" aria-hidden="true"></i>
           }

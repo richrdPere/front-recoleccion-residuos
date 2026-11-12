@@ -131,7 +131,8 @@
               [class.textarea-success]="campoCompleto('motivo_cancelacion')"
               [class.textarea-error]="campoInvalido('motivo_cancelacion')"
               [attr.aria-invalid]="campoInvalido('motivo_cancelacion')"
-              [attr.aria-describedby]="campoInvalido('motivo_cancelacion') ? 'cancelacion-motivo-error' : null">
+              [attr.aria-describedby]="campoInvalido('motivo_cancelacion') ? 'cancelacion-motivo-error' : null"
+              appUppercase>
             </textarea>
 
             @if (campoInvalido('motivo_cancelacion')) {
@@ -143,8 +144,10 @@
         </fieldset>
 
         <div class="rounded-xl bg-secondary/10 p-4 text-sm text-base-content/70">
-          La orden pasará a CANCELADO. El motivo quedará registrado
-          en su historial.
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          <span> La orden pasará a CANCELADO. El motivo quedará registrado
+            en su historial.</span>
+
         </div>
       </div>
 
