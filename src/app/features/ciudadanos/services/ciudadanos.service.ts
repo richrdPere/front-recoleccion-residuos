@@ -12,7 +12,7 @@ import { AuthStorageService } from 'src/app/core/auth/auth-storage.service';
 import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
 // Interface
-import { ActualizarDomicilioRequest, ActualizarDomicilioResponse, ActualizarPerfilCiudadanoRequest, ActualizarPreferenciasNotificacionRequest, ActualizarPreferenciasNotificacionResponse, CrearDomicilioRequest, CrearDomicilioResponse, CrearPerfilCiudadanoRequest, CrearPerfilCiudadanoResponse, EliminarDomicilioResponse, EstablecerDomicilioPrincipalResponse, GetDomicilioCronogramaParams, GetDomicilioCronogramaResponse, GetMisDomiciliosParams, GetMisDomiciliosResponse, GetPerfilCiudadanoResponse, GetPreferenciasNotificacionResponse, UpdatePerfilCiudadanoResponse } from '../interfaces';
+import { ActualizarDomicilioRequest, ActualizarDomicilioResponse, ActualizarPerfilCiudadanoRequest, ActualizarPreferenciasNotificacionRequest, ActualizarPreferenciasNotificacionResponse, CiudadanosPaginadosFilters, CrearDomicilioRequest, CrearDomicilioResponse, CrearPerfilCiudadanoRequest, CrearPerfilCiudadanoResponse, EliminarDomicilioResponse, EstablecerDomicilioPrincipalResponse, GetCiudadanosPaginadosResponse, GetDomicilioCronogramaParams, GetDomicilioCronogramaResponse, GetMisDomiciliosParams, GetMisDomiciliosResponse, GetPerfilCiudadanoResponse, GetPreferenciasNotificacionResponse, UpdatePerfilCiudadanoResponse } from '../interfaces';
 
 @Injectable({
   providedIn: 'root'
@@ -341,6 +341,34 @@ export class CiudadanosService {
           HttpServiceHelper.handleError(
             error,
             'No se pudo eliminar el domicilio.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 12. LISTADO ADMINISTRATIVO
+  // *********************************************************
+  getCiudadanosPaginados(
+    filters: CiudadanosPaginadosFilters = {},
+  ): Observable<GetCiudadanosPaginadosResponse> {
+    const headers = this.getJsonHeaders().set(
+      'x-client-origin',
+      'WEB',
+    );
+
+    const params = HttpServiceHelper.buildParams(filters);
+
+    return this.http
+      .get<GetCiudadanosPaginadosResponse>(
+        `${this.API_BASE}/admin/paginado`,
+        { headers, params },
+      )
+      .pipe(
+        catchError((error: unknown) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudieron consultar los ciudadanos.',
           ),
         ),
       );

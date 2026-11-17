@@ -13,6 +13,8 @@ import { HttpServiceHelper } from 'src/app/core/auth/http-service.helper';
 
 // Interface
 import { AsignarResponsableIncidenciaRequest, AsignarResponsableIncidenciaResponse, ChangeIncidenciaEstadoRequest, ChangeIncidenciaEstadoResponse, ChangeIncidenciaHabilitacionRequest, ChangeIncidenciaHabilitacionResponse, DeleteIncidenciaResponse, GetIncidenciaArchivoResponse, GetIncidenciaArchivosResponse, GetIncidenciaByIdResponse, GetIncidenciasPaginatedResponse, IncidenciaId, IncidenciasPaginadasFilters } from '../interfaces';
+import { ApiResponse } from 'src/app/core/models/api-response.model';
+import { IncidenciaArchivoListadoItem } from '../interfaces/get-incidencia-archivo-listado.incidencia';
 
 @Injectable({
   providedIn: 'root'
@@ -260,6 +262,77 @@ export class IncidenciasService {
         ),
       );
   }
+
+  // *********************************************************
+  // 9. AGREGAR EVIDENCIAS
+  // *********************************************************
+  agregarIncidenciaArchivos(
+    idIncidencia: IncidenciaId,
+    archivos: readonly File[],
+    descripcion = '',
+  ): Observable<ApiResponse<IncidenciaArchivoListadoItem[]>> {
+    const id = encodeURIComponent(String(idIncidencia));
+
+    const body = new FormData();
+
+    if (descripcion.trim()) {
+      body.append('descripcion', descripcion.trim());
+    }
+
+    for (const archivo of archivos) {
+      body.append('archivos', archivo, archivo.name);
+    }
+
+    // No establecer Content-Type: el navegador agrega el boundary.
+    const headers = HttpServiceHelper.getMultipartHeaders({
+      token: this.authStorage.getAccessToken(),
+
+      extraHeaders: {
+        'x-client-origin': 'WEB',
+      },
+    });
+
+    return this.http
+      .post<ApiResponse<IncidenciaArchivoListadoItem[]>>(
+        `${this.API_BASE}/${id}/archivos`,
+        body,
+        { headers },
+      )
+      .pipe(
+        catchError((error: unknown) =>
+          HttpServiceHelper.handleError(
+            error,
+            'No se pudieron registrar las evidencias.',
+          ),
+        ),
+      );
+  }
+
+  // *********************************************************
+  // 10. OBTENER ARCHIVOS DE INCIDENCIAS
+  // *********************************************************
+  getArchivoContenido(idIncidencia: IncidenciaId, idArchivo: IncidenciaId): Observable<Blob> {
+    const incidenciaId = encodeURIComponent(
+      String(idIncidencia),
+    );
+
+    const archivoId = encodeURIComponent(
+      String(idArchivo),
+    );
+
+    return this.http.get(
+      `${this.API_BASE}/${incidenciaId}` +
+      `/archivos/${archivoId}/contenido`,
+
+      {
+        responseType: 'blob',
+
+        headers: this.getJsonHeaders()
+          .set('Accept', '*/*'),
+      },
+    );
+  }
+
 
   // *********************************************************
   // MÉTODOS PRIVADOS

@@ -24,8 +24,7 @@ export type ReporteOrigenCiudadano =
 // 2. FILTROS
 // Hereda fechas, IDs, estado, tipo, prioridad y paginación.
 // *********************************************************
-export interface ReporteCiudadanosFilters
-  extends Omit<ReporteIncidenciasFilters, 'origen'> {
+export interface ReporteCiudadanosFilters extends Omit<ReporteIncidenciasFilters, 'origen'> {
 
   origen?: ReporteOrigenCiudadano | null;
 }
@@ -46,8 +45,7 @@ export interface ReporteCiudadanosFiltrosAplicados
 // 4. REGISTRO DEL REPORTE
 // Hereda los campos y valores nullable de una incidencia.
 // *********************************************************
-export interface ReporteCiudadanoItem
-  extends Omit<ReporteIncidenciaItem, 'origen'> {
+export interface ReporteCiudadanoItem extends Omit<ReporteIncidenciaItem, 'origen'> {
 
   origen: ReporteOrigenCiudadano;
 }

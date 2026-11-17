@@ -31,14 +31,27 @@ export class VehiculosEstadoOperativoComponent implements OnChanges, OnDestroy {
   private destruido = false;
   private readonly destroy$ = new Subject<void>();
 
+  // readonly estadosOperativos: {
+  //   value: EstadoOperativoVehiculo;
+  //   label: string;
+  // }[] = [
+  //     { value: 'DISPONIBLE', label: 'DISPONIBLE' },
+  //     { value: 'EN_RUTA', label: 'EN RUTA' },
+  //     { value: 'EN_MANTENIMIENTO', label: 'EN MANTENIMIENTO' },
+  //     { value: 'FUERA_DE_SERVICIO', label: 'FUERA DE SERVICIO' },
+  //   ];
   readonly estadosOperativos: {
     value: EstadoOperativoVehiculo;
     label: string;
   }[] = [
-      { value: 'DISPONIBLE', label: 'DISPONIBLE' },
-      { value: 'EN_RUTA', label: 'EN RUTA' },
-      { value: 'EN_MANTENIMIENTO', label: 'EN MANTENIMIENTO' },
-      { value: 'FUERA_DE_SERVICIO', label: 'FUERA DE SERVICIO' },
+      {
+        value: 'DISPONIBLE',
+        label: 'DISPONIBLE',
+      },
+      {
+        value: 'FUERA_DE_SERVICIO',
+        label: 'FUERA DE SERVICIO',
+      },
     ];
 
   readonly formEstadoOperativo: FormGroup;
@@ -55,9 +68,7 @@ export class VehiculosEstadoOperativoComponent implements OnChanges, OnDestroy {
   // 1. CARGAR DATOS AL ABRIR
   // *********************************************************
   ngOnChanges(changes: SimpleChanges): void {
-    const debeSincronizar =
-      !!changes['mostrarModal'] ||
-      !!changes['vehiculo'];
+    const debeSincronizar = !!changes['mostrarModal'] || !!changes['vehiculo'];
 
     if (
       !debeSincronizar ||
@@ -82,10 +93,20 @@ export class VehiculosEstadoOperativoComponent implements OnChanges, OnDestroy {
 
       this.errorMensaje = '';
 
+      const estadoActual = this.vehiculo.estado_operativo;
+      const esEstadoManual = this.estadosOperativos.some(
+        opcion => opcion.value === estadoActual,
+      );
+
       this.formEstadoOperativo.reset({
-        estado_operativo: this.vehiculo.estado_operativo,
-        observacion: this.vehiculo.observacion ?? '',
+        estado_operativo: esEstadoManual ? estadoActual : '',
+        observacion: '',
       });
+
+      // this.formEstadoOperativo.reset({
+      //   estado_operativo: this.vehiculo.estado_operativo,
+      //   observacion: this.vehiculo.observacion ?? '',
+      // });
 
       this.cdr.detectChanges();
     });
@@ -94,8 +115,7 @@ export class VehiculosEstadoOperativoComponent implements OnChanges, OnDestroy {
   private initFormulario(): FormGroup {
     return this.fb.nonNullable.group({
       estado_operativo: ['', [Validators.required]],
-      codigo: ['',],
-
+      observacion: ['', [Validators.maxLength(1000)]],
     });
   }
 

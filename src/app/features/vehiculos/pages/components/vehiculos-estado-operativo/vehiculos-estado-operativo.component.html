@@ -101,11 +101,12 @@
               }
             </select>
 
-            <!-- @if (campoInvalido('estado_operativo')) {
-            <p id="estado-operativo-error" class="mt-1 text-sm text-red-500">
-              {{ obtenerError('estado_operativo') }}
+            <p class="mt-2 text-xs text-base-content/60">
+              Estado actual: {{ vehiculo.estado_operativo }}.
+              Los estados En ruta y En mantenimiento se gestionan
+              desde sus respectivos módulos.
             </p>
-            } -->
+
             <p id="estado-operativo-error" class="mt-1.5 text-xs">
               @if ( campoInvalido('estado_operativo') ) {
               <span class="text-error">
@@ -130,7 +131,13 @@
 
             <textarea id="vehiculo-estado-observacion" class="textarea textarea-bordered min-h-28
                      w-full rounded-xl" formControlName="observacion"
-              placeholder="Describe el motivo del cambio de estado." rows="4"></textarea>
+              placeholder="Describe el motivo del cambio de estado." rows="4" maxlength="1000"></textarea>
+
+            @if (campoInvalido('observacion')) {
+            <p class="mt-1 text-xs text-error">
+              La observación admite hasta 1000 caracteres.
+            </p>
+            }
           </div>
         </div>
 
@@ -152,7 +159,7 @@
               <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
               Guardando...
               } @else {
-              <!-- <i class="fa-solid fa-check" aria-hidden="true"></i> -->
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
               Guardar
               }
             </button>

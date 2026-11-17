@@ -223,7 +223,7 @@ export const adminFeatureRoutes: Routes = [
       {
         path: 'vehiculos',
         canActivate: [roleGuard],
-        data: { roles: ['SUPER_ADMIN', 'ADMIN', 'SUPERVISOR'] },
+        data: { roles: ['SUPER_ADMIN', 'ADMIN', 'SUPERVISOR', 'OPERADOR',] },
         loadComponent: () =>
           import('./vehiculos/pages/vehiculos-page/vehiculos-page.component').then(
             (m) => m.VehiculosPageComponent,
@@ -238,6 +238,25 @@ export const adminFeatureRoutes: Routes = [
         loadComponent: () =>
           import('./zonas/pages/zonas-page/zonas-page.component').then(
             (m) => m.ZonasPageComponent,
+          ),
+      },
+
+
+      // Diagnostico notificaciones
+      {
+        path: 'diagnostico-notificaciones',
+        canActivate: [roleGuard],
+        data: {
+          roles: [
+            'SUPER_ADMIN',
+            'ADMIN',
+            'SUPERVISOR',
+          ],
+        },
+
+        loadComponent: () =>
+          import('./notificaciones/pages/diagnostico-notificaciones-page/diagnostico-notificaciones-page.component').then(
+            (m) => m.DiagnosticoNotificacionesPageComponent,
           ),
       },
 

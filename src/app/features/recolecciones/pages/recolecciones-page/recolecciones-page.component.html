@@ -1,123 +1,360 @@
-<main class="space-y-6 p-4 md:p-6">
+<!-- ================================================= -->
+<!-- CONTENEDOR DEL RECOLECCIONES -->
+<!-- ================================================= -->
+<div class="mx-auto w-full max-w-500">
+
+  <!-- ================================================= -->
   <!-- ENCABEZADO -->
-  <header class="flex flex-wrap items-start justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-bold md:text-3xl">
-        <i class="fa-solid fa-recycle mr-2 text-primary" aria-hidden="true"></i>
-        Recolecciones
-      </h1>
+  <!-- ================================================= -->
+  <header class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
-      <p class="mt-2 text-sm text-base-content/60">
-        Consulta los puntos, registros y evidencias de cada recorrido.
-      </p>
-    </div>
+    <div class="flex min-w-0 items-center gap-3">
 
-    <button type="button" class="btn btn-primary" [disabled]="recorrido_id === null"
-      (click)="actualizarRecolecciones()">
-      <i class="fa-solid fa-rotate" aria-hidden="true"></i>
-      Actualizar
-    </button>
-  </header>
-
-  <!-- SELECCIÓN DEL RECORRIDO -->
-  <section class="rounded-xl border border-base-300 bg-base-100 p-5" aria-labelledby="recolecciones-seleccion-titulo">
-    <h2 id="recolecciones-seleccion-titulo" class="mb-4 font-semibold">
-      Seleccionar recorrido
-    </h2>
-
-    <form class="flex flex-wrap items-end gap-3" (ngSubmit)="seleccionarRecorrido()">
-      <div class="w-full sm:w-64">
-        <label for="recolecciones-recorrido" class="mb-2 block text-sm">
-          ID del recorrido
-        </label>
-
-        <input id="recolecciones-recorrido" name="recorridoBusqueda" type="number" min="1" step="1"
-          class="input input-bordered w-full" placeholder="Ingresa el ID del recorrido" [(ngModel)]="recorridoBusqueda"
-          [class.input-error]="errorSeleccion !== null" [attr.aria-invalid]="errorSeleccion !== null"
-          aria-describedby="recolecciones-error-seleccion" />
+      <div class="flex h-12 w-12 shrink-0
+                 items-center justify-center
+                 rounded-2xl bg-primary/10
+                 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-recycle text-2xl" aria-hidden="true"></i>
       </div>
 
-      <button type="submit" class="btn btn-primary">
-        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-        Consultar
-      </button>
+      <div class="min-w-0">
+        <h1 class="flex items-center gap-3 text-2xl font-bold">
+          Recolecciones
+        </h1>
 
-      <button type="button" class="btn btn-ghost" (click)="limpiarRecorrido()">
-        Limpiar
-      </button>
-    </form>
-
-    <p id="recolecciones-error-seleccion" class="mt-2 text-sm text-error" role="status">
-      {{ errorSeleccion }}
-    </p>
-
-    @if (recorrido_id !== null) {
-    <div class="mt-3">
-      <span class="badge badge-outline h-auto py-2">
-        Recorrido seleccionado: #{{ recorrido_id }}
-      </span>
+        <p class="mt-2 text-sm text-base-content/65">
+          Consulta la atención de puntos, el resultado final y las
+          evidencias de cada recorrido.
+        </p>
+      </div>
     </div>
-    }
+
+  </header>
+
+  @if (recorridoSeleccionado; as seleccionado) {
+
+  <!-- ================================================= -->
+  <!-- DETALLE DEL RECORRIDO SELECCIONADO -->
+  <!-- ================================================= -->
+  <button type="button" class="btn btn-ghost btn-sm gap-2" (click)="volverAlListado()">
+    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+    Volver al listado
+  </button>
+
+  <section class="rounded-2xl border border-base-300 bg-base-100 p-5">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <p class="text-xs text-base-content/55">
+          Recorrido #{{ seleccionado.id_recorrido }}
+        </p>
+
+        <h2 class="mt-1 text-xl font-bold">
+          {{ seleccionado.ruta || 'Ruta sin información' }}
+        </h2>
+
+        <p class="mt-2 text-sm text-base-content/65">
+          {{ seleccionado.zona || 'Sin zona asociada' }}
+          · {{ seleccionado.placa || 'Sin placa disponible' }}
+        </p>
+
+        <p class="mt-1 text-xs text-base-content/55">
+          Inicio:
+          {{
+          seleccionado.fecha_inicio
+          | date:'dd/MM/yyyy HH:mm':'-0500'
+          }}
+        </p>
+      </div>
+
+      <button type="button" class="btn btn-primary btn-sm" (click)="actualizarRecolecciones()">
+        <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+        Actualizar detalle
+      </button>
+    </div>
   </section>
 
-  @if (recorrido_id !== null) {
-  <!-- PROGRESO / CAPACIDAD -->
-  <div class="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
+  <!-- PROGRESO Y CAPACIDAD -->
+  <div class="grid items-start gap-6 xl:grid-cols-2">
     <div class="min-w-0">
-      <recoleccion-progreso [idRecorrido]="recorrido_id"
-        [actualizacion]="actualizacionRecolecciones"></recoleccion-progreso>
+      <recoleccion-progreso [idRecorrido]="recorrido_id" [actualizacion]="actualizacionRecolecciones" />
     </div>
 
     <div class="min-w-0">
-      <recoleccion-capacidad [idRecorrido]="recorrido_id"
-        [actualizacion]="actualizacionRecolecciones"></recoleccion-capacidad>
+      <recoleccion-capacidad [idRecorrido]="recorrido_id" [actualizacion]="actualizacionRecolecciones" />
     </div>
   </div>
 
-  <!-- PUNTOS DEL RECORRIDO -->
+  <!-- PUNTOS -->
   <recoleccion-puntos [idRecorrido]="recorrido_id" [actualizacion]="actualizacionRecolecciones"
     (verRecoleccion)="abrirDetalleRecoleccion($event)" (verEvidencias)="abrirEvidenciasRecoleccion($event)"
-    (anularRecoleccion)="abrirModalAnular($event)"></recoleccion-puntos>
+    (anularRecoleccion)="abrirModalAnular($event)" />
 
-  <!-- EVIDENCIAS DE LA RECOLECCIÓN SELECCIONADA -->
+  <!-- EVIDENCIAS -->
   @if (recoleccion_id !== null) {
   <section class="space-y-3">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <h2 class="text-sm font-semibold">
-        Recolección seleccionada: #{{ recoleccion_id }}
-      </h2>
+      <h3 class="font-semibold">
+        Evidencias de la recolección #{{ recoleccion_id }}
+      </h3>
 
-      <button type="button" class="btn btn-sm btn-ghost" (click)="cerrarEvidencias()">
+      <button type="button" class="btn btn-ghost btn-sm" (click)="cerrarEvidencias()">
         <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         Cerrar evidencias
       </button>
     </div>
 
     <recoleccion-evidencia [idRecoleccion]="recoleccion_id" [actualizacion]="actualizacionEvidencias"
-      (evidenciasActualizadas)="onEvidenciasActualizadas($event)"></recoleccion-evidencia>
+      (evidenciasActualizadas)="onEvidenciasActualizadas($event)" />
   </section>
   }
-  } @else {
-  <!-- SIN RECORRIDO SELECCIONADO -->
-  <section class="rounded-xl border border-dashed border-base-300
-             bg-base-100 px-6 py-12 text-center">
-    <i class="fa-solid fa-route mb-4 text-4xl text-base-content/30" aria-hidden="true"></i>
 
-    <h2 class="font-semibold">Selecciona un recorrido</h2>
-
-    <p class="mt-2 text-sm text-base-content/60">
-      Ingresa su identificador para consultar el progreso,
-      la capacidad y los puntos de recolección.
-    </p>
-  </section>
-  }
+  <p class="text-xs text-base-content/55">
+    El detalle se actualiza cada 30 segundos mientras esta página
+    está visible y no hay un modal abierto.
+  </p>
 
   <!-- MODAL DE DETALLE -->
   <recoleccion-view [mostrarModal]="mostrarModalView" [idRecoleccion]="recoleccionViewId"
     [actualizacion]="actualizacionDetalle" (modalCerrado)="cerrarModalView()"
-    (verEvidencias)="abrirEvidenciasRecoleccion($event)"></recoleccion-view>
+    (verEvidencias)="abrirEvidenciasRecoleccion($event)" />
 
   <!-- MODAL DE ANULACIÓN -->
   <app-recoleccion-anular [mostrarModal]="mostrarModalAnular" [idRecoleccion]="recoleccionAnularId"
-    (modalCerrado)="cerrarModalAnular()" (recoleccionAnulada)="onRecoleccionAnulada($event)"></app-recoleccion-anular>
-</main>
+    (modalCerrado)="cerrarModalAnular()" (recoleccionAnulada)="onRecoleccionAnulada($event)" />
+
+  } @else {
+
+  <!-- ================================================= -->
+  <!-- FILTROS DEL LISTADO -->
+  <!-- ================================================= -->
+  <section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100">
+    <header class="border-b border-base-300 px-4 py-4 sm:px-5">
+      <h2 class="flex items-center gap-2 font-semibold">
+        <i class="fa-solid fa-filter text-primary" aria-hidden="true"></i>
+        Buscar recorridos
+      </h2>
+    </header>
+
+    <form (ngSubmit)="buscar()" class="space-y-4 p-4 sm:p-5">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+        <div class="min-w-0 space-y-2">
+          <label for="recolecciones-fecha-inicio" class="block text-sm font-medium">
+            Fecha desde
+          </label>
+
+          <input id="recolecciones-fecha-inicio" name="fechaInicio" type="date" required
+            class="input input-bordered w-full min-w-0 rounded-xl" [(ngModel)]="fechaInicioBusqueda" />
+        </div>
+
+        <div class="min-w-0 space-y-2">
+          <label for="recolecciones-fecha-fin" class="block text-sm font-medium">
+            Fecha hasta
+          </label>
+
+          <input id="recolecciones-fecha-fin" name="fechaFin" type="date" required
+            class="input input-bordered w-full min-w-0 rounded-xl" [(ngModel)]="fechaFinBusqueda" />
+        </div>
+
+        <div class="min-w-0 space-y-2">
+          <label for="recolecciones-estado" class="block text-sm font-medium">
+            Estado del recorrido
+          </label>
+
+          <select id="recolecciones-estado" name="estado" class="select select-bordered w-full min-w-0 rounded-xl"
+            [(ngModel)]="estadoBusqueda">
+            <option value="">Todos los estados</option>
+
+            @for (estado of estados; track estado) {
+            <option [value]="estado">
+              {{ getEstadoLabel(estado) }}
+            </option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (errorFiltros) {
+      <p class="text-sm text-error" role="alert">
+        {{ errorFiltros }}
+      </p>
+      }
+
+      <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
+        <button type="button" class="btn btn-ghost rounded-xl" [disabled]="isLoading" (click)="limpiarFiltros()">
+          Restablecer
+        </button>
+
+        <button type="submit" class="btn btn-primary rounded-xl" [disabled]="isLoading">
+          @if (isLoading) {
+          <span class="loading loading-spinner loading-sm"></span>
+          } @else {
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          }
+
+          Consultar
+        </button>
+      </div>
+    </form>
+  </section>
+
+  @if (errorMensaje) {
+  <div class="alert alert-error" role="alert">
+    <span>{{ errorMensaje }}</span>
+
+    <button type="button" class="btn btn-sm" [disabled]="isLoading" (click)="getRecoleccionesPaginated()">
+      Reintentar
+    </button>
+  </div>
+  }
+
+  <!-- ================================================= -->
+  <!-- TABLA DE RECORRIDOS -->
+  <!-- ================================================= -->
+  <section class="overflow-hidden rounded-2xl border border-base-300 bg-base-100"
+    aria-labelledby="recolecciones-listado-titulo" [attr.aria-busy]="isLoading">
+    <header class="flex flex-col gap-3 border-b border-base-300
+               px-4 py-4 sm:flex-row sm:items-center
+               sm:justify-between sm:px-5">
+      <h2 id="recolecciones-listado-titulo" class="font-semibold">
+        Recorridos y atención de puntos
+      </h2>
+
+      <div class="flex items-center gap-2 text-sm text-base-content/70">
+        <label for="recolecciones-page-size">
+          Mostrar
+        </label>
+
+        <select id="recolecciones-page-size" class="select select-bordered select-sm w-20" [(ngModel)]="limit"
+          [disabled]="isLoading" (change)="cambiarLimite()">
+          @for (size of pageSizeOptions; track size) {
+          <option [ngValue]="size">{{ size }}</option>
+          }
+        </select>
+
+        <span>ítems por página</span>
+      </div>
+    </header>
+
+    @if (isLoading) {
+    <div class="flex items-center justify-center gap-3 p-12" role="status">
+      <span class="loading loading-spinner text-primary"></span>
+      <span class="text-sm">Consultando recorridos...</span>
+    </div>
+    } @else if (!errorMensaje) {
+    <div class="overflow-x-auto">
+      <table class="table">
+        <caption class="sr-only">
+          Recorridos disponibles para consultar sus recolecciones
+        </caption>
+
+        <thead class="bg-base-200/70">
+          <tr>
+            <th scope="col">Recorrido</th>
+            <th scope="col">Ruta / zona</th>
+            <th scope="col">Vehículo</th>
+            <th scope="col">Inicio</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Atención de puntos</th>
+            <th scope="col" class="text-right">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (item of recorridos; track item.id_recorrido) {
+          <tr class="transition-colors hover:bg-base-200/40">
+
+            <td class="font-semibold">
+              #{{ item.id_recorrido }}
+            </td>
+
+            <td>
+              <p class="font-medium">
+                {{ item.ruta || 'Ruta no disponible' }}
+              </p>
+
+              <p class="mt-1 text-xs text-base-content/60">
+                {{ item.zona || 'Sin zona asociada' }}
+              </p>
+            </td>
+
+            <td>
+              <span class="badge badge-outline">
+                {{ item.placa || 'Sin placa' }}
+              </span>
+            </td>
+
+            <td class="whitespace-nowrap text-sm">
+              {{ item.fecha_inicio | date:'dd/MM/yyyy HH:mm':'-0500' }}
+            </td>
+
+            <td>
+              <span class="badge badge-outline whitespace-nowrap" [ngClass]="getEstadoBadge(item.estado)">
+                {{ getEstadoLabel(item.estado) }}
+              </span>
+            </td>
+
+            <td>
+              <p class="text-sm font-medium">
+                {{ item.puntos_atendidos }} / {{ item.puntos_total }}
+                atendidos
+              </p>
+
+              <p class="mt-1 text-xs text-base-content/60">
+                {{ item.puntos_omitidos }} omitidos
+                · {{ item.puntos_pendientes }} pendientes
+              </p>
+            </td>
+
+            <td class="text-right">
+              <button type="button" class="btn btn-outline btn-primary btn-sm whitespace-nowrap"
+                (click)="seleccionarRecorrido(item)">
+                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                Ver recolección
+              </button>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="7" class="py-12 text-center">
+              <i class="fa-solid fa-route text-3xl text-base-content/30" aria-hidden="true"></i>
+
+              <p class="mt-3 text-sm text-base-content/60">
+                No se encontraron recorridos con los filtros aplicados.
+              </p>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <footer class="flex flex-col gap-3 border-t border-base-300
+                 px-4 py-4 sm:flex-row sm:items-center
+                 sm:justify-between sm:px-5">
+      <p class="text-sm text-base-content/60">
+        Mostrando {{ registroDesde }}–{{ registroHasta }}
+        de {{ totalItems }} recorridos
+      </p>
+
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <button type="button" class="btn btn-outline btn-sm" [disabled]="page <= 1 || totalPages === 0"
+          (click)="cambiarPagina(page - 1)">
+          Anterior
+        </button>
+
+        <span class="text-sm">
+          Página {{ currentPage }} de {{ totalPages || 1 }}
+        </span>
+
+        <button type="button" class="btn btn-outline btn-sm" [disabled]="page >= totalPages"
+          (click)="cambiarPagina(page + 1)">
+          Siguiente
+        </button>
+      </div>
+    </footer>
+    }
+  </section>
+  }
+</div>

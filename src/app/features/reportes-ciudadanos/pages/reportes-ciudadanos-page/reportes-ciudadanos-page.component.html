@@ -1,1 +1,548 @@
-<p>reportes-ciudadanos-page works!</p>
+<!-- ================================================= -->
+<!-- CONTENEDOR DEL REPORTES CIUDADANO -->
+<!-- ================================================= -->
+<div class="mx-auto w-full max-w-500">
+
+  <!-- ================================================= -->
+  <!-- ENCABEZADO -->
+  <!-- ================================================= -->
+  <header class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex min-w-0 items-center gap-3">
+
+      <div class="flex h-12 w-12 shrink-0
+                 items-center justify-center
+                 rounded-2xl bg-primary/10
+                 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-bullhorn text-2xl"></i>
+      </div>
+
+      <div class="min-w-0">
+        <h1 class="text-2xl font-bold leading-tight text-base-content">
+          Reportes ciudadanos
+        </h1>
+
+        <p class="mt-1 max-w-2xl text-sm leading-relaxed text-base-content/60">
+          Consulta las incidencias registradas desde la aplicación
+          y la web ciudadana.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================================================= -->
+  <!-- FILTROS -->
+  <!-- ================================================= -->
+  <section class="mb-6 overflow-hidden rounded-2xl
+         border border-base-300 bg-base-100 shadow-sm">
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_170px]">
+
+      <!-- ================================================= -->
+      <!-- CAMPOS DE FILTRO -->
+      <!-- ================================================= -->
+      <div class="min-w-0 p-4 sm:p-5">
+        <div class="grid grid-cols-1 items-end gap-4
+               sm:grid-cols-2
+               xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+
+          <!-- TIPO -->
+          <div class="min-w-0">
+            <label for="reportes-tipo" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Tipo de incidencia
+            </label>
+
+            <select id="reportes-tipo" name="tipo" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [ngClass]="tipoBusqueda ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="tipoBusqueda" (ngModelChange)="onFiltroChange()">
+              <option value="">Todos los tipos</option>
+
+              @for (tipo of tipos; track tipo.value) {
+              <option [value]="tipo.value">
+                {{ formatearEtiqueta(tipo.label) }}
+              </option>
+              }
+            </select>
+          </div>
+
+          <!-- BUSCAR POR FECHA INICIAL -->
+          <div class="min-w-0">
+            <label for="reportes-fecha-inicio" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Fecha desde
+            </label>
+
+            <input id="reportes-fecha-inicio" name="fechaInicio" type="date" class="input input-bordered h-11 min-h-11
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30f"
+              [ngClass]="fechaInicioBusqueda.trim() ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="fechaInicioBusqueda" (ngModelChange)="onFiltroChange()" />
+          </div>
+
+          <!-- BUSCAR POR FECHA FINAL -->
+          <div class="min-w-0">
+            <label for="reportes-fecha-fin" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Fecha hasta
+            </label>
+
+            <input id="reportes-fecha-fin" name="fechaFin" type="date" required class="input input-bordered h-11 min-h-11
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30f"
+              [ngClass]="fechaFinBusqueda.trim() ? 'border-primary' : 'border-base-500'" [(ngModel)]="fechaFinBusqueda"
+              (ngModelChange)="onFiltroChange()" />
+          </div>
+
+
+
+          <!-- ESTADO -->
+          <!-- <div class="min-w-0 space-y-2">
+            <label for="reportes-estado" class="block text-sm font-medium">
+              Estado
+            </label>
+
+            <select id="reportes-estado" name="estado" class="select select-bordered w-full min-w-0 rounded-xl"
+              [(ngModel)]="estadoBusqueda">
+              <option value="">Todos los estados</option>
+
+              @for (estado of estados; track estado) {
+              <option [value]="estado">
+                {{ formatearEtiqueta(estado) }}
+              </option>
+              }
+            </select>
+          </div> -->
+
+          <!-- PRIORIDAD -->
+          <!-- <div class="min-w-0 space-y-2">
+            <label for="reportes-prioridad" class="block text-sm font-medium">
+              Prioridad
+            </label>
+
+            <select id="reportes-prioridad" name="prioridad" class="select select-bordered w-full min-w-0 rounded-xl"
+              [(ngModel)]="prioridadBusqueda">
+              <option value="">Todas las prioridades</option>
+
+              @for (prioridad of prioridades; track prioridad) {
+              <option [value]="prioridad">
+                {{ formatearEtiqueta(prioridad) }}
+              </option>
+              }
+            </select>
+          </div> -->
+
+          <!-- ORIGEN -->
+          <!-- <div class="min-w-0 space-y-2">
+            <label for="reportes-origen" class="block text-sm font-medium">
+              Canal de registro
+            </label>
+
+            <select id="reportes-origen" name="origen" class="select select-bordered w-full min-w-0 rounded-xl"
+              [(ngModel)]="origenBusqueda">
+              <option value="">Todos los canales</option>
+              <option value="APP_CIUDADANA">Aplicación ciudadana</option>
+              <option value="WEB_CIUDADANA">Web ciudadana</option>
+            </select>
+          </div> -->
+
+        </div>
+      </div>
+
+      <!-- ================================================= -->
+      <!-- ILUSTRACIÓN -->
+      <!-- ================================================= -->
+      <div class="hidden items-center justify-center px-5 lg:flex">
+        <span class="imagen-lupa block h-32 w-32 text-base-content opacity-90" aria-hidden="true"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================= -->
+  <!-- ERROR DE CONSULTA -->
+  <!-- ================================================= -->
+  @if (error) {
+  <div class="alert alert-error" role="alert">
+    <span>{{ error }}</span>
+
+    <button type="button" class="btn btn-sm" [disabled]="isLoading" (click)="getReportesPaginated()">
+      Reintentar
+    </button>
+  </div>
+  }
+
+  <!-- ================================================= -->
+  <!-- LISTADO DE REPORTES CIUDADANOS -->
+  <!-- ================================================= -->
+  @if (isLoading || reportes.length >0) {
+  <section class="overflow-hidden rounded-2xl
+           border border-base-300
+           bg-base-100 shadow-sm" aria-label="reportes-listado-titulo">
+
+    <!-- ===================================================== -->
+    <!-- CABECERA -->
+    <!-- ===================================================== -->
+    <div class="flex flex-col gap-4 border-b border-base-300 px-4 py-4
+             sm:flex-row sm:items-center sm:justify-between sm:px-5">
+
+      <!-- Descripcion -->
+      <div>
+        <h2 id="reportes-listado-titulo" class="font-semibold">
+          Listado de reportes
+        </h2>
+
+        @if (!isLoading && !error) {
+        <p class="mt-1 text-xs text-base-content/60">
+          {{ totalItems }} reportes encontrados
+        </p>
+        }
+      </div>
+
+      <!-- Cantidad por página -->
+      <div class="flex items-center gap-2 text-sm text-base-content/70">
+        <label for="reportes-page-size">Mostrar</label>
+
+        <select id="reportes-page-size" class="select select-bordered select-sm w-20" [(ngModel)]="limit"
+          [disabled]="isLoading" (change)="cambiarLimite()">
+          @for (size of pageSizeOptions; track size) {
+          <option [ngValue]="size">{{ size }}</option>
+          }
+        </select>
+
+        <span>ítems por página</span>
+      </div>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- TABLA DE REPORTES DE CIUDADANOS -->
+    <!-- ===================================================== -->
+    <div class="overflow-x-auto">
+      <table class="table min-w-275">
+        <thead class="bg-base-300/90">
+          <tr class="text-xs uppercase
+                     tracking-wide
+                     text-base-content/60">
+            <th scope="col">N.º</th>
+            <th scope="col">Reporte</th>
+            <th scope="col">Sector / ruta</th>
+            <th scope="col">Registro</th>
+            <th scope="col">Prioridad</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Responsable</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <!-- =================================================== -->
+          <!-- CARGANDO -->
+          <!-- =================================================== -->
+          @if (isLoading) {
+          @for ( item of [1, 2, 3, 4, 5, 6]; track item ) {
+          <tr>
+            <!-- NUMERACION -->
+            <td>
+              <div class="skeleton mx-auto h-4 w-8"></div>
+            </td>
+
+            <!-- REPORTE -->
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="skeleton h-10 w-10 rounded-xl"></div>
+
+                <div class="space-y-2">
+                  <div class="skeleton h-4 w-20"></div>
+                  <div class="skeleton h-3 w-16"></div>
+                </div>
+              </div>
+            </td>
+
+
+            <!-- SECTOR / RUTA -->
+            <td>
+              <div class="space-y-2">
+                <div class="skeleton h-4 w-24"></div>
+                <div class="skeleton h-3 w-28"></div>
+              </div>
+            </td>
+
+            <!-- REGISTRO -->
+            <td>
+              <div class="skeleton h-6 w-36"></div>
+              <div class="skeleton h-3 w-28"></div>
+              <div class="skeleton h-3 w-28"></div>
+            </td>
+
+            <!-- PRIORIDAD -->
+            <td>
+              <div class="skeleton h-4 w-24"></div>
+            </td>
+
+            <!-- ESTADO -->
+            <td>
+              <div class="skeleton h-4 w-20"></div>
+            </td>
+
+            <!-- RESPONSABLE -->
+            <td>
+              <div class="skeleton h-6 w-36"></div>
+              <div class="skeleton h-3 w-28"></div>
+              <div class="skeleton h-3 w-28"></div>
+            </td>
+
+            <!-- ACCIONES -->
+            <td>
+              <div class="flex justify-center gap-1">
+                <div class="skeleton h-8 w-8 rounded-full"></div>
+                <!-- <div class="skeleton h-8 w-8 rounded-full"></div>
+                <div class="skeleton h-8 w-8 rounded-full"></div> -->
+              </div>
+            </td>
+          </tr>
+          }
+          } @else {
+          @for (item of reportes; track item.id_incidencia; let i = $index) {
+          <tr class="transition-colors hover:bg-base-200/40">
+
+            <!-- NUMERACION -->
+            <td class="text-base-content/60">
+              {{ ((page - 1) * limit) + i + 1 }}
+            </td>
+
+            <!-- REPORTE -->
+            <td>
+              <p class="text-xs text-base-content/55">
+                #{{ item.id_incidencia }}
+              </p>
+
+              <p class="mt-1 max-w-xs whitespace-normal font-semibold">
+                {{ item.titulo }}
+              </p>
+
+              <p class="mt-1 text-xs text-base-content/60">
+                {{ formatearEtiqueta(item.tipo) }}
+              </p>
+            </td>
+
+            <!-- SECTOR / RUTA-->
+            <td>
+              <p>{{ item.zona || 'Sin zona asociada' }}</p>
+
+              <p class="mt-1 text-xs text-base-content/60">
+                {{ item.ruta || 'Sin ruta asociada' }}
+              </p>
+            </td>
+
+            <!-- REGISTRO -->
+            <td>
+              <p class="whitespace-nowrap text-sm">
+                {{ item.fecha_reporte | date:'dd/MM/yyyy HH:mm':'-0500' }}
+              </p>
+
+              <p class="mt-1 text-xs text-base-content/60">
+                {{ getOrigenLabel(item.origen) }}
+              </p>
+
+              <p class="mt-1 text-xs text-base-content/50">
+                Usuario #{{ item.id_usuario_reporte }}
+              </p>
+            </td>
+
+            <!-- PRIORIDAD -->
+            <td>
+              <span class="badge badge-outline" [ngClass]="getPrioridadBadge(item.prioridad)">
+                {{ formatearEtiqueta(item.prioridad) }}
+              </span>
+            </td>
+
+            <!-- ESTADO -->
+            <td>
+              <span class="badge badge-outline whitespace-nowrap" [ngClass]="getEstadoBadge(item.estado)">
+                {{ formatearEtiqueta(item.estado) }}
+              </span>
+
+              @if (item.fecha_resolucion) {
+              <p class="mt-2 text-xs text-base-content/60">
+                Resolución:
+                {{
+                item.fecha_resolucion
+                | date:'dd/MM/yyyy HH:mm':'-0500'
+                }}
+              </p>
+              }
+            </td>
+
+            <!-- REPONSABLE-->
+            <td>
+              @if (item.id_responsable !== null) {
+              <span class="text-sm">
+                Usuario #{{ item.id_responsable }}
+              </span>
+              } @else {
+              <span class="text-sm text-base-content/50">
+                Sin asignar
+              </span>
+              }
+            </td>
+
+            <!-- ACCIONES -->
+
+            <td>
+
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="7" class="py-12 text-center">
+              <i class="fa-regular fa-folder-open text-3xl text-base-content/30" aria-hidden="true"></i>
+
+              <p class="mt-3 text-sm text-base-content/60">
+                No se encontraron reportes con los filtros aplicados.
+              </p>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- PAGINACIÓN -->
+    <!-- ===================================================== -->
+    @if (!isLoading && totalItems > 0 ) {
+    <footer class="flex flex-col gap-4
+                 border-t border-base-300
+                 bg-base-200/50
+                 px-4 py-4
+                 lg:flex-row
+                 lg:items-center
+                 lg:justify-between
+                 sm:px-5">
+
+      <!-- Resumen de reportes -->
+      <div class="text-center sm:text-left">
+        <p class="text-sm text-base-content/60">
+          Mostrando {{ registroDesde }}–{{ registroHasta }}
+          de {{ totalItems }} reportes
+        </p>
+      </div>
+
+      <!-- Controles de paginacion -->
+      <div class="flex w-full flex-col
+           items-center gap-3
+           text-sm text-base-content/70
+           sm:w-auto sm:flex-row">
+
+        <!-- Pagina actual -->
+
+        <span class="whitespace-nowrap">
+          @if (totalPages > 0) {
+          Página
+          <strong class="text-base-content">
+            {{ page }}
+          </strong>
+          de
+          <strong class="text-base-content">
+            {{ totalPages }}
+          </strong>
+          } @else {
+          Sin páginas disponibles
+          }
+        </span>
+
+
+        <!-- Botones -->
+        <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+          <button type="button" class="btn btn-sm w-full
+               gap-2 rounded-lg
+               sm:w-auto" [disabled]="isLoading || page <= 1" (click)="cambiarPagina(page - 1)">
+            <i class="fa-solid fa-chevron-left"></i>
+
+            Anterior
+          </button>
+
+          <button type="button" class="btn btn-sm w-full
+              gap-2 rounded-lg
+              sm:w-auto" [disabled]="
+                  isLoading ||
+                  totalPages === 0 ||
+                  page >= totalPages
+                " (click)="cambiarPagina(page + 1)">
+
+            Siguiente
+
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </footer>
+    }
+  </section>
+
+  @if (listado; as datos) {
+  <p class="text-xs text-base-content/50 pt-2">
+    Generado:
+    {{ datos.metadata.generado_en | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
+    · Hora de Perú
+    · Referencia de fechas: {{ datos.metadata.base_fecha }}
+  </p>
+  }
+  }
+
+  <!-- ======================================================= -->
+  <!-- ESTADO VACÍO GENERAL -->
+  <!-- ======================================================= -->
+  @if (!isLoading && reportes.length === 0) {
+  <section class="rounded-2xl border border-dashed border-base-300
+           bg-base-100 px-6 py-16 text-center shadow-sm">
+    <div class="mx-auto flex h-20 w-20 items-center justify-center
+             rounded-full transition-colors" [ngClass]="
+        tipoBusqueda
+
+          ? 'bg-secondary/10 text-secondary'
+          : 'bg-primary/10 text-primary'
+      ">
+
+      <i class="fa-solid fa-bullhorn text-3xl" aria-hidden="true"></i>
+    </div>
+
+    <h2 class="mt-5 text-lg font-bold">
+      @if ( tipoBusqueda) {
+      No se encontraron ciudadanos registrados
+      } @else {
+      Aún no tienes ciudadanos registrados
+      }
+    </h2>
+
+    <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-base-content/55">
+      @if ( tipoBusqueda ) {
+      No hay ciudadanos disponibles que coincidan con los filtros seleccionados.
+      Prueba con otros criterios de búsqueda.
+      } @else {
+      Estos pueden registrarse desde la app movil de recolección de la municipalidad o ser registrados desde la opcion
+      "Usuarios".
+      }
+    </p>
+
+    <!-- Acciones -->
+    <div class="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+      @if ( tipoBusqueda.trim() ) {
+      <button type="button" class="btn btn-secondary btn-sm w-full gap-2 rounded-xl sm:w-auto"
+        (click)="limpiarFiltros()">
+        <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+
+        Limpiar filtros
+      </button>
+      }
+
+    </div>
+  </section>
+  }
+
+</div>

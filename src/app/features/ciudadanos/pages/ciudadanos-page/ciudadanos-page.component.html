@@ -1,1 +1,524 @@
-<p>ciudadanos-page works!</p>
+<!-- ================================================= -->
+<!-- CONTENEDOR DEL CIUDADANOS -->
+<!-- ================================================= -->
+<div class="mx-auto w-full max-w-500">
+
+  <!-- ================================================= -->
+  <!-- ENCABEZADO -->
+  <!-- ================================================= -->
+  <header class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+    <div class="flex min-w-0 items-center gap-3">
+      <div class="flex h-12 w-12 shrink-0
+                 items-center justify-center
+                 rounded-2xl bg-primary/10
+                 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-people-group text-2xl"></i>
+      </div>
+
+      <div class="min-w-0">
+        <h1 class="text-2xl font-bold text-base-content">
+          Ciudadanos
+        </h1>
+
+        <p class="mt-1 max-w-2xl text-sm leading-relaxed text-base-content/60">
+          Consulta los perfiles ciudadanos, su estado y la información
+          de consentimiento registrada.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================================================= -->
+  <!-- FILTROS -->
+  <!-- ================================================= -->
+  <section class="mb-6 overflow-hidden rounded-2xl
+         border border-base-300 bg-base-100 shadow-sm">
+
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_170px]">
+
+      <!-- ================================================= -->
+      <!-- CAMPOS DE FILTRO -->
+      <!-- ================================================= -->
+      <div class="min-w-0 p-4 sm:p-5">
+        <div class="grid grid-cols-1 items-end gap-4
+               sm:grid-cols-2
+               xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+
+          <!-- BÚSQUEDA -->
+          <div class="min-w-0">
+            <label for="ciudadanos-busqueda" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Buscar ciudadano
+            </label>
+
+            <div class="relative">
+              <input id="ciudadanos-busqueda" name="search" type="search" maxlength="120" class="input input-bordered h-11 min-h-11
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pl-11 pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30" placeholder="Nombres, apellidos, documento o usuario"
+                autocomplete="off" [ngClass]="searchBusqueda.trim() ? 'border-primary' : 'border-base-500'"
+                [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()" appUppercase />
+
+
+              <span class="pointer-events-none absolute inset-y-0 left-0 z-10
+                     flex w-11 items-center justify-center
+                     text-base-content/50" aria-hidden="true">
+                <i class="fa-solid fa-magnifying-glass text-base"></i>
+              </span>
+            </div>
+          </div>
+
+          <!-- ESTADO -->
+          <div class="min-w-0">
+            <label for="ciudadanos-estado" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Estado del perfil
+            </label>
+
+            <select id="ciudadanos-estado" name="estado" class="select select-bordered h-11 min-h-11
+                w-full min-w-0 rounded-xl bg-base-200
+                pl-4 pr-10 transition-colors
+                focus:border-primary focus:outline-none
+                focus:ring-2 focus:ring-primary/30" [ngClass]="estadoBusqueda ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="estadoBusqueda" (ngModelChange)="onSearchChange()">
+              <option value="">Todos los estados</option>
+
+              @for (estado of estados; track estado.value) {
+              <option [value]="estado.value">
+                {{ formatearEtiqueta(estado.label) }}
+              </option>
+              }
+            </select>
+          </div>
+
+          <!-- ORIGEN -->
+          <div class="min-w-0 space-y-2">
+            <label for="ciudadanos-origen" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+              Origen del registro
+            </label>
+
+            <select id="ciudadanos-origen" name="origen" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [ngClass]="origenBusqueda ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="origenBusqueda" (ngModelChange)="onSearchChange()">
+              <option value="">Todos los orígenes</option>
+
+              @for (origen of origenes; track origen.value) {
+              <option [value]="origen.value">
+                {{ formatearEtiqueta(origen.label) }}
+              </option>
+              }
+            </select>
+          </div>
+
+          <!-- Limpiar -->
+          @if (hayFiltros) {
+          <div class="min-w-0">
+            <button type="button" class="btn btn-secondary h-11 min-h-11
+                   w-full gap-2 rounded-xl
+                   xl:w-auto xl:min-w-28" [disabled]="
+              !searchBusqueda &&
+              !estadoBusqueda &&
+              !origenBusqueda
+            " (click)="limpiarFiltros()">
+              <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+              Limpiar
+            </button>
+          </div>
+          }
+
+        </div>
+      </div>
+
+      <!-- ================================================= -->
+      <!-- ILUSTRACIÓN -->
+      <!-- ================================================= -->
+      <div class="hidden items-center justify-center px-5 lg:flex">
+        <span class="imagen-lupa block h-32 w-32 text-base-content opacity-90" aria-hidden="true"></span>
+      </div>
+    </div>
+
+  </section>
+
+  @if (errorMensaje) {
+  <div class="alert alert-error" role="alert">
+    <span>{{ errorMensaje }}</span>
+
+    <button type="button" class="btn btn-sm" [disabled]="isLoading" (click)="getCiudadanosPaginated()">
+      Reintentar consulta
+    </button>
+  </div>
+  }
+
+  <!-- ================================================= -->
+  <!-- LISTADO -->
+  <!-- ================================================= -->
+  @if (isLoading || ciudadanos.length >0) {
+  <section class="overflow-hidden rounded-2xl
+           border border-base-300
+           bg-base-100 shadow-sm" aria-label="ciudadanos-listado-titulo">
+
+    <!-- ===================================================== -->
+    <!-- CABECERA -->
+    <!-- ===================================================== -->
+    <div class="flex flex-col gap-4 border-b border-base-300 px-4 py-4
+             sm:flex-row sm:items-center sm:justify-between sm:px-5">
+
+      <!-- Descripcion -->
+      <div>
+        <h2 id="ciudadanos-listado-titulo" class="font-semibold">
+          Ciudadanos registrados
+        </h2>
+
+        @if (!isLoading && !errorMensaje) {
+        <p class="mt-1 text-xs text-base-content/60">
+          {{ totalItems }} perfiles encontrados
+        </p>
+        }
+      </div>
+
+      <!-- Cantidad por página -->
+      <div class="flex items-center gap-2 text-sm text-base-content/70">
+        <label for="ciudadanos-page-size">Mostrar</label>
+
+        <select id="ciudadanos-page-size" class="select select-bordered select-sm w-20" [(ngModel)]="limit"
+          [disabled]="isLoading" (change)="cambiarLimite()">
+          @for (size of pageSizeOptions; track size) {
+          <option [ngValue]="size">{{ size }}</option>
+          }
+        </select>
+
+        <span>ítems por página</span>
+      </div>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- TABLA DE CIUDADANOS -->
+    <!-- ===================================================== -->
+    <div class="overflow-x-auto">
+      <table class="table min-w-275">
+        <thead class="bg-base-300/90">
+          <tr class="text-xs uppercase
+                     tracking-wide
+                     text-base-content/60">
+            <th scope="col">N.°</th>
+            <th scope="col">Ciudadano</th>
+            <th scope="col">Contacto</th>
+            <th scope="col">Registro</th>
+            <th scope="col">Consentimiento</th>
+            <th scope="col">Estado</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <!-- =================================================== -->
+          <!-- CARGANDO -->
+          <!-- =================================================== -->
+
+          @if (isLoading) {
+          @for ( item of [1, 2, 3, 4, 5, 6]; track item ) {
+          <tr>
+            <!-- NUMERACION -->
+            <td>
+              <div class="skeleton mx-auto h-4 w-8"></div>
+            </td>
+
+            <!-- IDENTIDAD -->
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="skeleton h-10 w-10 rounded-xl"></div>
+
+                <div class="space-y-2">
+                  <div class="skeleton h-4 w-20"></div>
+                  <div class="skeleton h-3 w-16"></div>
+                </div>
+              </div>
+            </td>
+
+
+            <!-- CONTACTO -->
+            <td>
+              <div class="space-y-2">
+                <div class="skeleton h-4 w-24"></div>
+                <div class="skeleton h-3 w-28"></div>
+                <div class="skeleton h-3 w-28"></div>
+              </div>
+            </td>
+
+            <!-- REGISTRO -->
+            <td>
+              <div class="skeleton h-6 w-36"></div>
+              <div class="skeleton h-3 w-28"></div>
+              <div class="skeleton h-3 w-28"></div>
+            </td>
+
+            <!-- CONSENTIMIENTO -->
+            <td>
+              <div class="skeleton h-4 w-24"></div>
+              <div class="skeleton h-3 w-28"></div>
+              <div class="skeleton h-3 w-28"></div>
+            </td>
+
+            <!-- ESTADO -->
+            <td>
+              <div class="skeleton h-4 w-20"></div>
+            </td>
+
+            <!-- Acciones -->
+            <!-- <td>
+              <div class="flex justify-center gap-1">
+                <div class="skeleton h-8 w-8 rounded-full"></div>
+                <div class="skeleton h-8 w-8 rounded-full"></div>
+                <div class="skeleton h-8 w-8 rounded-full"></div>
+              </div>
+            </td> -->
+          </tr>
+          }
+          } @else {
+          @for ( ciudadano of ciudadanos; track ciudadano.id_ciudadano; let i = $index ) {
+          <tr class="transition-colors hover:bg-base-200/40">
+
+            <!-- NUMERACION -->
+            <td class="text-base-content/60">
+              {{ ((page - 1) * limit) + i + 1 }}
+            </td>
+
+            <!-- IDENTIDAD -->
+            <td>
+              <p class="max-w-xs whitespace-normal font-semibold">
+                {{ nombreCompleto(ciudadano) }}
+              </p>
+
+              <p class="mt-1 text-xs text-base-content/60">
+                {{ ciudadano.tipo_documento || 'Documento' }}:
+                {{ ciudadano.numero_documento || 'No disponible' }}
+              </p>
+
+              <p class="mt-1 text-xs text-base-content/50">
+                Perfil #{{ ciudadano.id_ciudadano }}
+                · Usuario {{ ciudadano.username || ciudadano.id_usuario }}
+              </p>
+            </td>
+
+            <!-- CONTACTO -->
+            <td>
+              <p class="text-sm">
+                {{ ciudadano.celular || 'Sin celular registrado' }}
+              </p>
+
+              @if (ciudadano.celular) {
+              <span class="badge badge-outline badge-sm mt-1" [class.badge-success]="ciudadano.celular_verificado">
+                {{
+                ciudadano.celular_verificado
+                ? 'Celular verificado'
+                : 'Celular sin verificar'
+                }}
+              </span>
+              }
+
+              <p class="mt-2 max-w-xs break-all text-xs text-base-content/60">
+                {{ ciudadano.email_acceso || 'Sin correo disponible' }}
+              </p>
+            </td>
+
+            <!-- REGISTRO -->
+            <td>
+              <span class="badge badge-outline">
+                {{ formatearEtiqueta(ciudadano.origen_registro) }}
+              </span>
+
+              <p class="mt-2 whitespace-nowrap text-xs text-base-content/60">
+                {{
+                ciudadano.fecha_registro
+                | date:'dd/MM/yyyy HH:mm':'-0500'
+                }}
+              </p>
+            </td>
+
+            <!-- CONSENTIMIENTO -->
+            <td>
+              <span class="badge badge-outline" [class.badge-success]="ciudadano.acepta_tratamiento_datos"
+                [class.badge-warning]="!ciudadano.acepta_tratamiento_datos">
+                {{
+                ciudadano.acepta_tratamiento_datos
+                ? 'Aceptado'
+                : 'No aceptado'
+                }}
+              </span>
+
+              @if (ciudadano.fecha_consentimiento) {
+              <p class="mt-2 text-xs text-base-content/60">
+                {{
+                ciudadano.fecha_consentimiento
+                | date:'dd/MM/yyyy HH:mm':'-0500'
+                }}
+              </p>
+              }
+
+              @if (ciudadano.version_consentimiento) {
+              <p class="mt-1 text-xs text-base-content/50">
+                Versión {{ ciudadano.version_consentimiento }}
+              </p>
+              }
+            </td>
+
+            <!-- ESTADO DEL PERFIL -->
+            <td>
+              <span class="badge badge-outline" [ngClass]="getEstadoBadge(ciudadano.estado_ciudadano)">
+                {{ formatearEtiqueta(ciudadano.estado_ciudadano) }}
+              </span>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6" class="py-12 text-center">
+              <i class="fa-solid fa-users text-3xl text-base-content/30" aria-hidden="true"></i>
+
+              <p class="mt-3 text-sm text-base-content/60">
+                No se encontraron ciudadanos con los filtros aplicados.
+              </p>
+            </td>
+          </tr>
+          }
+          }
+
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- PAGINACIÓN -->
+    <!-- ===================================================== -->
+    @if (!isLoading && totalItems > 0) {
+    <footer class="flex flex-col gap-4
+                 border-t border-base-300
+                 bg-base-200/50
+                 px-4 py-4
+                 lg:flex-row
+                 lg:items-center
+                 lg:justify-between
+                 sm:px-5">
+
+      <!-- Resumen de ciudadanos -->
+      <div class="text-center sm:text-left">
+        <p class="text-sm text-base-content/60">
+          Mostrando {{ registroDesde }}–{{ registroHasta }}
+          de {{ totalItems }} ciudadanos
+        </p>
+      </div>
+
+      <!-- Controles de paginación -->
+      <div class="flex w-full flex-col
+           items-center gap-3
+           text-sm text-base-content/70
+           sm:w-auto sm:flex-row">
+
+        <!-- Pagina actual -->
+
+        <span class="whitespace-nowrap">
+          @if (totalPages > 0) {
+          Página
+          <strong class="text-base-content">
+            {{ page }}
+          </strong>
+          de
+          <strong class="text-base-content">
+            {{ totalPages }}
+          </strong>
+          } @else {
+          Sin páginas disponibles
+          }
+        </span>
+
+
+        <!-- Botones -->
+        <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+          <button type="button" class="btn btn-sm w-full
+               gap-2 rounded-lg
+               sm:w-auto" [disabled]="isLoading || page <= 1" (click)="cambiarPagina(page - 1)">
+            <i class="fa-solid fa-chevron-left"></i>
+
+            Anterior
+          </button>
+
+          <button type="button" class="btn btn-sm w-full
+              gap-2 rounded-lg
+              sm:w-auto" [disabled]="
+                  isLoading ||
+                  totalPages === 0 ||
+                  page >= totalPages
+                " (click)="cambiarPagina(page + 1)">
+
+            Siguiente
+
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </footer>
+    }
+
+  </section>
+  }
+
+  <!-- ======================================================= -->
+  <!-- ESTADO VACÍO GENERAL -->
+  <!-- ======================================================= -->
+  @if (!isLoading && ciudadanos.length === 0) {
+  <section class="rounded-2xl border border-dashed border-base-300
+           bg-base-100 px-6 py-16 text-center shadow-sm">
+    <div class="mx-auto flex h-20 w-20 items-center justify-center
+             rounded-full transition-colors" [ngClass]="
+        searchBusqueda.trim() ||
+        estadoBusqueda ||
+        origenBusqueda
+          ? 'bg-secondary/10 text-secondary'
+          : 'bg-primary/10 text-primary'
+      ">
+      <i class="fa-solid fa-people-group text-3xl" aria-hidden="true"></i>
+    </div>
+
+    <h2 class="mt-5 text-lg font-bold">
+      @if ( searchBusqueda.trim() || estadoBusqueda || origenBusqueda ) {
+      No se encontraron ciudadanos registrados
+      } @else {
+      Aún no tienes ciudadanos registrados
+      }
+    </h2>
+
+    <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-base-content/55">
+      @if ( searchBusqueda.trim() || estadoBusqueda || origenBusqueda ) {
+      No hay ciudadanos disponibles que coincidan con los filtros seleccionados.
+      Prueba con otros criterios de búsqueda.
+      } @else {
+      Estos pueden registrarse desde la app movil de recolección de la municipalidad o ser registrados desde la opcion
+      "Usuarios".
+      }
+    </p>
+
+    <!-- Acciones -->
+    <div class="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+      @if (
+      searchBusqueda.trim() ||
+      estadoBusqueda ||
+      origenBusqueda
+      ) {
+      <button type="button" class="btn btn-secondary btn-sm w-full gap-2 rounded-xl sm:w-auto"
+        (click)="limpiarFiltros()">
+        <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+
+        Limpiar filtros
+      </button>
+      }
+
+    </div>
+  </section>
+  }
+
+</div>

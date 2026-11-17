@@ -1,0 +1,243 @@
+<div class="mx-auto max-w-7xl space-y-5 p-5">
+  <header>
+    <h1 class="text-2xl font-bold">
+      Diagnóstico de notificaciones
+    </h1>
+
+    <p class="mt-2 text-sm text-base-content/65">
+      Aceptación por Firebase, recepción confirmada por la app
+      y lectura son estados diferentes.
+    </p>
+  </header>
+
+  <form class="flex flex-wrap items-end gap-3" (ngSubmit)="cargar()">
+    <div>
+      <label for="diagnostico-id" class="mb-2 block text-sm font-semibold">
+        ID de notificación
+      </label>
+
+      <input id="diagnostico-id" name="idNotificacion" type="text" inputmode="numeric" class="input input-bordered"
+        [(ngModel)]="idNotificacion" [disabled]="cargando" />
+
+      <p class="mt-1 text-xs text-base-content/60">
+        Usa id_notificacion, no id_notificacion_usuario.
+      </p>
+    </div>
+
+    <button type="submit" class="btn btn-primary" [disabled]="cargando">
+      {{ cargando ? 'Consultando…' : 'Consultar' }}
+    </button>
+  </form>
+
+  @if (error) {
+  <div class="alert alert-error" role="alert">
+    {{ error }}
+  </div>
+  }
+
+  @if (diagnostico; as data) {
+  <section class="rounded-2xl bg-base-200 p-5">
+    <h2 class="text-lg font-bold">
+      {{ data.notificacion.titulo }}
+    </h2>
+
+    <dl class="mt-4 grid gap-4 text-sm sm:grid-cols-3">
+      <div>
+        <dt class="font-semibold">Estado del trabajo</dt>
+        <dd>{{ data.notificacion.estado_notificacion }}</dd>
+      </div>
+
+      <div>
+        <dt class="font-semibold">Creación</dt>
+        <dd>
+          {{
+          data.notificacion.created_at
+          | date:'dd/MM/yyyy HH:mm:ss':'-0500'
+          }}
+        </dd>
+      </div>
+
+      <div>
+        <dt class="font-semibold">Último procesamiento</dt>
+        <dd>
+          {{
+          data.notificacion.fecha_procesamiento
+          ? (data.notificacion.fecha_procesamiento
+          | date:'dd/MM/yyyy HH:mm:ss':'-0500')
+          : 'Pendiente'
+          }}
+        </dd>
+      </div>
+
+      <div>
+        <dt class="font-semibold">Canal push</dt>
+        <dd>
+          {{ data.notificacion.enviar_push ? 'Solicitado' : 'No solicitado' }}
+        </dd>
+      </div>
+
+      <div>
+        <dt class="font-semibold">Canal interno</dt>
+        <dd>
+          {{ data.notificacion.enviar_interna ? 'Solicitado' : 'No solicitado' }}
+        </dd>
+      </div>
+    </dl>
+
+    <p class="mt-4 text-xs text-base-content/60">
+      Fechas mostradas en hora de Perú.
+    </p>
+  </section>
+
+  @if (data.historial_limitado) {
+  <div class="alert alert-warning">
+    Se muestran los 1000 intentos más recientes de esta página
+    de destinatarios. El historial mostrado es parcial.
+  </div>
+  }
+
+  @for (
+  destinatario of data.destinatarios;
+  track destinatario.id_notificacion_usuario
+  ) {
+  <section class="rounded-2xl border border-base-300 p-5">
+    <h3 class="font-bold">
+      Usuario {{ destinatario.id_usuario }}
+    </h3>
+
+    <div class="mt-3 flex flex-wrap gap-2 text-sm">
+      <span class="badge badge-outline">
+        Push: {{ destinatario.estado_push }}
+      </span>
+
+      <span class="badge badge-outline">
+        Dispositivos habilitados ahora:
+        {{ destinatario.dispositivos_habilitados_actuales }}
+      </span>
+
+      <span class="badge badge-outline">
+        {{ destinatario.leida ? 'Leída' : 'Sin leer' }}
+      </span>
+    </div>
+
+    @if (destinatario.fecha_leida) {
+    <p class="mt-2 text-xs">
+      Lectura:
+      {{
+      destinatario.fecha_leida
+      | date:'dd/MM/yyyy HH:mm:ss':'-0500'
+      }}
+    </p>
+    }
+
+    @if (destinatario.sin_dispositivo_en_ultimo_proceso) {
+    <p class="mt-3 text-sm text-warning">
+      No había un dispositivo habilitado en el último procesamiento.
+    </p>
+    }
+
+    <div class="mt-4 overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Intento / dispositivo</th>
+            <th>Resultado de envío</th>
+            <th>Recepción en la app</th>
+            <th>Error</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (
+          intento of destinatario.intentos;
+          track intento.id_envio
+          ) {
+          <tr>
+            <td>
+              <p>
+                #{{ intento.numero_intento }}
+                · dispositivo {{ intento.id_dispositivo }}
+              </p>
+
+              <p class="text-xs text-base-content/60">
+                {{
+                intento.fecha_intento
+                | date:'dd/MM/yyyy HH:mm:ss':'-0500'
+                }}
+              </p>
+            </td>
+
+            <td>
+              {{ estadoIntento(intento.estado_envio) }}
+
+              @if (intento.aceptada_firebase) {
+              <p class="text-xs text-base-content/60">
+                {{
+                intento.fecha_envio
+                | date:'dd/MM/yyyy HH:mm:ss':'-0500'
+                }}
+              </p>
+              }
+            </td>
+
+            <td>
+              @if (intento.fecha_recepcion_app) {
+              <p class="text-success">
+                Recepción confirmada por la app
+              </p>
+
+              <p class="text-xs">
+                Registrada:
+                {{
+                intento.fecha_recepcion_app
+                | date:'dd/MM/yyyy HH:mm:ss':'-0500'
+                }}
+              </p>
+
+              <p class="text-xs text-base-content/60">
+                {{ intento.contexto_recepcion }}
+              </p>
+              } @else {
+              <span class="text-base-content/60">
+                Recepción no confirmada
+              </span>
+              }
+            </td>
+
+            <td class="break-all">
+              {{ intento.codigo_error || '—' }}
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="4">
+              Sin intentos de envío registrados en esta consulta.
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  } @empty {
+  <p>No hay destinatarios en esta página.</p>
+  }
+
+  <div class="flex items-center justify-between gap-3">
+    <button type="button" class="btn btn-outline btn-sm" [disabled]="cargando || data.page <= 1"
+      (click)="cargar(data.page - 1)">
+      Anterior
+    </button>
+
+    <span class="text-sm">
+      Página {{ data.page }}
+      · {{ data.total }} destinatarios
+    </span>
+
+    <button type="button" class="btn btn-outline btn-sm" [disabled]="cargando || data.page >= data.total_paginas"
+      (click)="cargar(data.page + 1)">
+      Siguiente
+    </button>
+  </div>
+  }
+</div>

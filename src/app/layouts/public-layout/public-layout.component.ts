@@ -1,21 +1,6 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  DOCUMENT,
-  PLATFORM_ID,
-  inject,
-  signal,
-} from '@angular/core';
-
-import {
-  isPlatformBrowser,
-} from '@angular/common';
-
-import {
-  RouterLink,
-  RouterLinkActive,
-  RouterOutlet,
-} from '@angular/router';
+import { ChangeDetectionStrategy, Component, DOCUMENT, PLATFORM_ID, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 // Interface
 interface PublicNavItem {
@@ -74,11 +59,11 @@ export class PublicLayoutComponent {
         icon: 'fa-solid fa-route',
       },
 
-      {
-        label: 'Reportar problema',
-        route: '/reportar',
-        icon: 'fa-solid fa-bullhorn',
-      },
+      // {
+      //   label: 'Reportar problema',
+      //   route: '/reportar',
+      //   icon: 'fa-solid fa-bullhorn',
+      // },
     ];
 
   constructor() {

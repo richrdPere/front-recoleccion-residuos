@@ -28,7 +28,7 @@ export class CodigoQrViewComponent implements OnChanges, OnDestroy {
   codigoQr: CodigoQrDetalleData | null = null;
 
   isLoading = false;
-    modalWidthClass = 'max-w-4xl';
+  modalWidthClass = 'max-w-4xl';
   errorMensaje = '';
 
   // Suscripción
@@ -116,9 +116,9 @@ export class CodigoQrViewComponent implements OnChanges, OnDestroy {
     );
   }
 
-  obtenerCampoAsociacion(
-    asociacion: Record<string, unknown> | null,
-    campo: string,
+  obtenerCampoAsociacion<T extends object>(
+    asociacion: T | null,
+    campo: keyof T,
   ): string | null {
     if (!asociacion) {
       return null;
@@ -141,7 +141,10 @@ export class CodigoQrViewComponent implements OnChanges, OnDestroy {
   }
 
   obtenerReferenciaCodigo(
-    asociacion: Record<string, unknown> | null,
+    asociacion: {
+      codigo?: unknown;
+      id_codigo_qr?: unknown;
+    } | null,
     idAlternativo: number | null = null,
   ): string {
     const codigo = this.obtenerCampoAsociacion(

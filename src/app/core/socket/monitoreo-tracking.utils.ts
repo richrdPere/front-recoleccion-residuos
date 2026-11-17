@@ -28,14 +28,26 @@ export function normalizarTracking(event: TrackingActualizadoSocket): MonitoreoU
   const lat = Number(u.latitud), lng = Number(u.longitud);
 
   if (!recorrido || !posicion || !ultima || !usuario ||
-    identificador(u.id_recorrido) !== recorrido || identificador(u.id_posicion) !== posicion ||
+
+    identificador(u.id_recorrido) !== recorrido ||
+    identificador(u.id_posicion) !== posicion ||
     u.latitud == null || u.longitud == null ||
-    String(u.latitud).trim() === '' || String(u.longitud).trim() === '' ||
-    !Number.isFinite(lat) || !Number.isFinite(lng) ||
+
+    String(u.latitud).trim() === '' ||
+    String(u.longitud).trim() === '' ||
+
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng) ||
+
     Math.abs(lat) > 90 || Math.abs(lng) > 180 || u.es_ubicacion_simulada !== false ||
+
     !Number.isFinite(Date.parse(u.fecha_dispositivo)) ||
     !Number.isFinite(Date.parse(u.fecha_recepcion)) ||
-    Date.parse(u.fecha_dispositivo) > Date.now() + 300000) return null;
+
+    Date.parse(u.fecha_dispositivo) > Date.now() + 300000
+  )
+
+    return null;
 
   const decimal = (value: unknown): string | null => value == null ? null : String(value);
 
@@ -56,10 +68,12 @@ export function normalizarTracking(event: TrackingActualizadoSocket): MonitoreoU
     nivel_bateria: decimal(u.nivel_bateria),
 
     es_ubicacion_simulada: false,
-    fecha_dispositivo: '',
-    fecha_recepcion: '',
-    created_at: '',
-    updated_at: ''
+    fecha_dispositivo: String(u.fecha_dispositivo),
+    fecha_recepcion: String(u.fecha_recepcion),
+
+    created_at: u.created_at || String(u.fecha_recepcion),
+
+    updated_at: u.updated_at || String(u.fecha_recepcion),
   };
 }
 
@@ -76,15 +90,44 @@ export function esMasReciente(nueva: MonitoreoUltimaUbicacion, actual: Monitoreo
 }
 
 /** Estado visual del cliente; las reglas de alertas continúan en el backend. */
-export function gpsVisual(ubicacion: MonitoreoUltimaUbicacion, ahora = Date.now()): MonitoreoGps {
-  const fecha = Date.parse(ubicacion.fecha_dispositivo);
-  const segundos = Number.isFinite(fecha) ?
-    Math.max(0, Math.floor((ahora - fecha) / 1000)) :
-    null;
+export function gpsVisual(
+  ubicacion: MonitoreoUltimaUbicacion,
+  ahora = Date.now(),
+): MonitoreoGps {
+  const fecha =
+    Date.parse(ubicacion.fecha_dispositivo);
+
+  if (
+    !Number.isFinite(fecha) ||
+    fecha > ahora + 5000
+  ) {
+    return {
+      estado: 'SIN_DATOS',
+      segundos_sin_actualizar: null,
+      fecha_ultima_posicion:
+        ubicacion.fecha_dispositivo || null,
+    };
+  }
+
+  const segundos = Math.max(
+    0,
+    Math.floor(
+      (ahora - fecha) / 1000,
+    ),
+  );
+
+  // Mismos valores predeterminados que el backend.
+  const estado = segundos <= 60
+    ? 'EN_LINEA'
+    : segundos <= 180
+      ? 'DEMORADO'
+      : 'DESCONECTADO';
 
   return {
-    estado: segundos !== null && segundos <= 120 ? 'ACTUALIZADO' : 'DESACTUALIZADO',
+    estado,
     segundos_sin_actualizar: segundos,
-    fecha_ultima_posicion: ubicacion.fecha_dispositivo,
+
+    fecha_ultima_posicion:
+      ubicacion.fecha_dispositivo,
   };
 }

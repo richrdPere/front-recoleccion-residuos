@@ -1,1 +1,221 @@
-<p>incidencia-responsable-form works!</p>
+<dialog #dialogo class="modal" aria-labelledby="incidencia-responsable-titulo" [attr.aria-busy]="isSaving"
+  (cancel)="cerrarModal($event)" (close)="notificarCierre()">
+  <section class="modal-box flex max-h-[90dvh] w-11/12 max-w-2xl
+           flex-col overflow-hidden rounded-2xl p-0">
+
+    <!-- ================================================= -->
+    <!-- ENCABEZADO -->
+    <!-- ================================================= -->
+    <header class="flex shrink-0 items-center justify-between gap-4
+             border-b border-base-300 px-5 py-4 sm:px-6">
+      <div class="flex min-w-0 items-center gap-3">
+        <div class="flex size-11 shrink-0 items-center justify-center
+                 rounded-xl bg-primary/10 text-primary">
+          <i class="fa-solid fa-user-check" aria-hidden="true"></i>
+        </div>
+
+        <div class="min-w-0">
+          <h2 id="incidencia-responsable-titulo" class="text-xl font-bold">
+            Responsable de atención
+          </h2>
+
+          <p class="mt-1 text-xs text-base-content/60">
+            Incidencia #{{ incidenciaActual?.id_incidencia }}
+          </p>
+        </div>
+      </div>
+
+      <button type="button" autofocus class="btn btn-circle btn-ghost btn-sm shrink-0" aria-label="Cerrar formulario"
+        [disabled]="isSaving" (click)="cerrarModal()">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <!-- ================================================= -->
+    <!-- FORMULARIO -->
+    <!-- ================================================= -->
+    <form [formGroup]="responsableForm" (ngSubmit)="guardar()" class="flex min-h-0 flex-1 flex-col">
+      <div class="min-h-0 flex-1 space-y-5 overflow-y-auto p-5 sm:p-6">
+
+        @if (incidenciaActual; as detalle) {
+        <section class="rounded-xl border border-base-300 p-4">
+          <h3 class="wrap-break-word font-semibold">
+            {{ detalle.titulo }}
+          </h3>
+
+          <p class="mt-3 text-xs text-base-content/60">
+            Responsable actual
+          </p>
+
+          <p class="mt-1 text-sm font-medium">
+            {{ responsableActual }}
+          </p>
+        </section>
+        }
+
+        @if (!incidenciaEditable) {
+        <div class="alert alert-warning" role="alert">
+          <span>
+            Solo puedes modificar el responsable de una incidencia
+            habilitada que esté reportada, en revisión o en atención.
+          </span>
+        </div>
+        }
+
+        @if (errorMensaje) {
+        <div class="alert alert-error" role="alert">
+          <span>{{ errorMensaje }}</span>
+        </div>
+        }
+
+        <fieldset class="space-y-5" [disabled]="isSaving || !incidenciaEditable">
+          <legend class="sr-only">
+            Selección del responsable
+          </legend>
+
+          <!-- RETIRAR RESPONSABLE -->
+          @if (incidenciaActual?.id_responsable != null) {
+          <div class="rounded-xl border border-warning/30 bg-warning/5 p-4">
+            <label for="incidencia-retirar-responsable" class="flex items-start gap-3"
+              [class.cursor-pointer]="puedeRetirar">
+              <input id="incidencia-retirar-responsable" type="checkbox"
+                class="checkbox checkbox-warning mt-0.5 shrink-0" formControlName="retirar_responsable"
+                [attr.disabled]="!puedeRetirar ? '' : null" (change)="onRetirarChange()" />
+
+              <span>
+                <span class="block text-sm font-semibold">
+                  Retirar al responsable actual
+                </span>
+
+                <span class="mt-1 block text-xs leading-5 text-base-content/65">
+                  La incidencia quedará sin una persona asignada.
+                </span>
+              </span>
+            </label>
+
+            @if ( incidenciaActual?.estado_incidencia === 'EN_ATENCION' ) {
+            <p class="mt-3 text-xs text-warning">
+              Una incidencia en atención debe conservar un responsable.
+              Puedes asignarle otro usuario.
+            </p>
+            }
+          </div>
+          }
+
+          @if (!retirando) {
+          <!-- BÚSQUEDA -->
+          <div class="space-y-2">
+            <label for="incidencia-buscar-responsable" class="block text-sm font-medium">
+              Buscar usuario
+            </label>
+
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <input id="incidencia-buscar-responsable" type="search"
+                class="input input-bordered w-full min-w-0 rounded-xl" placeholder="Nombre, documento o usuario"
+                [formControl]="busquedaUsuario" (keydown.enter)="$event.preventDefault(); cargarUsuarios()" />
+
+              <button type="button" class="btn btn-outline shrink-0 rounded-xl" [disabled]="isLoadingUsuarios"
+                (click)="cargarUsuarios()">
+                @if (isLoadingUsuarios) {
+                <span class="loading loading-spinner loading-sm"></span>
+                } @else {
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                }
+
+                Buscar
+              </button>
+            </div>
+          </div>
+
+          <!-- SELECTOR -->
+          <div class="space-y-2">
+            <label for="incidencia-nuevo-responsable" class="block text-sm font-medium">
+              Nuevo responsable
+              <span class="text-error">*</span>
+            </label>
+
+            <select id="incidencia-nuevo-responsable" formControlName="id_responsable"
+              class="select select-bordered w-full min-w-0 rounded-xl" [attr.aria-busy]="isLoadingUsuarios"
+              [class.select-error]="
+                  responsableForm.controls.id_responsable.touched &&
+                  responsableForm.controls.id_responsable.invalid
+                ">
+              <option [ngValue]="null">
+                {{
+                isLoadingUsuarios
+                ? 'Cargando usuarios...'
+                : 'Selecciona un usuario'
+                }}
+              </option>
+
+              @for (usuario of usuarios; track usuario.id_usuario) {
+              <option [ngValue]="'' + usuario.id_usuario">
+                {{ usuario.label }}
+              </option>
+              }
+            </select>
+
+            @if (
+            responsableForm.controls.id_responsable.touched &&
+            responsableForm.controls.id_responsable.hasError('required')
+            ) {
+            <p class="text-xs text-error">
+              Selecciona al nuevo responsable.
+            </p>
+            }
+
+            @if (errorUsuarios) {
+            <div class="flex flex-wrap items-center gap-2 text-sm text-error" role="alert">
+              <span>{{ errorUsuarios }}</span>
+
+              <button type="button" class="btn btn-ghost btn-xs" [disabled]="isLoadingUsuarios"
+                (click)="cargarUsuarios()">
+                Reintentar
+              </button>
+            </div>
+            } @else if (!isLoadingUsuarios && usuarios.length === 0) {
+            <p class="text-xs text-base-content/60">
+              No se encontraron usuarios activos para esta búsqueda.
+            </p>
+            }
+
+            <p class="text-xs leading-5 text-base-content/55">
+              Se muestran hasta 50 usuarios activos. Utiliza la búsqueda
+              para localizar a la persona.
+            </p>
+          </div>
+          }
+        </fieldset>
+      </div>
+
+      <!-- ================================================= -->
+      <!-- ACCIONES -->
+      <!-- ================================================= -->
+      <footer class="flex shrink-0 flex-col-reverse gap-3
+               border-t border-base-300 px-5 py-4
+               sm:flex-row sm:justify-end sm:px-6">
+        <button type="button" class="btn btn-ghost rounded-xl" [disabled]="isSaving" (click)="cerrarModal()">
+          Cancelar
+        </button>
+
+        <button type="submit" class="btn rounded-xl" [class.btn-primary]="!retirando" [class.btn-warning]="retirando"
+          [disabled]="!puedeGuardar">
+          @if (isSaving) {
+          <span class="loading loading-spinner loading-sm"></span>
+          } @else {
+          <i class="fa-solid" [class.fa-user-check]="!retirando" [class.fa-user-minus]="retirando"
+            aria-hidden="true"></i>
+          }
+
+          {{
+          isSaving
+          ? 'Guardando...'
+          : retirando
+          ? 'Retirar responsable'
+          : 'Guardar responsable'
+          }}
+        </button>
+      </footer>
+    </form>
+  </section>
+</dialog>

@@ -258,7 +258,7 @@ export class AdminLayoutComponent {
             label: 'Recolecciones',
             description: 'Puntos atendidos y cantidades',
             route: '/admin/recolecciones',
-            icon: 'fa-solid fa-trash-can-arrow-up',
+            icon: 'fa-solid fa-recycle',
             roles: [
               'SUPER_ADMIN',
               'ADMIN',
@@ -293,6 +293,7 @@ export class AdminLayoutComponent {
               'SUPER_ADMIN',
               'ADMIN',
               'SUPERVISOR',
+              'OPERADOR',
             ],
           },
           {

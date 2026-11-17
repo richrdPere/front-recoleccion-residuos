@@ -1,9 +1,13 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Subscription, timer } from 'rxjs';
+import { Subscription, finalize, timer } from 'rxjs';
+
+// Services
+import { ReportesServices } from '../../../reportes/services/reportes.service';
 
 // Interfaces
+import { ReporteEstadoRecorrido, ReporteRecorridoItem, ReporteRecorridosFilters } from '../../../reportes/interfaces';
 import { PuntoRecorridoRecoleccion } from '../../interfaces';
 
 // Componentes
@@ -14,9 +18,27 @@ import { RecoleccionEvidenciaComponent } from '../components/recoleccion-evidenc
 import { RecoleccionViewComponent } from '../components/recoleccion-view/recoleccion-view.component';
 import { RecoleccionAnularComponent } from '../components/recoleccion-anular/recoleccion-anular.component';
 
+// ==========================================================
+// FECHA DE PERÚ
+// ==========================================================
+const fechaPeru = (): string => {
+  const partes = new Intl.DateTimeFormat('en', {
+    timeZone: 'America/Lima',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+
+  const valor = (tipo: string) =>
+    partes.find(parte => parte.type === tipo)?.value ?? '';
+
+  return `${valor('year')}-${valor('month')}-${valor('day')}`;
+};
+
 @Component({
   selector: 'app-recolecciones-page',
   standalone: true,
+
   imports: [
     CommonModule,
     FormsModule,
@@ -27,52 +49,98 @@ import { RecoleccionAnularComponent } from '../components/recoleccion-anular/rec
     RecoleccionViewComponent,
     RecoleccionAnularComponent,
   ],
+
   templateUrl: './recolecciones-page.component.html',
-  styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RecoleccionesPageComponent implements OnInit, OnDestroy {
-
-  // ================================
-  // Selección del recorrido
-  // ================================
-  recorridoBusqueda: number | null = null;
-  recorrido_id: number | null = null;
-
-  errorSeleccion: string | null = null;
-
-  // Actualización de puntos, progreso y capacidad
-  actualizacionRecolecciones = 0;
-
   private readonly document = inject(DOCUMENT);
 
-  private refrescoAutomatico?: Subscription;
+  // ==========================================================
+  // LISTADO
+  // ==========================================================
+  recorridos: ReporteRecorridoItem[] = [];
 
+  isLoading = false;
+  errorMensaje = '';
+  errorFiltros = '';
 
-  // ================================
-  // Evidencias
-  // ================================
+  // ==========================================================
+  // FILTROS
+  // ==========================================================
+  fechaFinBusqueda = fechaPeru();
+  fechaInicioBusqueda =
+    `${this.fechaFinBusqueda.slice(0, 7)}-01`;
+
+  estadoBusqueda: ReporteEstadoRecorrido | '' = '';
+
+  readonly estados: ReporteEstadoRecorrido[] = [
+    'EN_CURSO',
+    'PAUSADO',
+    'FINALIZADO',
+    'CANCELADO',
+  ];
+
+  private filtrosAplicados: ReporteRecorridosFilters = {
+    fecha_inicio: this.fechaInicioBusqueda,
+    fecha_fin: this.fechaFinBusqueda,
+  };
+
+  // ==========================================================
+  // PAGINACIÓN
+  // ==========================================================
+  page = 1;
+  currentPage = 1;
+  limit = 10;
+
+  totalItems = 0;
+  totalPages = 0;
+
+  readonly pageSizeOptions = [5, 10, 20, 50];
+
+  // ==========================================================
+  // RECORRIDO SELECCIONADO
+  // ==========================================================
+  recorridoSeleccionado: ReporteRecorridoItem | null = null;
+  recorrido_id: number | null = null;
+
+  actualizacionRecolecciones = 0;
+
+  // ==========================================================
+  // EVIDENCIAS
+  // ==========================================================
   recoleccion_id: number | null = null;
   actualizacionEvidencias = 0;
 
-  // ================================
-  // Modal de detalle
-  // ================================
+  // ==========================================================
+  // MODAL DE DETALLE
+  // ==========================================================
   mostrarModalView = false;
   recoleccionViewId: number | null = null;
   actualizacionDetalle = 0;
 
-  // ================================
-  // Modal de anulación
-  // ================================
+  // ==========================================================
+  // MODAL DE ANULACIÓN
+  // ==========================================================
   mostrarModalAnular = false;
   recoleccionAnularId: number | null = null;
 
+  // Suscripciones
+  private consultaListado?: Subscription;
+  private refrescoAutomatico?: Subscription;
+  private destruido = false;
+
   constructor(
-    private cdr: ChangeDetectorRef,
+    private readonly reportesService: ReportesServices,
+    private readonly cdr: ChangeDetectorRef,
   ) { }
 
+  // ==========================================================
+  // CICLO DE VIDA
+  // ==========================================================
   ngOnInit(): void {
+    this.buscar();
+
     this.refrescoAutomatico = timer(
       30_000,
       30_000,
@@ -91,40 +159,186 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destruido = true;
+
+    this.consultaListado?.unsubscribe();
     this.refrescoAutomatico?.unsubscribe();
   }
 
-  // ================================
-  // Methods
-  // ================================
-  seleccionarRecorrido(): void {
-    this.errorSeleccion = null;
+  // ==========================================================
+  // CONSULTAR LISTADO
+  // ==========================================================
+  buscar(): void {
+    this.errorFiltros = this.validarFiltros();
 
-    const id = this.recorridoBusqueda;
-
-    if (!this.esIdentificadorValido(id)) {
-      this.errorSeleccion =
-        'Ingresa un identificador de recorrido válido.';
+    if (this.errorFiltros) {
       this.cdr.markForCheck();
       return;
     }
 
-    if (this.recorrido_id === id) {
-      this.actualizarRecolecciones();
+    this.filtrosAplicados = {
+      fecha_inicio: this.fechaInicioBusqueda,
+      fecha_fin: this.fechaFinBusqueda,
+    };
+
+    if (this.estadoBusqueda) {
+      this.filtrosAplicados.estado = this.estadoBusqueda;
+    }
+
+    this.cargarPagina(1);
+  }
+
+  getRecoleccionesPaginated(): void {
+    this.cargarPagina(this.page);
+  }
+
+  private cargarPagina(pagina: number): void {
+    if (this.destruido) return;
+
+    const limite = Number(this.limit);
+
+    if (
+      !Number.isSafeInteger(pagina) ||
+      pagina < 1 ||
+      !this.pageSizeOptions.includes(limite)
+    ) {
+      this.errorMensaje = 'La paginación seleccionada no es válida.';
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.consultaListado?.unsubscribe();
+
+    this.page = pagina;
+    this.currentPage = pagina;
+    this.limit = limite;
+
+    this.isLoading = true;
+    this.errorMensaje = '';
+
+    this.recorridos = [];
+    this.totalItems = 0;
+    this.totalPages = 0;
+
+    this.cdr.markForCheck();
+
+    this.consultaListado = this.reportesService
+      .getReporteRecorridos({
+        ...this.filtrosAplicados,
+        page: pagina,
+        limit: limite,
+      })
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+
+          if (!this.destruido) {
+            this.cdr.markForCheck();
+          }
+        }),
+      )
+      .subscribe({
+        next: response => {
+          if (!response.success || !response.data) {
+            this.errorMensaje = response.message ||
+              'No se pudieron consultar los recorridos.';
+
+            return;
+          }
+
+          const data = response.data;
+
+          this.recorridos = data.items;
+
+          this.page = data.pagination.page;
+          this.currentPage = data.pagination.page;
+          this.limit = data.pagination.limit;
+
+          this.totalItems = data.pagination.total;
+          this.totalPages = data.pagination.total_pages;
+        },
+
+        error: (error: unknown) => {
+          this.errorMensaje = this.obtenerMensajeError(
+            error,
+            'No se pudieron consultar los recorridos.',
+          );
+        },
+      });
+  }
+
+  // ==========================================================
+  // FILTROS Y PAGINACIÓN
+  // ==========================================================
+  limpiarFiltros(): void {
+    const hoy = fechaPeru();
+
+    this.fechaInicioBusqueda = `${hoy.slice(0, 7)}-01`;
+    this.fechaFinBusqueda = hoy;
+    this.estadoBusqueda = '';
+
+    this.buscar();
+  }
+
+  cambiarPagina(pagina: number): void {
+    if (
+      this.isLoading ||
+      pagina < 1 ||
+      pagina > this.totalPages ||
+      pagina === this.page
+    ) {
+      return;
+    }
+
+    this.cargarPagina(pagina);
+  }
+
+  cambiarLimite(): void {
+    this.limit = Number(this.limit);
+    this.cargarPagina(1);
+  }
+
+  get registroDesde(): number {
+    return this.totalItems === 0
+      ? 0
+      : (this.page - 1) * this.limit + 1;
+  }
+
+  get registroHasta(): number {
+    return Math.min(
+      this.page * this.limit,
+      this.totalItems,
+    );
+  }
+
+  // ==========================================================
+  // SELECCIÓN DEL RECORRIDO
+  // ==========================================================
+  seleccionarRecorrido(recorrido: ReporteRecorridoItem): void {
+    if (!this.esIdentificadorValido(recorrido.id_recorrido)) {
       return;
     }
 
     this.limpiarSeleccionRecoleccion();
-    this.recorrido_id = id;
 
-    // El cambio de ID activa las consultas de los hijos.
+    this.recorridoSeleccionado = recorrido;
+    this.recorrido_id = recorrido.id_recorrido;
+
     this.cdr.markForCheck();
   }
 
+  volverAlListado(): void {
+    this.limpiarSeleccionRecoleccion();
+
+    this.recorridoSeleccionado = null;
+    this.recorrido_id = null;
+
+    // Actualiza los conteos después de consultar o anular registros.
+    this.cargarPagina(this.page);
+  }
+
   actualizarRecolecciones(): void {
-    if (this.recorrido_id === null) {
-      return;
-    }
+    if (this.recorrido_id === null) return;
 
     this.actualizacionRecolecciones++;
     this.actualizacionEvidencias++;
@@ -133,15 +347,9 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  limpiarRecorrido(): void {
-    this.recorridoBusqueda = null;
-    this.recorrido_id = null;
-    this.errorSeleccion = null;
-
-    this.limpiarSeleccionRecoleccion();
-    this.cdr.markForCheck();
-  }
-
+  // ==========================================================
+  // EVIDENCIAS
+  // ==========================================================
   abrirEvidenciasRecoleccion(idRecoleccion: number): void {
     if (
       this.recorrido_id === null ||
@@ -150,7 +358,6 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Cierra el detalle para mostrar la sección de evidencias.
     this.cerrarModalView();
 
     if (this.recoleccion_id === idRecoleccion) {
@@ -168,8 +375,6 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
   }
 
   onEvidenciasActualizadas(idRecoleccion: number): void {
-    // El listado de evidencias ya se actualiza internamente.
-    // Refrescamos el detalle si corresponde a esa recolección.
     if (
       this.mostrarModalView &&
       this.recoleccionViewId === idRecoleccion
@@ -180,60 +385,9 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  onRecoleccionAnulada(
-    recoleccion: PuntoRecorridoRecoleccion,
-  ): void {
-    if (
-      this.recoleccionAnularId === recoleccion.id_recoleccion
-    ) {
-      this.cerrarModalAnular();
-    }
-
-    // Una respuesta de otro recorrido no refresca la selección actual.
-    if (recoleccion.id_recorrido !== this.recorrido_id) {
-      return;
-    }
-
-    this.actualizacionRecolecciones++;
-
-    if (this.recoleccion_id === recoleccion.id_recoleccion) {
-      this.actualizacionEvidencias++;
-    }
-
-    if (
-      this.mostrarModalView &&
-      this.recoleccionViewId === recoleccion.id_recoleccion
-    ) {
-      this.actualizacionDetalle++;
-    }
-
-    this.cdr.markForCheck();
-  }
-
-  // ================================
-  // Helpers methods
-  // ================================
-  private esIdentificadorValido(
-    id: number | null,
-  ): id is number {
-    return typeof id === 'number' &&
-      Number.isSafeInteger(id) &&
-      id > 0;
-  }
-
-  private limpiarSeleccionRecoleccion(): void {
-    this.recoleccion_id = null;
-
-    this.mostrarModalView = false;
-    this.recoleccionViewId = null;
-
-    this.mostrarModalAnular = false;
-    this.recoleccionAnularId = null;
-  }
-
-  // ================================
-  // Modales methods
-  // ================================
+  // ==========================================================
+  // DETALLE DE UNA RECOLECCIÓN
+  // ==========================================================
   abrirDetalleRecoleccion(idRecoleccion: number): void {
     if (
       this.recorrido_id === null ||
@@ -257,6 +411,9 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  // ==========================================================
+  // ANULACIÓN
+  // ==========================================================
   abrirModalAnular(
     recoleccion: PuntoRecorridoRecoleccion,
   ): void {
@@ -281,5 +438,132 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
     this.recoleccionAnularId = null;
 
     this.cdr.markForCheck();
+  }
+
+  onRecoleccionAnulada(
+    recoleccion: PuntoRecorridoRecoleccion,
+  ): void {
+    if (recoleccion.id_recorrido !== this.recorrido_id) {
+      return;
+    }
+
+    if (
+      this.recoleccionAnularId === recoleccion.id_recoleccion
+    ) {
+      this.cerrarModalAnular();
+    }
+
+    this.actualizarRecolecciones();
+  }
+
+  // ==========================================================
+  // PRESENTACIÓN
+  // ==========================================================
+  getEstadoBadge(estado: ReporteEstadoRecorrido): string {
+    switch (estado) {
+      case 'EN_CURSO':
+        return 'badge-success';
+
+      case 'PAUSADO':
+        return 'badge-warning';
+
+      case 'FINALIZADO':
+        return 'badge-info';
+
+      case 'CANCELADO':
+        return 'badge-error';
+
+      default:
+        return 'badge-neutral';
+    }
+  }
+
+  getEstadoLabel(estado: ReporteEstadoRecorrido): string {
+    const etiquetas: Record<ReporteEstadoRecorrido, string> = {
+      EN_CURSO: 'En curso',
+      PAUSADO: 'Pausado',
+      FINALIZADO: 'Finalizado',
+      CANCELADO: 'Cancelado',
+    };
+
+    return etiquetas[estado] ?? estado;
+  }
+
+  // ==========================================================
+  // HELPERS
+  // ==========================================================
+  private limpiarSeleccionRecoleccion(): void {
+    this.recoleccion_id = null;
+
+    this.mostrarModalView = false;
+    this.recoleccionViewId = null;
+
+    this.mostrarModalAnular = false;
+    this.recoleccionAnularId = null;
+  }
+
+  private esIdentificadorValido(
+    id: number | null,
+  ): id is number {
+    return typeof id === 'number' &&
+      Number.isSafeInteger(id) &&
+      id > 0;
+  }
+
+  private validarFiltros(): string {
+    const fechaValida = (valor: string): boolean => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+        return false;
+      }
+
+      const fecha = new Date(`${valor}T12:00:00Z`);
+
+      return Number.isFinite(fecha.getTime()) &&
+        fecha.toISOString().slice(0, 10) === valor;
+    };
+
+    if (
+      !fechaValida(this.fechaInicioBusqueda) ||
+      !fechaValida(this.fechaFinBusqueda)
+    ) {
+      return 'Selecciona fechas válidas para consultar.';
+    }
+
+    if (this.fechaInicioBusqueda > this.fechaFinBusqueda) {
+      return 'La fecha inicial no puede ser posterior a la final.';
+    }
+
+    return '';
+  }
+
+  private obtenerMensajeError(
+    error: unknown,
+    respaldo: string,
+  ): string {
+    const texto = (valor: unknown): string | null =>
+      typeof valor === 'string' && valor.trim()
+        ? valor.trim()
+        : null;
+
+    const mensajeDe = (valor: unknown): string | null =>
+      valor && typeof valor === 'object'
+        ? texto((valor as { message?: unknown }).message)
+        : null;
+
+    if (!error || typeof error !== 'object') {
+      return texto(error) ?? respaldo;
+    }
+
+    const objeto = error as {
+      details?: unknown;
+      error?: unknown;
+      message?: unknown;
+    };
+
+    return mensajeDe(objeto.details) ??
+      mensajeDe(objeto.error) ??
+      texto(objeto.message) ??
+      texto(objeto.error) ??
+      respaldo;
   }
 }

@@ -9,3 +9,4 @@ export * from './get-domicilio-cronograma.interface';
 export * from './get-preferencias-notificacion.interface';
 export * from './update-preferencias-notificacion.interface';
 export * from './delete-domicilio.interface';
+export * from './get-ciudadanos-paginados.interface';

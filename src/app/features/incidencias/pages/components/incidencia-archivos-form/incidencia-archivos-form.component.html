@@ -1,1 +1,186 @@
-<p>incidencia-archivos-form works!</p>
+<dialog #dialogo class="modal" aria-labelledby="incidencia-archivos-titulo" [attr.aria-busy]="isSaving"
+  (cancel)="cerrarModal($event)" (close)="notificarCierre()">
+  <section class="modal-box flex max-h-[90dvh] w-11/12 max-w-2xl
+           flex-col overflow-hidden rounded-2xl p-0">
+
+    <!-- ENCABEZADO -->
+    <header class="flex shrink-0 items-center justify-between gap-4
+             border-b border-base-300 px-5 py-4 sm:px-6">
+      <div class="flex min-w-0 items-center gap-3">
+        <div class="flex size-11 shrink-0 items-center justify-center
+                 rounded-xl bg-primary/10 text-primary">
+          <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
+        </div>
+
+        <div class="min-w-0">
+          <h2 id="incidencia-archivos-titulo" class="text-xl font-bold">
+            Adjuntar evidencias
+          </h2>
+
+          <p class="mt-1 text-xs text-base-content/60">
+            Incidencia #{{ incidenciaActual?.id_incidencia }}
+          </p>
+        </div>
+      </div>
+
+      <button type="button" autofocus class="btn btn-circle btn-ghost btn-sm shrink-0" aria-label="Cerrar formulario"
+        [disabled]="isSaving" (click)="cerrarModal()">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <form [formGroup]="archivosForm" (ngSubmit)="guardar()" class="flex min-h-0 flex-1 flex-col">
+      <div class="min-h-0 flex-1 space-y-5 overflow-y-auto p-5 sm:p-6">
+
+        @if (incidenciaActual; as detalle) {
+        <p class="rounded-xl bg-base-200/50 p-4 text-sm font-semibold">
+          {{ detalle.titulo }}
+        </p>
+        }
+
+        @if (!puedeAdjuntar) {
+        <div class="alert alert-warning" role="alert">
+          <span>
+            Las evidencias solo pueden agregarse a incidencias
+            abiertas y habilitadas, por su reportante o por
+            un usuario de gestión autorizado.
+          </span>
+        </div>
+        }
+
+        @if (errorMensaje) {
+        <div class="alert alert-error" role="alert">
+          <span>{{ errorMensaje }}</span>
+        </div>
+        }
+
+        <fieldset class="space-y-5" [disabled]="isSaving || !puedeAdjuntar">
+          <legend class="sr-only">
+            Archivos y descripción de las evidencias
+          </legend>
+
+          <!-- SELECCIÓN -->
+          <div class="space-y-2">
+            <label for="incidencia-archivos" class="block text-sm font-medium">
+              Archivos
+              <span class="text-error">*</span>
+            </label>
+
+            <input id="incidencia-archivos" type="file" multiple [accept]="accept"
+              class="file-input file-input-bordered w-full min-w-0 rounded-xl"
+              aria-describedby="incidencia-archivos-ayuda incidencia-archivos-error"
+              [attr.aria-invalid]="!!errorArchivos" (change)="seleccionarArchivos($event)" />
+
+            <p id="incidencia-archivos-ayuda" class="text-xs leading-5 text-base-content/60">
+              JPEG, PNG, WebP o PDF. Máximo 10 archivos por envío
+              y 5 MB por archivo. Puedes seleccionar archivos
+              en varias ocasiones antes de enviarlos.
+            </p>
+
+            <div id="incidencia-archivos-error" aria-live="polite">
+              @if (errorArchivos) {
+              <p class="text-xs text-error">
+                {{ errorArchivos }}
+              </p>
+              }
+            </div>
+          </div>
+
+          <!-- ARCHIVOS PENDIENTES -->
+          @if (archivos.length) {
+          <section class="space-y-3" aria-label="Archivos seleccionados">
+            <div class="flex flex-wrap justify-between gap-2 text-xs text-base-content/60">
+              <span>
+                {{ archivos.length }} / {{ maxArchivos }} archivos
+              </span>
+
+              <span>
+                Total: {{ formatearTamano(totalBytes) }}
+              </span>
+            </div>
+
+            @for (archivo of archivos; track $index; let i = $index) {
+            <div class="flex items-center gap-3 rounded-xl
+                         border border-base-300 p-3">
+              <i class="fa-solid shrink-0 text-primary" [class.fa-file-pdf]="archivo.type === 'application/pdf'"
+                [class.fa-file-image]="archivo.type !== 'application/pdf'" aria-hidden="true"></i>
+
+              <div class="min-w-0 flex-1">
+                <p class="wrap-break-word text-sm font-medium">
+                  {{ archivo.name }}
+                </p>
+
+                <p class="mt-1 text-xs text-base-content/60">
+                  {{ formatearTamano(archivo.size) }}
+                </p>
+              </div>
+
+              <button type="button" class="btn btn-circle btn-ghost btn-sm shrink-0 text-error"
+                [attr.aria-label]="'Quitar ' + archivo.name" (click)="quitarArchivo(i)">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              </button>
+            </div>
+            }
+          </section>
+          }
+
+          <!-- DESCRIPCIÓN COMÚN -->
+          <div class="space-y-2">
+            <label for="incidencia-archivos-descripcion" class="block text-sm font-medium">
+              Descripción
+              <span class="font-normal text-base-content/50">
+                (opcional)
+              </span>
+            </label>
+
+            <textarea id="incidencia-archivos-descripcion" formControlName="descripcion" rows="3" maxlength="500"
+              class="textarea textarea-bordered w-full rounded-xl"
+              placeholder="Ejemplo: Evidencias de la inspección realizada en el sector."></textarea>
+
+            <div class="flex flex-wrap justify-between gap-2 text-xs text-base-content/55">
+              <span>
+                La descripción se aplicará a todos los archivos del envío.
+              </span>
+
+              <span>
+                {{ archivosForm.controls.descripcion.value.length }} / 500
+              </span>
+            </div>
+
+            @if (archivosForm.controls.descripcion.hasError('maxlength')) {
+            <p class="text-xs text-error">
+              La descripción admite hasta 500 caracteres.
+            </p>
+            }
+          </div>
+        </fieldset>
+
+        @if (isSaving) {
+        <div class="flex items-center gap-3 text-sm text-base-content/70" role="status">
+          <span class="loading loading-spinner loading-sm text-primary"></span>
+          Enviando y registrando las evidencias...
+        </div>
+        }
+      </div>
+
+      <!-- ACCIONES -->
+      <footer class="flex shrink-0 flex-col-reverse gap-3
+               border-t border-base-300 px-5 py-4
+               sm:flex-row sm:justify-end sm:px-6">
+        <button type="button" class="btn btn-ghost rounded-xl" [disabled]="isSaving" (click)="cerrarModal()">
+          Cancelar
+        </button>
+
+        <button type="submit" class="btn btn-primary rounded-xl" [disabled]="!puedeGuardar">
+          @if (isSaving) {
+          <span class="loading loading-spinner loading-sm"></span>
+          } @else {
+          <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
+          }
+
+          {{ isSaving ? 'Enviando...' : 'Guardar evidencias' }}
+        </button>
+      </footer>
+    </form>
+  </section>
+</dialog>

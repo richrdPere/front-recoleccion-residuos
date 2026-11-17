@@ -1,1 +1,435 @@
-<p>incidencia-view works!</p>
+<dialog
+  #dialogo
+  class="modal"
+  aria-labelledby="incidencia-view-titulo"
+  [attr.aria-busy]="isLoading"
+  (cancel)="cerrarModal($event)"
+  (close)="notificarCierre()"
+>
+  <section
+    class="modal-box flex max-h-[90dvh] w-11/12 max-w-5xl
+           flex-col overflow-hidden rounded-2xl p-0"
+  >
+
+    <!-- ================================================= -->
+    <!-- ENCABEZADO -->
+    <!-- ================================================= -->
+    <header
+      class="flex shrink-0 items-center justify-between gap-4
+             border-b border-base-300 px-5 py-4 sm:px-6"
+    >
+      <div class="flex min-w-0 items-center gap-3">
+        <div
+          class="flex size-11 shrink-0 items-center justify-center
+                 rounded-xl bg-primary/10 text-primary"
+        >
+          <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+        </div>
+
+        <div class="min-w-0">
+          <h2 id="incidencia-view-titulo" class="text-xl font-bold">
+            Detalle de incidencia
+          </h2>
+
+          <p class="mt-1 text-xs text-base-content/60">
+            Incidencia #{{ idIncidencia }}
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        autofocus
+        class="btn btn-circle btn-ghost btn-sm shrink-0"
+        aria-label="Cerrar detalle"
+        (click)="cerrarModal()"
+      >
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <!-- ================================================= -->
+    <!-- CONTENIDO -->
+    <!-- ================================================= -->
+    <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 sm:p-6">
+
+      @if (isLoading) {
+        <div class="flex items-center justify-center gap-3 py-12" role="status">
+          <span class="loading loading-spinner text-primary"></span>
+          <span class="text-sm">Consultando incidencia...</span>
+        </div>
+      } @else if (errorMensaje) {
+        <div class="alert alert-error" role="alert">
+          <span>{{ errorMensaje }}</span>
+
+          @if (idValido) {
+            <button
+              type="button"
+              class="btn btn-sm"
+              (click)="cargarDetalle()"
+            >
+              Reintentar
+            </button>
+          }
+        </div>
+      } @else if (incidencia; as detalle) {
+        <div class="space-y-5">
+
+          <!-- RESUMEN -->
+          <section class="rounded-xl border border-base-300 p-4">
+            <h3 class="wrap-break-word text-lg font-bold">
+              {{ detalle.titulo }}
+            </h3>
+
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span
+                class="badge badge-outline"
+                [ngClass]="getEstadoBadge(detalle.estado_incidencia)"
+              >
+                {{ formatearEtiqueta(detalle.estado_incidencia) }}
+              </span>
+
+              <span
+                class="badge badge-outline"
+                [ngClass]="getPrioridadBadge(detalle.prioridad)"
+              >
+                Prioridad {{ formatearEtiqueta(detalle.prioridad) }}
+              </span>
+
+              <span class="badge badge-outline">
+                {{ formatearEtiqueta(detalle.tipo) }}
+              </span>
+            </div>
+
+            @if (!detalle.estado) {
+              <p class="mt-3 text-sm text-warning">
+                Esta incidencia está deshabilitada administrativamente.
+              </p>
+            }
+          </section>
+
+          <!-- NAVEGACIÓN -->
+          <nav
+            class="flex flex-wrap gap-2 border-b border-base-300 pb-3"
+            aria-label="Secciones del detalle"
+          >
+            <button
+              type="button"
+              class="btn btn-sm"
+              [class.btn-primary]="seccionActiva === 'informacion'"
+              [class.btn-ghost]="seccionActiva !== 'informacion'"
+              [attr.aria-pressed]="seccionActiva === 'informacion'"
+              (click)="seleccionarSeccion('informacion')"
+            >
+              <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+              Información
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-sm"
+              [class.btn-primary]="seccionActiva === 'ubicacion'"
+              [class.btn-ghost]="seccionActiva !== 'ubicacion'"
+              [attr.aria-pressed]="seccionActiva === 'ubicacion'"
+              (click)="seleccionarSeccion('ubicacion')"
+            >
+              <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+              Ubicación
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-sm"
+              [class.btn-primary]="seccionActiva === 'evidencias'"
+              [class.btn-ghost]="seccionActiva !== 'evidencias'"
+              [attr.aria-pressed]="seccionActiva === 'evidencias'"
+              (click)="seleccionarSeccion('evidencias')"
+            >
+              <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
+              Evidencias
+              <span class="badge badge-sm">{{ archivos.length }}</span>
+            </button>
+          </nav>
+
+          <!-- ============================================= -->
+          <!-- INFORMACIÓN -->
+          <!-- ============================================= -->
+          @if (seccionActiva === 'informacion') {
+            <section class="space-y-5" aria-label="Información de la incidencia">
+
+              <div>
+                <h3 class="font-semibold">Descripción</h3>
+
+                <p class="mt-2 whitespace-pre-wrap wrap-break-word text-sm leading-6 text-base-content/75">{{ detalle.descripcion || 'Sin descripción registrada.' }}</p>
+              </div>
+
+              <dl class="grid grid-cols-1 gap-4 rounded-xl bg-base-200/50 p-4 sm:grid-cols-2">
+
+                <div>
+                  <dt class="text-xs text-base-content/60">Reportante</dt>
+                  <dd class="mt-1 text-sm font-medium">
+                    {{
+                      detalle.reportante?.username ||
+                      ('Usuario #' + detalle.id_usuario_reporte)
+                    }}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt class="text-xs text-base-content/60">Responsable de atención</dt>
+                  <dd class="mt-1 text-sm font-medium">
+                    {{
+                      detalle.responsable?.username ||
+                      (
+                        detalle.id_responsable !== null
+                          ? 'Usuario #' + detalle.id_responsable
+                          : 'Sin asignar'
+                      )
+                    }}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt class="text-xs text-base-content/60">Origen</dt>
+                  <dd class="mt-1 text-sm">
+                    {{ formatearEtiqueta(detalle.origen) }}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt class="text-xs text-base-content/60">Fecha del reporte</dt>
+                  <dd class="mt-1 text-sm">
+                    {{ detalle.fecha_reporte | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt class="text-xs text-base-content/60">Recorrido asociado</dt>
+                  <dd class="mt-1 text-sm">
+                    {{
+                      detalle.id_recorrido !== null
+                        ? '#' + detalle.id_recorrido
+                        : 'Sin recorrido asociado'
+                    }}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt class="text-xs text-base-content/60">Habilitación administrativa</dt>
+                  <dd class="mt-1 text-sm">
+                    {{ detalle.estado ? 'Habilitada' : 'Deshabilitada' }}
+                  </dd>
+                </div>
+              </dl>
+
+              <!-- RESOLUCIÓN -->
+              <section class="rounded-xl border border-base-300 p-4">
+                <h3 class="font-semibold">
+                  Resolución registrada
+                </h3>
+
+                @if (detalle.fecha_resolucion || detalle.detalle_resolucion) {
+                  @if (detalle.fecha_resolucion) {
+                    <p class="mt-2 text-xs text-base-content/60">
+                      {{ detalle.fecha_resolucion | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
+                    </p>
+                  }
+
+                  <p class="mt-3 whitespace-pre-wrap wrap-break-word text-sm leading-6">{{ detalle.detalle_resolucion || 'Sin detalle de resolución.' }}</p>
+                } @else {
+                  <p class="mt-2 text-sm text-base-content/60">
+                    No hay una resolución registrada.
+                  </p>
+                }
+              </section>
+
+              <p class="text-xs text-base-content/50">
+                Última modificación:
+                {{ detalle.updated_at | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
+              </p>
+            </section>
+          }
+
+          <!-- ============================================= -->
+          <!-- UBICACIÓN -->
+          <!-- ============================================= -->
+          @if (seccionActiva === 'ubicacion') {
+            <section class="space-y-4" aria-label="Ubicación reportada">
+
+              <dl class="grid gap-4 sm:grid-cols-2">
+                <div class="rounded-xl bg-base-200/50 p-4">
+                  <dt class="text-xs text-base-content/60">Zona</dt>
+                  <dd class="mt-1 font-medium">
+                    {{ detalle.zona?.nombre || 'Sin zona asociada' }}
+                  </dd>
+
+                  @if (detalle.zona) {
+                    <dd class="mt-1 text-xs text-base-content/60">
+                      {{ detalle.zona.codigo }}
+                    </dd>
+                  }
+                </div>
+
+                <div class="rounded-xl bg-base-200/50 p-4">
+                  <dt class="text-xs text-base-content/60">Ruta</dt>
+                  <dd class="mt-1 font-medium">
+                    {{ detalle.ruta?.nombre || 'Sin ruta asociada' }}
+                  </dd>
+
+                  @if (detalle.ruta) {
+                    <dd class="mt-1 text-xs text-base-content/60">
+                      {{ detalle.ruta.codigo }}
+                    </dd>
+                  }
+                </div>
+              </dl>
+
+              <div class="rounded-xl border border-base-300 p-4">
+                <h3 class="font-semibold">Dirección o referencia</h3>
+
+                <p class="mt-2 whitespace-pre-wrap wrap-break-word text-sm">{{ detalle.direccion_referencia || 'Sin referencia registrada.' }}</p>
+              </div>
+
+              @if (coordenadas; as punto) {
+                <div class="rounded-xl border border-base-300 p-4">
+                  <h3 class="font-semibold">Coordenadas registradas</h3>
+
+                  <dl class="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+                    <div>
+                      <dt class="text-base-content/60">Latitud</dt>
+                      <dd>{{ punto.latitud }}</dd>
+                    </div>
+
+                    <div>
+                      <dt class="text-base-content/60">Longitud</dt>
+                      <dd>{{ punto.longitud }}</dd>
+                    </div>
+                  </dl>
+
+                  @if (detalle.precision_ubicacion !== null) {
+                    <p class="mt-3 text-xs text-base-content/60">
+                      Precisión reportada:
+                      {{ detalle.precision_ubicacion }} metros
+                    </p>
+                  }
+
+                  @if (enlaceMapa; as enlace) {
+                    <a
+                      [href]="enlace"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="btn btn-outline btn-primary btn-sm mt-4"
+                    >
+                      <i
+                        class="fa-solid fa-arrow-up-right-from-square"
+                        aria-hidden="true"
+                      ></i>
+                      Abrir ubicación en mapa
+                    </a>
+                  }
+                </div>
+              } @else {
+                <p class="rounded-xl bg-base-200/50 p-4 text-sm text-base-content/65">
+                  No hay coordenadas válidas para mostrar esta ubicación.
+                </p>
+              }
+            </section>
+          }
+
+          <!-- ============================================= -->
+          <!-- EVIDENCIAS -->
+          <!-- ============================================= -->
+          @if (seccionActiva === 'evidencias') {
+            <section class="space-y-3" aria-label="Evidencias registradas">
+
+              @for (archivo of archivos; track archivo.id_incidencia_archivo) {
+                <article class="rounded-xl border border-base-300 p-4">
+                  <div class="flex items-start gap-3">
+                    <i
+                      class="fa-solid fa-paperclip mt-1 text-primary"
+                      aria-hidden="true"
+                    ></i>
+
+                    <div class="min-w-0 flex-1">
+                      <h3 class="wrap-break-word text-sm font-semibold">
+                        {{ archivo.nombre_original }}
+                      </h3>
+
+                      <div class="mt-2 flex flex-wrap items-center gap-2">
+                        <span class="badge badge-outline badge-sm">
+                          {{ formatearEtiqueta(archivo.tipo_archivo) }}
+                        </span>
+
+                        <span class="text-xs text-base-content/60">
+                          {{ formatearTamano(archivo.tamanio_bytes) }}
+                        </span>
+
+                        <span class="text-xs text-base-content/60">
+                          {{ archivo.estado ? 'Habilitado' : 'Deshabilitado' }}
+                        </span>
+                      </div>
+
+                      @if (archivo.descripcion) {
+                        <p class="mt-3 whitespace-pre-wrap wrap-break-word text-sm">{{ archivo.descripcion }}</p>
+                      }
+
+                      <p class="mt-3 text-xs text-base-content/55">
+                        {{ archivo.created_at | date:'dd/MM/yyyy HH:mm':'-0500' }}
+                        · Usuario #{{ archivo.id_usuario_carga }}
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              } @empty {
+                <div class="rounded-xl bg-base-200/50 p-8 text-center">
+                  <i
+                    class="fa-regular fa-folder-open text-3xl text-base-content/30"
+                    aria-hidden="true"
+                  ></i>
+
+                  <p class="mt-3 text-sm text-base-content/60">
+                    No hay evidencias disponibles para esta incidencia.
+                  </p>
+                </div>
+              }
+
+              @if (archivos.length) {
+                <p class="text-xs text-base-content/55">
+                  Esta sección muestra los datos de los archivos registrados.
+                </p>
+              }
+            </section>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- ================================================= -->
+    <!-- ACCIONES -->
+    <!-- ================================================= -->
+    <footer
+      class="flex shrink-0 flex-wrap justify-end gap-3
+             border-t border-base-300 px-5 py-4 sm:px-6"
+    >
+      @if (incidencia) {
+        <button
+          type="button"
+          class="btn btn-outline btn-sm"
+          [disabled]="isLoading"
+          (click)="cargarDetalle()"
+        >
+          <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+          Actualizar
+        </button>
+      }
+
+      <button
+        type="button"
+        class="btn btn-primary btn-sm"
+        (click)="cerrarModal()"
+      >
+        Cerrar
+      </button>
+    </footer>
+  </section>
+</dialog>

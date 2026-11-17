@@ -843,3 +843,18 @@
 
   </section>
 </div>
+
+<!-- MODAL DE DETALLE -->
+<incidencia-view [mostrarModal]="mostrarModalView" [idIncidencia]="incidencia_id" (modalCerrado)="cerrarModalInfo()" />
+
+<!-- MODAL RESPONSABLE -->
+<incidencia-responsable-form [mostrarModal]="mostrarModalResponsable" [incidencia]="incidenciaSeleccionada"
+  (modalCerrado)="cerrarModalResponsable()" (guardado)="onIncidenciaActualizada($event)" />
+
+<!-- MODAL INCIDENCIA ESTADO-->
+<incidencia-estado-form [mostrarModal]="mostrarModalEstado" [incidencia]="incidenciaSeleccionada"
+  (modalCerrado)="cerrarModalEstado()" (guardado)="onIncidenciaActualizada($event)" />
+
+<!-- MODAL INCIDENCIA ARCHIVOS -->
+<incidencia-archivos-form [mostrarModal]="mostrarModalArchivos" [incidencia]="incidenciaSeleccionada"
+  (modalCerrado)="cerrarModalArchivos()" (archivosGuardados)="onArchivosIncidenciaGuardados()" />

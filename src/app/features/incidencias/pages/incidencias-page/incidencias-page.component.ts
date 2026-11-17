@@ -13,6 +13,12 @@ import { IncidenciasService } from '../../services/incidencias.service';
 // Interfaces
 import { IncidenciaId, IncidenciaTipo, IncidenciaPrioridad, IncidenciaOrigen, IncidenciaEstado, IncidenciaListadoItem, IncidenciaDetalleData, IncidenciasPaginadasFilters, IncidenciasSortBy, IncidenciasSortOrder, ChangeIncidenciaHabilitacionResponse, DeleteIncidenciaResponse } from '../../interfaces';
 
+// Componentes
+import { IncidenciaViewComponent } from '../components/incidencia-view/incidencia-view.component';
+import { IncidenciaResponsableFormComponent } from '../components/incidencia-responsable-form/incidencia-responsable-form.component';
+import { IncidenciaEstadoFormComponent } from '../components/incidencia-estado-form/incidencia-estado-form.component';
+import { IncidenciaArchivosFormComponent } from '../components/incidencia-archivos-form/incidencia-archivos-form.component';
+
 @Component({
   selector: 'app-incidencias-page',
   standalone: true,
@@ -21,6 +27,10 @@ import { IncidenciaId, IncidenciaTipo, IncidenciaPrioridad, IncidenciaOrigen, In
     DatePipe,
     FormsModule,
     UppercaseDirective,
+    IncidenciaViewComponent,
+    IncidenciaResponsableFormComponent,
+    IncidenciaEstadoFormComponent,
+    IncidenciaArchivosFormComponent,
   ],
   templateUrl: './incidencias-page.component.html',
   styles: ``,
@@ -33,7 +43,7 @@ export class IncidenciasPageComponent implements OnInit, OnDestroy {
   // *********************************************************
 
   incidencias: IncidenciaListadoItem[] = [];
-  incidencia_id: IncidenciaId | null = null;
+
   incidenciaSeleccionada: IncidenciaListadoItem | null = null;
 
   isLoading = true;
@@ -42,9 +52,14 @@ export class IncidenciasPageComponent implements OnInit, OnDestroy {
   // *********************************************************
   // MODALES
   // *********************************************************
+
+  // Detalle
+  incidencia_id: IncidenciaId | null = null;
   mostrarModalView = false;
+
   mostrarModalResponsable = false;
   mostrarModalEstado = false;
+  mostrarModalArchivos = false;
 
   // *********************************************************
   // BÚSQUEDA
@@ -732,9 +747,7 @@ export class IncidenciasPageComponent implements OnInit, OnDestroy {
   // MODAL: DETALLE
   // *********************************************************
 
-  verIncidencia(
-    incidencia: IncidenciaListadoItem,
-  ): void {
+  verIncidencia(incidencia: IncidenciaListadoItem): void {
     this.incidencia_id = incidencia.id_incidencia;
     this.mostrarModalView = true;
   }
@@ -786,6 +799,36 @@ export class IncidenciasPageComponent implements OnInit, OnDestroy {
     if (!this.mostrarModalResponsable) {
       this.incidenciaSeleccionada = null;
     }
+  }
+
+  // *********************************************************
+  // MODAL: INCIDENCIA ARCHIVOS FORM
+  // *********************************************************
+
+  abrirModalArchivos(incidencia: IncidenciaListadoItem): void {
+    this.cerrarModalInfo();
+
+    this.incidenciaSeleccionada = {
+      ...incidencia,
+    };
+
+    this.mostrarModalArchivos = true;
+  }
+
+  cerrarModalArchivos(): void {
+    this.mostrarModalArchivos = false;
+
+    if (
+      !this.mostrarModalResponsable &&
+      !this.mostrarModalEstado
+    ) {
+      this.incidenciaSeleccionada = null;
+    }
+  }
+
+  onArchivosIncidenciaGuardados(): void {
+    this.cerrarModalArchivos();
+    this.getIncidenciasPaginated();
   }
 
   // *********************************************************

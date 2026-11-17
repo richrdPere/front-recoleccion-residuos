@@ -1,183 +1,207 @@
 <div class="mx-auto max-w-3xl px-4 py-7 sm:px-6">
+  <app-public-page-header titulo="Registro de avisos" descripcion="Registra tus datos y elige los avisos de tu sector."
+    etiqueta="Avisos ciudadanos" icono="fa-regular fa-bell" />
 
-      <app-public-page-header
-        titulo="Registro de avisos"
-        descripcion="Revisa el formulario de registro voluntario y elige los avisos de tu interés."
-        etiqueta="Avisos ciudadanos"
-        icono="fa-regular fa-bell"
-      />
+  @if (cargandoInicial) {
+  <div class="mb-5 flex items-center gap-3 rounded-xl bg-base-200 p-4" role="status">
+    <span class="loading loading-spinner loading-sm"></span>
+    Cargando sectores y condiciones del registro…
+  </div>
+  }
 
-      <p
-        role="note"
-        class="mb-6 rounded-2xl bg-warning/10 p-4 text-sm leading-6"
-      >
-        Formulario de demostración. La suscripción y el permiso
-        de notificaciones del navegador están pendientes de integración.
+  @if (errorMensaje) {
+  <div class="alert alert-error mb-5" role="alert">
+    <span>{{ errorMensaje }}</span>
+  </div>
+
+  @if (!consentimiento || zonas.length === 0) {
+  <button type="button" class="btn btn-outline btn-sm mb-5" [disabled]="cargandoInicial" (click)="cargarDatos()">
+    Reintentar carga
+  </button>
+  }
+  }
+
+  @if (registrado) {
+  <div class="alert alert-success" role="status">
+    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+
+    <span>{{ mensaje }}</span>
+  </div>
+  } @else {
+  <form [formGroup]="form" (ngSubmit)="registrar()" novalidate [attr.aria-busy]="isSaving" class="space-y-6 rounded-3xl border border-base-300
+             bg-base-100 p-5 shadow-sm sm:p-7">
+    <!-- Nombre -->
+    <div>
+      <label for="aviso-nombre" class="mb-2 block text-sm font-semibold">
+        Nombre completo
+      </label>
+
+      <input id="aviso-nombre" type="text" autocomplete="name" maxlength="100" class="input input-bordered w-full"
+        formControlName="nombre" [attr.aria-invalid]="invalido('nombre')" />
+
+      @if (invalido('nombre')) {
+      <p class="mt-1 text-xs text-error">
+        Ingresa un nombre de entre 2 y 100 caracteres.
+      </p>
+      }
+    </div>
+
+    <!-- Celular -->
+    <div>
+      <label for="aviso-celular" class="mb-2 block text-sm font-semibold">
+        Celular
+      </label>
+
+      <input id="aviso-celular" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="9"
+        placeholder="9XXXXXXXX" class="input input-bordered w-full" formControlName="celular"
+        [attr.aria-invalid]="invalido('celular')" />
+
+      @if (invalido('celular')) {
+      <p class="mt-1 text-xs text-error">
+        Ingresa 9 dígitos comenzando con 9.
+      </p>
+      }
+    </div>
+
+    <!-- Sector -->
+    <div>
+      <label for="aviso-sector" class="mb-2 block text-sm font-semibold">
+        Sector
+      </label>
+
+      <select id="aviso-sector" class="select select-bordered w-full" formControlName="idZona" (change)="cambiarZona()"
+        [attr.aria-invalid]="invalido('idZona')">
+        <option value="">Selecciona un sector</option>
+
+        @for (zona of zonas; track zona.id_zona) {
+        <option [value]="zona.id_zona">
+          {{ zona.nombre }}
+        </option>
+        }
+      </select>
+
+      @if (invalido('idZona')) {
+      <p class="mt-1 text-xs text-error">
+        Selecciona un sector.
+      </p>
+      }
+    </div>
+
+    <!-- Ruta -->
+    <div>
+      <label for="aviso-ruta" class="mb-2 block text-sm font-semibold">
+        Ruta de recolección
+      </label>
+
+      <select id="aviso-ruta" class="select select-bordered w-full" formControlName="idRuta"
+        [attr.aria-invalid]="invalido('idRuta')">
+        <option value="">Selecciona una ruta</option>
+
+        @for (ruta of rutas; track ruta.id_ruta) {
+        <option [value]="ruta.id_ruta">
+          {{ ruta.codigo }} · {{ ruta.nombre }}
+        </option>
+        }
+      </select>
+
+      @if (cargandoRutas) {
+      <p class="mt-1 text-xs text-base-content/60">
+        Cargando rutas…
+      </p>
+      } @else if (
+      form.controls.idZona.value &&
+      rutas.length === 0
+      ) {
+      <p class="mt-1 text-xs text-warning">
+        No hay rutas activas disponibles para este sector.
+      </p>
+      }
+
+      @if (invalido('idRuta')) {
+      <p class="mt-1 text-xs text-error">
+        Selecciona una ruta.
+      </p>
+      }
+    </div>
+
+    <!-- Preferencias -->
+    <fieldset class="space-y-4 rounded-2xl bg-base-200 p-4">
+      <legend class="px-1 text-sm font-bold">
+        Preferencias de avisos
+      </legend>
+
+      <label class="flex items-start gap-3">
+        <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" formControlName="inicio" />
+
+        <span class="text-sm">
+          Inicio del recorrido de recolección
+        </span>
+      </label>
+
+      <label class="flex items-start gap-3">
+        <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" formControlName="cambios" />
+
+        <span class="text-sm">
+          Cambios de ruta, horario y cancelaciones
+        </span>
+      </label>
+
+      <label class="flex items-start gap-3">
+        <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" formControlName="incidencias" />
+
+        <span class="text-sm">
+          Incidencias públicas que afecten el servicio
+        </span>
+      </label>
+    </fieldset>
+
+    <!-- Consentimiento real obtenido del backend -->
+    @if (consentimiento; as aviso) {
+    <section class="rounded-2xl border border-base-300 p-4">
+      <p class="text-sm leading-6">
+        {{ aviso.texto }}
       </p>
 
-      <form
-        [formGroup]="form"
-        (ngSubmit)="revisar()"
-        novalidate
-        class="space-y-6 rounded-3xl border border-base-300
-               bg-base-100 p-5 shadow-sm sm:p-7"
-      >
-        <div>
-          <label for="aviso-nombre" class="mb-2 block text-sm font-semibold">
-            Nombre
-          </label>
+      <p class="mt-2 text-xs text-base-content/50">
+        Versión: {{ aviso.version }}
+      </p>
 
-          <input
-            id="aviso-nombre"
-            type="text"
-            autocomplete="name"
-            maxlength="100"
-            class="input input-bordered w-full"
-            formControlName="nombre"
-            [attr.aria-invalid]="invalido('nombre')"
-          />
+      <label class="mt-4 flex items-start gap-3">
+        <input type="checkbox" class="checkbox checkbox-primary checkbox-sm" formControlName="acepta"
+          [attr.aria-invalid]="invalido('acepta')" />
 
-          @if (invalido('nombre')) {
-            <p class="mt-1 text-xs text-error">
-              Ingresa un nombre de entre 2 y 100 caracteres.
-            </p>
-          }
-        </div>
+        <span class="text-sm">
+          Acepto el tratamiento de los datos descrito arriba.
+        </span>
+      </label>
 
-        <div>
-          <label for="aviso-celular" class="mb-2 block text-sm font-semibold">
-            Celular
-          </label>
+      @if (invalido('acepta')) {
+      <p class="mt-2 text-xs text-error">
+        Debes aceptar para guardar el registro.
+      </p>
+      }
+    </section>
+    }
 
-          <input
-            id="aviso-celular"
-            type="tel"
-            inputmode="numeric"
-            autocomplete="tel-national"
-            maxlength="9"
-            placeholder="9XXXXXXXX"
-            class="input input-bordered w-full"
-            formControlName="celular"
-            [attr.aria-invalid]="invalido('celular')"
-          />
+    <p class="text-xs leading-5 text-base-content/60">
+      Guardar el registro no habilita todavía las notificaciones
+      del navegador. Su vinculación se realiza por separado.
+    </p>
 
-          @if (invalido('celular')) {
-            <p class="mt-1 text-xs text-error">
-              Ingresa un celular peruano de 9 dígitos que comience con 9.
-            </p>
-          }
-        </div>
-
-        <div>
-          <label for="aviso-ruta" class="mb-2 block text-sm font-semibold">
-            Ruta de tu sector
-          </label>
-
-          <select
-            id="aviso-ruta"
-            class="select select-bordered w-full"
-            formControlName="idRuta"
-            [attr.aria-invalid]="invalido('idRuta')"
-          >
-            <option value="">Selecciona una ruta</option>
-
-            @for (ruta of rutas; track ruta.idRuta) {
-              <option [value]="ruta.idRuta">
-                {{ ruta.sector }} · {{ ruta.nombre }}
-              </option>
-            }
-          </select>
-
-          @if (invalido('idRuta')) {
-            <p class="mt-1 text-xs text-error">
-              Selecciona una ruta.
-            </p>
-          }
-        </div>
-
-        <fieldset class="space-y-4 rounded-2xl bg-base-200 p-4">
-          <legend class="px-1 text-sm font-bold">
-            Preferencias de avisos
-          </legend>
-
-          <label class="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              class="checkbox checkbox-primary checkbox-sm mt-1"
-              formControlName="inicio"
-            />
-
-            <span>
-              <span class="block text-sm font-semibold">
-                Inicio de recorrido
-              </span>
-              <span class="mt-1 block text-xs text-base-content/60">
-                Avisos cuando comience el servicio de la ruta.
-              </span>
-            </span>
-          </label>
-
-          <label class="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              class="checkbox checkbox-primary checkbox-sm mt-1"
-              formControlName="cambios"
-            />
-
-            <span class="text-sm">
-              Cambios de horario y cancelaciones
-            </span>
-          </label>
-
-          <label class="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              class="checkbox checkbox-primary checkbox-sm mt-1"
-              formControlName="incidencias"
-            />
-
-            <span class="text-sm">
-              Incidencias públicas que afecten el servicio
-            </span>
-          </label>
-        </fieldset>
-
-        <div>
-          <label class="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              class="checkbox checkbox-primary checkbox-sm mt-1"
-              formControlName="acepta"
-              [attr.aria-invalid]="invalido('acepta')"
-            />
-
-            <span class="text-sm leading-6">
-              He leído el
-              <a routerLink="/privacidad" class="link link-primary">
-                aviso de privacidad de demostración
-              </a>
-              para revisar este formulario.
-            </span>
-          </label>
-
-          @if (invalido('acepta')) {
-            <p class="mt-2 text-xs text-error">
-              Confirma la lectura del aviso para revisar el formulario.
-            </p>
-          }
-        </div>
-
-        <button type="submit" class="btn btn-primary w-full sm:w-auto">
-          Revisar preferencias
-        </button>
-
-        @if (mensaje()) {
-          <p
-            role="status"
-            class="rounded-2xl bg-info/10 p-4 text-sm leading-6"
-          >
-            {{ mensaje() }}
-          </p>
-        }
-      </form>
-    </div>
+    <button type="submit" class="btn btn-primary w-full sm:w-auto" [disabled]="
+          isSaving ||
+          cargandoInicial ||
+          cargandoRutas ||
+          !consentimiento ||
+          form.invalid
+        ">
+      @if (isSaving) {
+      <span class="loading loading-spinner loading-sm"></span>
+      Guardando…
+      } @else {
+      Guardar registro
+      }
+    </button>
+  </form>
+  }
+</div>
