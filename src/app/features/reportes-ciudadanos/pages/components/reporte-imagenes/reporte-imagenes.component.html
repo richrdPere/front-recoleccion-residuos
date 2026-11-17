@@ -1,0 +1,68 @@
+<dialog #dialogo class="modal" aria-labelledby="reporte-imagenes-titulo" [attr.aria-busy]="cargando"
+  (cancel)="cerrar($event)" (close)="notificarCierre()">
+  <section class="modal-box flex max-h-[90dvh] w-11/12 max-w-4xl
+           flex-col overflow-hidden rounded-2xl p-0">
+    <header class="flex shrink-0 items-center justify-between gap-4
+             border-b border-base-300 px-5 py-4">
+      <h2 id="reporte-imagenes-titulo" class="text-lg font-bold">
+        Imágenes del reporte
+      </h2>
+
+      <button type="button" autofocus class="btn btn-circle btn-ghost btn-sm" aria-label="Cerrar imágenes"
+        (click)="cerrar()">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <div class="min-h-0 flex-1 overflow-y-auto p-5">
+      @if (cargando) {
+      <div class="flex items-center justify-center gap-3 py-16" role="status">
+        <span class="loading loading-spinner text-primary"></span>
+        <span>Consultando imágenes…</span>
+      </div>
+      } @else if (errorMensaje) {
+      <div class="alert alert-error" role="alert">
+        <span>{{ errorMensaje }}</span>
+
+        <button type="button" class="btn btn-sm" (click)="cargarImagenes()">
+          Reintentar
+        </button>
+      </div>
+      } @else if (imagenActual; as imagen) {
+      <!--
+          El track destruye el visor anterior al cambiar de imagen:
+          cancela su consulta y libera su URL temporal.
+        -->
+      @for (archivo of [imagen]; track archivo.id_incidencia_archivo) {
+      <incidencia-evidencia-imagen [idIncidencia]="idIncidencia" [idArchivo]="archivo.id_incidencia_archivo"
+        [descripcion]="archivo.descripcion || archivo.nombre_original" />
+      }
+
+      <nav class="mt-5 flex items-center justify-between gap-3" aria-label="Navegación de imágenes">
+        <button type="button" class="btn btn-outline btn-sm" [disabled]="indiceActual === 0" (click)="anterior()">
+          <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+          Anterior
+        </button>
+
+        <span class="text-sm text-base-content/65" aria-live="polite">
+          {{ indiceActual + 1 }} / {{ imagenes.length }}
+        </span>
+
+        <button type="button" class="btn btn-outline btn-sm" [disabled]="indiceActual === imagenes.length - 1"
+          (click)="siguiente()">
+          Siguiente
+          <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        </button>
+      </nav>
+      } @else {
+      <div class="rounded-xl bg-base-200/50 p-10 text-center">
+        <i class="fa-regular fa-images text-4xl text-base-content/30" aria-hidden="true"></i>
+
+        <p class="mt-4 text-sm text-base-content/65">
+          Este reporte no tiene imágenes disponibles.
+        </p>
+      </div>
+      }
+    </div>
+  </section>
+</dialog>

@@ -10,11 +10,15 @@ import { IncidenciaDetalleData, IncidenciaEstado, IncidenciaId, IncidenciaPriori
 
 type SeccionDetalle = 'informacion' | 'ubicacion' | 'evidencias';
 
+// Componentes
+import { IncidenciaEvidenciaImagenComponent } from '../incidencia-evidencia-imagen/incidencia-evidencia-imagen.component';
+
 @Component({
   selector: 'incidencia-view',
   standalone: true,
   imports: [
     CommonModule,
+    IncidenciaEvidenciaImagenComponent,
   ],
   templateUrl: './incidencia-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,6 +30,8 @@ export class IncidenciaViewComponent implements OnChanges, AfterViewInit, OnDest
   // ==========================================================
   @Input() mostrarModal = false;
   @Input() idIncidencia: IncidenciaId | null = null;
+  @Input() seccionInicial: SeccionDetalle = 'informacion';
+  @Input() tituloModal = 'Detalle de incidencia';
 
   // Permite que el padre solicite actualizar un detalle abierto.
   @Input() actualizacion = 0;
@@ -64,16 +70,17 @@ export class IncidenciaViewComponent implements OnChanges, AfterViewInit, OnDest
 
       this.incidencia = null;
       this.errorMensaje = '';
+      this.isLoading = false;
 
       this.sincronizarDialogo();
       return;
     }
 
-    const seAbrio =
-      changes['mostrarModal']?.currentValue === true;
+    const seAbrio = changes['mostrarModal']?.currentValue === true;
 
     const cambioId = !!changes['idIncidencia'];
     const actualizar = !!changes['actualizacion'];
+    const cambioSeccion = !!changes['seccionInicial'];
 
     if (seAbrio || cambioId) {
       this.seccionActiva = 'informacion';

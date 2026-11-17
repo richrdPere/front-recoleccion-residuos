@@ -192,29 +192,35 @@
       <!-- ACCIONES -->
       <!-- ================================================= -->
       <footer class="flex shrink-0 flex-col-reverse gap-3
-               border-t border-base-300 px-5 py-4
-               sm:flex-row sm:justify-end sm:px-6">
-        <button type="button" class="btn btn-ghost rounded-xl" [disabled]="isSaving" (click)="cerrarModal()">
-          Cancelar
-        </button>
+               border-t border-base-300 bg-base-100
+               px-5 py-4 sm:flex-row sm:items-center
+               sm:justify-center sm:px-6">
 
-        <button type="submit" class="btn rounded-xl" [class.btn-primary]="!retirando" [class.btn-warning]="retirando"
-          [disabled]="!puedeGuardar">
-          @if (isSaving) {
-          <span class="loading loading-spinner loading-sm"></span>
-          } @else {
-          <i class="fa-solid" [class.fa-user-check]="!retirando" [class.fa-user-minus]="retirando"
-            aria-hidden="true"></i>
-          }
+        <div class="flex flex-col-reverse gap-5 sm:flex-row sm:justify-end">
+          <button type="button" class="btn btn-error" [disabled]="isSaving" (click)="cerrarModal()">
+            Cancelar
+          </button>
 
-          {{
-          isSaving
-          ? 'Guardando...'
-          : retirando
-          ? 'Retirar responsable'
-          : 'Guardar responsable'
-          }}
-        </button>
+          <button type="submit" class="btn btn-primary" [class.btn-primary]="!retirando" [class.btn-warning]="retirando"
+            [disabled]="!puedeGuardar">
+            @if (isSaving) {
+            <span class="loading loading-spinner loading-sm"></span>
+            } @else {
+            <i class="fa-solid" [class.fa-user-check]="!retirando" [class.fa-user-minus]="retirando"
+              aria-hidden="true"></i>
+            }
+
+            {{
+            isSaving
+            ? 'Guardando...'
+            : retirando
+            ? 'Retirar responsable'
+            : 'Guardar responsable'
+            }}
+          </button>
+        </div>
+
+
       </footer>
     </form>
   </section>

@@ -6,12 +6,14 @@
   <!-- ================================================= -->
   <!-- ENCABEZADO -->
   <!-- ================================================= -->
-  <header class="mb-5 flex flex-col gap-4
-           sm:flex-row sm:items-center sm:justify-between">
+  <header class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
     <div class="flex min-w-0 items-center gap-3">
 
-      <div class="flex h-12 w-12 shrink-0 items-center justify-center
-               rounded-2xl bg-warning/15 text-warning" aria-hidden="true">
+      <div class="flex h-12 w-12 shrink-0
+                 items-center justify-center
+                 rounded-2xl bg-primary/10
+                 text-primary" aria-hidden="true">
         <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
       </div>
 
@@ -29,11 +31,11 @@
 
     </div>
 
-    <button type="button" class="btn btn-outline h-10 min-h-10 gap-2 rounded-xl" [disabled]="isLoading"
+    <!-- <button type="button" class="btn btn-outline h-10 min-h-10 gap-2 rounded-xl" [disabled]="isLoading"
       (click)="getIncidenciasPaginated()">
       <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
       Actualizar
-    </button>
+    </button> -->
   </header>
 
   <!-- ================================================= -->
@@ -41,17 +43,20 @@
   <!-- ================================================= -->
   <section class="mb-6 overflow-hidden rounded-2xl
            border border-base-300 bg-base-100 shadow-sm" aria-label="Filtros de incidencias">
-    <div class="grid grid-cols-1
-             lg:grid-cols-[minmax(0,1fr)_170px]">
 
-      <!-- CAMPOS -->
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_170px]">
+
+      <!-- ================================================= -->
+      <!-- CAMPOS DE FILTRO -->
+      <!-- ================================================= -->
       <div class="min-w-0 p-4 sm:p-5">
 
         <div class="grid grid-cols-1 items-end gap-4
-                 sm:grid-cols-2 xl:grid-cols-4">
+               sm:grid-cols-2
+               xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
 
           <!-- BÚSQUEDA -->
-          <div class="min-w-0 sm:col-span-2">
+          <div class="min-w-0">
             <label for="incidencias-search" class="mb-1.5 block text-xs font-semibold
                      uppercase tracking-wide text-base-content/60">
               Buscar incidencia
@@ -59,16 +64,18 @@
 
             <div class="relative">
               <input id="incidencias-search" type="text" class="input input-bordered h-11 min-h-11
-                       w-full min-w-0 rounded-xl bg-base-100
-                       pl-11 pr-4 focus:outline-none
-                       focus:ring-2 focus:ring-primary/30" placeholder="Buscar por título o descripción"
-                autocomplete="off" maxlength="150" [(ngModel)]="searchBusqueda" (ngModelChange)="onSearchChange()"
-                appUppercase />
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pl-11 pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30" placeholder="Buscar por título o descripción"
+                autocomplete="off" maxlength="150"
+                [ngClass]="searchBusqueda.trim() ? 'border-primary' : 'border-base-500'" [(ngModel)]="searchBusqueda"
+                (ngModelChange)="onSearchChange()" appUppercase />
 
-              <span class="pointer-events-none absolute inset-y-0 left-0
-                       z-10 flex w-11 items-center justify-center
-                       text-base-content/50" aria-hidden="true">
-                <i class="fa-solid fa-magnifying-glass"></i>
+              <span class="pointer-events-none absolute inset-y-0 left-0 z-10
+                     flex w-11 items-center justify-center
+                     text-base-content/50" aria-hidden="true">
+                <i class="fa-solid fa-magnifying-glass text-base"></i>
               </span>
             </div>
           </div>
@@ -76,13 +83,16 @@
           <!-- TIPO -->
           <div class="min-w-0">
             <label for="incidencias-tipo" class="mb-1.5 block text-xs font-semibold
-                     uppercase tracking-wide text-base-content/60">
+                   uppercase tracking-wide text-base-content/60">
               Tipo de incidencia
             </label>
 
             <select id="incidencias-tipo" class="select select-bordered h-11 min-h-11
-                     w-full min-w-0 rounded-xl bg-base-100" [(ngModel)]="filtroTipo"
-              (ngModelChange)="onFiltroChange()">
+                w-full min-w-0 rounded-xl bg-base-200
+                pl-4 pr-10 transition-colors
+                focus:border-primary focus:outline-none
+                focus:ring-2 focus:ring-primary/30" [ngClass]="filtroTipo ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="filtroTipo" (ngModelChange)="onFiltroChange()">
               <option value="">Todos los tipos</option>
 
               @for (tipo of tiposIncidencia; track tipo) {
@@ -96,13 +106,15 @@
           <!-- PRIORIDAD -->
           <div class="min-w-0">
             <label for="incidencias-prioridad" class="mb-1.5 block text-xs font-semibold
-                     uppercase tracking-wide text-base-content/60">
+                   uppercase tracking-wide text-base-content/60">
               Prioridad
             </label>
 
             <select id="incidencias-prioridad" class="select select-bordered h-11 min-h-11
-                     w-full min-w-0 rounded-xl bg-base-100" [(ngModel)]="filtroPrioridad"
-              (ngModelChange)="onFiltroChange()">
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [ngClass]="filtroPrioridad ? 'border-primary' : 'border-base-500'"
+              [(ngModel)]="filtroPrioridad" (ngModelChange)="onFiltroChange()">
               <option value="">Todas las prioridades</option>
 
               @for (prioridad of prioridades; track prioridad) {
@@ -111,86 +123,6 @@
               </option>
               }
             </select>
-          </div>
-
-          <!-- ESTADO DE ATENCIÓN -->
-          <div class="min-w-0">
-            <label for="incidencias-estado" class="mb-1.5 block text-xs font-semibold
-                     uppercase tracking-wide text-base-content/60">
-              Estado de atención
-            </label>
-
-            <select id="incidencias-estado" class="select select-bordered h-11 min-h-11
-                     w-full min-w-0 rounded-xl bg-base-100" [(ngModel)]="filtroEstadoIncidencia"
-              (ngModelChange)="onFiltroChange()">
-              <option value="">Todos los estados</option>
-
-              @for (estado of estadosIncidencia; track estado) {
-              <option [value]="estado">
-                {{ estado.split('_').join(' ') }}
-              </option>
-              }
-            </select>
-          </div>
-
-          <!-- HABILITACIÓN -->
-          <div class="min-w-0">
-            <label for="incidencias-habilitacion" class="mb-1.5 block text-xs font-semibold
-                     uppercase tracking-wide text-base-content/60">
-              Habilitación
-            </label>
-
-            <select id="incidencias-habilitacion" class="select select-bordered h-11 min-h-11
-                     w-full min-w-0 rounded-xl bg-base-100" [(ngModel)]="filtroHabilitacion"
-              (ngModelChange)="onFiltroChange()">
-              <option value="">Todas</option>
-              <option value="true">Habilitadas</option>
-              <option value="false">Deshabilitadas</option>
-            </select>
-          </div>
-
-          <!-- ORIGEN -->
-          <div class="min-w-0">
-            <label for="incidencias-origen" class="mb-1.5 block text-xs font-semibold
-                     uppercase tracking-wide text-base-content/60">
-              Origen
-            </label>
-
-            <select id="incidencias-origen" class="select select-bordered h-11 min-h-11
-                     w-full min-w-0 rounded-xl bg-base-100" [(ngModel)]="filtroOrigen"
-              (ngModelChange)="onFiltroChange()">
-              <option value="">Todos los orígenes</option>
-
-              @for (origen of origenes; track origen) {
-              <option [value]="origen">
-                {{ origen.split('_').join(' ') }}
-              </option>
-              }
-            </select>
-          </div>
-
-          <!-- FECHA INICIAL -->
-          <div class="min-w-0">
-            <label for="incidencias-fecha-desde" class="mb-1.5 block text-xs font-semibold
-                     uppercase tracking-wide text-base-content/60">
-              Fecha de reporte desde
-            </label>
-
-            <input id="incidencias-fecha-desde" type="date" class="input input-bordered h-11 min-h-11
-                     w-full min-w-0 rounded-xl bg-base-100" [(ngModel)]="fechaDesde" [max]="fechaHasta || null"
-              (ngModelChange)="onFiltroChange()" />
-          </div>
-
-          <!-- FECHA FINAL -->
-          <div class="min-w-0">
-            <label for="incidencias-fecha-hasta" class="mb-1.5 block text-xs font-semibold
-                     uppercase tracking-wide text-base-content/60">
-              Fecha de reporte hasta
-            </label>
-
-            <input id="incidencias-fecha-hasta" type="date" class="input input-bordered h-11 min-h-11
-                     w-full min-w-0 rounded-xl bg-base-100" [(ngModel)]="fechaHasta" [min]="fechaDesde || null"
-              (ngModelChange)="onFiltroChange()" />
           </div>
 
           <!-- LIMPIAR -->
@@ -215,101 +147,63 @@
             Filtros adicionales y ordenamiento
           </summary>
 
-          <div class="mt-4 grid grid-cols-1 items-end gap-4
-                   sm:grid-cols-2 xl:grid-cols-4">
+          <div class="mt-4 grid grid-cols-1 items-end gap-4 sm:grid-cols-2
+          xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
 
-            <!-- ID REPORTANTE -->
+            <!-- ESTADO DE ATENCIÓN -->
             <div class="min-w-0">
-              <label for="incidencias-reportante" class="mb-1.5 block text-xs font-semibold
-                       uppercase tracking-wide text-base-content/60">
-                ID del reportante
+              <label for="incidencias-estado" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+                Estado de atención
               </label>
 
-              <input id="incidencias-reportante" type="text" inputmode="numeric" class="input input-bordered h-11 min-h-11
-                       w-full rounded-xl" placeholder="Identificador de usuario" autocomplete="off"
-                [(ngModel)]="filtroUsuarioReporte" (change)="onFiltroChange()" />
-            </div>
+              <select id="incidencias-estado" class="select select-bordered h-11 min-h-11
+                w-full min-w-0 rounded-xl bg-base-200
+                pl-4 pr-10 transition-colors
+                focus:border-primary focus:outline-none
+                focus:ring-2 focus:ring-primary/30"
+                [ngClass]="filtroEstadoIncidencia ? 'border-primary' : 'border-base-500'"
+                [(ngModel)]="filtroEstadoIncidencia" (ngModelChange)="onFiltroChange()">
+                <option value="">Todos los estados</option>
 
-            <!-- ID RESPONSABLE -->
-            <div class="min-w-0">
-              <label for="incidencias-responsable" class="mb-1.5 block text-xs font-semibold
-                       uppercase tracking-wide text-base-content/60">
-                ID del responsable
-              </label>
-
-              <input id="incidencias-responsable" type="text" inputmode="numeric" class="input input-bordered h-11 min-h-11
-                       w-full rounded-xl" placeholder="Identificador de usuario" autocomplete="off"
-                [(ngModel)]="filtroResponsable" (change)="onFiltroChange()" />
-            </div>
-
-            <!-- ID RECORRIDO -->
-            <div class="min-w-0">
-              <label for="incidencias-recorrido" class="mb-1.5 block text-xs font-semibold
-                       uppercase tracking-wide text-base-content/60">
-                ID del recorrido
-              </label>
-
-              <input id="incidencias-recorrido" type="text" inputmode="numeric" class="input input-bordered h-11 min-h-11
-                       w-full rounded-xl" placeholder="Identificador del recorrido" autocomplete="off"
-                [(ngModel)]="filtroRecorrido" (change)="onFiltroChange()" />
-            </div>
-
-            <!-- ID ZONA -->
-            <div class="min-w-0">
-              <label for="incidencias-zona" class="mb-1.5 block text-xs font-semibold
-                       uppercase tracking-wide text-base-content/60">
-                ID de la zona
-              </label>
-
-              <input id="incidencias-zona" type="text" inputmode="numeric" class="input input-bordered h-11 min-h-11
-                       w-full rounded-xl" placeholder="Identificador de zona" autocomplete="off"
-                [(ngModel)]="filtroZona" (change)="onFiltroChange()" />
-            </div>
-
-            <!-- ID RUTA -->
-            <div class="min-w-0">
-              <label for="incidencias-ruta" class="mb-1.5 block text-xs font-semibold
-                       uppercase tracking-wide text-base-content/60">
-                ID de la ruta
-              </label>
-
-              <input id="incidencias-ruta" type="text" inputmode="numeric" class="input input-bordered h-11 min-h-11
-                       w-full rounded-xl" placeholder="Identificador de ruta" autocomplete="off"
-                [(ngModel)]="filtroRuta" (change)="onFiltroChange()" />
-            </div>
-
-            <!-- ORDENAR POR -->
-            <div class="min-w-0">
-              <label for="incidencias-sort-by" class="mb-1.5 block text-xs font-semibold
-                       uppercase tracking-wide text-base-content/60">
-                Ordenar por
-              </label>
-
-              <select id="incidencias-sort-by" class="select select-bordered h-11 min-h-11
-                       w-full rounded-xl" [(ngModel)]="sortBy" (ngModelChange)="onFiltroChange()">
-                <option value="fecha_reporte">Fecha de reporte</option>
-                <option value="updated_at">Última actualización</option>
-                <option value="created_at">Fecha de registro</option>
-                <option value="id_incidencia">Identificador</option>
-                <option value="titulo">Título</option>
-                <option value="tipo">Tipo</option>
-                <option value="prioridad">Prioridad</option>
-                <option value="estado_incidencia">Estado de atención</option>
+                @for (estado of estadosIncidencia; track estado) {
+                <option [value]="estado">
+                  {{ estado.split('_').join(' ') }}
+                </option>
+                }
               </select>
             </div>
 
-            <!-- DIRECCIÓN -->
+            <!-- FECHA INICIAL -->
             <div class="min-w-0">
-              <label for="incidencias-sort-order" class="mb-1.5 block text-xs font-semibold
-                       uppercase tracking-wide text-base-content/60">
-                Dirección
+              <label for="incidencias-fecha-desde" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+                Fecha desde
               </label>
 
-              <select id="incidencias-sort-order" class="select select-bordered h-11 min-h-11
-                       w-full rounded-xl" [(ngModel)]="sortOrder" (ngModelChange)="onFiltroChange()">
-                <option value="DESC">Descendente</option>
-                <option value="ASC">Ascendente</option>
-              </select>
+              <input id="incidencias-fecha-desde" type="date" class="input input-bordered h-11 min-h-11
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30f"
+                [ngClass]="fechaDesde.trim() ? 'border-primary' : 'border-base-500'" [(ngModel)]="fechaDesde"
+                [max]="fechaHasta || null" (ngModelChange)="onFiltroChange()" />
+            </div>
+
+            <!-- FECHA FINAL -->
+            <div class="min-w-0">
+              <label for="incidencias-fecha-hasta" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
+                Fecha de reporte hasta
+              </label>
+
+              <input id="incidencias-fecha-hasta" type="date" class="input input-bordered h-11 min-h-11
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30f"
+                [ngClass]="fechaDesde.trim() ? 'border-primary' : 'border-base-500'" [(ngModel)]="fechaHasta"
+                [min]="fechaDesde || null" (ngModelChange)="onFiltroChange()" />
             </div>
 
           </div>

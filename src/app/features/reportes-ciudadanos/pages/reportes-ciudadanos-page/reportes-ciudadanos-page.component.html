@@ -391,9 +391,23 @@
             </td>
 
             <!-- ACCIONES -->
-
             <td>
+              <div class="flex items-center gap-2">
 
+                <!-- Detalle -->
+                <button type="button" class="btn btn-square btn-ghost btn-sm text-primary"
+                  title="Ver detalle del reporte" [attr.aria-label]="'Ver detalle del reporte #' + item.id_incidencia"
+                  (click)="abrirDetalle(item)">
+                  <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                </button>
+
+                <!-- Imagenes -->
+                <button type="button" class="btn btn-square btn-ghost btn-sm text-secondary"
+                  title="Ver imágenes y evidencias"
+                  [attr.aria-label]="'Ver evidencias del reporte #' + item.id_incidencia" (click)="abrirImagenes(item)">
+                  <i class="fa-solid fa-images" aria-hidden="true"></i>
+                </button>
+              </div>
             </td>
           </tr>
           } @empty {
@@ -546,3 +560,12 @@
   }
 
 </div>
+
+<!-- DETALLE DEL REPORTE -->
+<incidencia-view [mostrarModal]="mostrarDetalle" [idIncidencia]="idIncidenciaSeleccionada"
+  tituloModal="Detalle del reporte ciudadano" (modalCerrado)="cerrarDetalle()" />
+
+<!-- SOLO IMÁGENES -->
+@if (idReporteImagenes !== null) {
+<reporte-imagenes [idIncidencia]="idReporteImagenes" (modalCerrado)="cerrarImagenes()" />
+}

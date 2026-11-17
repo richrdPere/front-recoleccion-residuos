@@ -12,11 +12,12 @@ import { PuntoRecorridoRecoleccion } from '../../interfaces';
 
 // Componentes
 import { RecoleccionPuntosComponent } from '../components/recoleccion-puntos/recoleccion-puntos.component';
-import { RecoleccionProgresoComponent } from '../components/recoleccion-progreso/recoleccion-progreso.component';
-import { RecoleccionCapacidadComponent } from '../components/recoleccion-capacidad/recoleccion-capacidad.component';
+// import { RecoleccionProgresoComponent } from '../components/recoleccion-progreso/recoleccion-progreso.component';
+// import { RecoleccionCapacidadComponent } from '../components/recoleccion-capacidad/recoleccion-capacidad.component';
 import { RecoleccionEvidenciaComponent } from '../components/recoleccion-evidencia/recoleccion-evidencia.component';
 import { RecoleccionViewComponent } from '../components/recoleccion-view/recoleccion-view.component';
 import { RecoleccionAnularComponent } from '../components/recoleccion-anular/recoleccion-anular.component';
+import { RecoleccionResultadoRecorridoComponent } from '../components/recoleccion-resultado-recorrido/recoleccion-resultado-recorrido.component';
 
 // ==========================================================
 // FECHA DE PERÚ
@@ -43,13 +44,11 @@ const fechaPeru = (): string => {
     CommonModule,
     FormsModule,
     RecoleccionPuntosComponent,
-    RecoleccionProgresoComponent,
-    RecoleccionCapacidadComponent,
+    RecoleccionResultadoRecorridoComponent,
     RecoleccionEvidenciaComponent,
     RecoleccionViewComponent,
     RecoleccionAnularComponent,
   ],
-
   templateUrl: './recolecciones-page.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -68,17 +67,31 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
   // ==========================================================
   // FILTROS
   // ==========================================================
+  searchTimeout: any;
+
   fechaFinBusqueda = fechaPeru();
   fechaInicioBusqueda =
     `${this.fechaFinBusqueda.slice(0, 7)}-01`;
 
   estadoBusqueda: ReporteEstadoRecorrido | '' = '';
 
-  readonly estados: ReporteEstadoRecorrido[] = [
-    'EN_CURSO',
-    'PAUSADO',
-    'FINALIZADO',
-    'CANCELADO',
+  readonly estados: { value: ReporteEstadoRecorrido; label: string; }[] = [
+    {
+      value: 'EN_CURSO',
+      label: 'EN CURSO',
+    },
+    {
+      value: 'PAUSADO',
+      label: 'PAUSADO',
+    },
+    {
+      value: 'FINALIZADO',
+      label: 'FINALIZADO',
+    },
+    {
+      value: 'CANCELADO',
+      label: 'CANCELADO',
+    },
   ];
 
   private filtrosAplicados: ReporteRecorridosFilters = {
@@ -91,7 +104,7 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
   // ==========================================================
   page = 1;
   currentPage = 1;
-  limit = 10;
+  limit = 5;
 
   totalItems = 0;
   totalPages = 0;
@@ -139,7 +152,7 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
   // CICLO DE VIDA
   // ==========================================================
   ngOnInit(): void {
-    this.buscar();
+    this.getRecoleccionesPaginated();
 
     this.refrescoAutomatico = timer(
       30_000,
@@ -168,14 +181,29 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
   // ==========================================================
   // CONSULTAR LISTADO
   // ==========================================================
-  buscar(): void {
-    this.errorFiltros = this.validarFiltros();
+  // buscar(): void {
+  //   this.errorFiltros = this.validarFiltros();
 
-    if (this.errorFiltros) {
-      this.cdr.markForCheck();
-      return;
-    }
+  //   if (this.errorFiltros) {
+  //     this.cdr.markForCheck();
+  //     return;
+  //   }
 
+  //   this.filtrosAplicados = {
+  //     fecha_inicio: this.fechaInicioBusqueda,
+  //     fecha_fin: this.fechaFinBusqueda,
+  //   };
+
+  //   if (this.estadoBusqueda) {
+  //     this.filtrosAplicados.estado = this.estadoBusqueda;
+  //   }
+
+  //   this.cargarPagina(1);
+  // }
+
+  getRecoleccionesPaginated(): void {
+
+    // CONSTRUIR FILTROS TIPADOS
     this.filtrosAplicados = {
       fecha_inicio: this.fechaInicioBusqueda,
       fecha_fin: this.fechaFinBusqueda,
@@ -185,48 +213,12 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
       this.filtrosAplicados.estado = this.estadoBusqueda;
     }
 
-    this.cargarPagina(1);
-  }
-
-  getRecoleccionesPaginated(): void {
-    this.cargarPagina(this.page);
-  }
-
-  private cargarPagina(pagina: number): void {
-    if (this.destruido) return;
-
-    const limite = Number(this.limit);
-
-    if (
-      !Number.isSafeInteger(pagina) ||
-      pagina < 1 ||
-      !this.pageSizeOptions.includes(limite)
-    ) {
-      this.errorMensaje = 'La paginación seleccionada no es válida.';
-      this.cdr.markForCheck();
-      return;
-    }
-
-    this.consultaListado?.unsubscribe();
-
-    this.page = pagina;
-    this.currentPage = pagina;
-    this.limit = limite;
-
-    this.isLoading = true;
-    this.errorMensaje = '';
-
-    this.recorridos = [];
-    this.totalItems = 0;
-    this.totalPages = 0;
-
-    this.cdr.markForCheck();
-
+    // CONSULTAR LISTADO
     this.consultaListado = this.reportesService
       .getReporteRecorridos({
         ...this.filtrosAplicados,
-        page: pagina,
-        limit: limite,
+        page: this.page,
+        limit: this.limit,
       })
       .pipe(
         finalize(() => {
@@ -242,7 +234,6 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
           if (!response.success || !response.data) {
             this.errorMensaje = response.message ||
               'No se pudieron consultar los recorridos.';
-
             return;
           }
 
@@ -270,6 +261,18 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
   // ==========================================================
   // FILTROS Y PAGINACIÓN
   // ==========================================================
+  onFiltroChange(): void {
+    // this.page = 1;
+    // this.getRecorridosPaginated();
+
+    clearTimeout(this.searchTimeout);
+
+    this.searchTimeout = setTimeout(() => {
+      this.page = 1;
+      this.getRecoleccionesPaginated();
+    }, 300);
+  }
+
   limpiarFiltros(): void {
     const hoy = fechaPeru();
 
@@ -277,7 +280,7 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
     this.fechaFinBusqueda = hoy;
     this.estadoBusqueda = '';
 
-    this.buscar();
+    this.getRecoleccionesPaginated();
   }
 
   cambiarPagina(pagina: number): void {
@@ -289,13 +292,15 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
     ) {
       return;
     }
-
-    this.cargarPagina(pagina);
+    this.page = pagina;
+    this.getRecoleccionesPaginated();
   }
 
   cambiarLimite(): void {
     this.limit = Number(this.limit);
-    this.cargarPagina(1);
+    this.page = 1;
+
+    this.getRecoleccionesPaginated();
   }
 
   get registroDesde(): number {
@@ -324,6 +329,10 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
     this.recorridoSeleccionado = recorrido;
     this.recorrido_id = recorrido.id_recorrido;
 
+    // También permite volver a consultar si se selecciona
+    // nuevamente el mismo recorrido.
+    this.actualizacionRecolecciones++;
+
     this.cdr.markForCheck();
   }
 
@@ -334,7 +343,7 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
     this.recorrido_id = null;
 
     // Actualiza los conteos después de consultar o anular registros.
-    this.cargarPagina(this.page);
+    this.getRecoleccionesPaginated();
   }
 
   actualizarRecolecciones(): void {
@@ -478,16 +487,49 @@ export class RecoleccionesPageComponent implements OnInit, OnDestroy {
     }
   }
 
-  getEstadoLabel(estado: ReporteEstadoRecorrido): string {
-    const etiquetas: Record<ReporteEstadoRecorrido, string> = {
-      EN_CURSO: 'En curso',
-      PAUSADO: 'Pausado',
-      FINALIZADO: 'Finalizado',
-      CANCELADO: 'Cancelado',
+  obtenerEstado(estado: string): {
+    label: string;
+    class: string;
+  } {
+    const estados: Record<
+      string,
+      { label: string; class: string }
+    > = {
+      FINALIZADO: {
+        label: 'Finalizado',
+        class: 'badge-success',
+      },
+      CANCELADO: {
+        label: 'Cancelado',
+        class: 'badge-error',
+      },
+      EN_CURSO: {
+        label: 'En curso',
+        class: 'badge-info',
+      },
+      PAUSADO: {
+        label: 'Pausado',
+        class: 'badge-warning',
+      },
     };
 
-    return etiquetas[estado] ?? estado;
+    return estados[estado] ?? {
+      label: estado,
+      class: 'badge-neutral',
+    };
   }
+
+
+  // getEstadoLabel(estado: string): string {
+  //   const etiquetas: Record<ReporteEstadoRecorrido, string> = {
+  //     EN_CURSO: 'En curso',
+  //     PAUSADO: 'Pausado',
+  //     FINALIZADO: 'Finalizado',
+  //     CANCELADO: 'Cancelado',
+  //   };
+
+  //   return etiquetas[estado] ?? estado;
+  // }
 
   // ==========================================================
   // HELPERS

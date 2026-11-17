@@ -1,0 +1,185 @@
+<section class="space-y-5 rounded-2xl border border-base-300 bg-base-100 p-5"
+  aria-label="Resultado de recolección del recorrido" [attr.aria-busy]="cargando">
+  <header class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h2 class="flex items-center gap-2 text-lg font-bold">
+        <i class="fa-solid fa-recycle text-primary" aria-hidden="true"></i>
+        Resultado del recorrido
+      </h2>
+
+      <p class="mt-1 text-sm text-base-content/65">
+        Cantidad total registrada al finalizar la operación.
+      </p>
+    </div>
+
+    <button type="button" class="btn btn-outline btn-sm" [disabled]="cargando || idRecorrido === null"
+      (click)="consultar()">
+      <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+      Actualizar
+    </button>
+  </header>
+
+  @if (cargando) {
+  <div class="flex items-center gap-3 py-8" role="status">
+    <span class="loading loading-spinner text-primary"></span>
+    <span>Consultando resultado del recorrido…</span>
+  </div>
+  } @else if (errorCarga) {
+  <div class="alert alert-error" role="alert">
+    <span>{{ errorCarga }}</span>
+  </div>
+  } @else if (detalle; as d) {
+
+  <!-- ESTADO Y FECHAS DEL RECORRIDO -->
+  <div class="flex flex-wrap items-center gap-3">
+    <span class="badge badge-outline" [class.badge-success]="d.recorrido.estado_recorrido === 'FINALIZADO'"
+      [class.badge-info]="d.recorrido.estado_recorrido === 'EN_CURSO'"
+      [class.badge-warning]="d.recorrido.estado_recorrido === 'PAUSADO'"
+      [class.badge-error]="d.recorrido.estado_recorrido === 'CANCELADO'">
+      {{ estadoLabel }}
+    </span>
+
+    @if (d.recorrido.fecha_hora_finalizacion) {
+    <span class="text-sm text-base-content/65">
+      Finalización:
+      {{
+      d.recorrido.fecha_hora_finalizacion
+      | date:'dd/MM/yyyy HH:mm':'-0500'
+      }}
+    </span>
+    }
+  </div>
+
+  <!-- RESULTADO FINAL -->
+  @if (resultado; as r) {
+  <div class="grid gap-4 lg:grid-cols-3">
+
+    <article class="rounded-2xl bg-primary/10 p-5 lg:col-span-1">
+      <p class="text-sm font-medium text-base-content/70">
+        Total recolectado
+      </p>
+
+      @if (cantidadValida) {
+      <p class="mt-3 wrap-break-word text-3xl font-bold text-primary">
+        {{ r.cantidad_total | number:'1.0-3' }}
+        <span class="text-xl">
+          {{ unidadLabel(r.unidad_medida) }}
+        </span>
+      </p>
+      } @else {
+      <p class="mt-3 text-sm text-error">
+        El resultado contiene una cantidad no válida.
+      </p>
+      }
+
+      <p class="mt-3 text-xs text-base-content/65">
+        Registro final del recorrido.
+      </p>
+    </article>
+
+    <article class="rounded-2xl border border-base-300 p-5 lg:col-span-2">
+      <h3 class="font-semibold">Datos del registro</h3>
+
+      <dl class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <dt class="text-xs text-base-content/60">Registrado por</dt>
+          <dd class="mt-1 font-medium">
+            Usuario #{{ r.id_usuario }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-xs text-base-content/60">Vehículo al registrar</dt>
+          <dd class="mt-1 font-medium">
+            {{ r.vehiculo?.placa || 'Sin información' }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-xs text-base-content/60">Fecha del dispositivo</dt>
+          <dd class="mt-1 text-sm">
+            {{ r.fecha_dispositivo | date:'dd/MM/yyyy HH:mm':'-0500' }}
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-xs text-base-content/60">Recepción en servidor</dt>
+          <dd class="mt-1 text-sm">
+            {{ r.fecha_recepcion | date:'dd/MM/yyyy HH:mm':'-0500' }}
+          </dd>
+        </div>
+
+        <div class="sm:col-span-2">
+          <dt class="text-xs text-base-content/60">Observación</dt>
+          <dd class="mt-1 whitespace-pre-wrap wrap-break-word text-sm">{{ r.observacion || 'Sin observación' }}</dd>
+        </div>
+      </dl>
+    </article>
+  </div>
+  } @else {
+  <div class="rounded-xl border border-base-300 bg-base-200/50 p-4">
+    <p class="font-semibold">Sin resultado final registrado</p>
+    <p class="mt-2 text-sm text-base-content/70">
+      {{ mensajeSinResultado }}
+    </p>
+  </div>
+  }
+
+  <!-- ATENCIÓN DE PUNTOS -->
+  <section class="border-t border-base-300 pt-5">
+    <h3 class="font-semibold">Atención de puntos</h3>
+
+    <div class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div class="rounded-xl bg-base-200/60 p-4">
+        <p class="text-xs text-base-content/65">Total</p>
+        <p class="mt-1 text-2xl font-bold">
+          {{ d.resumen_puntos.total }}
+        </p>
+      </div>
+
+      <div class="rounded-xl bg-success/10 p-4">
+        <p class="text-xs text-base-content/65">Atendidos</p>
+        <p class="mt-1 text-2xl font-bold">
+          {{ d.resumen_puntos.atendidos }}
+        </p>
+      </div>
+
+      <div class="rounded-xl bg-error/10 p-4">
+        <p class="text-xs text-base-content/65">Omitidos</p>
+        <p class="mt-1 text-2xl font-bold">
+          {{ d.resumen_puntos.omitidos }}
+        </p>
+      </div>
+
+      <div class="rounded-xl bg-warning/10 p-4">
+        <p class="text-xs text-base-content/65">Pendientes</p>
+        <p class="mt-1 text-2xl font-bold">
+          {{ d.resumen_puntos.pendientes }}
+        </p>
+      </div>
+    </div>
+
+    @if (d.resumen_puntos.total > 0) {
+    <div class="mt-4">
+      <div class="mb-2 flex justify-between gap-3 text-sm">
+        <span>Puntos atendidos</span>
+        <span>{{ porcentajeAtencion | number:'1.0-1' }} %</span>
+      </div>
+
+      <progress class="progress progress-primary w-full" [value]="porcentajeAtencion" max="100"
+        aria-label="Porcentaje de puntos atendidos"></progress>
+    </div>
+    }
+
+    <p class="mt-3 text-xs text-base-content/60">
+      La atención de puntos y la cantidad final son registros independientes.
+      Los puntos no se utilizan para calcular el total recolectado.
+    </p>
+  </section>
+
+  } @else {
+  <p class="text-sm text-base-content/60">
+    Selecciona un recorrido para consultar su resultado.
+  </p>
+  }
+</section>

@@ -93,20 +93,6 @@
             <dd class="mt-1 font-medium">{{ datos.origen }}</dd>
           </div>
 
-          <div>
-            <dt class="text-xs text-base-content/60">
-              Cantidad recolectada
-            </dt>
-
-            <dd class="mt-1 font-medium">
-              @if (datos.cantidad_recolectada !== null) {
-              {{ datos.cantidad_recolectada }}
-              {{ datos.unidad_medida ?? '' }}
-              } @else {
-              No registrada
-              }
-            </dd>
-          </div>
 
           <div>
             <dt class="text-xs text-base-content/60">

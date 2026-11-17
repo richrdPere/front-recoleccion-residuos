@@ -8,6 +8,11 @@ import { ReportesServices } from '../../../reportes/services/reportes.service';
 
 // Interfaces
 import { ReporteCiudadanosData, ReporteCiudadanosFilters, ReporteCiudadanoItem, ReporteEstadoIncidencia, ReporteOrigenCiudadano, ReportePrioridadIncidencia, ReporteTipoIncidencia } from '../../../reportes/interfaces';
+import { IncidenciaId } from '../../../incidencias/interfaces';
+
+// Componentes
+import { IncidenciaViewComponent } from '../../../incidencias/pages/components/incidencia-view/incidencia-view.component';
+import { ReporteImagenesComponent } from '../components/reporte-imagenes/reporte-imagenes.component';
 
 // ==========================================================
 // FECHA ACTUAL DE PERÚ
@@ -33,19 +38,25 @@ const fechaPeru = (): string => {
   imports: [
     CommonModule,
     FormsModule,
+    IncidenciaViewComponent,
+    ReporteImagenesComponent,
   ],
 
   templateUrl: './reportes-ciudadanos-page.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ReportesCiudadanosPageComponent
-  implements OnInit, OnDestroy {
+export class ReportesCiudadanosPageComponent implements OnInit, OnDestroy {
 
   // ==========================================================
   // DATOS
   // ==========================================================
   listado: ReporteCiudadanosData | null = null;
   reportes: ReporteCiudadanoItem[] = [];
+
+  mostrarDetalle = false;
+  idIncidenciaSeleccionada: IncidenciaId | null = null;
+
+  idReporteImagenes: IncidenciaId | null = null;
 
   searchTimeout: any;
   isLoading = false;
@@ -248,6 +259,36 @@ export class ReportesCiudadanosPageComponent
         },
       });
 
+  }
+
+  // ==========================================================
+  // DETALLE
+  // ==========================================================
+  abrirDetalle(item: ReporteCiudadanoItem): void {
+    this.idIncidenciaSeleccionada = item.id_incidencia;
+    this.mostrarDetalle = true;
+  }
+
+  cerrarDetalle(): void {
+    this.mostrarDetalle = false;
+    this.idIncidenciaSeleccionada = null;
+
+    this.marcarCambios();
+  }
+
+  // ==========================================================
+  // IMÁGENES
+  // ==========================================================
+
+
+  abrirImagenes(item: ReporteCiudadanoItem): void {
+    this.idReporteImagenes = item.id_incidencia;
+  }
+
+  cerrarImagenes(): void {
+    this.idReporteImagenes = null;
+
+    this.marcarCambios();
   }
 
   // ==========================================================

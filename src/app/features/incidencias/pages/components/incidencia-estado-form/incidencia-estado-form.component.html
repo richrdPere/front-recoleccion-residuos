@@ -205,22 +205,27 @@
       <!-- ACCIONES -->
       <!-- ================================================= -->
       <footer class="flex shrink-0 flex-col-reverse gap-3
-               border-t border-base-300 px-5 py-4
-               sm:flex-row sm:justify-end sm:px-6">
-        <button type="button" class="btn btn-ghost rounded-xl" [disabled]="isSaving" (click)="cerrarModal()">
-          Cerrar
-        </button>
+               border-t border-base-300 bg-base-100
+               px-5 py-4 sm:flex-row sm:items-center
+               sm:justify-center sm:px-6">
 
-        <button type="submit" class="btn rounded-xl" [class.btn-primary]="!requiereDetalle"
-          [class.btn-warning]="requiereDetalle" [disabled]="!puedeGuardar">
-          @if (isSaving) {
-          <span class="loading loading-spinner loading-sm"></span>
-          } @else {
-          <i class="fa-solid fa-check" aria-hidden="true"></i>
-          }
+        <div class="flex flex-col-reverse gap-5 sm:flex-row sm:justify-end">
+          <button type="button" class="btn btn-error" [disabled]="isSaving" (click)="cerrarModal()">
+            Cerrar
+          </button>
 
-          {{ isSaving ? 'Guardando...' : 'Guardar estado' }}
-        </button>
+          <button type="submit" class="btn btn-primary" [class.btn-primary]="!requiereDetalle"
+            [class.btn-warning]="requiereDetalle" [disabled]="!puedeGuardar">
+            @if (isSaving) {
+            <span class="loading loading-spinner loading-sm"></span>
+            } @else {
+            <i class="fa-solid fa-check" aria-hidden="true"></i>
+            }
+
+            {{ isSaving ? 'Guardando...' : 'Guardar estado' }}
+          </button>
+        </div>
+
       </footer>
     </form>
   </section>

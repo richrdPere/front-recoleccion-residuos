@@ -14,7 +14,7 @@
                  items-center justify-center
                  rounded-2xl bg-primary/10
                  text-primary" aria-hidden="true">
-        <i class="fa-solid fa-route text-2xl" aria-hidden="true"></i>
+        <i class="fa-solid fa-location-arrow text-2xl" aria-hidden="true"></i>
       </div>
 
       <div class="min-w-0">
@@ -414,21 +414,26 @@
                 <div class="mx-auto flex max-w-md flex-col items-center">
                   <div class="mb-4 flex h-16 w-16 items-center justify-center
                            rounded-full bg-base-200 text-base-content/35">
-                    <i class="fa-solid fa-route text-2xl" aria-hidden="true"></i>
+                    <i class="fa-solid fa-location-arrow text-2xl" aria-hidden="true"></i>
                   </div>
 
-                  <h4 class="font-semibold">
+                  <h2 class="mt-5 text-lg font-bold">
                     No se encontraron recorridos
-                  </h4>
+                  </h2>
 
-                  <p class="mt-2 text-sm text-base-content/60">
+                  <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-base-content/55">
                     No hay resultados para el período y los filtros consultados.
                     Prueba con otro estado o amplía el rango de fechas.
                   </p>
 
-                  <button type="button" class="btn btn-outline btn-sm mt-4" (click)="limpiarFiltros()">
-                    Restablecer filtros
-                  </button>
+                  <div class="mt-6">
+                    <button type="button" class="btn btn-secondary btn-sm w-full gap-2 rounded-xl sm:w-auto"
+                      (click)="limpiarFiltros()">
+                      <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+                      Limpiar filtros
+                    </button>
+                  </div>
+
                 </div>
               </td>
             </tr>

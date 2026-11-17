@@ -34,8 +34,7 @@ export class IncidenciaArchivosFormComponent
 
   @Output() modalCerrado = new EventEmitter<void>();
 
-  @Output() archivosGuardados =
-    new EventEmitter<IncidenciaArchivoListadoItem[]>();
+  @Output() archivosGuardados = new EventEmitter<IncidenciaArchivoListadoItem[]>();
 
   @ViewChild('dialogo', { static: true })
   private dialogo?: ElementRef<HTMLDialogElement>;

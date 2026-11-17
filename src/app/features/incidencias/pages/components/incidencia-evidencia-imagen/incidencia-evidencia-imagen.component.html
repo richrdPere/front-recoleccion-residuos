@@ -1,15 +1,39 @@
-@if (cargando()) {
-<p class="text-sm text-base-content/60">
-  Cargando evidencia…
-</p>
-}
+<div class="overflow-hidden rounded-xl border border-base-300 bg-base-200/40" [attr.aria-busy]="cargando">
+  @if (cargando) {
+  <div class="flex min-h-48 flex-col items-center justify-center gap-3 p-6" role="status">
+    <span class="loading loading-spinner text-primary" aria-hidden="true"></span>
 
-@if (errorMensaje()) {
-<p class="text-sm text-error" role="alert">
-  {{ errorMensaje() }}
-</p>
-}
+    <p class="text-sm text-base-content/65">
+      Cargando imagen…
+    </p>
+  </div>
+  } @else if (errorMensaje) {
+  <div class="space-y-3 p-5" role="alert">
+    <p class="text-sm text-error">
+      {{ errorMensaje }}
+    </p>
 
-@if (imagenUrl(); as url) {
-<img [src]="url" [alt]="descripcion" class="max-h-96 w-full rounded-xl object-contain" />
-}
+    <button type="button" class="btn btn-outline btn-sm" (click)="cargarImagen()">
+      <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+      Reintentar
+    </button>
+  </div>
+  } @else if (imagenUrl; as url) {
+  <div class="flex items-center justify-between gap-3 border-b border-base-300 p-3">
+    <span class="text-xs text-base-content/65">
+      Vista previa
+    </span>
+
+    <button type="button" class="btn btn-ghost btn-sm" [attr.aria-pressed]="ampliada" (click)="alternarAmpliacion()">
+      <i class="fa-solid" [class.fa-expand]="!ampliada" [class.fa-compress]="ampliada" aria-hidden="true"></i>
+
+      {{ ampliada ? 'Reducir imagen' : 'Ampliar imagen' }}
+    </button>
+  </div>
+
+  <div class="p-3">
+    <img [src]="url" [alt]="descripcion" class="mx-auto w-full rounded-lg object-contain"
+      [style.max-height]="ampliada ? '70vh' : '20rem'" decoding="async" (error)="onErrorImagen(url)" />
+  </div>
+  }
+</div>
