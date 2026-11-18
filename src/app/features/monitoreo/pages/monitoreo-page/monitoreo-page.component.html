@@ -1,375 +1,641 @@
-<section class="space-y-6">
+<section
+  class="monitoreo-escena border border-base-300
+         bg-base-200 text-base-content"
+  aria-label="Monitoreo operativo"
+>
+  <!-- MAPA PERMANENTE -->
+  <div class="monitoreo-lienzo">
+    <mapa-base
 
-  <!-- ENCABEZADO Y FILTROS -->
-  <div class="rounded-xl border border-gray-200 bg-white p-5">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <h1 class="text-xl font-semibold text-gray-900">
+      [recorridos]="recorridosMapa()"
+      [zonas]="zonasMapa()"
+      [detalle]="detalle()"
+      [idRecorridoSeleccionado]="idRecorridoSeleccionado()"
+      (mapaError)="errorMapa.set($event)"
+      (recorridoSeleccionado)="
+        seleccionarRecorrido($event);
+        detalleModal.showModal()
+      "
+    />
+  </div>
+
+  <!-- CONTROLES SOBRE EL MAPA -->
+  <div class="monitoreo-interfaz">
+    <header class="monitoreo-barra-flotante">
+      <div
+        class="monitoreo-superficie rounded-2xl border
+               border-base-300 bg-base-100 px-4 py-3 shadow-lg"
+      >
+        <h1 class="text-lg font-bold">
           Monitoreo operativo
         </h1>
 
-        <p class="mt-1 text-sm text-gray-500">
-          Ubicación de los vehículos y seguimiento de la recolección.
-        </p>
+        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+          <span
+            class="badge badge-sm badge-outline"
+            [class.badge-success]="
+              consultaActual() &&
+              socketMonitoreo.estado() === 'EN_VIVO'
+            "
+            [class.badge-warning]="
+              consultaActual() &&
+              socketMonitoreo.estado() !== 'EN_VIVO'
+            "
+          >
+            {{
+              consultaActual()
+                ? socketMonitoreo.estado()
+                : 'Consulta histórica'
+            }}
+          </span>
+
+          @if (cargando() || sincronizando()) {
+            <span
+              class="flex items-center gap-2 text-base-content/65"
+              role="status"
+            >
+              <span class="loading loading-spinner loading-xs"></span>
+              Actualizando
+            </span>
+          }
+        </div>
       </div>
 
-      <div class="flex flex-wrap items-end gap-3">
+      <nav
+        class="monitoreo-superficie flex flex-wrap gap-2 rounded-2xl
+               border border-base-300 bg-base-100 p-2 shadow-lg"
+        aria-label="Herramientas de monitoreo"
+      >
+        <button
+          type="button"
+          class="btn btn-sm btn-ghost"
+          aria-haspopup="dialog"
+          aria-controls="monitoreo-consulta"
+          (click)="consultaModal.showModal()"
+        >
+          <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+          Consulta
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-sm btn-ghost"
+          aria-haspopup="dialog"
+          aria-controls="monitoreo-recorridos"
+          (click)="recorridosModal.showModal()"
+        >
+          <i class="fa-solid fa-truck" aria-hidden="true"></i>
+          Recorridos
+          <span class="badge badge-sm">
+            {{ recorridosMapa().length }}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-sm btn-ghost"
+          aria-haspopup="dialog"
+          aria-controls="monitoreo-alertas"
+          (click)="alertasModal.showModal()"
+        >
+          <i class="fa-solid fa-bell" aria-hidden="true"></i>
+          Alertas
+          <span class="badge badge-warning badge-sm">
+            {{ resumenAlertas()?.total ?? 0 }}
+          </span>
+        </button>
+
+        @if (idRecorridoSeleccionado() !== null) {
+          <button
+            type="button"
+            class="btn btn-sm btn-primary"
+            aria-haspopup="dialog"
+            aria-controls="monitoreo-detalle"
+            (click)="detalleModal.showModal()"
+          >
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            Detalle
+          </button>
+        }
+      </nav>
+    </header>
+
+    <!-- MENSAJES IMPORTANTES -->
+    <div class="monitoreo-avisos" aria-live="polite">
+      @if (errorMapa()) {
+        <div class="alert alert-error shadow-lg" role="alert">
+          <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
+          <span>{{ errorMapa() }}</span>
+        </div>
+      }
+
+      @if (errorOperacion()) {
+        <div class="alert alert-error shadow-lg" role="alert">
+          <span>{{ errorOperacion() }}</span>
+        </div>
+      }
+
+      <p
+        class="rounded-xl border border-base-300 bg-base-100
+               px-4 py-3 text-xs shadow-lg"
+      >
+        Selecciona un vehículo del mapa o del listado para ver su recorrido.
+      </p>
+    </div>
+  </div>
+
+  <!-- ================================================== -->
+  <!-- MODAL: CONSULTA, INDICADORES Y CONEXIÓN -->
+  <!-- ================================================== -->
+  <dialog
+    #consultaModal
+    id="monitoreo-consulta"
+    class="modal monitoreo-modal"
+    aria-labelledby="monitoreo-consulta-titulo"
+  >
+    <div class="modal-box">
+      <header class="monitoreo-modal-cabecera">
+        <h2 id="monitoreo-consulta-titulo" class="text-lg font-bold">
+          Consulta e indicadores
+        </h2>
+
+        <button
+          type="button"
+          autofocus
+          class="btn btn-circle btn-ghost btn-sm"
+          aria-label="Cerrar consulta"
+          (click)="consultaModal.close()"
+        >
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <div class="monitoreo-modal-cuerpo space-y-5">
         <div>
-          <label for="fecha-monitoreo" class="mb-1 block text-sm font-medium text-gray-700">
+          <label
+            for="fecha-monitoreo"
+            class="mb-2 block text-sm font-medium"
+          >
             Fecha de consulta
           </label>
 
-          <input id="fecha-monitoreo" type="date" class="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-            [ngModel]="filtros().fecha" (ngModelChange)="actualizarFiltros({ fecha: $event })" />
+          <input
+            id="fecha-monitoreo"
+            type="date"
+            class="input input-bordered w-full bg-base-100"
+            [ngModel]="filtros().fecha"
+            (ngModelChange)="actualizarFiltros({ fecha: $event })"
+          />
         </div>
 
-        <button type="button" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium
-                 text-white disabled:cursor-not-allowed disabled:opacity-50" [disabled]="cargando()"
-          (click)="actualizarMonitoreo()">
-          {{ cargando() ? 'Consultando...' : 'Actualizar' }}
-        </button>
-
-        <button type="button" class="rounded-lg border border-gray-300 px-4 py-2
-                 text-sm font-medium text-gray-700" (click)="limpiarFiltros()">
-          Limpiar filtros
-        </button>
-      </div>
-    </div>
-
-    @if (generadoEn()) {
-    <p class="mt-3 text-xs text-gray-500">
-      Datos generados:
-      {{ generadoEn() | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
-    </p>
-    }
-
-    <div class="mt-3 flex flex-wrap items-center gap-3 text-xs" aria-live="polite">
-      <span class="rounded-full px-3 py-1" [class.bg-green-100]="socketMonitoreo.estado() === 'EN_VIVO'"
-        [class.text-green-800]="socketMonitoreo.estado() === 'EN_VIVO'"
-        [class.bg-amber-100]="socketMonitoreo.estado() !== 'EN_VIVO'">
-        Conexión: {{ socketMonitoreo.estado() }}
-      </span>
-      @if (!consultaActual()) {
-      <span class="text-gray-500">Consulta histórica: no se aplican posiciones en vivo.</span>
-      }
-      @if (sincronizando()) { <span>Sincronizando indicadores...</span> }
-      @if (ultimaRecepcionSocket(); as fecha) {
-      <span>Último evento GPS: {{ fecha | date:'HH:mm:ss':'-0500' }}</span>
-      }
-      @if (socketMonitoreo.estado() === 'ERROR' || socketMonitoreo.estado() === 'DESCONECTADO') {
-      <button type="button" class="rounded border px-3 py-1" (click)="reconectarSocket()">
-        Reconectar
-      </button>
-      }
-    </div>
-    @if (socketMonitoreo.error(); as error) {
-    <p role="alert" class="mt-2 text-sm text-amber-800">{{ error.message }}</p>
-    }
-    @if (socketMonitoreo.requiereAutenticacion()) {
-    <p class="mt-1 text-xs text-amber-800">Renueve su sesión antes de reconectar.</p>
-    }
-  </div>
-
-  <!-- ERROR OPERATIVO -->
-  @if (errorOperacion()) {
-  <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-    {{ errorOperacion() }}
-  </div>
-  }
-
-  <!-- RESUMEN -->
-  @if (resumen(); as datos) {
-  <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-    <div class="rounded-xl border border-gray-200 bg-white p-4">
-      <p class="text-sm text-gray-500">Programaciones</p>
-      <p class="mt-1 text-2xl font-semibold">
-        {{ datos.total_programaciones }}
-      </p>
-    </div>
-
-    <div class="rounded-xl border border-gray-200 bg-white p-4">
-      <p class="text-sm text-gray-500">En curso</p>
-      <p class="mt-1 text-2xl font-semibold text-blue-600">
-        {{ datos.en_curso }}
-      </p>
-    </div>
-
-    <div class="rounded-xl border border-gray-200 bg-white p-4">
-      <p class="text-sm text-gray-500">Finalizadas</p>
-      <p class="mt-1 text-2xl font-semibold text-green-600">
-        {{ datos.finalizadas }}
-      </p>
-    </div>
-
-    <div class="rounded-xl border border-gray-200 bg-white p-4">
-      <p class="text-sm text-gray-500">Cumplimiento</p>
-      <p class="mt-1 text-2xl font-semibold text-indigo-600">
-        {{ datos.cumplimiento_porcentaje | number:'1.0-1' }}%
-      </p>
-    </div>
-  </div>
-  }
-
-  <!-- MAPA Y LISTA DE VEHÍCULOS -->
-  <div class="grid gap-5 xl:grid-cols-3">
-
-    <div class="min-w-0 xl:col-span-2">
-      @if (errorMapa()) {
-      <div role="alert" class="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-        {{ errorMapa() }}
-      </div>
-      }
-
-      <!-- Mantener fuera de condiciones de carga -->
-      <mapa-base [recorridos]="recorridosMapa()" [zonas]="zonasMapa()" [detalle]="detalle()"
-        [idRecorridoSeleccionado]="idRecorridoSeleccionado()" (mapaError)="errorMapa.set($event)"
-        (recorridoSeleccionado)="seleccionarRecorrido($event)"></mapa-base>
-
-      <p class="mt-2 text-xs text-gray-500">
-        Selecciona un vehículo para consultar su detalle y mostrar
-        el trazado de su ruta.
-      </p>
-    </div>
-
-    <aside class="rounded-xl border border-gray-200 bg-white p-4">
-      <h2 class="font-semibold text-gray-900">
-        Recorridos del mapa
-      </h2>
-
-      <p class="mt-1 text-xs text-gray-500">
-        {{ recorridosConUbicacion().length }} con ubicación ·
-        {{ recorridosSinUbicacion().length }} sin coordenadas válidas
-      </p>
-
-      <div class="mt-4 max-h-150 space-y-3 overflow-y-auto" [attr.aria-busy]="cargando()">
-        @if (cargando()) {
-        <p role="status" class="text-sm text-gray-500">
-          Consultando vehículos...
-        </p>
-        } @else {
-        @for (item of recorridosMapa(); track item.id_recorrido) {
-        <button type="button" class="block w-full rounded-lg border p-3 text-left
-                     transition hover:bg-indigo-50" [class.border-indigo-500]="
-                idRecorridoSeleccionado() === item.id_recorrido
-              " [class.bg-indigo-50]="
-                idRecorridoSeleccionado() === item.id_recorrido
-              " [class.border-gray-200]="
-                idRecorridoSeleccionado() !== item.id_recorrido
-              " [attr.aria-pressed]="
-                idRecorridoSeleccionado() === item.id_recorrido
-              " (click)="seleccionarRecorrido(item.id_recorrido)">
-          <div class="flex items-center justify-between gap-2">
-            <span class="font-semibold text-gray-900">
-              {{ item.vehiculo.placa }}
-            </span>
-
-            <span class="text-xs text-gray-500">
-              #{{ item.id_recorrido }}
-            </span>
-          </div>
-
-          <p class="mt-1 text-sm text-gray-700">
-            {{ item.ruta.nombre }}
-          </p>
-
-          <p class="text-xs text-gray-500">
-            {{ item.ruta.zona.nombre }}
-          </p>
-
-          <div class="mt-2 space-y-1 text-xs text-gray-600">
-            <p>Estado: {{ item.estado_recorrido }}</p>
-            <p>GPS: {{ item.gps.estado }}</p>
-
-            @if (obtenerCoordenadas(item.ultima_ubicacion)) {
-            <p>
-              Última posición:
-              {{
-              (item.gps.fecha_ultima_posicion ??
-              item.ultima_ubicacion?.fecha_recepcion)
-              | date:'dd/MM HH:mm:ss':'-0500'
-              }}
-            </p>
-            } @else {
-            <p class="text-amber-700">
-              Sin coordenadas válidas para mostrar en el mapa.
-            </p>
-            }
-
-            <p>
-              Puntos atendidos:
-              {{ item.progreso.atendidos }}/{{ item.progreso.total_puntos }}
-              · {{ item.progreso.porcentaje | number:'1.0-1' }}%
-            </p>
-          </div>
-        </button>
-        } @empty {
-        @if (!errorMapa()) {
-        <p class="text-sm text-gray-500">
-          No hay recorridos para los filtros seleccionados.
-        </p>
-        }
-        }
-        }
-      </div>
-    </aside>
-  </div>
-
-  <!-- DETALLE DEL RECORRIDO -->
-  @if (idRecorridoSeleccionado() !== null) {
-  <section class="rounded-xl border border-gray-200 bg-white p-5">
-    <div class="flex items-center justify-between gap-3">
-      <h2 class="font-semibold text-gray-900">
-        Detalle del recorrido #{{ idRecorridoSeleccionado() }}
-      </h2>
-
-      <button type="button" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm" (click)="cerrarDetalle()">
-        Cerrar
-      </button>
-    </div>
-
-    @if (cargandoDetalle()) {
-    <p role="status" class="mt-4 text-sm text-gray-500">
-      Consultando detalle...
-    </p>
-    }
-
-    @if (errorDetalle()) {
-    <p role="alert" class="mt-4 text-sm text-red-700">
-      {{ errorDetalle() }}
-    </p>
-    }
-
-    @if (detalle(); as datos) {
-    <div class="mt-4 grid gap-4 text-sm md:grid-cols-2 lg:grid-cols-4">
-      <div>
-        <p class="text-gray-500">Vehículo</p>
-        <p class="font-medium">
-          {{ datos.programacion.vehiculo.placa }}
-        </p>
-      </div>
-
-      <div>
-        <p class="text-gray-500">Ruta</p>
-        <p class="font-medium">
-          {{ datos.programacion.ruta.nombre }}
-        </p>
-      </div>
-
-      <div>
-        <p class="text-gray-500">Estado</p>
-        <p class="font-medium">{{ datos.estado_recorrido }}</p>
-      </div>
-
-      <div>
-        <p class="text-gray-500">Inicio</p>
-        <p class="font-medium">
-          {{
-          datos.fecha_hora_inicio
-          | date:'dd/MM/yyyy HH:mm':'-0500'
-          }}
-        </p>
-      </div>
-
-      <div>
-        <p class="text-gray-500">Progreso</p>
-        <p class="font-medium">
-          {{ datos.progreso.atendidos }}/{{ datos.progreso.total_puntos }}
-          puntos · {{ datos.progreso.porcentaje | number:'1.0-1' }}%
-        </p>
-      </div>
-
-      <div>
-        <p class="text-gray-500">Capacidad</p>
-        @if (datos.capacidad.disponible) {
-        <p class="font-medium">
-          {{ datos.capacidad.cantidad_acumulada | number:'1.0-2' }}
-          / {{ datos.capacidad.capacidad_maxima | number:'1.0-2' }}
-          {{ datos.capacidad.unidad_medida }}
-        </p>
-        } @else {
-        <p>No disponible</p>
-        }
-      </div>
-
-      <div>
-        <p class="text-gray-500">GPS</p>
-        <p class="font-medium">{{ datos.gps.estado }}</p>
-      </div>
-
-      <div>
-        <p class="text-gray-500">Versión de ruta</p>
-        <p class="font-medium">
-          {{ datos.programacion.version_ruta.numero_version }}
-        </p>
-      </div>
-    </div>
-    }
-  </section>
-  }
-
-  <!-- ALERTAS -->
-  <section class="rounded-xl border border-gray-200 bg-white p-5">
-    <h2 class="font-semibold text-gray-900">Alertas operativas</h2>
-
-    @if (resumenAlertas(); as datos) {
-    <p class="mt-1 text-sm text-gray-500">
-      {{ datos.total }} alertas ·
-      {{ datos.criticas }} críticas ·
-      {{ datos.advertencias }} advertencias ·
-      {{ datos.informativas }} informativas
-    </p>
-    }
-
-    @if (errorAlertas()) {
-    <p role="alert" class="mt-3 text-sm text-red-700">
-      {{ errorAlertas() }}
-    </p>
-    }
-
-    @if (cargando()) {
-    <p role="status" class="mt-3 text-sm text-gray-500">
-      Consultando alertas...
-    </p>
-    } @else {
-    <div class="mt-4 space-y-3">
-      @for (alerta of alertasOperativas(); track $index) {
-      <div class="rounded-lg border border-amber-200 bg-amber-50 p-3">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <p class="text-sm font-semibold text-gray-900">
-            {{ alerta.nivel }} · {{ alerta.codigo }}
-          </p>
-
-          @if (alerta.id_recorrido !== null) {
-          <button type="button" class="text-sm font-medium text-indigo-700 underline"
-            (click)="seleccionarRecorrido(alerta.id_recorrido!)">
-            Ver recorrido
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            [disabled]="cargando()"
+            (click)="actualizarMonitoreo()"
+          >
+            <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+            {{ cargando() ? 'Consultando…' : 'Actualizar' }}
           </button>
+
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            [disabled]="cargando()"
+            (click)="limpiarFiltros()"
+          >
+            Limpiar filtros
+          </button>
+        </div>
+
+        @if (resumen(); as datos) {
+          <section
+            class="grid grid-cols-2 gap-3"
+            aria-label="Resumen operativo"
+          >
+            <div class="rounded-xl bg-base-200 p-4">
+              <p class="text-xs text-base-content/65">Programaciones</p>
+              <p class="mt-1 text-2xl font-bold">
+                {{ datos.total_programaciones }}
+              </p>
+            </div>
+
+            <div class="rounded-xl bg-base-200 p-4">
+              <p class="text-xs text-base-content/65">En curso</p>
+              <p class="mt-1 text-2xl font-bold text-primary">
+                {{ datos.en_curso }}
+              </p>
+            </div>
+
+            <div class="rounded-xl bg-base-200 p-4">
+              <p class="text-xs text-base-content/65">Finalizadas</p>
+              <p class="mt-1 text-2xl font-bold text-success">
+                {{ datos.finalizadas }}
+              </p>
+            </div>
+
+            <div class="rounded-xl bg-base-200 p-4">
+              <p class="text-xs text-base-content/65">Cumplimiento</p>
+              <p class="mt-1 text-2xl font-bold text-primary">
+                {{ datos.cumplimiento_porcentaje | number:'1.0-1' }}%
+              </p>
+            </div>
+          </section>
+        }
+
+        <section class="space-y-3 rounded-xl border border-base-300 p-4">
+          <h3 class="font-semibold">Conexión y actualización</h3>
+
+          <p class="text-sm">
+            Estado: {{ socketMonitoreo.estado() }}
+          </p>
+
+          @if (!consultaActual()) {
+            <p class="text-sm text-base-content/65">
+              Consulta histórica: no se aplican posiciones en vivo.
+            </p>
+          }
+
+          @if (generadoEn()) {
+            <p class="text-xs text-base-content/65">
+              Datos generados:
+              {{ generadoEn() | date:'dd/MM/yyyy HH:mm:ss':'-0500' }}
+            </p>
+          }
+
+          @if (ultimaRecepcionSocket(); as fecha) {
+            <p class="text-xs text-base-content/65">
+              Último evento GPS:
+              {{ fecha | date:'HH:mm:ss':'-0500' }}
+            </p>
+          }
+
+          @if (socketMonitoreo.error(); as error) {
+            <p class="text-sm text-error" role="alert">
+              {{ error.message }}
+            </p>
+          }
+
+          @if (socketMonitoreo.requiereAutenticacion()) {
+            <p class="text-sm text-warning">
+              Renueva tu sesión antes de reconectar.
+            </p>
+          }
+
+          @if (
+            socketMonitoreo.estado() === 'ERROR' ||
+            socketMonitoreo.estado() === 'DESCONECTADO'
+          ) {
+            <button
+              type="button"
+              class="btn btn-outline btn-sm"
+              (click)="reconectarSocket()"
+            >
+              Reconectar
+            </button>
+          }
+        </section>
+      </div>
+    </div>
+
+    <form method="dialog" class="modal-backdrop">
+      <button aria-label="Cerrar consulta">Cerrar</button>
+    </form>
+  </dialog>
+
+  <!-- ================================================== -->
+  <!-- MODAL: RECORRIDOS -->
+  <!-- ================================================== -->
+  <dialog
+    #recorridosModal
+    id="monitoreo-recorridos"
+    class="modal monitoreo-modal"
+    aria-labelledby="monitoreo-recorridos-titulo"
+  >
+    <div class="modal-box">
+      <header class="monitoreo-modal-cabecera">
+        <div>
+          <h2 id="monitoreo-recorridos-titulo" class="text-lg font-bold">
+            Recorridos del mapa
+          </h2>
+
+          <p class="mt-1 text-xs text-base-content/65">
+            {{ recorridosConUbicacion().length }} con ubicación ·
+            {{ recorridosSinUbicacion().length }} sin coordenadas
+          </p>
+        </div>
+
+        <button
+          type="button"
+          autofocus
+          class="btn btn-circle btn-ghost btn-sm"
+          aria-label="Cerrar recorridos"
+          (click)="recorridosModal.close()"
+        >
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <div class="monitoreo-modal-cuerpo space-y-3">
+        @if (cargando()) {
+          <p class="py-8 text-center text-sm" role="status">
+            Consultando recorridos…
+          </p>
+        } @else {
+          @for (item of recorridosMapa(); track item.id_recorrido) {
+            <button
+              type="button"
+              class="w-full rounded-xl border border-base-300
+                     bg-base-100 p-4 text-left transition-colors
+                     hover:bg-base-200 focus-visible:outline-2
+                     focus-visible:outline-primary"
+              [class.ring-2]="
+                idRecorridoSeleccionado() === item.id_recorrido
+              "
+              [class.ring-primary]="
+                idRecorridoSeleccionado() === item.id_recorrido
+              "
+              [attr.aria-pressed]="
+                idRecorridoSeleccionado() === item.id_recorrido
+              "
+              (click)="
+                recorridosModal.close();
+                seleccionarRecorrido(item.id_recorrido);
+                detalleModal.showModal()
+              "
+            >
+              <div class="flex items-center justify-between gap-3">
+                <strong>{{ item.vehiculo.placa }}</strong>
+                <span class="text-xs text-base-content/60">
+                  #{{ item.id_recorrido }}
+                </span>
+              </div>
+
+              <p class="mt-2 text-sm">{{ item.ruta.nombre }}</p>
+              <p class="mt-1 text-xs text-base-content/65">
+                {{ item.ruta.zona.nombre }}
+              </p>
+
+              <div class="mt-3 flex flex-wrap gap-2">
+                <span class="badge badge-outline badge-sm">
+                  {{ item.estado_recorrido }}
+                </span>
+                <span class="badge badge-outline badge-sm">
+                  GPS: {{ item.gps.estado }}
+                </span>
+              </div>
+
+              <p class="mt-3 text-xs text-base-content/65">
+                Puntos atendidos:
+                {{ item.progreso.atendidos }}/{{ item.progreso.total_puntos }}
+                · {{ item.progreso.porcentaje | number:'1.0-1' }}%
+              </p>
+
+              @if (obtenerCoordenadas(item.ultima_ubicacion)) {
+                <p class="mt-2 text-xs text-base-content/65">
+                  Última posición:
+                  {{
+                    (item.gps.fecha_ultima_posicion ??
+                      item.ultima_ubicacion?.fecha_recepcion)
+                    | date:'dd/MM HH:mm:ss':'-0500'
+                  }}
+                </p>
+              } @else {
+                <p class="mt-2 text-xs text-warning">
+                  Sin coordenadas válidas para mostrar en el mapa.
+                </p>
+              }
+            </button>
+          } @empty {
+            <p class="rounded-xl bg-base-200 p-6 text-center text-sm">
+              No hay recorridos para los filtros seleccionados.
+            </p>
+          }
+        }
+      </div>
+    </div>
+
+    <form method="dialog" class="modal-backdrop">
+      <button aria-label="Cerrar recorridos">Cerrar</button>
+    </form>
+  </dialog>
+
+  <!-- ================================================== -->
+  <!-- MODAL: ALERTAS -->
+  <!-- ================================================== -->
+  <dialog
+    #alertasModal
+    id="monitoreo-alertas"
+    class="modal monitoreo-modal"
+    aria-labelledby="monitoreo-alertas-titulo"
+  >
+    <div class="modal-box">
+      <header class="monitoreo-modal-cabecera">
+        <div>
+          <h2 id="monitoreo-alertas-titulo" class="text-lg font-bold">
+            Alertas operativas
+          </h2>
+
+          @if (resumenAlertas(); as datos) {
+            <p class="mt-1 text-xs text-base-content/65">
+              {{ datos.total }} alertas ·
+              {{ datos.criticas }} críticas ·
+              {{ datos.advertencias }} advertencias ·
+              {{ datos.informativas }} informativas
+            </p>
           }
         </div>
 
-        <p class="mt-1 text-sm text-gray-700">
-          {{ alerta.mensaje }}
-        </p>
+        <button
+          type="button"
+          autofocus
+          class="btn btn-circle btn-ghost btn-sm"
+          aria-label="Cerrar alertas"
+          (click)="alertasModal.close()"
+        >
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </header>
 
-        <p class="mt-1 text-xs text-gray-500">
-          {{ alerta.vehiculo.placa }} · {{ alerta.ruta.nombre }}
-        </p>
+      <div class="monitoreo-modal-cuerpo space-y-3">
+        @if (errorAlertas()) {
+          <p class="alert alert-error" role="alert">
+            {{ errorAlertas() }}
+          </p>
+        }
+
+        @if (cargando()) {
+          <p class="py-8 text-center text-sm" role="status">
+            Consultando alertas…
+          </p>
+        } @else {
+          @for (alerta of alertasOperativas(); track $index) {
+            <article class="rounded-xl border border-base-300 bg-base-200 p-4">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <span
+                  class="badge badge-outline"
+                  [class.badge-error]="alerta.nivel === 'CRITICA'"
+                  [class.badge-warning]="alerta.nivel === 'ADVERTENCIA'"
+                  [class.badge-info]="
+                    alerta.nivel !== 'CRITICA' &&
+                    alerta.nivel !== 'ADVERTENCIA'
+                  "
+                >
+                  {{ alerta.nivel }}
+                </span>
+
+                <span class="text-xs text-base-content/60">
+                  {{ alerta.codigo }}
+                </span>
+              </div>
+
+              <p class="mt-3 text-sm">{{ alerta.mensaje }}</p>
+
+              <p class="mt-2 text-xs text-base-content/65">
+                {{ alerta.vehiculo.placa }} · {{ alerta.ruta.nombre }}
+              </p>
+
+              @if (alerta.id_recorrido !== null) {
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm mt-4"
+                  (click)="
+                    alertasModal.close();
+                    seleccionarRecorrido(alerta.id_recorrido!);
+                    detalleModal.showModal()
+                  "
+                >
+                  Ver recorrido
+                </button>
+              }
+            </article>
+          } @empty {
+            @if (!errorAlertas()) {
+              <p class="rounded-xl bg-base-200 p-6 text-center text-sm">
+                No se encontraron alertas.
+              </p>
+            }
+          }
+
+          @if ((alertas()?.pagination?.total_pages ?? 0) > 1) {
+            <p class="text-xs text-base-content/60">
+              Mostrando la primera página de alertas.
+            </p>
+          }
+        }
       </div>
-      } @empty {
-      @if (!errorAlertas()) {
-      <p class="text-sm text-gray-500">
-        No se encontraron alertas.
-      </p>
-      }
-      }
     </div>
 
-    @if ((alertas()?.pagination?.total_pages ?? 0) > 1) {
-    <p class="mt-3 text-xs text-gray-500">
-      Mostrando la primera página de alertas.
-    </p>
-    }
-    }
-  </section>
+    <form method="dialog" class="modal-backdrop">
+      <button aria-label="Cerrar alertas">Cerrar</button>
+    </form>
+  </dialog>
 
+  <!-- ================================================== -->
+  <!-- MODAL: DETALLE DEL RECORRIDO -->
+  <!-- ================================================== -->
+  <dialog
+    #detalleModal
+    id="monitoreo-detalle"
+    class="modal monitoreo-modal"
+    aria-labelledby="monitoreo-detalle-titulo"
+  >
+    <div class="modal-box">
+      <header class="monitoreo-modal-cabecera">
+        <h2 id="monitoreo-detalle-titulo" class="text-lg font-bold">
+          Detalle del recorrido
+          @if (idRecorridoSeleccionado() !== null) {
+            #{{ idRecorridoSeleccionado() }}
+          }
+        </h2>
+
+        <button
+          type="button"
+          autofocus
+          class="btn btn-circle btn-ghost btn-sm"
+          aria-label="Cerrar detalle"
+          (click)="detalleModal.close()"
+        >
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <div class="monitoreo-modal-cuerpo">
+        @if (cargandoDetalle()) {
+          <p class="py-8 text-center text-sm" role="status">
+            Consultando detalle…
+          </p>
+        } @else if (errorDetalle()) {
+          <p class="alert alert-error" role="alert">
+            {{ errorDetalle() }}
+          </p>
+        } @else if (detalle(); as datos) {
+          <dl class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            <div class="rounded-xl bg-base-200 p-4">
+              <dt class="text-xs text-base-content/65">Vehículo</dt>
+              <dd class="mt-1 font-semibold">
+                {{ datos.programacion.vehiculo.placa }}
+              </dd>
+            </div>
+
+            <div class="rounded-xl bg-base-200 p-4">
+              <dt class="text-xs text-base-content/65">Ruta</dt>
+              <dd class="mt-1 font-semibold">
+                {{ datos.programacion.ruta.nombre }}
+              </dd>
+            </div>
+
+            <div class="rounded-xl bg-base-200 p-4">
+              <dt class="text-xs text-base-content/65">Estado</dt>
+              <dd class="mt-1 font-semibold">{{ datos.estado_recorrido }}</dd>
+            </div>
+
+            <div class="rounded-xl bg-base-200 p-4">
+              <dt class="text-xs text-base-content/65">Inicio</dt>
+              <dd class="mt-1 font-semibold">
+                {{ datos.fecha_hora_inicio | date:'dd/MM/yyyy HH:mm':'-0500' }}
+              </dd>
+            </div>
+
+            <div class="rounded-xl bg-base-200 p-4">
+              <dt class="text-xs text-base-content/65">Progreso</dt>
+              <dd class="mt-1 font-semibold">
+                {{ datos.progreso.atendidos }}/{{ datos.progreso.total_puntos }}
+                puntos · {{ datos.progreso.porcentaje | number:'1.0-1' }}%
+              </dd>
+            </div>
+
+            <div class="rounded-xl bg-base-200 p-4">
+              <dt class="text-xs text-base-content/65">GPS</dt>
+              <dd class="mt-1 font-semibold">{{ datos.gps.estado }}</dd>
+            </div>
+
+            <div class="rounded-xl bg-base-200 p-4">
+              <dt class="text-xs text-base-content/65">Versión de ruta</dt>
+              <dd class="mt-1 font-semibold">
+                {{ datos.programacion.version_ruta.numero_version }}
+              </dd>
+            </div>
+          </dl>
+
+          <button
+            type="button"
+            class="btn btn-outline btn-sm mt-5"
+            (click)="cerrarDetalle(); detalleModal.close()"
+          >
+            Quitar selección del mapa
+          </button>
+        } @else {
+          <p class="text-sm text-base-content/65">
+            No hay un recorrido seleccionado.
+          </p>
+        }
+      </div>
+    </div>
+
+    <form method="dialog" class="modal-backdrop">
+      <button aria-label="Cerrar detalle">Cerrar</button>
+    </form>
+  </dialog>
 </section>

@@ -51,37 +51,21 @@ export class ReportesFiltrosComponent {
   // INPUTS
   // *********************************************************
 
-  @Input({ required: true })
-  filtros!: ReportesFiltrosFormulario;
-
-  @Input()
-  zonas: readonly ReporteOpcionCatalogo[] = [];
-
-  @Input()
-  rutas: readonly ReporteOpcionCatalogo[] = [];
-
-  @Input()
-  vehiculos: readonly ReporteOpcionCatalogo[] = [];
-
-  @Input()
-  cargando = false;
-
-  @Input()
-  exportando = false;
-
-  @Input()
-  catalogosCargando = false;
-
-  @Input()
-  erroresCatalogos: readonly string[] = [];
+  @Input({ required: true }) filtros!: ReportesFiltrosFormulario;
+  @Input() zonas: readonly ReporteOpcionCatalogo[] = [];
+  @Input() rutas: readonly ReporteOpcionCatalogo[] = [];
+  @Input() vehiculos: readonly ReporteOpcionCatalogo[] = [];
+  @Input() cargando = false;
+  @Input() exportando = false;
+  @Input() catalogosCargando = false;
+  @Input() erroresCatalogos: readonly string[] = [];
 
   // *********************************************************
   // OUTPUTS
   // *********************************************************
 
   @Output()
-  filtrosChange =
-    new EventEmitter<ReportesFiltrosFormulario>();
+  filtrosChange =    new EventEmitter<ReportesFiltrosFormulario>();
 
   @Output()
   consultar = new EventEmitter<void>();

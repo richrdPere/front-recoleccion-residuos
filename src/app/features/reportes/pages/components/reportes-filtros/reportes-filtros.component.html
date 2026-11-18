@@ -1,3 +1,6 @@
+<!-- ===================================================== -->
+<!-- FILTROS -->
+<!-- ===================================================== -->
 <section class="rounded-2xl border border-base-300 bg-base-100 p-5 shadow-sm" aria-labelledby="reportes-filtros-titulo">
   <div class="mb-5 flex items-center gap-3">
     <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -42,12 +45,17 @@
 
         <!-- TIPO DE REPORTE -->
         <div class="form-control md:col-span-2">
-          <label class="label" for="reporte-tipo">
+          <label class="label" for="reporte-tipo" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
             <span class="label-text">Tipo de reporte</span>
           </label>
 
-          <select id="reporte-tipo" name="tipoReporte" class="select select-bordered w-full" required
-            [ngModel]="filtros.tipoReporte" (ngModelChange)="cambiarTipo($event)">
+          <select id="reporte-tipo" name="tipoReporte" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" required
+            [ngClass]="filtros.tipoReporte ? 'border-primary' : 'border-base-500'" [ngModel]="filtros.tipoReporte"
+            (ngModelChange)="cambiarTipo($event)">
             @for (reporte of reportes; track reporte.value) {
             <option [ngValue]="reporte.value">
               {{ reporte.label }}
@@ -58,23 +66,33 @@
 
         <!-- FECHA INICIO -->
         <div class="form-control">
-          <label class="label" for="reporte-fecha-inicio">
+          <label class="label" for="reporte-fecha-inicio" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
             <span class="label-text">Fecha de inicio</span>
           </label>
 
-          <input id="reporte-fecha-inicio" name="fechaInicio" type="date" required class="input input-bordered w-full"
-            [max]="filtros.fechaFin || null" [ngModel]="filtros.fechaInicio"
-            (ngModelChange)="actualizar('fechaInicio', $event)" />
+          <input id="reporte-fecha-inicio" name="fechaInicio" type="date" required class="input input-bordered h-11 min-h-11
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30f" [max]="filtros.fechaFin || null"
+            [ngClass]="filtros.fechaInicio.trim() ? 'border-primary' : 'border-base-500'"
+            [ngModel]="filtros.fechaInicio" (ngModelChange)="actualizar('fechaInicio', $event)" />
         </div>
 
         <!-- FECHA FIN -->
         <div class="form-control">
-          <label class="label" for="reporte-fecha-fin">
+          <label class="label" for="reporte-fecha-fin" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
             <span class="label-text">Fecha de fin</span>
           </label>
 
-          <input id="reporte-fecha-fin" name="fechaFin" type="date" required class="input input-bordered w-full"
-            [min]="filtros.fechaInicio || null" [ngModel]="filtros.fechaFin"
+          <input id="reporte-fecha-fin" name="fechaFin" type="date" required class="input input-bordered h-11 min-h-11
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30f" [min]="filtros.fechaInicio || null"
+            [ngClass]="filtros.fechaFin.trim() ? 'border-primary' : 'border-base-500'" [ngModel]="filtros.fechaFin"
             (ngModelChange)="actualizar('fechaFin', $event)" />
         </div>
 
@@ -82,11 +100,15 @@
 
         <!-- ZONA -->
         <div class="form-control">
-          <label class="label" for="reporte-zona">
+          <label class="label" for="reporte-zona" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
             <span class="label-text">Zona</span>
           </label>
 
-          <select id="reporte-zona" name="zonaBusqueda" class="select select-bordered w-full"
+          <select id="reporte-zona" name="zonaBusqueda" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [ngClass]="filtros.zonaBusqueda ? 'border-primary' : 'border-base-500'"
             [disabled]="catalogosCargando || bloqueado" [ngModel]="filtros.zonaBusqueda"
             (ngModelChange)="cambiarZona($event)">
             <option [ngValue]="null">Todas las zonas</option>
@@ -101,12 +123,16 @@
 
         <!-- RUTA -->
         <div class="form-control">
-          <label class="label" for="reporte-ruta">
+          <label class="label" for="reporte-ruta" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
             <span class="label-text">Ruta</span>
           </label>
 
-          <select id="reporte-ruta" name="rutaBusqueda" class="select select-bordered w-full"
-            [disabled]="catalogosCargando || bloqueado" [ngModel]="filtros.rutaBusqueda"
+          <select id="reporte-ruta" name="rutaBusqueda" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [disabled]="catalogosCargando || bloqueado"
+            [ngClass]="filtros.rutaBusqueda ? 'border-primary' : 'border-base-500'" [ngModel]="filtros.rutaBusqueda"
             (ngModelChange)="cambiarRuta($event)">
             <option [ngValue]="null">Todas las rutas</option>
 
@@ -120,11 +146,15 @@
 
         <!-- TURNO -->
         <div class="form-control">
-          <label class="label" for="reporte-turno">
+          <label class="label" for="reporte-turno" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
             <span class="label-text">Turno</span>
           </label>
 
-          <select id="reporte-turno" name="turnoBusqueda" class="select select-bordered w-full"
+          <select id="reporte-turno" name="turnoBusqueda" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [ngClass]="filtros.turnoBusqueda ? 'border-primary' : 'border-base-500'"
             [ngModel]="filtros.turnoBusqueda" (ngModelChange)="actualizar('turnoBusqueda', $event)">
             <option value="">Todos los turnos</option>
 
@@ -139,11 +169,15 @@
 
         <!-- VEHÍCULO -->
         <div class="form-control">
-          <label class="label" for="reporte-vehiculo">
+          <label class="label" for="reporte-vehiculo" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
             <span class="label-text">Vehículo</span>
           </label>
 
-          <select id="reporte-vehiculo" name="vehiculoBusqueda" class="select select-bordered w-full"
+          <select id="reporte-vehiculo" name="vehiculoBusqueda" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [ngClass]="filtros.vehiculoBusqueda ? 'border-primary' : 'border-base-500'"
             [disabled]="catalogosCargando || bloqueado" [ngModel]="filtros.vehiculoBusqueda"
             (ngModelChange)="actualizar('vehiculoBusqueda', $event)">
             <option [ngValue]="null">Todos los vehículos</option>

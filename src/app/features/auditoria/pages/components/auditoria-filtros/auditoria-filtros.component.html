@@ -1,3 +1,6 @@
+<!-- ===================================================== -->
+<!-- FILTROS -->
+<!-- ===================================================== -->
 <section class="rounded-2xl border border-base-300 bg-base-100 p-5 shadow-sm" aria-label="Filtros de auditoría">
   <div class="mb-5 flex items-center gap-3">
     <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -25,33 +28,47 @@
 
         <!-- FECHA INICIO -->
         <div class="form-control">
-          <label class="label" for="auditoria-fecha-inicio">
+          <label class="label" for="auditoria-fecha-inicio" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
             <span class="label-text">Fecha de inicio</span>
           </label>
 
-          <input id="auditoria-fecha-inicio" name="fechaInicio" type="date" required class="input input-bordered w-full"
-            [max]="filtros.fecha_fin || null" [ngModel]="filtros.fecha_inicio"
-            (ngModelChange)="actualizar('fecha_inicio', $event)" />
+          <input id="auditoria-fecha-inicio" name="fechaInicio" type="date" required class="input input-bordered h-11 min-h-11
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30f" [max]="filtros.fecha_fin || null"
+            [ngClass]="filtros.fecha_inicio.trim() ? 'border-primary' : 'border-base-500'"
+            [ngModel]="filtros.fecha_inicio" (ngModelChange)="actualizar('fecha_inicio', $event)" />
         </div>
 
         <!-- FECHA FIN -->
         <div class="form-control">
-          <label class="label" for="auditoria-fecha-fin">
+          <label class="label" for="auditoria-fecha-fin" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
             <span class="label-text">Fecha de fin</span>
           </label>
 
-          <input id="auditoria-fecha-fin" name="fechaFin" type="date" required class="input input-bordered w-full"
-            [min]="filtros.fecha_inicio || null" [ngModel]="filtros.fecha_fin"
+          <input id="auditoria-fecha-fin" name="fechaFin" type="date" required class="input input-bordered h-11 min-h-11
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30f" [min]="filtros.fecha_inicio || null"
+            [ngClass]="filtros.fecha_fin.trim() ? 'border-primary' : 'border-base-500'" [ngModel]="filtros.fecha_fin"
             (ngModelChange)="actualizar('fecha_fin', $event)" />
         </div>
 
         <!-- RESULTADO -->
         <div class="form-control">
-          <label class="label" for="auditoria-resultado">
+          <label class="label" for="auditoria-resultado" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
             <span class="label-text">Resultado</span>
           </label>
 
-          <select id="auditoria-resultado" name="resultado" class="select select-bordered w-full"
+          <select id="auditoria-resultado" name="resultado" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [ngClass]="filtros.resultado ? 'border-primary' : 'border-base-500'"
             [ngModel]="filtros.resultado ?? null" (ngModelChange)="actualizar('resultado', $event)">
             <option [ngValue]="null">Todos los resultados</option>
 
@@ -65,11 +82,15 @@
 
         <!-- TIPO DE ACTOR -->
         <div class="form-control">
-          <label class="label" for="auditoria-tipo-actor">
+          <label class="label" for="auditoria-tipo-actor" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
             <span class="label-text">Tipo de actor</span>
           </label>
 
-          <select id="auditoria-tipo-actor" name="tipoActor" class="select select-bordered w-full"
+          <select id="auditoria-tipo-actor" name="tipoActor" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [ngClass]="filtros.tipo_actor ? 'border-primary' : 'border-base-500'"
             [ngModel]="filtros.tipo_actor ?? null" (ngModelChange)="actualizar('tipo_actor', $event)">
             <option [ngValue]="null">Todos los actores</option>
 
@@ -83,17 +104,32 @@
 
         <!-- MÓDULO -->
         <div class="form-control">
-          <label class="label" for="auditoria-modulo">
+          <label class="label" for="auditoria-modulo" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
             <span class="label-text">Módulo</span>
           </label>
 
-          <input id="auditoria-modulo" name="modulo" type="text" maxlength="60" pattern="[A-Z][A-Z0-9_]*"
-            placeholder="Ej.: RECORRIDOS" class="input input-bordered w-full" [ngModel]="filtros.modulo ?? ''"
-            (ngModelChange)="actualizarTexto('modulo', $event)" />
+          <div class="relative">
+            <input id="auditoria-modulo" name="modulo" type="text" maxlength="60" pattern="[A-Z][A-Z0-9_]*"
+              placeholder="Ej.: RECORRIDOS" class="input input-bordered h-11 min-h-11
+                    w-full min-w-0 rounded-xl bg-base-200
+                    pl-11 pr-4 transition-colors
+                    focus:border-primary focus:outline-none
+                    focus:ring-2 focus:ring-primary/30"
+              [ngClass]="filtros.modulo ? 'border-primary' : 'border-base-500'" [ngModel]="filtros.modulo ?? ''"
+              (ngModelChange)="actualizarTexto('modulo', $event)" appUppercase />
+
+            <span class="pointer-events-none absolute inset-y-0 left-0 z-10
+                     flex w-11 items-center justify-center
+                     text-base-content/50" aria-hidden="true">
+              <i class="fa-solid fa-magnifying-glass text-base"></i>
+            </span>
+          </div>
+
         </div>
 
         <!-- ACCIÓN -->
-        <div class="form-control">
+        <!-- <div class="form-control">
           <label class="label" for="auditoria-accion">
             <span class="label-text">Acción</span>
           </label>
@@ -101,10 +137,10 @@
           <input id="auditoria-accion" name="accion" type="text" maxlength="80" pattern="[A-Z][A-Z0-9_]*"
             placeholder="Ej.: FINALIZAR" class="input input-bordered w-full" [ngModel]="filtros.accion ?? ''"
             (ngModelChange)="actualizarTexto('accion', $event)" />
-        </div>
+        </div> -->
 
         <!-- USUARIO -->
-        <div class="form-control">
+        <!-- <div class="form-control">
           <label class="label" for="auditoria-usuario">
             <span class="label-text">Usuario (ID)</span>
           </label>
@@ -112,15 +148,19 @@
           <input id="auditoria-usuario" name="idUsuario" type="text" inputmode="numeric" pattern="[1-9][0-9]*"
             maxlength="19" placeholder="Ej.: 18" class="input input-bordered w-full"
             [ngModel]="filtros.id_usuario ?? ''" (ngModelChange)="actualizarTexto('id_usuario', $event)" />
-        </div>
+        </div> -->
 
         <!-- ORIGEN -->
         <div class="form-control">
-          <label class="label" for="auditoria-origen">
+          <label class="label" for="auditoria-origen" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
             <span class="label-text">Origen</span>
           </label>
 
-          <select id="auditoria-origen" name="origen" class="select select-bordered w-full"
+          <select id="auditoria-origen" name="origen" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [ngClass]="filtros.origen ? 'border-primary' : 'border-base-500'"
             [ngModel]="filtros.origen ?? null" (ngModelChange)="actualizar('origen', $event)">
             <option [ngValue]="null">Todos los orígenes</option>
 
@@ -134,7 +174,7 @@
       </div>
 
       <!-- FILTROS ADICIONALES -->
-      <details class="mt-5 rounded-xl border border-base-300">
+      <!-- <details class="mt-5 rounded-xl border border-base-300">
         <summary class="cursor-pointer px-4 py-3 font-medium">
           Entidad e identificadores de seguimiento
         </summary>
@@ -180,15 +220,19 @@
               (ngModelChange)="actualizarTexto('clave_operacion', $event)" />
           </div>
         </div>
-      </details>
+      </details> -->
 
       <div class="mt-5 flex flex-col gap-4 border-t border-base-300 pt-5 sm:flex-row sm:items-end sm:justify-between">
         <div class="form-control">
-          <label class="label" for="auditoria-orden">
+          <label class="label" for="auditoria-orden" class="mb-1.5 block text-xs font-semibold
+                   uppercase tracking-wide text-base-content/60">
             <span class="label-text">Orden</span>
           </label>
 
-          <select id="auditoria-orden" name="orden" class="select select-bordered w-full"
+          <select id="auditoria-orden" name="orden" class="select select-bordered h-11 min-h-11
+                   w-full min-w-0 rounded-xl bg-base-200
+                   focus:outline-none focus:ring-2
+                   focus:ring-primary/30" [ngClass]="filtros.sort_order ? 'border-primary' : 'border-base-500'"
             [ngModel]="filtros.sort_order ?? 'DESC'" (ngModelChange)="actualizar('sort_order', $event)">
             @for (orden of ordenes; track orden.value) {
             <option [ngValue]="orden.value">

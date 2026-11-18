@@ -1,6 +1,20 @@
 :host {
   display: block;
   width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.mapa {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+/* :host {
+  display: block;
+  width: 100%;
 }
 
 .mapa {
@@ -8,4 +22,4 @@
   height: clamp(400px, 65vh, 750px);
   border-radius: 12px;
   overflow: hidden;
-}
+} */

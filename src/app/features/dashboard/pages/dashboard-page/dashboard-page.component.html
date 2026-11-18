@@ -2,7 +2,7 @@
 <!-- CONTENEDOR DEL DASHBOARD -->
 <!-- ================================================= -->
 
-<main class="mx-auto w-full max-w-500">
+<main class="mx-auto w-full max-w-500 space-y-5">
 
   <!-- ================================================= -->
   <!-- ENCABEZADO -->
@@ -69,10 +69,16 @@
   </section> -->
 
   <!-- RESUMEN GENERAL -->
-  <dashboard-resumen [filtros]="filtrosResumen" [actualizacion]="actualizacionDashboard"></dashboard-resumen>
+  <div>
+    <dashboard-resumen [filtros]="filtrosResumen" [actualizacion]="actualizacionDashboard"></dashboard-resumen>
+  </div>
+
 
   <!-- TENDENCIAS -->
-  <dashboard-tendencias [filtros]="filtrosTendencias" [actualizacion]="actualizacionDashboard"></dashboard-tendencias>
+  <div>
+    <dashboard-tendencias [filtros]="filtrosTendencias" [actualizacion]="actualizacionDashboard"></dashboard-tendencias>
+  </div>
+
 
   <!-- PROGRAMACIONES / RECOLECCIONES -->
   <div class="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
@@ -88,9 +94,14 @@
   </div>
 
   <!-- VEHÍCULOS -->
-  <dashboard-vehiculos [filtros]="filtrosVehiculos" [actualizacion]="actualizacionDashboard"></dashboard-vehiculos>
+  <div>
+    <dashboard-vehiculos [filtros]="filtrosVehiculos" [actualizacion]="actualizacionDashboard"></dashboard-vehiculos>
+  </div>
 
   <!-- RENDIMIENTO DE RUTAS -->
-  <dashboard-rendimiento-rutas [filtros]="filtrosRendimientoRutas"
-    [actualizacion]="actualizacionDashboard"></dashboard-rendimiento-rutas>
+  <div>
+    <dashboard-rendimiento-rutas [filtros]="filtrosRendimientoRutas"
+      [actualizacion]="actualizacionDashboard"></dashboard-rendimiento-rutas>
+  </div>
+
 </main>

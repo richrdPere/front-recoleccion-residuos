@@ -2,6 +2,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
+// Directives
+import { UppercaseDirective } from 'src/app/shared/directives/uppercase.directive';
+
 // Interfaces
 import { AuditoriaPaginadoFilters } from '../../../interfaces';
 
@@ -11,6 +14,7 @@ import { AuditoriaPaginadoFilters } from '../../../interfaces';
   imports: [
     CommonModule,
     FormsModule,
+    UppercaseDirective
   ],
   templateUrl: './auditoria-filtros.component.html',
 })

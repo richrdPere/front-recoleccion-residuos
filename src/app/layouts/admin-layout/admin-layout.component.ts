@@ -379,7 +379,7 @@ export class AdminLayoutComponent {
             label: 'Reportes',
             description: 'Consultas y exportaciones',
             route: '/admin/reportes',
-            icon: 'fa-regular fa-file-lines',
+            icon: 'fa-solid fa-chart-column',
             roles: [
               'SUPER_ADMIN',
               'ADMIN',
@@ -389,16 +389,9 @@ export class AdminLayoutComponent {
 
           {
             label: 'Auditoría',
-
-            description:
-              'Historial de operaciones',
-
-            route:
-              '/admin/auditoria',
-
-            icon:
-              'fa-solid fa-clock-rotate-left',
-
+            description: 'Historial de operaciones',
+            route: '/admin/auditoria',
+            icon: 'fa-solid fa-clock-rotate-left',
             roles: [
               'SUPER_ADMIN',
               'ADMIN',
@@ -421,23 +414,15 @@ export class AdminLayoutComponent {
               'ADMIN',
             ],
           },
-
-          {
-            label: 'Roles y permisos',
-
-            description:
-              'Control de acceso',
-
-            route:
-              '/admin/roles',
-
-            icon:
-              'fa-solid fa-shield-halved',
-
-            roles: [
-              'SUPER_ADMIN',
-            ],
-          },
+          // {
+          //   label: 'Roles y permisos',
+          //   description: 'Control de acceso',
+          //   route: '/admin/roles',
+          //   icon: 'fa-solid fa-shield-halved',
+          //   roles: [
+          //     'SUPER_ADMIN',
+          //   ],
+          // },
         ],
       },
     ];
